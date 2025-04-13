@@ -8,7 +8,7 @@ interface Pool {
   description: string;
 }
 
-const UserPools: React.FC = () => {
+const Pools: React.FC = () => {
   const [pools, setPools] = useState<Pool[]>([
     { id: "1", name: "Amazon Pool", description: "Handles Amazon orders" },
     { id: "2", name: "Shopify Pool", description: "Manages Shopify products" },
@@ -113,4 +113,4 @@ const UserPools: React.FC = () => {
   );
 };
 
-export { UserPools };
+export { Pools };

@@ -3,9 +3,9 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Dashboard } from "./screens/user/Dashboard.tsx";
-import UserPanel from "./screens/user/UserPanel/UserPannel.tsx";
-import { UserPools } from "./screens/user/Pools/UserPools.tsx";
+import { Dashboard } from "./screens/dashboard/Dashboard.tsx";
+import DashboardPanel from "./screens/dashboard/DashboardPanel/DashboardPannel.tsx";
+import { Pools } from "./screens/dashboard/Pools.tsx";
 import LoginPage from "./screens/auth/Login/LoginPage.tsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 const router = createBrowserRouter([
@@ -18,16 +18,16 @@ const router = createBrowserRouter([
         element: <LoginPage />,
       },
       {
-        path: "user",
-        element: <UserPanel />, // <-- This becomes the layout for all /user/* routes
+        path: "dashboard",
+        element: <DashboardPanel />, // <-- This becomes the layout for all /Dashboard/* routes
         children: [
           {
-            index: true, // /user
+            index: true, // /Dashboard
             element: <Dashboard />, // or a default dashboard
           },
           {
-            path: "pools", // /user/pools
-            element: <UserPools />,
+            path: "pools", // /Dashboard/pools
+            element: <Pools />,
           },
         ],
       },

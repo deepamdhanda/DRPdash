@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import "./userPanel.css";
+import "./dashboardPannel.css";
 import { FaBoxOpen, FaUsers, FaClipboardList, FaHeart, FaFolderOpen, FaChartLine, FaSignOutAlt } from "react-icons/fa";
 
 type NavLink = {
