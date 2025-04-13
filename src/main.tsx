@@ -11,21 +11,22 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <App />, // General app layout
     children: [
-      {
-        index: true,
-        element: <UserPanel />,
-      },
       {
         path: "login",
         element: <LoginPage />,
       },
       {
         path: "user",
+        element: <UserPanel />, // <-- This becomes the layout for all /user/* routes
         children: [
           {
-            path: "pools",
+            index: true, // /user
+            element: <Dashboard />, // or a default dashboard
+          },
+          {
+            path: "pools", // /user/pools
             element: <UserPools />,
           },
         ],
