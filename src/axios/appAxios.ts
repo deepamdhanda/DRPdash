@@ -15,7 +15,7 @@ Axios.interceptors.request.use(
       return new Promise((resolve) => {
         const interval = setInterval(() => {
           const authToken = Cookies.get("authToken");
-          config.headers["authToken"] = `Bearer ${authToken}`;
+          config.headers["authorization"] = `Bearer ${authToken}`;
           clearInterval(interval);
           resolve(config);
         }, 100);

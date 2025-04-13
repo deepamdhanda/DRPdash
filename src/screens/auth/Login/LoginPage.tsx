@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./LoginPage.module.css";
-import { LoginUser } from "../../../APIs/auth";
+import { LoginUser } from "../../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
 
 // Define the form schema with Zod

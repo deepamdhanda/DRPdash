@@ -11,19 +11,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <App />, // General app layout
     children: [
-      {
-        index: true,
-        element: <UserPanel />,
-      },
       {
         path: "login",
         element: <LoginPage />,
       },
       {
         path: "user",
+        element: <UserPanel />,
         children: [
+          {
+            index: true,
+            element: <Dashboard />,
+          },
           {
             path: "pools",
             element: <UserPools />,
@@ -33,7 +34,6 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-
 createRoot(document.getElementById("root")!).render(
   <RouterProvider router={router} />
 );
