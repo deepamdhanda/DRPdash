@@ -1,87 +1,90 @@
 import React, { useState } from "react";
-import "./userPanel.css"; // Import your CSS file here
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
+import "./userPanel.css";
+import { FaBoxOpen, FaUsers, FaClipboardList, FaHeart, FaFolderOpen, FaChartLine, FaSignOutAlt } from "react-icons/fa";
 
 type NavLink = {
   name: string;
-  icon: string;
+  icon: React.ReactNode;
+  path?: string;
 };
+
 type TNavLinkName =
   | "Dashboard"
-  | "Users"
-  | "Messages"
-  | "Bookmark"
-  | "Files"
-  | "Stats"
+  | "Customers"
+  | "Orders"
+  | "Wishlist"
+  | "Inventory"
+  | "Analytics"
   | "SignOut";
+
 const navLinks: NavLink[] = [
-  { name: "Dashboard", icon: "bx-grid-alt" },
-  { name: "Users", icon: "bx-user" },
-  { name: "Messages", icon: "bx-message-square-detail" },
-  { name: "Bookmark", icon: "bx-bookmark" },
-  { name: "Files", icon: "bx-folder" },
-  { name: "Stats", icon: "bx-bar-chart-alt-2" },
-  { name: "SignOut", icon: "bx-log-out" },
+  { name: "Dashboard", icon: <FaBoxOpen />, path: "/user/dashboard" },
+  { name: "Customers", icon: <FaUsers />, path: "/user/customers" },
+  { name: "Orders", icon: <FaClipboardList />, path: "/user/orders" },
+  { name: "Wishlist", icon: <FaHeart />, path: "/user/wishlist" },
+  { name: "Inventory", icon: <FaFolderOpen />, path: "/user/inventory" },
+  { name: "Analytics", icon: <FaChartLine />, path: "/user/analytics" },
+  { name: "SignOut", icon: <FaSignOutAlt /> },
 ];
 
 const UserPanel: React.FC = () => {
-  const [navVisible, setNavVisible] = useState<boolean>(true);
+  const [navVisible, setNavVisible] = useState(true);
   const [activeLink, setActiveLink] = useState<TNavLinkName>("Dashboard");
+  const navigate = useNavigate();
 
   const handleToggle = () => {
-    setNavVisible((prev) => !prev);
+    setNavVisible(!navVisible);
   };
 
-  const handleLinkClick = (name: string) => {
+  const handleLinkClick = (name: string, path?: string) => {
     setActiveLink(name as TNavLinkName);
+    if (path) navigate(path);
   };
 
   return (
-    <div id="body-pd" className={navVisible ? "body-pd" : ""}>
-      <header className={`header ${navVisible ? "body-pd" : ""}`} id="header">
-        <div className="header_toggle">
-          <i onClick={handleToggle} className="fa-solid fa-bars"></i>
+    <div id="user-panel" className={navVisible ? "nav-visible" : ""}>
+      {/* <header className="header">
+        <div className="header-toggle" onClick={handleToggle}>
+          <i className="fa-solid fa-bars"></i>
         </div>
-        <div className="header_img">
+        <div className="header-title">Admin Panel</div>
+        <div className="header-img">
           <img src="https://i.imgur.com/hczKIze.jpg" alt="User Avatar" />
         </div>
-      </header>
+      </header> */}
 
-      <div className={`l-navbar ${navVisible ? "show" : ""}`} id="nav-bar">
+      <div className={`sidebar ${navVisible ? "sidebar-visible" : ""}`}>
         <nav className="nav">
           <div>
-            <a href="#" className="nav_logo">
-              <i className="bx bx-layer nav_logo-icon"></i>
-              <span className="nav_logo-name">DRP CRM</span>
-            </a>
-            <div className="nav_list">
+            <div className="nav-logo">
+              <span className="nav-logo-icon">🛒</span>
+              <span className="nav-logo-name">MyStore</span>
+            </div>
+            <div className="nav-list">
               {navLinks.slice(0, -1).map((link) => (
-                <a
+                <div
                   key={link.name}
-                  href="#"
-                  className={`nav_link ${
-                    activeLink === link.name ? "active" : ""
-                  }`}
-                  onClick={() => handleLinkClick(link.name)}
+                  className={`nav-link ${activeLink === link.name ? "active" : ""}`}
+                  onClick={() => handleLinkClick(link.name, link.path)}
                 >
-                  <i className={`bx ${link.icon} nav_icon`}></i>
-                  <span className="nav_name">{link.name}</span>
-                </a>
+                  <span className="nav-icon">{link.icon}</span> 
+                  <span className="nav-name"> {link.name}</span>
+                </div>
               ))}
             </div>
           </div>
-          <a
-            href="#"
-            className={`nav_link ${activeLink === "SignOut" ? "active" : ""}`}
+          <div
+            className={`nav-link ${activeLink === "SignOut" ? "active" : ""}`}
             onClick={() => handleLinkClick("SignOut")}
           >
-            <i className="bx bx-log-out nav_icon"></i>
-            <span className="nav_name">SignOut</span>
-          </a>
+            <span className="nav-icon"><FaSignOutAlt /></span>
+            <span className="nav-name"> Sign Out</span>
+          </div>
         </nav>
       </div>
 
-      <div className="height-100 bg-light">
+      <div className="main-content">
         <Outlet />
       </div>
     </div>

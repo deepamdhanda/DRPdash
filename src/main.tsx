@@ -19,14 +19,14 @@ const router = createBrowserRouter([
       },
       {
         path: "user",
-        element: <UserPanel />,
+        element: <UserPanel />, // <-- This becomes the layout for all /user/* routes
         children: [
           {
-            index: true,
-            element: <Dashboard />,
+            index: true, // /user
+            element: <Dashboard />, // or a default dashboard
           },
           {
-            path: "pools",
+            path: "pools", // /user/pools
             element: <UserPools />,
           },
         ],
