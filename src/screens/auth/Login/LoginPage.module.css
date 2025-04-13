@@ -1,0 +1,133 @@
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  min-width: 100vw;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.loginCard {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  padding: 40px;
+  transition: transform 0.3s;
+}
+
+.loginCard:hover {
+  transform: translateY(-5px);
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.loginHeader h2 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.loginHeader p {
+  color: #777;
+  font-size: 16px;
+}
+
+.loginForm {
+  margin-bottom: 25px;
+}
+
+.errorMessage {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.forgotPassword {
+  font-size: 14px;
+  color: #6c757d;
+  text-decoration: none;
+}
+
+.forgotPassword:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.loginButton {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  background-color: #4e73df;
+  border: none;
+  transition: all 0.3s;
+}
+
+.loginButton:hover:not(:disabled) {
+  background-color: #375bd2;
+  transform: translateY(-2px);
+}
+
+.loginButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loginFooter {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.loginFooter p {
+  margin-bottom: 20px;
+  color: #6c757d;
+}
+
+.loginFooter a {
+  color: #4e73df;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.loginFooter a:hover {
+  text-decoration: underline;
+}
+
+.socialLogin {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.socialButton {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #555;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.socialButton:hover {
+  background-color: #f8f9fa;
+  border-color: #c3cfe2;
+}
+
+@media (max-width: 576px) {
+  .loginCard {
+    padding: 25px;
+  }
+
+  .socialLogin {
+    flex-direction: column;
+  }
+}
