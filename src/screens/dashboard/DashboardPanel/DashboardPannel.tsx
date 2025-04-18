@@ -1,7 +1,24 @@
-import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./dashboardPannel.css";
-import { FaBoxOpen, FaUsers, FaClipboardList, FaHeart, FaFolderOpen, FaChartLine, FaSignOutAlt } from "react-icons/fa";
+import {
+  FaBoxOpen,
+  FaUsers,
+  FaClipboardList,
+  FaHeart,
+  FaFolderOpen,
+  FaChartLine,
+  FaSignOutAlt,
+  FaPeopleCarry,
+  FaStore,
+  FaTachometerAlt,
+  FaLayerGroup,
+  FaSatelliteDish,
+  FaBarcode,
+  FaLink,
+  FaTruckLoading,
+  FaRupeeSign
+} from "react-icons/fa";
 
 type NavLink = {
   name: string;
@@ -10,32 +27,46 @@ type NavLink = {
 };
 
 type TNavLinkName =
+  | ""
   | "Dashboard"
-  | "Customers"
   | "Orders"
-  | "Wishlist"
-  | "Inventory"
-  | "Analytics"
+  | "Pools"
+  | "Channels"
+  | "Products"
+  | "Product SKUs"
+  | "Channels linked SKU"
+  | "NDR"
+  | "Finance"
   | "SignOut";
 
 const navLinks: NavLink[] = [
-  { name: "Dashboard", icon: <FaBoxOpen />, path: "/user/dashboard" },
-  { name: "Customers", icon: <FaUsers />, path: "/user/customers" },
-  { name: "Orders", icon: <FaClipboardList />, path: "/user/orders" },
-  { name: "Wishlist", icon: <FaHeart />, path: "/user/wishlist" },
-  { name: "Inventory", icon: <FaFolderOpen />, path: "/user/inventory" },
-  { name: "Analytics", icon: <FaChartLine />, path: "/user/analytics" },
+  { name: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" },
+  { name: "Orders", icon: <FaClipboardList />, path: "/dashboard/orders" },
+  { name: "Pools", icon: <FaLayerGroup />, path: "/dashboard/pools" },
+  { name: "Channels Accounts", icon: <FaSatelliteDish />, path: "/dashboard/channel_accounts" },
+  { name: "Products", icon: <FaBoxOpen />, path: "/dashboard/Products" },
+  { name: "ProductSKU", icon: <FaBarcode />, path: "/dashboard/ProductSKU" },
+  { name: "ChannelSKU", icon: <FaLink />, path: "/dashboard/ChannelSKU" },
+  { name: "NDR", icon: <FaTruckLoading />, path: "/dashboard/NDR" },
+  { name: "Finance", icon: <FaRupeeSign />, path: "/dashboard/Finance" },
+  { name: "Warehouse", icon: <FaRupeeSign />, path: "/dashboard/Warehouses" },
   { name: "SignOut", icon: <FaSignOutAlt /> },
 ];
 
 const UserPanel: React.FC = () => {
   const [navVisible, setNavVisible] = useState(true);
-  const [activeLink, setActiveLink] = useState<TNavLinkName>("Dashboard");
+  const [activeLink, setActiveLink] = useState<TNavLinkName>("");
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleToggle = () => {
-    setNavVisible(!navVisible);
-  };
+  // Automatically sync active link with current URL
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const matchedLink = navLinks.find((link) => link.path === currentPath);
+    if (matchedLink) {
+      setActiveLink(matchedLink.name as TNavLinkName);
+    }
+  }, [location.pathname]);
 
   const handleLinkClick = (name: string, path?: string) => {
     setActiveLink(name as TNavLinkName);
@@ -44,16 +75,6 @@ const UserPanel: React.FC = () => {
 
   return (
     <div id="user-panel" className={navVisible ? "nav-visible" : ""}>
-      {/* <header className="header">
-        <div className="header-toggle" onClick={handleToggle}>
-          <i className="fa-solid fa-bars"></i>
-        </div>
-        <div className="header-title">Admin Panel</div>
-        <div className="header-img">
-          <img src="https://i.imgur.com/hczKIze.jpg" alt="User Avatar" />
-        </div>
-      </header> */}
-
       <div className={`sidebar ${navVisible ? "sidebar-visible" : ""}`}>
         <nav className="nav">
           <div>
@@ -68,7 +89,7 @@ const UserPanel: React.FC = () => {
                   className={`nav-link ${activeLink === link.name ? "active" : ""}`}
                   onClick={() => handleLinkClick(link.name, link.path)}
                 >
-                  <span className="nav-icon">{link.icon}</span> 
+                  <span className="nav-icon">{link.icon}</span>
                   <span className="nav-name"> {link.name}</span>
                 </div>
               ))}
