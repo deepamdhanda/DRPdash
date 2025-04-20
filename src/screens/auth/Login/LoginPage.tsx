@@ -34,7 +34,7 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     // Simulate API call
     await LoginUser(data, () => {
-      navigate("/user/pools");
+      navigate("/dashboard");
     });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request

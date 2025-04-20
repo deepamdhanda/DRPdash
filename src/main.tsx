@@ -8,6 +8,11 @@ import DashboardPanel from "./screens/dashboard/DashboardPanel/DashboardPannel.t
 import { Pools } from "./screens/dashboard/Pools.tsx";
 import LoginPage from "./screens/auth/Login/LoginPage.tsx";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { ChannelAccounts } from "./screens/dashboard/ChannelAccounts.tsx";
+import { Products } from "./screens/dashboard/Products.tsx";
+import { ProductSKUs } from "./screens/dashboard/ProductSKUs.tsx";
+import { Orders } from "./screens/dashboard/Orders.tsx";
+import { Warehouses } from "./screens/dashboard/Warehouse.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -28,6 +33,26 @@ const router = createBrowserRouter([
           {
             path: "pools", // /Dashboard/pools
             element: <Pools />,
+          },
+          {
+            path: "channel_accounts", // /Dashboard/pools
+            element: <ChannelAccounts />,
+          },
+          {
+            path: "products", // /Dashboard/pools
+            element: <Products />,
+          },
+          {
+            path: "productSKU", // /Dashboard/pools
+            element: <ProductSKUs />,
+          },
+          {
+            path: "orders", // /Dashboard/pools
+            element: <Orders />,
+          },
+          {
+            path: "warehouses", // /Dashboard/pools
+            element: <Warehouses />,
           },
         ],
       },
