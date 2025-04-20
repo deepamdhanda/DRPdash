@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Badge } from "react-bootstrap";
+import { Modal, Button, Form, Badge, Row, Col, Card } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { getAllOrders, createOrder, updateOrder } from "../../APIs/order";
 import { fetchNewOrders } from "../../APIs/fetchOrder";
+import { appAxios } from "../../axios/appAxios";
+import { channelAccounts_url, channels_url } from "../../URLs/dash";
 
 export interface User {
   _id: string;
@@ -25,45 +27,120 @@ export interface Order {
   product_name: string;
   quantity: number;
   total_amount: number;
+  name: string;
   payment_method: string;
   awb_number: string;
-  channel_account: { channel_account_name: string };
+  channel_account: { channel_account_name: string; _id: string };
   status: "active" | "inactive" | "suspended";
   createdAt?: string;
   updatedAt?: string;
 }
 
+interface FilterParams {
+  productName?: string;
+  startDate?: string;
+  endDate?: string;
+  channelAccountId?: string;
+}
+export interface IChannelAccount {
+  _id: string;
+  channel_account_name: string;
+}
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [totalOrders, setTotalOrders] = useState<number>(0); // Total number of orders
-  const [currentPage, setCurrentPage] = useState<number>(1); // Current page
-  const [rowsPerPage, setRowsPerPage] = useState<number>(10); // Rows per page
+  const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [showModal, setShowModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [tableHeight, setTableHeight] = useState<string>("400px"); // Default height
+  const [tableHeight, setTableHeight] = useState<string>("400px");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Filter states
+  const [filters, setFilters] = useState<FilterParams>({});
+  const [productName, setProductName] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [channelAccountId, setChannelAccountId] = useState<string>("");
+  const [channelAccounts, setChannelAccounts] = useState<Array<IChannel>>([]);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchOrders(currentPage, rowsPerPage);
-    calculateTableHeight(); // Calculate height on initial load
+    fetchOrders(currentPage, rowsPerPage, filters);
+    calculateTableHeight();
     fetchUsers();
+    fetchChannelAccounts();
   }, [currentPage, rowsPerPage]);
 
-  const fetchOrders = async (page: number, limit: number) => {
+  const fetchChannelAccounts = async () => {
     try {
-      const response = await getAllOrders(page, limit); // Pass page and limit to API
-      setOrders(response.orders); // Assuming API returns { orders, total }
-      setTotalOrders(response.total); // Set total number of orders
+      // Replace with your actual API endpoint for fetching channel accounts
+      const response = await appAxios.get(channelAccounts_url, {});
+      const data = await response.data;
+      setChannelAccounts(data);
     } catch (error) {
-      console.error("Error fetching orders", error);
+      console.error("Error fetching channel accounts", error);
     }
   };
 
+  const fetchOrders = async (
+    page: number,
+    limit: number,
+    filterParams: FilterParams = {}
+  ) => {
+    setIsLoading(true);
+    try {
+      // Instead of building a query string, we'll pass the filters directly as an object
+      // to the getAllOrders method
+      const response = await getAllOrders(page, limit, {
+        // Include pagination parameters
+        page,
+        limit,
+        // Spread the filter parameters
+        ...filterParams,
+      });
+
+      setOrders(response.orders);
+      setTotalOrders(response.total);
+    } catch (error) {
+      console.error("Error fetching orders", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const applyFilters = () => {
+    const newFilters: FilterParams = {};
+
+    if (productName.trim()) newFilters.productName = productName.trim();
+    if (startDate) newFilters.startDate = startDate;
+    if (endDate) newFilters.endDate = endDate;
+    if (channelAccountId) newFilters.channelAccountId = channelAccountId;
+
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when applying filters
+    fetchOrders(1, rowsPerPage, newFilters);
+  };
+
+  const resetFilters = () => {
+    setProductName("");
+    setStartDate("");
+    setEndDate("");
+    setChannelAccountId("");
+    setFilters({});
+    setCurrentPage(1);
+    fetchOrders(1, rowsPerPage, {});
+  };
+
   const calculateTableHeight = () => {
-    const headerHeight = 200; // Approximate height of the header and other elements
+    const headerHeight = showFilters ? 300 : 200; // Adjust based on filter visibility
     const availableHeight = window.innerHeight - headerHeight;
     setTableHeight(`${availableHeight}px`);
   };
+
+  useEffect(() => {
+    calculateTableHeight();
+  }, [showFilters]);
 
   const fetchUsers = async () => {
     try {
@@ -89,10 +166,14 @@ const Orders: React.FC = () => {
 
   const handleToggleStatus = async (order: Order) => {
     const newStatus = order.status === "active" ? "inactive" : "active";
-    if (window.confirm(`Are you sure you want to mark this order as ${newStatus}?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to mark this order as ${newStatus}?`
+      )
+    ) {
       try {
         await updateOrder(order._id, { status: newStatus });
-        fetchOrders(currentPage, rowsPerPage); // Refresh orders
+        fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
       } catch (error) {
         console.error("Error updating status", error);
       }
@@ -115,7 +196,7 @@ const Orders: React.FC = () => {
       } else {
         await createOrder(formData);
       }
-      fetchOrders(currentPage, rowsPerPage); // Refresh orders
+      fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
       handleClose();
     } catch (error) {
       console.error("Error saving order", error);
@@ -123,12 +204,14 @@ const Orders: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page); // Update current page
+    setCurrentPage(page);
+    fetchOrders(page, rowsPerPage, filters);
   };
 
   const handleRowsPerPageChange = (newRowsPerPage: number, page: number) => {
-    setRowsPerPage(newRowsPerPage); // Update rows per page
-    setCurrentPage(page); // Reset to the current page
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(page);
+    fetchOrders(page, newRowsPerPage, filters);
   };
 
   const columns = [
@@ -137,21 +220,29 @@ const Orders: React.FC = () => {
       cell: (row: Order) => (
         <div>
           <strong>Order ID:</strong> {row.order_id || "—"} <br />
-          <strong>Channel Order ID:</strong> {row.channel_order_id || "—"} <br />
-          <strong>Store Order ID:<span style={{ color: 'blue' }}> {row.store_order_id || "—"} </span></strong><br />
-          <strong>Channel Account:</strong> {row.channel_account?.channel_account_name || "—"}
+          <strong>Channel Order ID:</strong> {row.channel_order_id || "—"}{" "}
+          <br />
+          <strong>
+            Store Order ID:
+            <span style={{ color: "blue" }}> {row.store_order_id || "—"} </span>
+          </strong>
+          <br />
+          <strong>Channel Account:</strong>{" "}
+          {row.channel_account?.channel_account_name || "—"}
         </div>
       ),
       wrap: true,
       width: "250px",
-      style: { margin: '10px 0' }
+      style: { margin: "10px 0" },
     },
     {
       name: "Product Details",
       cell: (row: Order) => (
         <div>
           <strong>Product:</strong>{" "}
-          <span style={{ textDecoration: "underline" }}>{row.product_name} </span>
+          <span style={{ textDecoration: "underline" }}>
+            {row.product_name}{" "}
+          </span>
           <br />
           <strong>Quantity:</strong> {row.quantity || "—"} pcs <br />
           <strong>Amount:</strong> ₹{row.total_amount || "—"} <br />
@@ -160,7 +251,7 @@ const Orders: React.FC = () => {
       ),
       wrap: true,
       width: "225px",
-      style: { margin: '10px 0' }
+      style: { margin: "10px 0" },
     },
     {
       name: "Shipping Address",
@@ -168,26 +259,36 @@ const Orders: React.FC = () => {
         <div>
           <strong>Name:</strong> {row.customer_name || "—"} <br />
           <strong>Phone:</strong> {row.customer_phone || "—"} <br />
-          {row.customer_email && <strong>Email:</strong>} {row.customer_email || ""}
-          <strong>Address:</strong> {row.shipping_address}, {row.shipping_city}, {row.shipping_state},{" "}
-          {row.shipping_country} - {row.shipping_pincode}
+          {row.customer_email && <strong>Email:</strong>}{" "}
+          {row.customer_email || ""}
+          <strong>Address:</strong> {row.shipping_address}, {row.shipping_city},{" "}
+          {row.shipping_state}, {row.shipping_country} - {row.shipping_pincode}
         </div>
       ),
       wrap: true,
       width: "225px",
-      style: { margin: '10px 0' }
+      style: { margin: "10px 0" },
     },
     {
       name: "Courier Details",
       cell: (row: Order) => (
         <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
-          {row?.recomended_courier_id && (<><strong>Recomended Courier:</strong> {row?.shipping_courier?.courier_name || "—"} <br /></>)}
-          <strong>Shipping Courier:</strong> {row?.shipping_courier?.courier_name || "—"} <br />
+          {row?.recomended_courier_id && (
+            <>
+              <strong>Recomended Courier:</strong>{" "}
+              {row?.shipping_courier?.courier_name || "—"} <br />
+            </>
+          )}
+          <strong>Shipping Courier:</strong>{" "}
+          {row?.shipping_courier?.courier_name || "—"} <br />
           {row.awb_number ? (
             <>
               <strong>AWB:</strong>{" "}
               <a
-                href={row?.shipping_courier?.tracking_url?.replace("{{awb_number}}", row.awb_number)}
+                href={row?.shipping_courier?.tracking_url?.replace(
+                  "{{awb_number}}",
+                  row.awb_number
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#007bff", textDecoration: "underline" }}
@@ -217,7 +318,7 @@ const Orders: React.FC = () => {
       ),
       wrap: true,
       width: "200px",
-      style: { margin: '10px 0' },
+      style: { margin: "10px 0" },
     },
     {
       name: "Issues",
@@ -232,27 +333,29 @@ const Orders: React.FC = () => {
               ))}
             </ul>
           ) : (
-            <span style={{ fontSize: "13px", color: "#5cb85c" }}>No Issues</span>
+            <span style={{ fontSize: "13px", color: "#5cb85c" }}>
+              No Issues
+            </span>
           )}
         </div>
       ),
       sortable: false,
       width: "150px",
-      style: { margin: '10px 0' }
+      style: { margin: "10px 0" },
     },
     {
       name: "Fetched On",
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
       width: "110px",
-      style: { margin: '10px 0' }
+      style: { margin: "10px 0" },
     },
     {
       name: "Actions",
@@ -267,7 +370,9 @@ const Orders: React.FC = () => {
             Edit
           </Button>
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant={
+              row.status === "active" ? "outline-danger" : "outline-success"
+            }
             size="sm"
             onClick={() => handleToggleStatus(row)}
           >
@@ -336,15 +441,98 @@ const Orders: React.FC = () => {
       },
     },
   ];
+
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Orders</h4>
         <div>
-          <Button onClick={async () => { (await fetchNewOrders()) && fetchOrders(1, rowsPerPage) }} className="me-2">Fetch New Orders</Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+            className="me-2"
+          >
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
+          <Button
+            onClick={async () => {
+              (await fetchNewOrders()) && fetchOrders(1, rowsPerPage, filters);
+            }}
+            className="me-2"
+          >
+            Fetch New Orders
+          </Button>
           <Button onClick={handleShow}>+ New Order</Button>
         </div>
       </div>
+
+      {showFilters && (
+        <Card className="mb-3">
+          <Card.Body>
+            <Row>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by product name"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Channel Account</Form.Label>
+                  <Form.Select
+                    value={channelAccountId}
+                    onChange={(e) => setChannelAccountId(e.target.value)}
+                  >
+                    <option value="">All Channel Accounts</option>
+                    {channelAccounts.map((account) => (
+                      <option key={account._id} value={account._id}>
+                        {account.channel_account_name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>From Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>To Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="secondary"
+                className="me-2"
+                onClick={resetFilters}
+              >
+                Reset
+              </Button>
+              <Button variant="primary" onClick={applyFilters}>
+                Apply Filters
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
 
       <DataTable
         title="Your Orders"
@@ -363,17 +551,19 @@ const Orders: React.FC = () => {
         defaultSortFieldId="createdAt"
         defaultSortAsc={false}
         sortIcon={<i className="fa-solid fa-sort"></i>}
-        // className="table-responsive"
         noDataComponent="No orders found"
         responsive
         striped
         persistTableHead
-        progressPending={orders.length === 0}
-        conditionalRowStyles={conditionalRowStyles} // Apply conditional row styles
+        progressPending={isLoading}
+        conditionalRowStyles={conditionalRowStyles}
       />
+
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingOrder ? "Edit Order" : "Create Order"}</Modal.Title>
+          <Modal.Title>
+            {editingOrder ? "Edit Order" : "Create Order"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -396,7 +586,7 @@ const Orders: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div >
+    </div>
   );
 };
 

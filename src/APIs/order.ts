@@ -2,13 +2,34 @@ import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
 import { orders_url } from "../URLs/dash";
 import { Order } from "../screens/dashboard/Orders";
-
-export const getAllOrders = async (page: number = 1, limit: number = 10) => {
+import { drpCrmBaseUrl } from "../axios/urls";
+import Cookies from "js-cookie";
+export const getAllOrders = async (page = 1, limit = 10, filters = {}) => {
   try {
-    const response = await appAxios.get(orders_url + `/?page=${page}&limit=${limit}`);
-    return response.data as Order[];
-  } catch (error: any) {
-    toast.error("Failed to fetch orders.");
+    // We don't need to manually build the URL with query parameters anymore
+    // as we'll pass all parameters through the axios params object
+
+    // Pass page, limit, and all filter parameters directly to axios
+    const response = await appAxios.get(orders_url, {
+      params: {
+        page,
+        limit,
+        // Spread all filters into the params object
+        ...filters,
+      },
+    });
+    const responseData = response.data;
+    if (!response.data) {
+      console.error("API Error Response:", responseData);
+    }
+
+    // Handle empty response gracefully
+    return {
+      orders: responseData.orders || [],
+      total: responseData.total || 0,
+    };
+  } catch (error) {
+    console.error("Error in getAllOrders API call:", error);
     throw error;
   }
 };
