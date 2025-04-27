@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
 import { warehouses_url } from "../URLs/dash";
-import { Warehouse } from "../screens/dashboard/Warehouses";
+import { Warehouse } from "../screens/dashboard/Warehouse";
 
 export const getAllWarehouses = async () => {
   try {

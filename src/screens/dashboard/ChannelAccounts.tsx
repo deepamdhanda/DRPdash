@@ -10,7 +10,7 @@ import { getAllChannels } from "../../APIs/channel";
 import { getAllPools } from "../../APIs/pool";
 
 export interface ChannelAccount {
-  _id: string;
+  _id?: string;
   channel_account_name: string;
   pool_id?: { _id: string; name: string };
   channel_id?: { _id: string; channel_name: string };
@@ -93,7 +93,11 @@ const ChannelAccounts: React.FC = () => {
     const newStatus = channelAccount.status === "active" ? "inactive" : "active";
     if (window.confirm(`Are you sure you want to mark this channel account as ${newStatus}?`)) {
       try {
-        await updateChannelAccount(channelAccount._id, { ...channelAccount, status: newStatus });
+        if (channelAccount._id) {
+          await updateChannelAccount(channelAccount._id, { ...channelAccount, status: newStatus });
+        } else {
+          console.error("Error: channelAccount._id is undefined");
+        }
         fetchChannelAccounts();
       } catch (err) {
         console.error("Error toggling status", err);
@@ -133,17 +137,35 @@ const ChannelAccounts: React.FC = () => {
       }
     });
 
-    const formData = {
+    const formData : ChannelAccount = {
       channel_account_name: form.channel_account_name.value.trim(),
-      pool_id: form.pool_id.value || undefined,
-      channel_id: form.channel_id.value || undefined,
+      pool_id: form.pool_id.value
+        ? pools.find((pool) => pool._id === form.pool_id.value)
+        : undefined,
+      channel_id: form.channel_id.value
+        ? channels.find((channel) => channel._id === form.channel_id.value)
+        : undefined,
       fulfillment_type: form.fulfillment_type.value as ChannelAccount["fulfillment_type"],
       keys: keysObject,
+      status: "active",
+      created_by: "",
+      ownership: {
+        _id: "",
+        name: ""
+      }
     };
-
+          if (editingChannelAccount && editingChannelAccount._id) {
+            await updateChannelAccount(editingChannelAccount._id, formData);
+          } else {
+            console.error("Error: editingChannelAccount._id is undefined");
+          }
     try {
       if (editingChannelAccount) {
-        await updateChannelAccount(editingChannelAccount._id, formData);
+        if (editingChannelAccount._id) {
+          await updateChannelAccount(editingChannelAccount._id, formData);
+        } else {
+          console.error("Error: editingChannelAccount._id is undefined");
+        }
       } else {
         await createChannelAccount(formData);
       }

@@ -7,7 +7,7 @@ import {
   updateWarehouse,
 } from "../../APIs/warehouse";
 
-interface Warehouse {
+export interface Warehouse {
   _id: string;
   name: string;
   address1: string;

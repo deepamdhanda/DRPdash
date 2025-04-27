@@ -4,23 +4,14 @@ import DataTable from "react-data-table-component";
 import { createProductSKU, getAllProductSKUs, updateProductSKU } from "../../APIs/productSKU";
 import { getAllWarehouses } from "../../APIs/warehouse";
 import { getAllProducts } from "../../APIs/product";
+import { Product } from "./Products";
+import { Warehouse } from "./Warehouse";
 
 interface ProductSKUAttribute {
   key: string;
   value: string;
 }
 
-interface Warehouse {
-  _id: string;
-  name: string;
-}
-
-interface Product {
-  _id: string;
-  product_name: string;
-  product_weight: number;
-  warehouse: { warehouse: { _id: string; name: string }; stock: number }[];
-}
 
 interface WarehouseStock {
   warehouse: string;
@@ -43,8 +34,8 @@ export interface ProductSKU {
   warehouse: WarehouseStock[];
   products: ProductSKUProduct[];
   status: "active" | "inactive";
-  created_by?: any;
-  ownership?: any;
+  created_by?: string;
+  ownership?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -257,7 +248,7 @@ const ProductSKUs: React.FC = () => {
       const updatedStatus = productSKU.status === "active" ? "inactive" : "active";
 
       // Update the status in the backend
-      await updateProductSKU(productSKU._id!, { status: updatedStatus });
+      await updateProductSKU(productSKU._id!, { ...productSKU, status: updatedStatus });
 
       // Update the status in the frontend
       setProductSKUs((prev) =>
@@ -329,7 +320,7 @@ const ProductSKUs: React.FC = () => {
       name: "Name",
       selector: (row: Product) => row.product_name,
       sortable: true,
-      cell: (row: Product) => (
+      cell: (row: ProductSKU) => (
         <div className="d-flex align-items-center" style={{ gap: "12px" }}>
           <img
             src={row.product_sku_image}
@@ -575,7 +566,7 @@ const ProductSKUs: React.FC = () => {
                 <Col>
                   <Form.Control
                     as="select"
-                    value={selected.product_id._id} // Pre-select the product
+                    value={selected.product_id} // Pre-select the product
                     onChange={(e) => handleProductChange(idx, e.target.value)}
                     disabled={!!editingProductSKU} // Disable dropdown in edit mode
                   >

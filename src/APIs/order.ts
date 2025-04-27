@@ -2,8 +2,6 @@ import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
 import { orders_url } from "../URLs/dash";
 import { Order } from "../screens/dashboard/Orders";
-import { drpCrmBaseUrl } from "../axios/urls";
-import Cookies from "js-cookie";
 export const getAllOrders = async (page = 1, limit = 10, filters = {}) => {
   try {
     // We don't need to manually build the URL with query parameters anymore

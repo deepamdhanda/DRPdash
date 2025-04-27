@@ -4,19 +4,17 @@ import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { createProduct, getAllProducts, updateProduct } from "../../APIs/product";
 import { getAllWarehouses } from "../../APIs/warehouse";
+import { Warehouse } from "./Warehouse";
 
 interface ProductAttribute {
   key: string;
   value: string;
 }
 
-interface Warehouse {
-  _id: string;
-  name: string;
-}
+
 
 interface WarehouseStock {
-  warehouse: string;
+  warehouse: Warehouse["_id"];
   stock: number;
 }
 
@@ -28,9 +26,9 @@ export interface Product {
   product_attributes: ProductAttribute[];
   product_image: string;
   warehouse: WarehouseStock[];
-  created_by?: any;
-  ownership?: any;
-  status?: string;
+  created_by?: string;
+  ownership?: string;
+  status?: "active" | "inactive" | "suspended";
   createdAt?: string;
   updatedAt?: string;
 }
@@ -44,10 +42,6 @@ const Products: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
   const fetchInitialData = async () => {
     try {
       const [productData, warehouseData] = await Promise.all([
@@ -60,6 +54,10 @@ const Products: React.FC = () => {
       console.error("Error loading products or warehouses", error);
     }
   };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
 
   const handleClose = () => {
     setShowModal(false);
@@ -81,7 +79,7 @@ const Products: React.FC = () => {
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setProductAttributes(product.product_attributes || []);
-    setImagePreview(product.product_image);
+    setImagePreview(product.product_image || "");
 
     // Map the warehouse stocks correctly
     const mappedStocks = warehouses.map((wh) => {
@@ -102,7 +100,11 @@ const Products: React.FC = () => {
     const newStatus = product.status === "active" ? "inactive" : "active";
     if (window.confirm(`Are you sure you want to mark this product as ${newStatus}?`)) {
       try {
-        await updateProduct(product._id, { status: newStatus });
+        if (product._id) {
+          await updateProduct(product._id, { ...product, status: newStatus });
+        } else {
+          console.error("Product ID is undefined");
+        }
         fetchInitialData();
       } catch (error) {
         console.error("Error updating status", error);
@@ -155,7 +157,7 @@ const Products: React.FC = () => {
       product_description: (form.elements.namedItem("product_description") as HTMLInputElement).value,
       product_weight: parseFloat((form.elements.namedItem("product_weight") as HTMLInputElement).value),
       product_attributes: productAttributes,
-      product_image: imagePreview || undefined,
+      product_image: imagePreview || "",
       warehouse: warehouseStocks
         .filter((ws) => ws.stock > 0) // Only include warehouses with stock > 0
         .map((ws) => ({
@@ -228,7 +230,7 @@ const Products: React.FC = () => {
             // const warehouseName = warehouses.find((w) => w._id === wh.warehouse)?.name;
             return (
               <div key={i}>
-                <strong>{wh.warehouse?.name}:</strong> {wh.stock}
+                <strong>{warehouses.find((w) => w._id === wh.warehouse)?.name || "Unknown"}:</strong> {wh.stock}
               </div>
             );
           })}

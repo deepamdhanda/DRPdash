@@ -3,14 +3,8 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./dashboardPannel.css";
 import {
   FaBoxOpen,
-  FaUsers,
   FaClipboardList,
-  FaHeart,
-  FaFolderOpen,
-  FaChartLine,
   FaSignOutAlt,
-  FaPeopleCarry,
-  FaStore,
   FaTachometerAlt,
   FaLayerGroup,
   FaSatelliteDish,
@@ -54,7 +48,6 @@ const navLinks: NavLink[] = [
 ];
 
 const UserPanel: React.FC = () => {
-  const [navVisible, setNavVisible] = useState(true);
   const [activeLink, setActiveLink] = useState<TNavLinkName>("");
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,8 +67,8 @@ const UserPanel: React.FC = () => {
   };
 
   return (
-    <div id="user-panel" className={navVisible ? "nav-visible" : ""}>
-      <div className={`sidebar ${navVisible ? "sidebar-visible" : ""}`}>
+    <div id="user-panel" >
+      <div className={`sidebar `}>
         <nav className="nav">
           <div>
             <div className="nav-logo">

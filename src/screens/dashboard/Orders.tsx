@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Badge, Row, Col, Card } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Card } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { getAllOrders, createOrder, updateOrder } from "../../APIs/order";
 import { fetchNewOrders } from "../../APIs/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
-import { channelAccounts_url, channels_url } from "../../URLs/dash";
+import { channelAccounts_url } from "../../URLs/dash";
+import { ChannelAccount } from "./ChannelAccounts";
 
 export interface User {
   _id: string;
@@ -63,7 +64,7 @@ const Orders: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [channelAccountId, setChannelAccountId] = useState<string>("");
-  const [channelAccounts, setChannelAccounts] = useState<Array<IChannel>>([]);
+  const [channelAccounts, setChannelAccounts] = useState<Array<ChannelAccount>>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
   useEffect(() => {
@@ -147,6 +148,7 @@ const Orders: React.FC = () => {
       const res = await fetch("/api/users"); // Replace with your user API
       const data = await res.json();
       setUsers(data);
+      console.log("Users fetched successfully", users);
     } catch (error) {
       console.error("Error fetching users", error);
     }
@@ -172,7 +174,7 @@ const Orders: React.FC = () => {
       )
     ) {
       try {
-        await updateOrder(order._id, { status: newStatus });
+        await updateOrder(order._id, { ...order,  status: newStatus });
         fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
       } catch (error) {
         console.error("Error updating status", error);
@@ -348,10 +350,10 @@ const Orders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       sortable: true,
       width: "110px",
