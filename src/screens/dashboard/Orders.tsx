@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Badge, Row, Col, Card } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Card } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { getAllOrders, createOrder, updateOrder } from "../../APIs/order";
 import { fetchNewOrders } from "../../APIs/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
-import { channelAccounts_url, channels_url } from "../../URLs/dash";
+import { channelAccounts_url } from "../../URLs/dash";
 
 export interface User {
   _id: string;
@@ -63,8 +63,9 @@ const Orders: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [channelAccountId, setChannelAccountId] = useState<string>("");
-  const [channelAccounts, setChannelAccounts] = useState<Array<IChannel>>([]);
+  const [channelAccounts, setChannelAccounts] = useState<Array<any>>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  console.log(users);
 
   useEffect(() => {
     fetchOrders(currentPage, rowsPerPage, filters);
@@ -255,7 +256,7 @@ const Orders: React.FC = () => {
     },
     {
       name: "Shipping Address",
-      cell: (row: Order) => (
+      cell: (row: any) => (
         <div>
           <strong>Name:</strong> {row.customer_name || "—"} <br />
           <strong>Phone:</strong> {row.customer_phone || "—"} <br />
@@ -271,7 +272,7 @@ const Orders: React.FC = () => {
     },
     {
       name: "Courier Details",
-      cell: (row: Order) => (
+      cell: (row: any) => (
         <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
           {row?.recomended_courier_id && (
             <>
@@ -322,11 +323,11 @@ const Orders: React.FC = () => {
     },
     {
       name: "Issues",
-      cell: (row: Order) => (
+      cell: (row: any) => (
         <div>
           {row.issues && row.issues.length > 0 ? (
             <ul style={{ paddingLeft: "15px", margin: 0 }}>
-              {row.issues.map((issue, index) => (
+              {row.issues.map((issue: any, index: any) => (
                 <li key={index} style={{ fontSize: "13px", color: "#d9534f" }}>
                   {issue.message || issue} {/* Display the issue message */}
                 </li>
@@ -385,56 +386,56 @@ const Orders: React.FC = () => {
   ];
   const conditionalRowStyles = [
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_name"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_name"),
       style: {
         backgroundColor: "#ffcccc", // Light red for missing customer name
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_phone"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_phone"),
       style: {
         backgroundColor: "#ffe6cc", // Light orange for invalid phone number
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_email"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_email"),
       style: {
         backgroundColor: "#ffffcc", // Light yellow for invalid email
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "shipping_address"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "shipping_address"),
       style: {
         backgroundColor: "#e6ffcc", // Light green for missing shipping address
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_pincode"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_pincode"),
       style: {
         backgroundColor: "#cce6ff", // Light blue for invalid pincode
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "high_volume"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "high_volume"),
       style: {
         backgroundColor: "#d9ccff", // Light purple for high volume orders
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "duplicate_order"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "duplicate_order"),
       style: {
         backgroundColor: "#ffb3b3", // Light pink for duplicate orders
         color: "black",

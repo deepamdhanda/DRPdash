@@ -29,6 +29,7 @@ const Pools: React.FC = () => {
     fetchPools();
     fetchUsers();
   }, []);
+  console.log(users);
 
   const fetchPools = async () => {
     try {
@@ -63,7 +64,9 @@ const Pools: React.FC = () => {
 
   const handleToggleStatus = async (pool: Pool) => {
     const newStatus = pool.status === "active" ? "inactive" : "active";
-    if (window.confirm(`Are you sure you want to mark this pool as ${newStatus}?`)) {
+    if (
+      window.confirm(`Are you sure you want to mark this pool as ${newStatus}?`)
+    ) {
       try {
         await updatePool(pool._id, { status: newStatus });
         fetchPools();
@@ -78,7 +81,6 @@ const Pools: React.FC = () => {
     const form = e.target as typeof e.target & {
       name: { value: string };
     };
-
 
     const formData = {
       name: form.name.value.trim(),
@@ -102,7 +104,11 @@ const Pools: React.FC = () => {
       name: "Name",
       selector: (row: Pool) => (
         <>
-          {row.status === "active" ? "🟢" : row.status === "inactive" ? "🔴" : "❌"}{" "}
+          {row.status === "active"
+            ? "🟢"
+            : row.status === "inactive"
+            ? "🔴"
+            : "❌"}{" "}
           <strong>{row.name}</strong>
         </>
       ),
@@ -139,10 +145,10 @@ const Pools: React.FC = () => {
       selector: (row: Pool) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
     },
     {
@@ -158,7 +164,9 @@ const Pools: React.FC = () => {
             Edit
           </Button>
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant={
+              row.status === "active" ? "outline-danger" : "outline-success"
+            }
             size="sm"
             onClick={() => handleToggleStatus(row)}
           >
@@ -180,7 +188,7 @@ const Pools: React.FC = () => {
       <DataTable
         title="Your Pools"
         data={pools}
-        columns={columns}
+        columns={columns as any}
         highlightOnHover
         pagination
         paginationRowsPerPageOptions={[10, 20, 50]}

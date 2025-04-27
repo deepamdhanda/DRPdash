@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
@@ -13,6 +12,7 @@ import { Products } from "./screens/dashboard/Products.tsx";
 import { ProductSKUs } from "./screens/dashboard/ProductSKUs.tsx";
 import { Orders } from "./screens/dashboard/Orders.tsx";
 import { Warehouses } from "./screens/dashboard/Warehouse.tsx";
+import { ChannelSKU } from "./screens/dashboard/ChannelSKU.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -45,6 +45,10 @@ const router = createBrowserRouter([
           {
             path: "productSKU", // /Dashboard/pools
             element: <ProductSKUs />,
+          },
+          {
+            path: "channelSKU", // /Dashboard/pools
+            element: <ChannelSKU />,
           },
           {
             path: "orders", // /Dashboard/pools

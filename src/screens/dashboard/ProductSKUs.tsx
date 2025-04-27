@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { createProductSKU, getAllProductSKUs, updateProductSKU } from "../../APIs/productSKU";
+import {
+  createProductSKU,
+  getAllProductSKUs,
+  updateProductSKU,
+} from "../../APIs/productSKU";
 import { getAllWarehouses } from "../../APIs/warehouse";
 import { getAllProducts } from "../../APIs/product";
+import { Product } from "./Products";
 
 interface ProductSKUAttribute {
   key: string;
@@ -13,13 +18,6 @@ interface ProductSKUAttribute {
 interface Warehouse {
   _id: string;
   name: string;
-}
-
-interface Product {
-  _id: string;
-  product_name: string;
-  product_weight: number;
-  warehouse: { warehouse: { _id: string; name: string }; stock: number }[];
 }
 
 interface WarehouseStock {
@@ -50,20 +48,27 @@ export interface ProductSKU {
 }
 
 const ProductSKUs: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [editingProductSKU, setEditingProductSKU] = useState<ProductSKU | null>(null);
-  const [productSKUAttributes, setProductSKUAttributes] = useState<ProductSKUAttribute[]>([]);
+  const [editingProductSKU, setEditingProductSKU] = useState<ProductSKU | null>(
+    null
+  );
+  const [productSKUAttributes, setProductSKUAttributes] = useState<
+    ProductSKUAttribute[]
+  >([]);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<ProductSKUProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Partial<any>[]>([]);
   const [productSKUId, setProductSKUId] = useState<string>(""); // New state for ProductSKU ID
   const [calculatedWeight, setCalculatedWeight] = useState<number>(0); // New state for calculated weight
+  console.log(loading);
 
   useEffect(() => {
     const fetchInitialData = async () => {
+      setLoading(true);
       try {
         const [productSKUData, warehouseData, productData] = await Promise.all([
           getAllProductSKUs(),
@@ -75,6 +80,8 @@ const ProductSKUs: React.FC = () => {
         setProducts(productData);
       } catch (error) {
         console.error("Error loading initial data", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -127,11 +134,13 @@ const ProductSKUs: React.FC = () => {
     // Derive warehouses from the products in the SKU
     const derivedWarehouses = productSKU.products.flatMap((product) => {
       const productDetails = products.find((p) => p._id === product.product_id);
-      return productDetails?.warehouse.map((w) => ({
-        warehouse: w.warehouse._id,
-        stock: w.stock,
-        name: w.warehouse.name,
-      })) || [];
+      return (
+        productDetails?.warehouse.map((w) => ({
+          warehouse: w.warehouse._id,
+          stock: w.stock,
+          name: w.warehouse.name,
+        })) || []
+      );
     });
 
     // Remove duplicate warehouses by ID
@@ -154,7 +163,11 @@ const ProductSKUs: React.FC = () => {
     }
   };
 
-  const handleAttributeChange = (index: number, field: "key" | "value", value: string) => {
+  const handleAttributeChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const updated = [...productSKUAttributes];
     updated[index][field] = value;
     setProductSKUAttributes(updated);
@@ -181,8 +194,8 @@ const ProductSKUs: React.FC = () => {
       const product = products.find((p) => p._id === sel.product_id);
       return product
         ? product.warehouse
-          .filter((w) => w.stock > 0)
-          .map((w) => w.warehouse._id)
+            .filter((w) => w.stock > 0)
+            .map((w) => w.warehouse._id)
         : [];
     });
 
@@ -204,7 +217,9 @@ const ProductSKUs: React.FC = () => {
       return;
     }
 
-    if (selectedProducts.some((p, i) => i !== index && p.product_id === productId)) {
+    if (
+      selectedProducts.some((p, i) => i !== index && p.product_id === productId)
+    ) {
       alert("Product already added to this SKU.");
       return;
     }
@@ -228,6 +243,7 @@ const ProductSKUs: React.FC = () => {
     const availableProducts = products.filter((p) => {
       const productWarehouses = p.warehouse.map((w) => w.warehouse._id);
       return (
+        p._id &&
         !selectedIds.includes(p._id) &&
         productWarehouses.some((wh) => commonWarehouses.includes(wh))
       );
@@ -254,7 +270,8 @@ const ProductSKUs: React.FC = () => {
   const handleToggleStatus = async (productSKU: ProductSKU) => {
     try {
       // Toggle the status
-      const updatedStatus = productSKU.status === "active" ? "inactive" : "active";
+      const updatedStatus =
+        productSKU.status === "active" ? "inactive" : "active";
 
       // Update the status in the backend
       await updateProductSKU(productSKU._id!, { status: updatedStatus });
@@ -276,10 +293,14 @@ const ProductSKUs: React.FC = () => {
     e.preventDefault();
     const form = e.currentTarget;
 
-    const newProductSKU: ProductSKU = {
+    const newProductSKU: any = {
       product_sku_id: productSKUId, // Use the manually entered ProductSKU ID
-      product_sku_name: (form.elements.namedItem("product_sku_name") as HTMLInputElement).value,
-      product_sku_description: (form.elements.namedItem("product_sku_description") as HTMLInputElement).value,
+      product_sku_name: (
+        form.elements.namedItem("product_sku_name") as HTMLInputElement
+      ).value,
+      product_sku_description: (
+        form.elements.namedItem("product_sku_description") as HTMLInputElement
+      ).value,
       product_sku_weight: calculatedWeight, // Use the calculated weight
       product_sku_attributes: productSKUAttributes,
       product_sku_image: imagePreview || "",
@@ -292,7 +313,11 @@ const ProductSKUs: React.FC = () => {
       if (editingProductSKU) {
         await updateProductSKU(editingProductSKU._id!, newProductSKU);
         setProductSKUs((prev) =>
-          prev.map((p) => (p._id === editingProductSKU._id ? { ...newProductSKU, _id: editingProductSKU._id } : p))
+          prev.map((p) =>
+            p._id === editingProductSKU._id
+              ? { ...newProductSKU, _id: editingProductSKU._id }
+              : p
+          )
         );
       } else {
         const created = await createProductSKU(newProductSKU);
@@ -320,16 +345,20 @@ const ProductSKUs: React.FC = () => {
             textOverflow: "ellipsis", // Add ellipsis if content overflows
           }}
         >
-          {row.status === "active" ? "🟢" : row.status === "inactive" ? "🔴" : "❌"}{" "}
+          {row.status === "active"
+            ? "🟢"
+            : row.status === "inactive"
+            ? "🔴"
+            : "❌"}{" "}
           {row.product_sku_id}
         </div>
       ),
     },
     {
       name: "Name",
-      selector: (row: Product) => row.product_name,
+      selector: (row: any) => row.product_name,
       sortable: true,
-      cell: (row: Product) => (
+      cell: (row: any) => (
         <div className="d-flex align-items-center" style={{ gap: "12px" }}>
           <img
             src={row.product_sku_image}
@@ -348,17 +377,21 @@ const ProductSKUs: React.FC = () => {
         </div>
       ),
       width: "280px",
-      style: { margin: 10 }
+      style: { margin: 10 },
     },
     {
       name: "Products",
       cell: (row: ProductSKU) => (
         <div>
           {row.products.map((product, index) => {
-            const productDetails = product.product_id as Product; // Ensure product_id is populated
+            const productDetails = product.product_id as any; // Ensure product_id is populated
             return (
-              <div key={index} style={{ fontSize: "13px", marginBottom: "4px" }}>
-                <strong>{productDetails?.product_name}</strong>: {product.quantity} pcs
+              <div
+                key={index}
+                style={{ fontSize: "13px", marginBottom: "4px" }}
+              >
+                <strong>{productDetails?.product_name}</strong>:{" "}
+                {product.quantity} pcs
               </div>
             );
           })}
@@ -387,43 +420,53 @@ const ProductSKUs: React.FC = () => {
       name: "Weight",
       selector: (row: ProductSKU) => {
         const totalWeight = row.products.reduce((sum, product) => {
-          const productDetails = product.product_id as Product; // Ensure product_id is populated
+          const productDetails = product.product_id as any; // Ensure product_id is populated
           return sum + (productDetails?.product_weight || 0) * product.quantity;
         }, 0);
         return `${totalWeight.toFixed(2)} kg`;
       },
       cell: (row: ProductSKU) => {
         const totalWeight = row.products.reduce((sum, product) => {
-          const productDetails = product.product_id as Product;
+          const productDetails = product.product_id as any;
           return sum + (productDetails?.product_weight || 0) * product.quantity;
         }, 0);
         return (
-          <div style={{ fontWeight: "bold", fontSize: "13px", color: "#28a745" }}>
+          <div
+            style={{ fontWeight: "bold", fontSize: "13px", color: "#28a745" }}
+          >
             {totalWeight.toFixed(2)} kg
           </div>
         );
       },
       sortable: true,
-    }, {
+    },
+    {
       name: "Created On",
       selector: (row: ProductSKU) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
     },
     {
       name: "Actions",
       cell: (row: ProductSKU) => (
         <>
-          <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(row)}>
+          <Button
+            variant="outline-primary"
+            size="sm"
+            className="me-2"
+            onClick={() => handleEdit(row)}
+          >
             Edit
           </Button>
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant={
+              row.status === "active" ? "outline-danger" : "outline-success"
+            }
             size="sm"
             onClick={() => handleToggleStatus(row)}
           >
@@ -443,7 +486,7 @@ const ProductSKUs: React.FC = () => {
       </div>
       <DataTable
         title="Your Product SKUs"
-        columns={columns}
+        columns={columns as any}
         data={productSKUs}
         pagination
         highlightOnHover
@@ -451,30 +494,32 @@ const ProductSKUs: React.FC = () => {
         customStyles={{
           rows: {
             style: {
-              minHeight: '72px', // Adjust row height for better readability
+              minHeight: "72px", // Adjust row height for better readability
             },
           },
           headCells: {
             style: {
-              fontSize: '14px',
-              fontWeight: 'bold',
-              textAlign: 'left',
-              whiteSpace: 'normal', // Allow text to wrap
-              wordWrap: 'break-word', // Break long words
+              fontSize: "14px",
+              fontWeight: "bold",
+              textAlign: "left",
+              whiteSpace: "normal", // Allow text to wrap
+              wordWrap: "break-word", // Break long words
             },
           },
           cells: {
             style: {
-              fontSize: '13px',
-              whiteSpace: 'normal', // Allow text to wrap
-              wordWrap: 'break-word', // Break long words
+              fontSize: "13px",
+              whiteSpace: "normal", // Allow text to wrap
+              wordWrap: "break-word", // Break long words
             },
           },
         }}
       />
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{editingProductSKU ? "Edit Product SKU" : "Create Product SKU"}</Modal.Title>
+          <Modal.Title>
+            {editingProductSKU ? "Edit Product SKU" : "Create Product SKU"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -507,7 +552,9 @@ const ProductSKUs: React.FC = () => {
                     as="textarea"
                     rows={3}
                     name="product_sku_description"
-                    defaultValue={editingProductSKU?.product_sku_description || ""}
+                    defaultValue={
+                      editingProductSKU?.product_sku_description || ""
+                    }
                     required
                   />
                 </Form.Group>
@@ -526,7 +573,11 @@ const ProductSKUs: React.FC = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Image</Form.Label>
-                  <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
                   {imagePreview && (
                     <img
                       src={imagePreview}
@@ -544,24 +595,40 @@ const ProductSKUs: React.FC = () => {
                         <Form.Control
                           placeholder="Key"
                           value={attr.key}
-                          onChange={(e) => handleAttributeChange(index, "key", e.target.value)}
+                          onChange={(e) =>
+                            handleAttributeChange(index, "key", e.target.value)
+                          }
                         />
                       </Col>
                       <Col>
                         <Form.Control
                           placeholder="Value"
                           value={attr.value}
-                          onChange={(e) => handleAttributeChange(index, "value", e.target.value)}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              index,
+                              "value",
+                              e.target.value
+                            )
+                          }
                         />
                       </Col>
                       <Col xs="auto">
-                        <Button variant="danger" size="sm" onClick={() => removeAttribute(index)}>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => removeAttribute(index)}
+                        >
                           ✕
                         </Button>
                       </Col>
                     </Row>
                   ))}
-                  <Button size="sm" variant="outline-primary" onClick={addAttribute}>
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    onClick={addAttribute}
+                  >
                     + Add Attribute
                   </Button>
                 </Form.Group>
@@ -591,7 +658,9 @@ const ProductSKUs: React.FC = () => {
                   <Form.Control
                     type="number"
                     value={selected.quantity} // Pre-fill the quantity
-                    onChange={(e) => handleProductQuantityChange(idx, parseInt(e.target.value))}
+                    onChange={(e) =>
+                      handleProductQuantityChange(idx, parseInt(e.target.value))
+                    }
                   />
                 </Col>
                 <Col xs="auto">

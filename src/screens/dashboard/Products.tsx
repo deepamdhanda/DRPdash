@@ -2,7 +2,11 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { createProduct, getAllProducts, updateProduct } from "../../APIs/product";
+import {
+  createProduct,
+  getAllProducts,
+  updateProduct,
+} from "../../APIs/product";
 import { getAllWarehouses } from "../../APIs/warehouse";
 
 interface ProductAttribute {
@@ -16,7 +20,7 @@ interface Warehouse {
 }
 
 interface WarehouseStock {
-  warehouse: string;
+  warehouse: any;
   stock: number;
 }
 
@@ -40,7 +44,9 @@ const Products: React.FC = () => {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productAttributes, setProductAttributes] = useState<ProductAttribute[]>([]);
+  const [productAttributes, setProductAttributes] = useState<
+    ProductAttribute[]
+  >([]);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
 
@@ -85,7 +91,9 @@ const Products: React.FC = () => {
 
     // Map the warehouse stocks correctly
     const mappedStocks = warehouses.map((wh) => {
-      const existingStock = product.warehouse.find((w) => w.warehouse === wh._id);
+      const existingStock = product.warehouse.find(
+        (w) => w.warehouse === wh._id
+      );
       return {
         warehouse: wh._id, // Keep the warehouse ID
         stock: existingStock ? existingStock.stock : 0, // Use existing stock or default to 0
@@ -97,10 +105,13 @@ const Products: React.FC = () => {
     setShowModal(true);
   };
 
-
-  const handleToggleStatus = async (product: Product) => {
+  const handleToggleStatus = async (product: any) => {
     const newStatus = product.status === "active" ? "inactive" : "active";
-    if (window.confirm(`Are you sure you want to mark this product as ${newStatus}?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to mark this product as ${newStatus}?`
+      )
+    ) {
       try {
         await updateProduct(product._id, { status: newStatus });
         fetchInitialData();
@@ -121,7 +132,11 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleAttributeChange = (index: number, field: "key" | "value", value: string) => {
+  const handleAttributeChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const updated = [...productAttributes];
     updated[index][field] = value;
     setProductAttributes(updated);
@@ -151,11 +166,15 @@ const Products: React.FC = () => {
     const form = e.currentTarget;
 
     const newProduct: Product = {
-      product_name: (form.elements.namedItem("product_name") as HTMLInputElement).value,
-      product_description: (form.elements.namedItem("product_description") as HTMLInputElement).value,
-      product_weight: parseFloat((form.elements.namedItem("product_weight") as HTMLInputElement).value),
+      product_name: (form.elements.namedItem("product_name") as any).value,
+      product_description: (
+        form.elements.namedItem("product_description") as any
+      ).value,
+      product_weight: parseFloat(
+        (form.elements.namedItem("product_weight") as any).value
+      ),
       product_attributes: productAttributes,
-      product_image: imagePreview || undefined,
+      product_image: imagePreview || "",
       warehouse: warehouseStocks
         .filter((ws) => ws.stock > 0) // Only include warehouses with stock > 0
         .map((ws) => ({
@@ -168,7 +187,11 @@ const Products: React.FC = () => {
       if (editingProduct) {
         await updateProduct(editingProduct._id!, newProduct);
         setProducts((prev) =>
-          prev.map((p) => (p._id === editingProduct._id ? { ...newProduct, _id: editingProduct._id } : p))
+          prev.map((p) =>
+            p._id === editingProduct._id
+              ? { ...newProduct, _id: editingProduct._id }
+              : p
+          )
         );
       } else {
         const created = await createProduct(newProduct);
@@ -187,7 +210,11 @@ const Products: React.FC = () => {
       sortable: true,
       cell: (row: Product) => (
         <div className="d-flex align-items-center" style={{ gap: "12px" }}>
-          {row.status === "active" ? "🟢" : row.status === "inactive" ? "🔴" : "❌"}{" "}
+          {row.status === "active"
+            ? "🟢"
+            : row.status === "inactive"
+            ? "🔴"
+            : "❌"}{" "}
           <img
             src={row.product_image}
             alt={row.product_name}
@@ -206,7 +233,10 @@ const Products: React.FC = () => {
       ),
     },
 
-    { name: "Description", selector: (row: Product) => row.product_description },
+    {
+      name: "Description",
+      selector: (row: Product) => row.product_description,
+    },
     { name: "Weight", selector: (row: Product) => row.product_weight + " kg" },
     {
       name: "Attributes",
@@ -234,26 +264,34 @@ const Products: React.FC = () => {
           })}
         </div>
       ),
-    }, {
+    },
+    {
       name: "Created On",
       selector: (row: Product) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
     },
     {
       name: "Actions",
       cell: (row: Product) => (
         <>
-          <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(row)}>
+          <Button
+            variant="outline-primary"
+            size="sm"
+            className="me-2"
+            onClick={() => handleEdit(row)}
+          >
             Edit
           </Button>
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant={
+              row.status === "active" ? "outline-danger" : "outline-success"
+            }
             size="sm"
             onClick={() => handleToggleStatus(row)}
           >
@@ -283,23 +321,23 @@ const Products: React.FC = () => {
         customStyles={{
           rows: {
             style: {
-              minHeight: '72px', // Adjust row height for better readability
+              minHeight: "72px", // Adjust row height for better readability
             },
           },
           headCells: {
             style: {
-              fontSize: '14px',
-              fontWeight: 'bold',
-              textAlign: 'left',
-              whiteSpace: 'normal', // Allow text to wrap
-              wordWrap: 'break-word', // Break long words
+              fontSize: "14px",
+              fontWeight: "bold",
+              textAlign: "left",
+              whiteSpace: "normal", // Allow text to wrap
+              wordWrap: "break-word", // Break long words
             },
           },
           cells: {
             style: {
-              fontSize: '13px',
-              whiteSpace: 'normal', // Allow text to wrap
-              wordWrap: 'break-word', // Break long words
+              fontSize: "13px",
+              whiteSpace: "normal", // Allow text to wrap
+              wordWrap: "break-word", // Break long words
             },
           },
         }}
@@ -308,7 +346,9 @@ const Products: React.FC = () => {
 
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{editingProduct ? "Edit Product" : "Create Product"}</Modal.Title>
+          <Modal.Title>
+            {editingProduct ? "Edit Product" : "Create Product"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -316,7 +356,11 @@ const Products: React.FC = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Product Name</Form.Label>
-                  <Form.Control name="product_name" defaultValue={editingProduct?.product_name || ""} required />
+                  <Form.Control
+                    name="product_name"
+                    defaultValue={editingProduct?.product_name || ""}
+                    required
+                  />
                 </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Description</Form.Label>
@@ -348,8 +392,17 @@ const Products: React.FC = () => {
                         <Form.Control
                           type="number"
                           placeholder="Stock"
-                          value={warehouseStocks.find((w) => w.warehouse === wh._id)?.stock?.toString() || ""}
-                          onChange={(e) => handleWarehouseStockChange(wh._id, parseInt(e.target.value) || 0)}
+                          value={
+                            warehouseStocks
+                              .find((w) => w.warehouse === wh._id)
+                              ?.stock?.toString() || ""
+                          }
+                          onChange={(e) =>
+                            handleWarehouseStockChange(
+                              wh._id,
+                              parseInt(e.target.value) || 0
+                            )
+                          }
                         />
                       </Col>
                     </Row>
@@ -360,8 +413,18 @@ const Products: React.FC = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Product Image</Form.Label>
-                  <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
-                  {imagePreview && <img src={imagePreview} alt="Preview" className="mt-2 w-100 rounded shadow-sm" />}
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="mt-2 w-100 rounded shadow-sm"
+                    />
+                  )}
                 </Form.Group>
 
                 <Form.Label>Attributes</Form.Label>
@@ -371,32 +434,48 @@ const Products: React.FC = () => {
                       <Form.Control
                         placeholder="Key"
                         value={attr.key}
-                        onChange={(e) => handleAttributeChange(index, "key", e.target.value)}
+                        onChange={(e) =>
+                          handleAttributeChange(index, "key", e.target.value)
+                        }
                       />
                     </Col>
                     <Col>
                       <Form.Control
                         placeholder="Value"
                         value={attr.value}
-                        onChange={(e) => handleAttributeChange(index, "value", e.target.value)}
+                        onChange={(e) =>
+                          handleAttributeChange(index, "value", e.target.value)
+                        }
                       />
                     </Col>
                     <Col xs="auto">
-                      <Button variant="danger" size="sm" onClick={() => removeAttribute(index)}>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeAttribute(index)}
+                      >
                         ✕
                       </Button>
                     </Col>
                   </Row>
                 ))}
-                <Button size="sm" variant="outline-primary" onClick={addAttribute}>
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={addAttribute}
+                >
                   + Add Attribute
                 </Button>
               </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-            <Button type="submit" variant="primary">{editingProduct ? "Update" : "Create"}</Button>
+            <Button variant="secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              {editingProduct ? "Update" : "Create"}
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>

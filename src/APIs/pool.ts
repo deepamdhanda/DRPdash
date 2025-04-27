@@ -13,7 +13,7 @@ export const getAllPools = async () => {
   }
 };
 
-export const createPool = async (data: Pool) => {
+export const createPool = async (data: any) => {
   try {
     // console.log(data)
     // return 0;
@@ -26,7 +26,7 @@ export const createPool = async (data: Pool) => {
   }
 };
 
-export const updatePool = async (id: string, data: Pool) => {
+export const updatePool = async (id: string, data: any) => {
   try {
     const response = await appAxios.patch(`${pools_url}/${id}`, data);
     toast.success("Pool updated successfully!");

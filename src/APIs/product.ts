@@ -13,7 +13,7 @@ export const getAllProducts = async () => {
   }
 };
 
-export const createProduct = async (data: Product) => {
+export const createProduct = async (data: any) => {
   try {
     const response = await appAxios.post(products_url, data);
     toast.success("Product created successfully!");
@@ -24,7 +24,7 @@ export const createProduct = async (data: Product) => {
   }
 };
 
-export const updateProduct = async (id: string, data: Product) => {
+export const updateProduct = async (id: string, data: any) => {
   try {
     const response = await appAxios.patch(`${products_url}/${id}`, data);
     toast.success("Product updated successfully!");

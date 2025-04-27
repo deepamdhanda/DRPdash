@@ -1,12 +1,11 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
 import { channels_url } from "../URLs/dash";
-import { Channel } from "../screens/dashboard/Channels";
 
 export const getAllChannels = async () => {
   try {
     const response = await appAxios.get(channels_url);
-    return response.data as Channel[];
+    return response.data as any[];
   } catch (error: any) {
     toast.error("Failed to fetch channels.");
     throw error;

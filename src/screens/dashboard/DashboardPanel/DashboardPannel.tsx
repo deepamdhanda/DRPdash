@@ -3,21 +3,15 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./dashboardPannel.css";
 import {
   FaBoxOpen,
-  FaUsers,
   FaClipboardList,
-  FaHeart,
-  FaFolderOpen,
-  FaChartLine,
   FaSignOutAlt,
-  FaPeopleCarry,
-  FaStore,
   FaTachometerAlt,
   FaLayerGroup,
   FaSatelliteDish,
   FaBarcode,
   FaLink,
   FaTruckLoading,
-  FaRupeeSign
+  FaRupeeSign,
 } from "react-icons/fa";
 
 type NavLink = {
@@ -43,7 +37,11 @@ const navLinks: NavLink[] = [
   { name: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" },
   { name: "Orders", icon: <FaClipboardList />, path: "/dashboard/orders" },
   { name: "Pools", icon: <FaLayerGroup />, path: "/dashboard/pools" },
-  { name: "Channels Accounts", icon: <FaSatelliteDish />, path: "/dashboard/channel_accounts" },
+  {
+    name: "Channels Accounts",
+    icon: <FaSatelliteDish />,
+    path: "/dashboard/channel_accounts",
+  },
   { name: "Products", icon: <FaBoxOpen />, path: "/dashboard/Products" },
   { name: "ProductSKU", icon: <FaBarcode />, path: "/dashboard/ProductSKU" },
   { name: "ChannelSKU", icon: <FaLink />, path: "/dashboard/ChannelSKU" },
@@ -54,7 +52,6 @@ const navLinks: NavLink[] = [
 ];
 
 const UserPanel: React.FC = () => {
-  const [navVisible, setNavVisible] = useState(true);
   const [activeLink, setActiveLink] = useState<TNavLinkName>("");
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,8 +71,8 @@ const UserPanel: React.FC = () => {
   };
 
   return (
-    <div id="user-panel" className={navVisible ? "nav-visible" : ""}>
-      <div className={`sidebar ${navVisible ? "sidebar-visible" : ""}`}>
+    <div id="user-panel" className="nav-visible">
+      <div className={`sidebar sidebar-visible`}>
         <nav className="nav">
           <div>
             <div className="nav-logo">
@@ -86,7 +83,9 @@ const UserPanel: React.FC = () => {
               {navLinks.slice(0, -1).map((link) => (
                 <div
                   key={link.name}
-                  className={`nav-link ${activeLink === link.name ? "active" : ""}`}
+                  className={`nav-link ${
+                    activeLink === link.name ? "active" : ""
+                  }`}
                   onClick={() => handleLinkClick(link.name, link.path)}
                 >
                   <span className="nav-icon">{link.icon}</span>
@@ -99,7 +98,9 @@ const UserPanel: React.FC = () => {
             className={`nav-link ${activeLink === "SignOut" ? "active" : ""}`}
             onClick={() => handleLinkClick("SignOut")}
           >
-            <span className="nav-icon"><FaSignOutAlt /></span>
+            <span className="nav-icon">
+              <FaSignOutAlt />
+            </span>
             <span className="nav-name"> Sign Out</span>
           </div>
         </nav>

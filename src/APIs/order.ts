@@ -1,9 +1,6 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
 import { orders_url } from "../URLs/dash";
-import { Order } from "../screens/dashboard/Orders";
-import { drpCrmBaseUrl } from "../axios/urls";
-import Cookies from "js-cookie";
 export const getAllOrders = async (page = 1, limit = 10, filters = {}) => {
   try {
     // We don't need to manually build the URL with query parameters anymore
@@ -34,7 +31,7 @@ export const getAllOrders = async (page = 1, limit = 10, filters = {}) => {
   }
 };
 
-export const createOrder = async (data: Order) => {
+export const createOrder = async (data: any) => {
   try {
     // console.log(data)
     // return 0;
@@ -47,7 +44,7 @@ export const createOrder = async (data: Order) => {
   }
 };
 
-export const updateOrder = async (id: string, data: Order) => {
+export const updateOrder = async (id: string, data: any) => {
   try {
     const response = await appAxios.patch(`${orders_url}/${id}`, data);
     toast.success("Order updated successfully!");
