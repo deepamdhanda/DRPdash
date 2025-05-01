@@ -13,7 +13,7 @@ export const getAllChannelAccounts = async () => {
   }
 };
 
-export const createChannelAccount = async (data: ChannelAccount) => {
+export const createChannelAccount = async (data: any) => {
   try {
     // console.log(data)
     // return 0;
@@ -26,7 +26,7 @@ export const createChannelAccount = async (data: ChannelAccount) => {
   }
 };
 
-export const updateChannelAccount = async (id: string, data: ChannelAccount) => {
+export const updateChannelAccount = async (id: string, data: any) => {
   try {
     const response = await appAxios.patch(`${channelAccounts_url}/${id}`, data);
     toast.success("ChannelAccount updated successfully!");

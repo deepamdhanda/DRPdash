@@ -24,7 +24,7 @@ export const createProductSKU = async (data: ProductSKU) => {
   }
 };
 
-export const updateProductSKU = async (id: string, data: ProductSKU) => {
+export const updateProductSKU = async (id: string, data: any) => {
   try {
     const response = await appAxios.patch(`${productSKUs_url}/${id}`, data);
     toast.success("ProductSKU updated successfully!");

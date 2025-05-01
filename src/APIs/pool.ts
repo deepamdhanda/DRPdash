@@ -5,7 +5,9 @@ import { Pool } from "../screens/dashboard/Pools";
 
 export const getAllPools = async () => {
   try {
-    const response = await appAxios.get(pools_url);
+    const response = await appAxios.get(pools_url, {
+      withCredentials: true,
+    });
     return response.data as Pool[];
   } catch (error: any) {
     toast.error("Failed to fetch pools.");
@@ -13,7 +15,7 @@ export const getAllPools = async () => {
   }
 };
 
-export const createPool = async (data: Pool) => {
+export const createPool = async (data: any) => {
   try {
     // console.log(data)
     // return 0;
@@ -26,7 +28,7 @@ export const createPool = async (data: Pool) => {
   }
 };
 
-export const updatePool = async (id: string, data: Pool) => {
+export const updatePool = async (id: string, data: any) => {
   try {
     const response = await appAxios.patch(`${pools_url}/${id}`, data);
     toast.success("Pool updated successfully!");

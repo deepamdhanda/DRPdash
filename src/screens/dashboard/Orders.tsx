@@ -5,7 +5,11 @@ import { getAllOrders, createOrder, updateOrder } from "../../APIs/order";
 import { fetchNewOrders } from "../../APIs/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/dash";
-import { ChannelAccount } from "./ChannelAccounts";
+import { BsClockFill, BsPhoneFill } from "react-icons/bs";
+import { MdEmail } from "react-icons/md";
+import { FaLocationPin } from "react-icons/fa6";
+import { FaDollarSign, FaTruck } from "react-icons/fa";
+import { BiCalendar, BiPackage } from "react-icons/bi";
 
 export interface User {
   _id: string;
@@ -20,6 +24,7 @@ export interface Order {
   order_date: string;
   customer_name: string;
   customer_phone: string;
+  customer_email?: string; // Added this property
   shipping_address: string;
   shipping_city: string;
   shipping_state: string;
@@ -53,18 +58,19 @@ const Orders: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [showModal, setShowModal] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [showShipmentModal, setShowShipmentModal] = useState(false);
+  const [editOrder, setEditOrder] = useState<Order | null>(null);
+  const [shipmentOrder, setShipmentOrder] = useState<Order | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [tableHeight, setTableHeight] = useState<string>("400px");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
   // Filter states
   const [filters, setFilters] = useState<FilterParams>({});
   const [productName, setProductName] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [channelAccountId, setChannelAccountId] = useState<string>("");
-  const [channelAccounts, setChannelAccounts] = useState<Array<ChannelAccount>>([]);
+  const [channelAccounts, setChannelAccounts] = useState<Array<any>>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
   useEffect(() => {
@@ -156,14 +162,34 @@ const Orders: React.FC = () => {
 
   const handleClose = () => {
     setShowModal(false);
-    setEditingOrder(null);
+    setEditOrder(null);
   };
 
+  const handleShipmentClose = () => {
+    setShowShipmentModal(false);
+    setShipmentOrder(null);
+  };
+
+  const handleShipment = (row: Order) => {
+    setShipmentOrder(row);
+    setShowShipmentModal(true);
+  };
   const handleShow = () => setShowModal(true);
 
   const handleEdit = (order: Order) => {
-    setEditingOrder(order);
+    setEditOrder(order);
     setShowModal(true);
+  };
+  const handleEditSubmit = async () => {
+    if (editOrder) {
+      try {
+        await updateOrder(editOrder._id, editOrder);
+        fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+        handleClose();
+      } catch (error) {
+        console.error("Error updating order", error);
+      }
+    }
   };
 
   const handleToggleStatus = async (order: Order) => {
@@ -174,7 +200,7 @@ const Orders: React.FC = () => {
       )
     ) {
       try {
-        await updateOrder(order._id, { ...order,  status: newStatus });
+        await updateOrder(order._id, { ...order, status: newStatus });
         fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
       } catch (error) {
         console.error("Error updating status", error);
@@ -193,8 +219,8 @@ const Orders: React.FC = () => {
     };
 
     try {
-      if (editingOrder) {
-        await updateOrder(editingOrder._id, formData);
+      if (editOrder) {
+        await updateOrder(editOrder._id, formData);
       } else {
         await createOrder(formData);
       }
@@ -221,59 +247,57 @@ const Orders: React.FC = () => {
       name: "Order Details",
       cell: (row: Order) => (
         <div>
-          <strong>Order ID:</strong> {row.order_id || "—"} <br />
-          <strong>Channel Order ID:</strong> {row.channel_order_id || "—"}{" "}
+          #{row.order_id || "—"} <br />
+          <strong>Channel OID:</strong> {row.channel_order_id || "—"}{" "}
           <br />
           <strong>
-            Store Order ID:
+            Store OID:
             <span style={{ color: "blue" }}> {row.store_order_id || "—"} </span>
           </strong>
           <br />
-          <strong>Channel Account:</strong>{" "}
+          <strong>Channel:</strong>{" "}
           {row.channel_account?.channel_account_name || "—"}
         </div>
       ),
       wrap: true,
-      width: "250px",
-      style: { margin: "10px 0" },
+      width: "200px",
+      style: { margin: "10px 0", fontSize: "11px" },
     },
     {
       name: "Product Details",
       cell: (row: Order) => (
         <div>
-          <strong>Product:</strong>{" "}
           <span style={{ textDecoration: "underline" }}>
             {row.product_name}{" "}
           </span>
           <br />
-          <strong>Quantity:</strong> {row.quantity || "—"} pcs <br />
-          <strong>Amount:</strong> ₹{row.total_amount || "—"} <br />
-          <strong>Payment:</strong> {row.payment_method || "—"}
+          <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
+          <strong>Amt:</strong> ₹{row.total_amount || "—"} ({row.payment_method || "—"})<br />
         </div>
       ),
       wrap: true,
       width: "225px",
-      style: { margin: "10px 0" },
+      style: { margin: "10px 0", fontSize: "11px" },
     },
     {
-      name: "Shipping Address",
-      cell: (row: Order) => (
+      name: "Customer Details",
+      cell: (row: any) => (
         <div>
-          <strong>Name:</strong> {row.customer_name || "—"} <br />
-          <strong>Phone:</strong> {row.customer_phone || "—"} <br />
-          {row.customer_email && <strong>Email:</strong>}{" "}
-          {row.customer_email || ""}
-          <strong>Address:</strong> {row.shipping_address}, {row.shipping_city},{" "}
+          {row.customer_name || "—"} <br />
+          <BsPhoneFill /> {row.customer_phone || "—"}<br />
+          {row.customer_email && <MdEmail />}{" "}
+          {(row.customer_email || "") && (<br />)}
+          <FaLocationPin /> {row.shipping_address}, {row.shipping_city},{" "}
           {row.shipping_state}, {row.shipping_country} - {row.shipping_pincode}
         </div>
       ),
       wrap: true,
       width: "225px",
-      style: { margin: "10px 0" },
+      style: { margin: "10px 0", fontSize: "11px" },
     },
     {
       name: "Courier Details",
-      cell: (row: Order) => (
+      cell: (row: any) => (
         <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
           {row?.recomended_courier_id && (
             <>
@@ -281,11 +305,10 @@ const Orders: React.FC = () => {
               {row?.shipping_courier?.courier_name || "—"} <br />
             </>
           )}
-          <strong>Shipping Courier:</strong>{" "}
           {row?.shipping_courier?.courier_name || "—"} <br />
           {row.awb_number ? (
             <>
-              <strong>AWB:</strong>{" "}
+              <FaTruck />{" "}
               <a
                 href={row?.shipping_courier?.tracking_url?.replace(
                   "{{awb_number}}",
@@ -304,7 +327,7 @@ const Orders: React.FC = () => {
               <strong>AWB:</strong> Not Assigned <br />
             </>
           )}
-          <strong>Status:</strong>{" "}
+          <BsClockFill />{" "}
           <span
             style={{
               textTransform: "capitalize",
@@ -320,15 +343,15 @@ const Orders: React.FC = () => {
       ),
       wrap: true,
       width: "200px",
-      style: { margin: "10px 0" },
+      style: { margin: "10px 0", fontSize: "11px" },
     },
     {
       name: "Issues",
-      cell: (row: Order) => (
+      cell: (row: any) => (
         <div>
           {row.issues && row.issues.length > 0 ? (
             <ul style={{ paddingLeft: "15px", margin: 0 }}>
-              {row.issues.map((issue, index) => (
+              {row.issues.map((issue: any, index: any) => (
                 <li key={index} style={{ fontSize: "13px", color: "#d9534f" }}>
                   {issue.message || issue} {/* Display the issue message */}
                 </li>
@@ -357,7 +380,7 @@ const Orders: React.FC = () => {
           : "—",
       sortable: true,
       width: "110px",
-      style: { margin: "10px 0" },
+      style: { margin: "10px 0", fontSize: "11px" },
     },
     {
       name: "Actions",
@@ -372,71 +395,70 @@ const Orders: React.FC = () => {
             Edit
           </Button>
           <Button
-            variant={
-              row.status === "active" ? "outline-danger" : "outline-success"
-            }
-            size="sm"
-            onClick={() => handleToggleStatus(row)}
+            variant="success" // Changed to a more vibrant color for "Ship Now"
+            size="lg"
+            className="fw-bold text-uppercase" // Added bold and uppercase styling
+            onClick={() => handleShipment(row)}
           >
-            {row.status === "active" ? "Deactivate" : "Activate"}
+            🚚 Ship Now
           </Button>
         </>
       ),
-      width: "125px",
+      width: "200px",
     },
   ];
   const conditionalRowStyles = [
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_name"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_name"),
       style: {
         backgroundColor: "#ffcccc", // Light red for missing customer name
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_phone"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_phone"),
       style: {
         backgroundColor: "#ffe6cc", // Light orange for invalid phone number
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_email"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_email"),
       style: {
         backgroundColor: "#ffffcc", // Light yellow for invalid email
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "shipping_address"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "shipping_address"),
       style: {
         backgroundColor: "#e6ffcc", // Light green for missing shipping address
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "customer_pincode"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "customer_pincode"),
       style: {
         backgroundColor: "#cce6ff", // Light blue for invalid pincode
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "high_volume"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "high_volume"),
       style: {
         backgroundColor: "#d9ccff", // Light purple for high volume orders
         color: "black",
       },
     },
     {
-      when: (row: Order) =>
-        row.issues?.some((issue) => issue.field === "duplicate_order"),
+      when: (row: any) =>
+        row.issues?.some((issue: any) => issue.field === "duplicate_order"),
       style: {
         backgroundColor: "#ffb3b3", // Light pink for duplicate orders
         color: "black",
@@ -560,35 +582,260 @@ const Orders: React.FC = () => {
         progressPending={isLoading}
         conditionalRowStyles={conditionalRowStyles}
       />
-
-      <Modal show={showModal} onHide={handleClose}>
+      <Modal show={showModal} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
-          <Modal.Title>
-            {editingOrder ? "Edit Order" : "Create Order"}
-          </Modal.Title>
+          Edit Order #{editOrder?.order_id || "—"}
         </Modal.Header>
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            <Form.Group className="mb-2">
-              <Form.Label>Order Name</Form.Label>
-              <Form.Control
-                name="name"
-                defaultValue={editingOrder?.name || ""}
-                required
-              />
+        <Modal.Body>
+          <div className="row">
+            <div className="col-lg-6">
+              <div>
+                #{editOrder?.order_id || "—"} <br />
+                <strong>Channel OID:</strong> {editOrder?.channel_order_id || "—"} <br />
+                <strong>
+                  Store OID:
+                  <span style={{ color: "blue" }}> {editOrder?.store_order_id || "—"} </span>
+                </strong>
+                <br />
+                <strong>Channel:</strong>{" "}
+                {editOrder?.channel_account?.channel_account_name || "—"}
+              </div>
+            </div>
+            <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
+              {editOrder?.["product_name"]} <br />
+              <b>
+                <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} ({editOrder?.["payment_method"]})
+              </b>
+              <br />
+              QTY: {editOrder?.["quantity"]} pc <br />
+              <BiCalendar size={12} /> Order Date:{" "}
+              {editOrder?.["order_date"]?.split("T")[0]}{" "}
+              {editOrder?.["order_date"]?.split("T")[1]?.split(":")[0]}:
+              {editOrder?.["order_date"]?.split("T")[1]?.split(":")[1]}
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col-lg-6' style={{ padding: 10, }}>
+              {/* <BiPackage size={12} />  Weight: {editOrder?.['weight']} grams */}
+            </div>
+            <div className='col-lg-6' style={{ padding: 10, fontSize: 12 }}>
+              {/* Dimensions: {editOrder?.['length']}cm X {editOrder?.['width']}cm X {editOrder?.['height']}cm */}
+            </div>
+          </div>
+
+          <Form className="theme-form row" action='#'>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Name"}</Form.Label>
+              <Form.Control className="form-control" type="text" onChange={(e) => {
+                let tempData = { ...editOrder }
+                tempData['customer_name'] = e.target.value
+                setEditOrder(tempData as Order);
+              }} defaultValue={editOrder?.['customer_name']} placeholder="Enter Customer Name" />
             </Form.Group>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              {editingOrder ? "Update" : "Create"}
-            </Button>
-          </Modal.Footer>
-        </Form>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Phone Number"}</Form.Label>
+              <Form.Control className="form-control" type="number" onChange={(e) => {
+                if (e.target.value.length > 9) {
+                  let tempData = { ...editOrder }
+                  tempData['customer_phone'] = e.target.value
+                  setEditOrder(tempData as Order);
+                }
+              }} defaultValue={editOrder?.['customer_phone']} placeholder="Enter Customer Phone Number" />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Address"}</Form.Label>
+              <Form.Control className="form-control" type="text" onChange={(e) => {
+                let tempData = { ...editOrder }
+                tempData['shipping_address'] = e.target.value
+                setEditOrder(tempData as Order);
+              }} defaultValue={editOrder?.['shipping_address']} placeholder="Enter Customer Address" />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Pin Code"}</Form.Label>
+              <Form.Control className="form-control" type="number" onChange={(e) => {
+                if (e.target.value.length == 6) {
+                  let tempData = { ...editOrder }
+                  tempData['shipping_pincode'] = Number(e.target.value)
+                  setEditOrder(tempData as Order);
+
+                  // CheckPinCode(e.target.value, (data) => {
+                  //   if (data['Status'] == "Success") {
+                  //     let tempData = { ...editOrder }
+                  //     tempData['customer_pincode'] = e.target.value
+                  //     tempData['customer_city'] = data['PostOffice'][0]['Block']
+                  //     tempData['customer_state'] = data['PostOffice'][0]['State']
+                  //     document.getElementById("pin_error").innerText = ""
+                  //      setEditOrder(tempData as Order);
+                  //     console.log(tempData);
+                  //   } else {
+                  //     document.getElementById("pin_error").innerText = "Error: " + data['Message']
+                  //   }
+                  // })
+                }
+              }} defaultValue={editOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
+              <div id="pin_error" style={{ color: 'red' }}></div>
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer City"}</Form.Label>
+              <Form.Control className="form-control" type="text" value={editOrder?.['shipping_city']} placeholder="Enter Customer City" disabled={true} />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer State"}</Form.Label>
+              <Form.Control className="form-control" type="text" value={editOrder?.['shipping_state']} placeholder="Enter Customer State" disabled={true} />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button style={{ color: "primary", }} className="m-r-15" onClick={handleEditSubmit} >{"Submit"}</Button>
+          <Button style={{ color: "warning", }} className="m-r-15" onClick={handleClose} >{"Close"}</Button>
+
+
+        </Modal.Footer>
       </Modal>
-    </div>
+
+
+      <Modal show={showShipmentModal} onHide={handleShipmentClose} size='xl'>
+        <Modal.Header>
+          Select Shipment for {shipmentOrder?.order_id}
+        </Modal.Header>
+        <Modal.Body>
+          <div className='row'>
+            <div className="col-lg-3">
+              <div>
+                #{shipmentOrder?.order_id || "—"} <br />
+                <strong>Channel OID:</strong> {shipmentOrder?.channel_order_id || "—"} <br />
+                <strong>
+                  Store OID:
+                  <span style={{ color: "blue" }}> {shipmentOrder?.store_order_id || "—"} </span>
+                </strong>
+                <br />
+                <strong>Channel:</strong>{" "}
+                {shipmentOrder?.channel_account?.channel_account_name || "—"}
+              </div>
+            </div>
+            <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
+              {shipmentOrder?.["product_name"]} <br />
+              <b>
+                <FaDollarSign size={12} /> ₹{shipmentOrder?.["total_amount"]} ({shipmentOrder?.["payment_method"]})
+              </b>
+              <br />
+              QTY: {shipmentOrder?.["quantity"]} pc <br />
+              <BiCalendar size={12} /> Order Date:{" "}
+              {shipmentOrder?.["order_date"]?.split("T")[0]}{" "}
+              {shipmentOrder?.["order_date"]?.split("T")[1]?.split(":")[0]}:
+              {shipmentOrder?.["order_date"]?.split("T")[1]?.split(":")[1]}
+            </div>
+            <div className='col-lg-3' style={{ padding: 10, fontSize: 12 }}>
+              <div>
+                {shipmentOrder?.customer_name || "—"} <br />
+                <BsPhoneFill /> {shipmentOrder?.customer_phone || "—"}<br />
+                {shipmentOrder?.customer_email && <MdEmail />}{" "}
+                {(shipmentOrder?.customer_email || "") && (<br />)}
+                <FaLocationPin /> {shipmentOrder?.shipping_address}, {shipmentOrder?.shipping_city},{" "}
+                {shipmentOrder?.shipping_state}, {shipmentOrder?.shipping_country} - {shipmentOrder?.shipping_pincode}
+              </div>
+            </div>
+          </div>
+          {/* <DataTable
+            style={{}}
+            // progressPending={filteredData.length == 0}
+            fixedHeader={true}
+            data={shipmentOrder?.['companies']}
+            highlightOnHover
+            // conditionalRowStyles={conditionalRowStyles}
+            columns={[
+              {
+                name: 'Company Name',
+                selector: row => courier_name,
+                cell: (row, index, column, id) => {
+            console.log(row)
+                  return (
+          <div style={{ padding: 10, fontSize: 12 }}>
+            <span style={{ fontSize: 14 }}><b>{courier_company_id}. {courier_name}</b></span><br />
+            Calling: {call_before_delivery}<br />
+            Delivery Boy Contact: {delivery_boy_contact}<br />
+            Chargeable Weight: {charge_weight} KG
+          </div>)
+                },
+          compact: true,
+          sortable: true
+              },
+          {
+            name: 'Performance',
+                selector: row => rating,
+                cell: (row, index, column, id) => {
+                  return (
+          <div style={{ padding: 10, fontSize: 12 }}>
+            Delivery: {delivery_performance}<br />
+            Pickup: {pickup_performance}<br />
+            RTO: {rto_performance}<br />
+            Tracking: {tracking_performance}<br />
+            <b>Overall: {rating}</b><br />
+          </div>)
+                },
+          compact: true,
+          sortable: true
+              },
+          {
+            name: 'Charges',
+                selector: row => rate,
+                cell: (row, index, column, id) => {
+                  return (
+          <div style={{ padding: 10, fontSize: 12, }}>
+            <u> <b style={{ textTransform: 'uppercase' }}>ZONE {zone[2]}</b></u><br />
+            {cod == 1 && cod_charges != 0 ? "COD: ₹" + cod_charges : ""}<br />
+            Freight: ₹{freight_charge}<br />
+            {other_charges != 0 ? "Other: ₹" + other_charges : ""}<br />
+            <b>Total: ₹{rate}</b><br />
+            RTO: ₹{rto_charges}<br />
+          </div>)
+                },
+          compact: true,
+          sortable: true
+              },
+          {
+            name: 'Estimated Delivery',
+                selector: row => etd_hours,
+                cell: (row, index, column, id) => {
+                  return (
+          <div style={{ padding: 10, fontSize: 12, }}>
+            Date: {etd}<br />
+            Days: {estimated_delivery_days}<br />
+            Hours: {etd_hours}<br />
+
+          </div>)
+                },
+          compact: true,
+          sortable: true
+              },
+          {
+            name: 'More',
+                selector: row => more,
+                cell: (row, index, column, id) => {
+                  return (
+          <>
+            <Btn attrBtn={{
+              color: "primary", size: "xs", className: "m-r-15", onClick: () => handleBookShipment(shipment, shipment_courier_id']) }} >{"Book Shipment"}</Btn>
+                < Btn attrBtn = {{ color: "danger", size: "xs", className: "m-r-15", onClick: () => handleSelectShipment(row) }} > { "Select"}</Btn>
+        </>
+        )
+                },
+        compact: true,
+        center: true,
+              },
+            ]}
+            // striped={true}
+        center={true}
+          /> */}
+      </Modal.Body>
+      <Modal.Footer>
+        {/* <Btn attrBtn={{ color: "primary", className: "m-r-15", onClick: () => handleAddSubmit() }} >{"Submit"}</Btn> */}
+        <Button style={{ color: "warning" }} className="m-r-15" onClick={handleShipmentClose} >{"Close"}</Button>
+
+
+      </Modal.Footer>
+    </Modal>
+    </div >
   );
 };
 

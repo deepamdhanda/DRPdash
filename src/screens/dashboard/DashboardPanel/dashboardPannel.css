@@ -2,10 +2,10 @@
 body, html {
   margin: 0;
   padding: 0;
-  font-family: SFProDisplay-Regular,sans-serif!important;
-  background-color: #f5f7fa;
-  color: #333;
-  font-size: 12px!important;
+  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif!important;
+  background-color: #000434; /* Navy */
+  color: #FFFFFF; /* White */
+  font-size: 11px!important;
 }
 
 /* Layout container */
@@ -17,8 +17,8 @@ body, html {
 
 /* Sidebar */
 .sidebar {
-  background-color: #1e1e2f;
-  color: white;
+  background-color: #000434; /* Navy */
+  color: #FFFFFF; /* White */
   width: 60px;
   min-width: 60px;
   transition: width 0.3s ease;
@@ -45,12 +45,14 @@ body, html {
 
 .nav-logo-icon {
   font-size: 1.5rem;
+  color: #F5891E; /* Orange */
 }
 
 .nav-logo-name {
   font-size: 1.1rem;
   font-weight: bold;
   display: none;
+  color: #FFFFFF; /* White */
 }
 
 .sidebar:hover .nav-logo-name {
@@ -74,29 +76,31 @@ body, html {
   align-items: center;
   padding: 0.75rem 1rem;
   cursor: pointer;
-  color: #fff!important;
+  color: #FFFFFF!important; /* White */
   transition: background-color 0.2s ease, color 0.2s ease;
   gap: 10px;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  background-color: #2f2f4f;
-  color: #fff;
+  background-color: #F5891E; /* Orange */
+  color: #FFFFFF; /* White */
 }
 
 .nav-link.active {
-  background-color: #4b61ff;
-  color: white;
+  background-color: #F5891E; /* Orange */
+  color: #FFFFFF; /* White */
 }
 
 .nav-icon {
   font-size: 1.25rem;
+  color: #FFFFFF; /* White */
 }
 
 .nav-name {
   display: none;
   font-size: 1rem;
+  color: #FFFFFF; /* White */
 }
 
 .sidebar:hover .nav-name {
@@ -108,7 +112,8 @@ body, html {
   flex-grow: 1;
   padding: 1.25rem 0.5rem;
   overflow-y: auto;
-  background-color: #f8f9fc;
+  background-color: #FFFFFF; /* White */
+  color: #000434; /* Navy */
 }
 
 /* Scrollbar Styling */
@@ -116,6 +121,6 @@ body, html {
   width: 6px;
 }
 .main-content::-webkit-scrollbar-thumb {
-  background-color: #ccc;
+  background-color: #F5891E; /* Orange */
   border-radius: 10px;
 }

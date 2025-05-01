@@ -1,29 +1,31 @@
-// LoginPage.tsx
+// RegisterPage.tsx
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./style.module.css";
-import { LoginUser } from "../../../APIs/authAPIs";
+import { RegisterUser } from "../../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
 
 // Define the form schema with Zod
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 // TypeScript type derived from the schema
-export type LoginFormData = z.infer<typeof loginSchema>;
+export type RegisterFormData = z.infer<typeof registerSchema>;
 
-const LoginPage: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "Admin",
       email: "admin@admin.com",
       password: "Admin@123",
     },
@@ -31,17 +33,17 @@ const LoginPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     // Simulate API call
-    await LoginUser(data, () => {
+    await RegisterUser(data, () => {
       navigate("/dashboard");
     });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request
-      console.log("Login successful!");
+      console.log("Register successful!");
       // Navigate to dashboard or home page
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Register failed:", error);
     }
   };
 
@@ -54,6 +56,21 @@ const LoginPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.loginForm}>
+          <div className="mb-3">
+            <label htmlFor="name" className="form-label">
+              Name
+            </label>
+            <input
+              id="name"
+              type="name"
+              className={`form-control ${errors.name ? "is-invalid" : ""}`}
+              placeholder="your@name.com"
+              {...register("name")}
+            />
+            {errors.name && (
+              <div className={styles.errorMessage}>{errors.name.message}</div>
+            )}
+          </div>
           <div className="mb-3">
             <label htmlFor="email" className="form-label">
               Email Address
@@ -75,9 +92,6 @@ const LoginPage: React.FC = () => {
               <label htmlFor="password" className="form-label">
                 Password
               </label>
-              <a href="#" className={styles.forgotPassword}>
-                Forgot Password?
-              </a>
             </div>
             <input
               id="password"
@@ -104,7 +118,7 @@ const LoginPage: React.FC = () => {
 
         <div className={styles.loginFooter}>
           <p>
-            Don't have an account? <a href="#" onClick={() => { navigate('/register') }}>Sign up</a>
+            Already have an account? <a href="#" onClick={() => { navigate('/login') }}>Sign in</a>
           </p>
         </div>
       </div>
@@ -112,4 +126,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

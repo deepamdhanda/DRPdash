@@ -21,18 +21,20 @@ export interface Product {
   product_attributes: ProductAttribute[];
   product_image: string;
   warehouse: WarehouseStock[];
-  created_by: string;
-  ownership: string;
+  created_by: any;
+  ownership: any;
   status: string;
 }
 
 const warehouseOptions = ["Delhi", "Mumbai", "Bangalore"];
 
 const Products: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productAttributes, setProductAttributes] = useState<ProductAttribute[]>([]);
+  const [productAttributes, setProductAttributes] = useState<
+    ProductAttribute[]
+  >([]);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
 
@@ -78,7 +80,11 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleAttributeChange = (index: number, field: "key" | "value", value: string) => {
+  const handleAttributeChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const updated = [...productAttributes];
     updated[index][field] = value;
     setProductAttributes(updated);
@@ -111,19 +117,27 @@ const Products: React.FC = () => {
 
     const newProduct: Product = {
       id: editingProduct?.id || new Date().toISOString(),
-      product_name: (form.elements.namedItem("product_name") as HTMLInputElement).value,
-      product_description: (form.elements.namedItem("product_description") as HTMLInputElement).value,
-      product_weight: parseFloat((form.elements.namedItem("product_weight") as HTMLInputElement).value),
+      product_name: (
+        form.elements.namedItem("product_name") as HTMLInputElement
+      ).value,
+      product_description: (
+        form.elements.namedItem("product_description") as HTMLInputElement
+      ).value,
+      product_weight: parseFloat(
+        (form.elements.namedItem("product_weight") as HTMLInputElement).value
+      ),
       product_attributes: productAttributes,
       product_image: imagePreview,
       warehouse: warehouseStocks,
-      created_by: defaultUserId,
-      ownership: defaultUserId,
+      created_by: "defaultUserId",
+      ownership: "defaultUserId",
       status: "active",
     };
 
     if (editingProduct) {
-      setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? newProduct : p)));
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editingProduct.id ? newProduct : p))
+      );
     } else {
       createProduct(newProduct);
       // setProducts((prev) => [...prev, newProduct]);
@@ -139,12 +153,19 @@ const Products: React.FC = () => {
       sortable: true,
       cell: (row: Product) => (
         <div>
-          <img src={row.product_image} alt="Product" style={{ width: 50, height: 50, margin: 10, borderRadius: 5 }} />
+          <img
+            src={row.product_image}
+            alt="Product"
+            style={{ width: 50, height: 50, margin: 10, borderRadius: 5 }}
+          />
           <b>{row.product_name}</b>
         </div>
       ),
     },
-    { name: "Description", selector: (row: Product) => row.product_description },
+    {
+      name: "Description",
+      selector: (row: Product) => row.product_description,
+    },
     { name: "Weight", selector: (row: Product) => row.product_weight },
     {
       name: "Attributes",
@@ -160,11 +181,11 @@ const Products: React.FC = () => {
     },
     {
       name: "Warehouse: Stock",
-      cell: (row: Product) => (
+      cell: (row: any) => (
         <div>
-          {row.warehouse.map((wh, i) => (
+          {row.warehouse.map((wh: any, i: any) => (
             <div key={i}>
-              <strong>{wh['warehouse']['name']}:</strong> {wh.stock}
+              <strong>{wh["warehouse"]["name"]}:</strong> {wh.stock}
             </div>
           ))}
         </div>
@@ -186,7 +207,11 @@ const Products: React.FC = () => {
     {
       name: "Actions",
       cell: (row: Product) => (
-        <Button variant="outline-primary" size="sm" onClick={() => handleEdit(row)}>
+        <Button
+          variant="outline-primary"
+          size="sm"
+          onClick={() => handleEdit(row)}
+        >
           Edit
         </Button>
       ),
@@ -214,7 +239,9 @@ const Products: React.FC = () => {
 
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{editingProduct ? "Edit Product" : "Create Product"}</Modal.Title>
+          <Modal.Title>
+            {editingProduct ? "Edit Product" : "Create Product"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -222,7 +249,11 @@ const Products: React.FC = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Product Name</Form.Label>
-                  <Form.Control name="product_name" defaultValue={editingProduct?.product_name || ""} required />
+                  <Form.Control
+                    name="product_name"
+                    defaultValue={editingProduct?.product_name || ""}
+                    required
+                  />
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -256,10 +287,15 @@ const Products: React.FC = () => {
                           type="number"
                           placeholder="Stock"
                           value={
-                            warehouseStocks.find((w) => w.warehouse_id === wh)?.stock?.toString() || ""
+                            warehouseStocks
+                              .find((w) => w.warehouse_id === wh)
+                              ?.stock?.toString() || ""
                           }
                           onChange={(e) =>
-                            handleWarehouseStockChange(wh, parseInt(e.target.value) || 0)
+                            handleWarehouseStockChange(
+                              wh,
+                              parseInt(e.target.value) || 0
+                            )
                           }
                         />
                       </Col>
@@ -271,8 +307,18 @@ const Products: React.FC = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Product Image</Form.Label>
-                  <Form.Control type="file" accept="image/*" onChange={handleImageChange} />
-                  {imagePreview && <img src={imagePreview} alt="Preview" className="mt-2 w-100 rounded shadow-sm" />}
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="mt-2 w-100 rounded shadow-sm"
+                    />
+                  )}
                 </Form.Group>
 
                 <Form.Label>Attributes</Form.Label>
@@ -282,24 +328,36 @@ const Products: React.FC = () => {
                       <Form.Control
                         placeholder="Key"
                         value={attr.key}
-                        onChange={(e) => handleAttributeChange(index, "key", e.target.value)}
+                        onChange={(e) =>
+                          handleAttributeChange(index, "key", e.target.value)
+                        }
                       />
                     </Col>
                     <Col>
                       <Form.Control
                         placeholder="Value"
                         value={attr.value}
-                        onChange={(e) => handleAttributeChange(index, "value", e.target.value)}
+                        onChange={(e) =>
+                          handleAttributeChange(index, "value", e.target.value)
+                        }
                       />
                     </Col>
                     <Col xs="auto">
-                      <Button variant="danger" size="sm" onClick={() => removeAttribute(index)}>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeAttribute(index)}
+                      >
                         ✕
                       </Button>
                     </Col>
                   </Row>
                 ))}
-                <Button size="sm" variant="outline-primary" onClick={addAttribute}>
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={addAttribute}
+                >
                   + Add Attribute
                 </Button>
               </Col>

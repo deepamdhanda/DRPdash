@@ -16,7 +16,6 @@ Axios.interceptors.request.use(
   (config) => {
     // Retrieve the token from cookies
     const authToken = Cookies.get("authToken");
-
     if (authToken) {
       // Set the Authorization header if the token exists
       config.headers["Authorization"] = `Bearer ${authToken}`;
@@ -45,7 +44,7 @@ Axios.interceptors.response.use(
     if (error?.response?.status === 401) {
       console.log("gettinnnn");
       errorMessage = "Login Failed.";
-      window.location.href = "/login";
+      // window.location.href = "/login";
     }
 
     if (error?.response?.data?.errorMessage) {

@@ -4,10 +4,11 @@ import { fetchOrdersURL } from "../URLs/auth";
 
 export const fetchNewOrders = async () => {
   try {
-    return true
+    await appAxios.get(fetchOrdersURL);
+    return true;
   } catch (error: any) {
     toast.error("Failed to fetch orders.");
-    return false
+    return false;
     throw error;
   }
 };

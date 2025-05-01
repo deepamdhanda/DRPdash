@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllPools, createPool, updatePool } from "../../APIs/pool";
+import { getAllFinances, createFinance, updateFinance, makePayment } from "../../APIs/finance";
 
 export interface User {
   _id: string;
   name: string;
 }
 
-export interface Pool {
+export interface Finance {
   _id: string;
   name: string;
   admins: User[];
@@ -19,64 +19,57 @@ export interface Pool {
   updatedAt?: string;
 }
 
-const Pools: React.FC = () => {
-  const [pools, setPools] = useState<Pool[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+const Finances: React.FC = () => {
+  const [finances, setFinances] = useState<Finance[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [editingPool, setEditingPool] = useState<Pool | null>(null);
+  const [editingFinance, setEditingFinance] = useState<Finance | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    fetchInitialData();
+    fetchFinances();
+    fetchUsers();
   }, []);
+  console.log(users);
 
-  const fetchInitialData = async () => {
-    setLoading(true);
+  const fetchFinances = async () => {
     try {
-      const [poolsData, usersData] = await Promise.all([
-        getAllPools(),
-        fetchUsers(),
-      ]);
-      setPools(poolsData);
-      setUsers(usersData);
+      const data = await getAllFinances();
+      setFinances(data);
     } catch (error) {
-      console.error("Error loading pools or users", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching finances", error);
     }
   };
 
-  const fetchUsers = async (): Promise<User[]> => {
+  const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/users"); // Replace with your user API endpoint
+      const res = await fetch("/api/users"); // You can change this as per your user API
       const data = await res.json();
-      return data;
+      setUsers(data);
     } catch (error) {
       console.error("Error fetching users", error);
-      return [];
     }
   };
 
   const handleClose = () => {
     setShowModal(false);
-    setEditingPool(null);
+    setEditingFinance(null);
   };
 
   const handleShow = () => setShowModal(true);
 
-  const handleEdit = (pool: Pool) => {
-    setEditingPool(pool);
+  const handleEdit = (finance: Finance) => {
+    setEditingFinance(finance);
     setShowModal(true);
   };
 
-  const handleToggleStatus = async (pool: Pool) => {
-    const newStatus = pool.status === "active" ? "inactive" : "active";
+  const handleToggleStatus = async (finance: Finance) => {
+    const newStatus = finance.status === "active" ? "inactive" : "active";
     if (
-      window.confirm(`Are you sure you want to mark this pool as ${newStatus}?`)
+      window.confirm(`Are you sure you want to mark this finance as ${newStatus}?`)
     ) {
       try {
-        await updatePool(pool._id, { status: newStatus });
-        fetchInitialData();
+        await updateFinance(finance._id, { status: newStatus });
+        fetchFinances();
       } catch (error) {
         console.error("Error updating status", error);
       }
@@ -94,28 +87,28 @@ const Pools: React.FC = () => {
     };
 
     try {
-      if (editingPool) {
-        await updatePool(editingPool._id, formData);
+      if (editingFinance) {
+        await updateFinance(editingFinance._id, formData);
       } else {
-        await createPool(formData);
+        await createFinance(formData);
       }
-      fetchInitialData();
+      fetchFinances();
       handleClose();
     } catch (error) {
-      console.error("Error saving pool", error);
+      console.error("Error saving finance", error);
     }
   };
 
   const columns = [
     {
       name: "Name",
-      selector: (row: Pool) => (
+      selector: (row: Finance) => (
         <>
           {row.status === "active"
             ? "🟢"
             : row.status === "inactive"
-            ? "🔴"
-            : "❌"}{" "}
+              ? "🔴"
+              : "❌"}{" "}
           <strong>{row.name}</strong>
         </>
       ),
@@ -123,7 +116,7 @@ const Pools: React.FC = () => {
     },
     {
       name: "Admins",
-      cell: (row: Pool) => (
+      cell: (row: Finance) => (
         <div>
           {row.admins?.map((admin) => (
             <Badge bg="secondary" className="me-1" key={admin._id}>
@@ -136,31 +129,31 @@ const Pools: React.FC = () => {
     },
     {
       name: "Created By",
-      selector: (row: Pool) => row.created_by?.name || "—",
+      selector: (row: Finance) => row.created_by?.name || "—",
     },
     {
       name: "Ownership",
-      selector: (row: Pool) => row.ownership?.name || "—",
+      selector: (row: Finance) => row.ownership?.name || "—",
     },
     {
       name: "Status",
-      selector: (row: Pool) => row.status,
+      selector: (row: Finance) => row.status,
       sortable: true,
     },
     {
       name: "Created On",
-      selector: (row: Pool) =>
+      selector: (row: Finance) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
     },
     {
       name: "Actions",
-      cell: (row: Pool) => (
+      cell: (row: Finance) => (
         <>
           <Button
             variant="outline-primary"
@@ -188,39 +181,35 @@ const Pools: React.FC = () => {
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Pools</h4>
-        <Button onClick={handleShow}>+ New Pool</Button>
+        <h4>Finances</h4>
+        <Button onClick={handleShow}>+ New Finance</Button>
+        <Button onClick={() => { makePayment() }}>+ Add Money</Button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : pools.length === 0 ? (
-        <p>No pools found.</p>
-      ) : (
-        <DataTable
-          title="Your Pools"
-          data={pools}
-          columns={columns as any}
-          highlightOnHover
-          pagination
-          paginationRowsPerPageOptions={[10, 20, 50]}
-          responsive
-          striped
-          persistTableHead
-        />
-      )}
+      <DataTable
+        title="Your Finances"
+        data={finances}
+        columns={columns as any}
+        highlightOnHover
+        pagination
+        paginationRowsPerPageOptions={[10, 20, 50]}
+        responsive
+        striped
+        persistTableHead
+        progressPending={finances.length === 0}
+      />
 
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingPool ? "Edit Pool" : "Create Pool"}</Modal.Title>
+          <Modal.Title>{editingFinance ? "Edit Finance" : "Create Finance"}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Form.Group className="mb-2">
-              <Form.Label>Pool Name</Form.Label>
+              <Form.Label>Finance Name</Form.Label>
               <Form.Control
                 name="name"
-                defaultValue={editingPool?.name || ""}
+                defaultValue={editingFinance?.name || ""}
                 required
               />
             </Form.Group>
@@ -230,7 +219,7 @@ const Pools: React.FC = () => {
               Cancel
             </Button>
             <Button type="submit" variant="primary">
-              {editingPool ? "Update" : "Create"}
+              {editingFinance ? "Update" : "Create"}
             </Button>
           </Modal.Footer>
         </Form>
@@ -239,4 +228,4 @@ const Pools: React.FC = () => {
   );
 };
 
-export { Pools };
+export { Finances };

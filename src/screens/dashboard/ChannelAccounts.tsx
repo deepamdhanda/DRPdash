@@ -27,52 +27,31 @@ const ChannelAccounts: React.FC = () => {
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [channels, setChannels] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true); // Added loading state
   const [showModal, setShowModal] = useState(false);
-  const [editingChannelAccount, setEditingChannelAccount] = useState<ChannelAccount | null>(null);
+  const [editingChannelAccount, setEditingChannelAccount] =
+    useState<ChannelAccount | null>(null);
   const [keys, setKeys] = useState<{ key: string; value: string }[]>([]);
 
   useEffect(() => {
-    fetchChannelAccounts();
-    fetchChannels();
-    fetchPools();
+    fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (editingChannelAccount?.keys) {
-      const loadedKeys = Object.entries(editingChannelAccount.keys).map(([key, value]) => ({
-        key,
-        value: String(value),
-      }));
-      setKeys(loadedKeys);
-    } else {
-      setKeys([]);
-    }
-  }, [editingChannelAccount]);
-
-  const fetchChannelAccounts = async () => {
+  const fetchInitialData = async () => {
+    setLoading(true);
     try {
-      const data = await getAllChannelAccounts();
-      setChannelAccounts(data);
+      const [channelAccountsData, channelsData, poolsData] = await Promise.all([
+        getAllChannelAccounts(),
+        getAllChannels(),
+        getAllPools(),
+      ]);
+      setChannelAccounts(channelAccountsData);
+      setChannels(channelsData);
+      setPools(poolsData);
     } catch (error) {
-      console.error("Error fetching channel accounts", error);
-    }
-  };
-
-  const fetchChannels = async () => {
-    try {
-      const data = await getAllChannels();
-      setChannels(data);
-    } catch (error) {
-      console.error("Error fetching channels", error);
-    }
-  };
-
-  const fetchPools = async () => {
-    try {
-      const data = await getAllPools();
-      setPools(data);
-    } catch (error) {
-      console.error("Error fetching pools", error);
+      console.error("Error loading initial data", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,26 +65,45 @@ const ChannelAccounts: React.FC = () => {
 
   const handleEdit = (channelAccount: ChannelAccount) => {
     setEditingChannelAccount(channelAccount);
+    if (channelAccount.keys) {
+      const loadedKeys = Object.entries(channelAccount.keys).map(
+        ([key, value]) => ({
+          key,
+          value: String(value),
+        })
+      );
+      setKeys(loadedKeys);
+    } else {
+      setKeys([]);
+    }
     setShowModal(true);
   };
 
   const handleToggleStatus = async (channelAccount: ChannelAccount) => {
-    const newStatus = channelAccount.status === "active" ? "inactive" : "active";
-    if (window.confirm(`Are you sure you want to mark this channel account as ${newStatus}?`)) {
+    const newStatus =
+      channelAccount.status === "active" ? "inactive" : "active";
+    if (
+      window.confirm(
+        `Are you sure you want to mark this channel account as ${newStatus}?`
+      )
+    ) {
       try {
-        if (channelAccount._id) {
-          await updateChannelAccount(channelAccount._id, { ...channelAccount, status: newStatus });
-        } else {
-          console.error("Error: channelAccount._id is undefined");
-        }
-        fetchChannelAccounts();
-      } catch (err) {
-        console.error("Error toggling status", err);
+        await updateChannelAccount(channelAccount._id!, {
+          ...channelAccount,
+          status: newStatus,
+        });
+        fetchInitialData();
+      } catch (error) {
+        console.error("Error toggling status", error);
       }
     }
   };
 
-  const handleKeyChange = (index: number, field: "key" | "value", value: string) => {
+  const handleKeyChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
     const updated = [...keys];
     updated[index][field] = value;
     setKeys(updated);
@@ -137,7 +135,7 @@ const ChannelAccounts: React.FC = () => {
       }
     });
 
-    const formData : ChannelAccount = {
+    const formData: ChannelAccount = {
       channel_account_name: form.channel_account_name.value.trim(),
       pool_id: form.pool_id.value
         ? pools.find((pool) => pool._id === form.pool_id.value)
@@ -147,29 +145,18 @@ const ChannelAccounts: React.FC = () => {
         : undefined,
       fulfillment_type: form.fulfillment_type.value as ChannelAccount["fulfillment_type"],
       keys: keysObject,
-      status: "active",
+      status: editingChannelAccount?.status || "active",
       created_by: "",
-      ownership: {
-        _id: "",
-        name: ""
-      }
+      ownership: { _id: "", name: "" },
     };
-          if (editingChannelAccount && editingChannelAccount._id) {
-            await updateChannelAccount(editingChannelAccount._id, formData);
-          } else {
-            console.error("Error: editingChannelAccount._id is undefined");
-          }
+
     try {
       if (editingChannelAccount) {
-        if (editingChannelAccount._id) {
-          await updateChannelAccount(editingChannelAccount._id, formData);
-        } else {
-          console.error("Error: editingChannelAccount._id is undefined");
-        }
+        await updateChannelAccount(editingChannelAccount._id!, formData);
       } else {
         await createChannelAccount(formData);
       }
-      fetchChannelAccounts();
+      fetchInitialData();
       handleClose();
     } catch (error) {
       console.error("Error saving channel account", error);
@@ -181,7 +168,11 @@ const ChannelAccounts: React.FC = () => {
       name: "Name",
       selector: (row: ChannelAccount) => (
         <div>
-          {row.status === "active" ? "🟢" : row.status === "inactive" ? "🔴" : "❌"}{" "}
+          {row.status === "active"
+            ? "🟢"
+            : row.status === "inactive"
+            ? "🔴"
+            : "❌"}{" "}
           <strong>{row.channel_account_name}</strong>
         </div>
       ),
@@ -200,7 +191,9 @@ const ChannelAccounts: React.FC = () => {
     {
       name: "Admins",
       selector: (row: ChannelAccount) =>
-        row.admins && row.admins.length > 0 ? row.admins.map((admin) => admin.name).join(", ") : "—",
+        row.admins && row.admins.length > 0
+          ? row.admins.map((admin) => admin.name).join(", ")
+          : "—",
       wrap: true,
     },
     {
@@ -229,11 +222,18 @@ const ChannelAccounts: React.FC = () => {
       name: "Actions",
       cell: (row: ChannelAccount) => (
         <>
-          <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(row)}>
+          <Button
+            variant="outline-primary"
+            size="sm"
+            className="me-2"
+            onClick={() => handleEdit(row)}
+          >
             Edit
           </Button>
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant={
+              row.status === "active" ? "outline-danger" : "outline-success"
+            }
             size="sm"
             onClick={() => handleToggleStatus(row)}
           >
@@ -253,25 +253,31 @@ const ChannelAccounts: React.FC = () => {
         <Button onClick={handleShow}>+ New Channel Account</Button>
       </div>
 
-      <DataTable
-        title="Your Channel Accounts"
-        data={channelAccounts}
-        columns={columns}
-        highlightOnHover
-        defaultSortFieldId={1}
-        defaultSortAsc={false}
-        pagination
-        paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
-        responsive
-        fixedHeader
-        persistTableHead
-        striped
-        progressPending={channelAccounts.length === 0}
-      />
+      {loading ? (
+        <p>Loading...</p>
+      ) : channelAccounts.length === 0 ? (
+        <p>No channel accounts found.</p>
+      ) : (
+        <DataTable
+          title="Your Channel Accounts"
+          data={channelAccounts}
+          columns={columns as any}
+          highlightOnHover
+          defaultSortFieldId={1}
+          pagination
+          paginationRowsPerPageOptions={[10, 20, 50, 100]}
+          responsive
+          fixedHeader
+          persistTableHead
+          striped
+        />
+      )}
 
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{editingChannelAccount ? "Edit" : "Create"} Channel Account</Modal.Title>
+          <Modal.Title>
+            {editingChannelAccount ? "Edit" : "Create"} Channel Account
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -286,7 +292,10 @@ const ChannelAccounts: React.FC = () => {
 
             <Form.Group className="mb-2">
               <Form.Label>Pool</Form.Label>
-              <Form.Select name="pool_id" defaultValue={editingChannelAccount?.pool_id?._id || ""}>
+              <Form.Select
+                name="pool_id"
+                defaultValue={editingChannelAccount?.pool_id?._id || ""}
+              >
                 <option value="">Select Pool</option>
                 {pools.map((pool) => (
                   <option key={pool._id} value={pool._id}>
@@ -298,7 +307,10 @@ const ChannelAccounts: React.FC = () => {
 
             <Form.Group className="mb-2">
               <Form.Label>Channel</Form.Label>
-              <Form.Select name="channel_id" defaultValue={editingChannelAccount?.channel_id?._id || ""}>
+              <Form.Select
+                name="channel_id"
+                defaultValue={editingChannelAccount?.channel_id?._id || ""}
+              >
                 <option value="">Select Channel</option>
                 {channels.map((channel) => (
                   <option key={channel._id} value={channel._id}>
@@ -310,7 +322,11 @@ const ChannelAccounts: React.FC = () => {
 
             <Form.Group className="mb-2">
               <Form.Label>Fulfillment Type</Form.Label>
-              <Form.Control as="select" name="fulfillment_type" defaultValue={editingChannelAccount?.fulfillment_type || ""}>
+              <Form.Control
+                as="select"
+                name="fulfillment_type"
+                defaultValue={editingChannelAccount?.fulfillment_type || ""}
+              >
                 <option value="">Select</option>
                 <option value="Self">Self</option>
                 <option value="Optional">Optional</option>
@@ -326,18 +342,26 @@ const ChannelAccounts: React.FC = () => {
                   <Form.Control
                     placeholder="Key"
                     value={item.key}
-                    onChange={(e) => handleKeyChange(index, "key", e.target.value)}
+                    onChange={(e) =>
+                      handleKeyChange(index, "key", e.target.value)
+                    }
                   />
                 </Col>
                 <Col>
                   <Form.Control
                     placeholder="Value"
                     value={item.value}
-                    onChange={(e) => handleKeyChange(index, "value", e.target.value)}
+                    onChange={(e) =>
+                      handleKeyChange(index, "value", e.target.value)
+                    }
                   />
                 </Col>
                 <Col xs="auto">
-                  <Button variant="danger" size="sm" onClick={() => handleRemoveKey(index)}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleRemoveKey(index)}
+                  >
                     ×
                   </Button>
                 </Col>
