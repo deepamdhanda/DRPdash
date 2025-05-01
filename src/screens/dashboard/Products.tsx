@@ -15,7 +15,7 @@ interface ProductAttribute {
 }
 
 interface WarehouseStock {
-  warehouse: string;
+  warehouse: Warehouse;
   stock: number;
 }
 
@@ -76,7 +76,7 @@ const Products: React.FC = () => {
 
   const handleShow = () => {
     const defaultStocks = warehouses.map((wh) => ({
-      warehouse: wh._id,
+      warehouse: wh,
       stock: 0,
     }));
     setWarehouseStocks(defaultStocks);
@@ -90,10 +90,10 @@ const Products: React.FC = () => {
 
     const mappedStocks = warehouses.map((wh) => {
       const existingStock = product.warehouse.find(
-        (w) => w.warehouse === wh._id
+        (w) => w.warehouse._id === wh._id
       );
       return {
-        warehouse: wh._id,
+        warehouse: wh,
         stock: existingStock ? existingStock.stock : 0,
       };
     });
@@ -151,7 +151,7 @@ const Products: React.FC = () => {
 
   const handleWarehouseStockChange = (warehouseId: string, stock: number) => {
     const updated = [...warehouseStocks];
-    const idx = updated.findIndex((w) => w.warehouse === warehouseId);
+    const idx = updated.findIndex((w) => w.warehouse._id === warehouseId);
     if (idx !== -1) {
       updated[idx].stock = stock;
     }
@@ -228,7 +228,7 @@ const Products: React.FC = () => {
           {row.warehouse.map((wh, i) => (
             <div key={i}>
               <strong>
-                {warehouses.find((w) => w._id === wh.warehouse)?.name || "N/A"}:
+                {warehouses.find((w) => { return w._id === wh.warehouse._id })?.name || "N/A"}:
               </strong>{" "}
               {wh.stock}
             </div>
@@ -284,6 +284,7 @@ const Products: React.FC = () => {
         />
       )}
 
+
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
@@ -292,7 +293,122 @@ const Products: React.FC = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {/* Form fields */}
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product Name</Form.Label>
+                  <Form.Control
+                    name="product_name"
+                    defaultValue={editingProduct?.product_name || ""}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Description</Form.Label>
+                  <Form.Control
+                    name="product_description"
+                    as="textarea"
+                    rows={3}
+                    defaultValue={editingProduct?.product_description || ""}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Weight (kg)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="product_weight"
+                    defaultValue={editingProduct?.product_weight || ""}
+                    required
+                    disabled={!!editingProduct}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Warehouse Stock</Form.Label>
+                  {warehouses.map((wh) => (
+                    <Row className="mb-2" key={wh._id}>
+                      <Col>{wh.name}</Col>
+                      <Col>
+                        <Form.Control
+                          type="number"
+                          placeholder="Stock"
+                          value={
+                            warehouseStocks
+                              .find((w) => w.warehouse._id === wh._id)
+                              ?.stock?.toString() || ""
+                          }
+                          onChange={(e) =>
+                            handleWarehouseStockChange(
+                              wh._id,
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </Col>
+                    </Row>
+                  ))}
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product Image</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="mt-2 w-100 rounded shadow-sm"
+                    />
+                  )}
+                </Form.Group>
+
+                <Form.Label>Attributes</Form.Label>
+                {productAttributes.map((attr, index) => (
+                  <Row key={index} className="mb-2">
+                    <Col>
+                      <Form.Control
+                        placeholder="Key"
+                        value={attr.key}
+                        onChange={(e) =>
+                          handleAttributeChange(index, "key", e.target.value)
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Control
+                        placeholder="Value"
+                        value={attr.value}
+                        onChange={(e) =>
+                          handleAttributeChange(index, "value", e.target.value)
+                        }
+                      />
+                    </Col>
+                    <Col xs="auto">
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeAttribute(index)}
+                      >
+                        ✕
+                      </Button>
+                    </Col>
+                  </Row>
+                ))}
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={addAttribute}
+                >
+                  + Add Attribute
+                </Button>
+              </Col>
+            </Row>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>

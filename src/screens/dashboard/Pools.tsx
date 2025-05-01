@@ -21,7 +21,6 @@ export interface Pool {
 
 const Pools: React.FC = () => {
   const [pools, setPools] = useState<Pool[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true); // Added loading state
   const [showModal, setShowModal] = useState(false);
   const [editingPool, setEditingPool] = useState<Pool | null>(null);
@@ -33,27 +32,14 @@ const Pools: React.FC = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [poolsData, usersData] = await Promise.all([
+      const [poolsData] = await Promise.all([
         getAllPools(),
-        fetchUsers(),
       ]);
       setPools(poolsData);
-      setUsers(usersData);
     } catch (error) {
       console.error("Error loading pools or users", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUsers = async (): Promise<User[]> => {
-    try {
-      const res = await fetch("/api/users"); // Replace with your user API endpoint
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching users", error);
-      return [];
     }
   };
 
@@ -114,8 +100,8 @@ const Pools: React.FC = () => {
           {row.status === "active"
             ? "🟢"
             : row.status === "inactive"
-            ? "🔴"
-            : "❌"}{" "}
+              ? "🔴"
+              : "❌"}{" "}
           <strong>{row.name}</strong>
         </>
       ),
@@ -152,10 +138,10 @@ const Pools: React.FC = () => {
       selector: (row: Pool) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
     },
     {

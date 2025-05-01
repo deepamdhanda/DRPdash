@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./style.module.css";
-import { RegisterUser } from "../../../APIs/authAPIs";
+import { RegisterUser } from "../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
 
 // Define the form schema with Zod
@@ -25,9 +25,9 @@ const RegisterPage: React.FC = () => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "Admin",
-      email: "admin@admin.com",
-      password: "Admin@123",
+      // name: "Admin",
+      // email: "admin@admin.com",
+      // password: "Admin@123",
     },
   });
 
@@ -64,7 +64,7 @@ const RegisterPage: React.FC = () => {
               id="name"
               type="name"
               className={`form-control ${errors.name ? "is-invalid" : ""}`}
-              placeholder="your@name.com"
+              placeholder="your name"
               {...register("name")}
             />
             {errors.name && (

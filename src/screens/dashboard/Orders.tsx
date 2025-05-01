@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col, Card } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllOrders, createOrder, updateOrder } from "../../APIs/order";
+import { getAllOrders, updateOrder } from "../../APIs/order";
 import { fetchNewOrders } from "../../APIs/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/dash";
@@ -9,7 +9,7 @@ import { BsClockFill, BsPhoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
-import { BiCalendar, BiPackage } from "react-icons/bi";
+import { BiCalendar } from "react-icons/bi";
 
 export interface User {
   _id: string;
@@ -192,44 +192,7 @@ const Orders: React.FC = () => {
     }
   };
 
-  const handleToggleStatus = async (order: Order) => {
-    const newStatus = order.status === "active" ? "inactive" : "active";
-    if (
-      window.confirm(
-        `Are you sure you want to mark this order as ${newStatus}?`
-      )
-    ) {
-      try {
-        await updateOrder(order._id, { ...order, status: newStatus });
-        fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
-      } catch (error) {
-        console.error("Error updating status", error);
-      }
-    }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as typeof e.target & {
-      name: { value: string };
-    };
-
-    const formData = {
-      name: form.name.value.trim(),
-    };
-
-    try {
-      if (editOrder) {
-        await updateOrder(editOrder._id, formData);
-      } else {
-        await createOrder(formData);
-      }
-      fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
-      handleClose();
-    } catch (error) {
-      console.error("Error saving order", error);
-    }
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -827,14 +790,14 @@ const Orders: React.FC = () => {
             // striped={true}
         center={true}
           /> */}
-      </Modal.Body>
-      <Modal.Footer>
-        {/* <Btn attrBtn={{ color: "primary", className: "m-r-15", onClick: () => handleAddSubmit() }} >{"Submit"}</Btn> */}
-        <Button style={{ color: "warning" }} className="m-r-15" onClick={handleShipmentClose} >{"Close"}</Button>
+        </Modal.Body>
+        <Modal.Footer>
+          {/* <Btn attrBtn={{ color: "primary", className: "m-r-15", onClick: () => handleAddSubmit() }} >{"Submit"}</Btn> */}
+          <Button style={{ color: "warning" }} className="m-r-15" onClick={handleShipmentClose} >{"Close"}</Button>
 
 
-      </Modal.Footer>
-    </Modal>
+        </Modal.Footer>
+      </Modal>
     </div >
   );
 };

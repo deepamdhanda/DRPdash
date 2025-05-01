@@ -90,21 +90,21 @@ const DashboardPanel: React.FC = () => {
               <span className="nav-logo-name"><img src={logoImg1} style={{ width: '100px ' }} /></span>
             </div>
             <div style={{ margin: '5px 0 15px 0', padding: '10px 10px', borderWidth: "1px 0", borderColor: '#F5891E', borderStyle: 'solid', fontSize: '14px', fontWeight: '200' }}>
-              Hello, Admin!
+              Hello, {Cookies.get('username')}!
             </div>
             <div className="nav-list">
               <center>
-              {navLinks.slice(0, -1).map((link) => (
-                <div
-                  key={link.name}
-                  className={`nav-link ${activeLink === link.name ? "active" : ""
-                    }`}
-                  onClick={() => handleLinkClick(link.name, link.path)}
-                >
-                  <span className="nav-icon">{link.icon}</span>
-                  <span className="nav-name"> {link.name}</span>
-                </div>
-              ))}
+                {navLinks.slice(0, -1).map((link) => (
+                  <div
+                    key={link.name}
+                    className={`nav-link ${activeLink === link.name ? "active" : ""
+                      }`}
+                    onClick={() => handleLinkClick(link.name, link.path)}
+                  >
+                    <span className="nav-icon">{link.icon}</span>
+                    <span className="nav-name"> {link.name}</span>
+                  </div>
+                ))}
               </center>
             </div>
           </div>

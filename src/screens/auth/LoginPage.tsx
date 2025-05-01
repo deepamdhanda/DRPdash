@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./style.module.css";
-import { LoginUser } from "../../../APIs/authAPIs";
+import { LoginUser } from "../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
 
 // Define the form schema with Zod
@@ -24,8 +24,8 @@ const LoginPage: React.FC = () => {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "admin@admin.com",
-      password: "Admin@123",
+      // email: "admin@admin.com",
+      // password: "Admin@123",
     },
   });
 

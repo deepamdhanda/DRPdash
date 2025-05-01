@@ -139,8 +139,8 @@ const Warehouses: React.FC = () => {
           {row.status === "active"
             ? `🟢`
             : row.status === "inactive"
-            ? `🔴`
-            : `❌`}{" "}
+              ? `🔴`
+              : `❌`}{" "}
           <strong style={{ fontSize: 16 }}> {row.name}</strong>
         </div>
       ),
@@ -150,8 +150,7 @@ const Warehouses: React.FC = () => {
     {
       name: "Address",
       selector: (row: Warehouse) =>
-        `${row.address1}${row.address2 ? `, ${row.address2}` : ""}, ${
-          row.City
+        `${row.address1}${row.address2 ? `, ${row.address2}` : ""}, ${row.City
         }, ${row.State}, ${row.Country} - ${row.pincode}`,
       wrap: true,
       compact: true,
@@ -185,10 +184,10 @@ const Warehouses: React.FC = () => {
       selector: (row: Warehouse) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       sortable: true,
       style: { margin: 10 },
@@ -257,7 +256,158 @@ const Warehouses: React.FC = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {/* Form fields */}
+            <Form.Group className="mb-2">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                name="name"
+                defaultValue={editingWarehouse?.name}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Address 1</Form.Label>
+              <Form.Control
+                name="address1"
+                defaultValue={editingWarehouse?.address1}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Address 2</Form.Label>
+              <Form.Control
+                name="address2"
+                defaultValue={editingWarehouse?.address2 || ""}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>City</Form.Label>
+              <Form.Control
+                name="City"
+                defaultValue={editingWarehouse?.City}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>State</Form.Label>
+              <Form.Control
+                as="select"
+                name="State"
+                defaultValue={editingWarehouse?.State}
+                required
+              >
+                <option value="">Select</option>
+                {[
+                  "Andaman and Nicobar Islands",
+                  "Andhra Pradesh",
+                  "Arunachal Pradesh",
+                  "Assam",
+                  "Bihar",
+                  "Chandigarh",
+                  "Chhattisgarh",
+                  "Dadra and Nagar Haveli and Daman and Diu",
+                  "Delhi",
+                  "Goa",
+                  "Gujarat",
+                  "Haryana",
+                  "Himachal Pradesh",
+                  "Jammu and Kashmir",
+                  "Jharkhand",
+                  "Karnataka",
+                  "Kerala",
+                  "Ladakh",
+                  "Lakshadweep",
+                  "Madhya Pradesh",
+                  "Maharashtra",
+                  "Manipur",
+                  "Meghalaya",
+                  "Mizoram",
+                  "Nagaland",
+                  "Odisha",
+                  "Puducherry",
+                  "Punjab",
+                  "Rajasthan",
+                  "Sikkim",
+                  "Tamil Nadu",
+                  "Telangana",
+                  "Tripura",
+                  "Uttar Pradesh",
+                  "Uttarakhand",
+                  "West Bengal",
+                ].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Pincode</Form.Label>
+              <Form.Control
+                name="pincode"
+                defaultValue={editingWarehouse?.pincode}
+                required
+                pattern="[1-9][0-9]{5}"
+                title="Enter a valid 6-digit Indian pincode"
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Contact Person</Form.Label>
+              <Form.Control
+                name="contact_person"
+                defaultValue={editingWarehouse?.contact_person}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Contact Phone</Form.Label>
+              <Form.Control
+                name="contact_phone"
+                defaultValue={editingWarehouse?.contact_phone}
+                required
+                pattern="[6-9]\d{9}"
+                title="Enter a valid 10-digit Indian mobile number"
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Contact Email</Form.Label>
+              <Form.Control
+                name="contact_email"
+                type="email"
+                defaultValue={editingWarehouse?.contact_email}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Latitude</Form.Label>
+              <Form.Control
+                name="latitude"
+                type="number"
+                step="any"
+                defaultValue={editingWarehouse?.latitude || ""}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Longitude</Form.Label>
+              <Form.Control
+                name="longitude"
+                type="number"
+                step="any"
+                defaultValue={editingWarehouse?.longitude || ""}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Status</Form.Label>
+              <Form.Control
+                as="select"
+                name="status"
+                defaultValue={editingWarehouse?.status || "active"}
+                required
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </Form.Control>
+            </Form.Group>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>

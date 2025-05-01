@@ -21,12 +21,12 @@ interface Warehouse {
 }
 
 interface WarehouseStock {
-  warehouse: string;
+  warehouse: Warehouse;
   stock: number;
 }
 
 interface ProductSKUProduct {
-  product_id: string;
+  product_id: Product;
   quantity: number;
 }
 
@@ -40,7 +40,7 @@ export interface ProductSKU {
   product_sku_image: string;
   warehouse: WarehouseStock[];
   products: ProductSKUProduct[];
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "suspended";
   created_by?: string;
   ownership?: string;
   createdAt?: string;
@@ -109,7 +109,7 @@ const ProductSKUs: React.FC = () => {
 
   const handleShow = () => {
     const defaultStocks = warehouses.map((wh) => ({
-      warehouse: wh._id,
+      warehouse: wh,
       stock: 0,
     }));
     setWarehouseStocks(defaultStocks);
@@ -141,6 +141,109 @@ const ProductSKUs: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleAttributeChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
+    const updated = [...productSKUAttributes];
+    updated[index][field] = value;
+    setProductSKUAttributes(updated);
+  };
+
+  const addAttribute = () => {
+    setProductSKUAttributes([...productSKUAttributes, { key: "", value: "" }]);
+  };
+
+  const removeAttribute = (index: number) => {
+    const updated = [...productSKUAttributes];
+    updated.splice(index, 1);
+    setProductSKUAttributes(updated);
+  };
+
+  const getCommonWarehouses = (): string[] => {
+    if (selectedProducts.length === 0) {
+      // If no products are selected, return all warehouses
+      return warehouses.map((w) => w._id);
+    }
+
+    // Get the list of warehouses for each selected product
+    const selectedProductWarehouses = selectedProducts.map((sel) => {
+      const product = products.find((p) => p._id === sel.product_id);
+      return product
+        ? product.warehouse
+          .filter((w) => w.stock > 0)
+          .map((w) => w.warehouse._id)
+        : [];
+    });
+
+    // Find the intersection of all selected product warehouses
+    return selectedProductWarehouses.reduce((common, current) => {
+      return common.filter((wh) => current.includes(wh));
+    });
+  };
+  const handleProductChange = (index: number, productId: string) => {
+    const product = products.find((p) => p._id === productId);
+    if (!product) return;
+
+    const commonWarehouses = getCommonWarehouses();
+    const productWarehouses = product.warehouse.map((w) => w.warehouse._id);
+
+    if (!productWarehouses.some((wh) => commonWarehouses.includes(wh))) {
+      alert("Selected product must have at least one common warehouse.");
+      return;
+    }
+
+    if (
+      selectedProducts.some((p, i) => i !== index && p.product_id === productId)
+    ) {
+      alert("Product already added to this SKU.");
+      return;
+    }
+
+    const updated = [...selectedProducts];
+    updated[index].product_id = productId;
+    setSelectedProducts(updated);
+  };
+
+  const handleProductQuantityChange = (index: number, quantity: number) => {
+    const updated = [...selectedProducts];
+    updated[index].quantity = quantity;
+    setSelectedProducts(updated);
+  };
+
+  const addProduct = () => {
+    const selectedIds = selectedProducts.map((p) => p.product_id);
+    const commonWarehouses = getCommonWarehouses();
+
+    // Filter products that are not already selected and have at least one common warehouse
+    const availableProducts = products.filter((p) => {
+      const productWarehouses = p.warehouse.map((w) => w.warehouse._id);
+      return (
+        p._id &&
+        !selectedIds.includes(p._id) &&
+        productWarehouses.some((wh) => commonWarehouses.includes(wh))
+      );
+    });
+
+    if (availableProducts.length === 0) {
+      alert("No eligible product left to add.");
+      return;
+    }
+
+    // Add the first available product to the selected products list
+    setSelectedProducts([
+      ...selectedProducts,
+      { product_id: availableProducts[0]._id, quantity: 1 },
+    ]);
+  };
+
+  const removeProduct = (index: number) => {
+    const updated = [...selectedProducts];
+    updated.splice(index, 1);
+    setSelectedProducts(updated);
   };
 
   const handleToggleStatus = async (productSKU: ProductSKU) => {
@@ -214,7 +317,15 @@ const ProductSKUs: React.FC = () => {
     },
     {
       name: "Weight",
-      selector: (row: ProductSKU) => `${row.product_sku_weight.toFixed(2)} kg`,
+      selector: (row: ProductSKU) => {
+        let totalWeight = 0;
+        row.products.forEach((product) => {
+          totalWeight += product.product_id.product_weight * product.quantity;
+
+        });
+        return totalWeight + " kg";
+
+      },
       sortable: true,
     },
     {
@@ -279,7 +390,160 @@ const ProductSKUs: React.FC = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {/* Form fields */}
+            <Row>
+              {/* Left Column */}
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product SKU ID</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="product_sku_id"
+                    value={productSKUId}
+                    onChange={(e) => setProductSKUId(e.target.value)}
+                    required
+                    disabled={!!editingProductSKU}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="product_sku_name"
+                    defaultValue={editingProductSKU?.product_sku_name || ""}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Description</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    name="product_sku_description"
+                    defaultValue={
+                      editingProductSKU?.product_sku_description || ""
+                    }
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Weight (kg)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="product_sku_weight"
+                    value={calculatedWeight} // Display the calculated weight
+                    readOnly
+                  />
+                </Form.Group>
+              </Col>
+
+              {/* Right Column */}
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Image</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="mt-3 w-100 rounded shadow-sm"
+                      style={{ maxHeight: "200px", objectFit: "cover" }}
+                    />
+                  )}
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Attributes</Form.Label>
+                  {productSKUAttributes.map((attr, index) => (
+                    <Row key={index} className="mb-2">
+                      <Col>
+                        <Form.Control
+                          placeholder="Key"
+                          value={attr.key}
+                          onChange={(e) =>
+                            handleAttributeChange(index, "key", e.target.value)
+                          }
+                        />
+                      </Col>
+                      <Col>
+                        <Form.Control
+                          placeholder="Value"
+                          value={attr.value}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              index,
+                              "value",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Col>
+                      <Col xs="auto">
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => removeAttribute(index)}
+                        >
+                          ✕
+                        </Button>
+                      </Col>
+                    </Row>
+                  ))}
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    onClick={addAttribute}
+                  >
+                    + Add Attribute
+                  </Button>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Products Section */}
+            <h5>Products</h5>
+            {selectedProducts.map((selected, idx) => (
+              <Row key={idx} className="mb-2">
+                <Col>
+                  <Form.Control
+                    as="select"
+                    value={selected.product_id} // Pre-select the product
+                    onChange={(e) => handleProductChange(idx, e.target.value)}
+                    disabled={!!editingProductSKU} // Disable dropdown in edit mode
+                  >
+                    <option value="">Select Product</option>
+                    {products.map((product) => (
+                      <option key={product._id} value={product._id}>
+                        {product.product_name}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Col>
+                <Col>
+                  <Form.Control
+                    type="number"
+                    value={selected.quantity} // Pre-fill the quantity
+                    onChange={(e) =>
+                      handleProductQuantityChange(idx, parseInt(e.target.value))
+                    }
+                  />
+                </Col>
+                <Col xs="auto">
+                  <Button
+                    variant="danger"
+                    onClick={() => removeProduct(idx)}
+                    disabled={!!editingProductSKU} // Disable remove button in edit mode
+                  >
+                    Remove
+                  </Button>
+                </Col>
+              </Row>
+            ))}
+            {!editingProductSKU && ( // Hide "Add Product" button in edit mode
+              <Button onClick={addProduct}>Add Product</Button>
+            )}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>

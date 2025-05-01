@@ -6,7 +6,7 @@ import { Dashboard } from "./screens/dashboard/Dashboard.tsx";
 import DashboardPanel from "./screens/dashboard/DashboardPanel/DashboardPannel.tsx";
 import { Pools } from "./screens/dashboard/Pools.tsx";
 import { Finances } from "./screens/dashboard/Finances.tsx";
-import LoginPage from "./screens/auth/Login/LoginPage.tsx";
+import LoginPage from "./screens/auth/LoginPage.tsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ChannelAccounts } from "./screens/dashboard/ChannelAccounts.tsx";
 import { Products } from "./screens/dashboard/Products.tsx";
@@ -14,7 +14,7 @@ import { ProductSKUs } from "./screens/dashboard/ProductSKUs.tsx";
 import { Orders } from "./screens/dashboard/Orders.tsx";
 import { Warehouses } from "./screens/dashboard/Warehouse.tsx";
 import { ChannelSKU } from "./screens/dashboard/ChannelSKU.tsx";
-import RegisterPage from "./screens/auth/Login/RegisterPage.tsx";
+import RegisterPage from "./screens/auth/RegisterPage.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
