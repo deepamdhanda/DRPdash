@@ -9,6 +9,8 @@ import {
 import { getAllWarehouses } from "../../APIs/warehouse";
 import { getAllProducts } from "../../APIs/product";
 import { Product } from "./Products";
+import { getAllProductPacks } from "../../APIs/productPack";
+import { ProductPack } from "./ProductPacks";
 
 interface ProductSKUAttribute {
   key: string;
@@ -38,6 +40,7 @@ export interface ProductSKU {
   product_sku_weight: number;
   product_sku_attributes: ProductSKUAttribute[];
   product_sku_image: string;
+  pack_id?: ProductPack;
   warehouse: WarehouseStock[];
   products: ProductSKUProduct[];
   status: "active" | "inactive" | "suspended";
@@ -53,6 +56,7 @@ const ProductSKUs: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [productPacks, setProductPacks] = useState<ProductPack[]>([]);
   const [editingProductSKU, setEditingProductSKU] = useState<ProductSKU | null>(
     null
   );
@@ -69,14 +73,16 @@ const ProductSKUs: React.FC = () => {
     const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const [productSKUData, warehouseData, productData] = await Promise.all([
+        const [productSKUData, warehouseData, productData, productPackData] = await Promise.all([
           getAllProductSKUs(),
           getAllWarehouses(),
           getAllProducts(),
+          getAllProductPacks(),
         ]);
         setProductSKUs(productSKUData);
         setWarehouses(warehouseData);
         setProducts(productData);
+        setProductPacks(productPackData);
       } catch (error) {
         console.error("Error loading initial data", error);
       } finally {
@@ -281,6 +287,8 @@ const ProductSKUs: React.FC = () => {
       product_sku_image: imagePreview || "",
       warehouse: warehouseStocks,
       products: selectedProducts,
+      pack_id: (form.elements.namedItem("pack_id") as HTMLSelectElement)
+        .value,
       status: editingProductSKU?.status || "active",
     };
 
@@ -316,14 +324,19 @@ const ProductSKUs: React.FC = () => {
       sortable: true,
     },
     {
-      name: "Weight",
+      name: "Dimensions and Weight",
       selector: (row: ProductSKU) => {
         let totalWeight = 0;
         row.products.forEach((product) => {
           totalWeight += product.product_id.product_weight * product.quantity;
 
         });
-        return totalWeight + " kg";
+        return (
+          <>
+            {totalWeight} kg<br />
+            {row.pack_id?.name}
+          </>
+        );
 
       },
       sortable: true,
@@ -426,7 +439,7 @@ const ProductSKUs: React.FC = () => {
                   />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Weight (kg)</Form.Label>
+                  <Form.Label>Weight (gm)</Form.Label>
                   <Form.Control
                     type="number"
                     name="product_sku_weight"
@@ -434,6 +447,21 @@ const ProductSKUs: React.FC = () => {
                     readOnly
                   />
                 </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Select Pack</Form.Label>
+                  <Form.Select
+                    name="pack_id"
+                    defaultValue={editingProductSKU?.pack_id?._id || ""}
+                  >
+                    <option value="">Select Channel</option>
+                    {productPacks.map((productPack) => (
+                      <option key={productPack._id} value={productPack._id}>
+                        {productPack.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
               </Col>
 
               {/* Right Column */}

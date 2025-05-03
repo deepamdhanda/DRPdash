@@ -10,6 +10,7 @@ import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
 import { BiCalendar } from "react-icons/bi";
+import { ProductSKU } from "./ProductSKUs";
 
 export interface User {
   _id: string;
@@ -32,7 +33,10 @@ export interface Order {
   shipping_pincode: number;
   product_name: string;
   quantity: number;
+  channel_account_name: string;
+  product_sku_id: string;
   total_amount: number;
+  product_sku: ProductSKU[];
   name: string;
   payment_method: string;
   awb_number: string;
@@ -174,7 +178,6 @@ const Orders: React.FC = () => {
     setShipmentOrder(row);
     setShowShipmentModal(true);
   };
-  const handleShow = () => setShowModal(true);
 
   const handleEdit = (order: Order) => {
     setEditOrder(order);
@@ -219,7 +222,7 @@ const Orders: React.FC = () => {
           </strong>
           <br />
           <strong>Channel:</strong>{" "}
-          {row.channel_account?.channel_account_name || "—"}
+          {row.channel_account_name || "—"}
         </div>
       ),
       wrap: true,
@@ -231,8 +234,9 @@ const Orders: React.FC = () => {
       cell: (row: Order) => (
         <div>
           <span style={{ textDecoration: "underline" }}>
-            {row.product_name}{" "}
+            {row.product_name || "—"}<br />
           </span>
+          SKU: {row.product_sku_id || "—"}
           <br />
           <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
           <strong>Amt:</strong> ₹{row.total_amount || "—"} ({row.payment_method || "—"})<br />
@@ -265,15 +269,15 @@ const Orders: React.FC = () => {
           {row?.recomended_courier_id && (
             <>
               <strong>Recomended Courier:</strong>{" "}
-              {row?.shipping_courier?.courier_name || "—"} <br />
+              {row?.recomended_courier_name || "—"} <br />
             </>
           )}
-          {row?.shipping_courier?.courier_name || "—"} <br />
+          {row?.shipping_courier_name || "—"} <br />
           {row.awb_number ? (
             <>
               <FaTruck />{" "}
               <a
-                href={row?.shipping_courier?.tracking_url?.replace(
+                href={row?.tracking_url?.replace(
                   "{{awb_number}}",
                   row.awb_number
                 )}
@@ -449,7 +453,7 @@ const Orders: React.FC = () => {
           >
             Fetch New Orders
           </Button>
-          <Button onClick={handleShow}>+ New Order</Button>
+          {/* <Button onClick={handleShow}>+ New Order</Button> */}
         </div>
       </div>
 
@@ -677,7 +681,7 @@ const Orders: React.FC = () => {
               </div>
             </div>
             <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
-              {shipmentOrder?.["product_name"]} <br />
+              {shipmentOrder?.["product_name"] || "-"} <br />
               <b>
                 <FaDollarSign size={12} /> ₹{shipmentOrder?.["total_amount"]} ({shipmentOrder?.["payment_method"]})
               </b>
@@ -699,6 +703,7 @@ const Orders: React.FC = () => {
               </div>
             </div>
           </div>
+          <hr />
           {/* <DataTable
             style={{}}
             // progressPending={filteredData.length == 0}

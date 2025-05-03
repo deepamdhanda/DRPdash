@@ -42,9 +42,9 @@ Axios.interceptors.response.use(
         "Please check your internet connection, and try again later.";
     }
     if (error?.response?.status === 401) {
-      console.log("gettinnnn");
       errorMessage = "Login Failed.";
-      // window.location.href = "/login";
+      Cookies.remove("authToken"); // Remove the token from cookies
+      window.location.href = "/login";
     }
 
     if (error?.response?.data?.errorMessage) {

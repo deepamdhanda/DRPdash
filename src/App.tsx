@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
+import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
   const navigator = useNavigate();
   useEffect(() => {

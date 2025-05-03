@@ -15,6 +15,7 @@ import { Orders } from "./screens/dashboard/Orders.tsx";
 import { Warehouses } from "./screens/dashboard/Warehouse.tsx";
 import { ChannelSKU } from "./screens/dashboard/ChannelSKU.tsx";
 import RegisterPage from "./screens/auth/RegisterPage.tsx";
+import { ProductPacks } from "./screens/dashboard/ProductPacks.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
           {
             path: "productSKU", // /Dashboard/pools
             element: <ProductSKUs />,
+          },
+          {
+            path: "productPacks", // /Dashboard/pools
+            element: <ProductPacks />,
           },
           {
             path: "channelSKU", // /Dashboard/pools

@@ -2,8 +2,10 @@ import { drpCrmBaseUrl } from "../axios/urls";
 
 export const products_url = `${drpCrmBaseUrl}/api/product`;
 export const productSKUs_url = `${drpCrmBaseUrl}/api/productSKU`;
+export const productPacks_url = `${drpCrmBaseUrl}/api/productPack`;
 export const warehouses_url = `${drpCrmBaseUrl}/api/warehouse`;
 export const pools_url = `${drpCrmBaseUrl}/api/pool`;
+export const productSKUChannelLinks_url = `${drpCrmBaseUrl}/api/productSKUChannelLink`;
 export const finances_url = `${drpCrmBaseUrl}/api/finance`;
 export const orders_url = `${drpCrmBaseUrl}/api/order`;
 export const channelAccounts_url = `${drpCrmBaseUrl}/api/channelAccount`;
