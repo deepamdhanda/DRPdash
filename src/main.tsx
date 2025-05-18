@@ -16,6 +16,9 @@ import { Warehouses } from "./screens/dashboard/Warehouse.tsx";
 import { ChannelSKU } from "./screens/dashboard/ChannelSKU.tsx";
 import RegisterPage from "./screens/auth/RegisterPage.tsx";
 import { ProductPacks } from "./screens/dashboard/ProductPacks.tsx";
+import VerifyPage from "./screens/auth/VerifyPage.tsx";
+import ForgotPasswordPage from "./screens/auth/ForgotPasswordPage.tsx";
+import ResetPasswordPage from "./screens/auth/ResetPasswordPage.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -28,6 +31,18 @@ const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "verify",
+        element: <VerifyPage />,
+      },
+      {
+        path: "forgotPassword",
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: "resetPassword",
+        element: <ResetPasswordPage />,
       },
       {
         path: "dashboard",

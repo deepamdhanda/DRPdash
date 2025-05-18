@@ -5,6 +5,7 @@ export const productSKUs_url = `${drpCrmBaseUrl}/api/productSKU`;
 export const productPacks_url = `${drpCrmBaseUrl}/api/productPack`;
 export const warehouses_url = `${drpCrmBaseUrl}/api/warehouse`;
 export const pools_url = `${drpCrmBaseUrl}/api/pool`;
+export const couriers_url = `${drpCrmBaseUrl}/api/courier`;
 export const productSKUChannelLinks_url = `${drpCrmBaseUrl}/api/productSKUChannelLink`;
 export const finances_url = `${drpCrmBaseUrl}/api/finance`;
 export const orders_url = `${drpCrmBaseUrl}/api/order`;

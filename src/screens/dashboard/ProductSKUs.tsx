@@ -130,7 +130,8 @@ const ProductSKUs: React.FC = () => {
 
     // Pre-select the products with their IDs and quantities
     const preSelectedProducts = productSKU.products.map((product) => ({
-      product_id: product.product_id, // Ensure product_id is set
+      product_id: product.product_id._id, // Ensure product_id is set
+      product_name: product.product_id.product_name,
       quantity: product.quantity, // Ensure quantity is set
     }));
 
@@ -543,7 +544,7 @@ const ProductSKUs: React.FC = () => {
                   >
                     <option value="">Select Product</option>
                     {products.map((product) => (
-                      <option key={product._id} value={product._id}>
+                      <option key={product._id} value={product._id} selected={selected.product_id === product._id}>
                         {product.product_name}
                       </option>
                     ))}

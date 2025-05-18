@@ -32,6 +32,7 @@ const ChannelAccounts: React.FC = () => {
   const [editingChannelAccount, setEditingChannelAccount] =
     useState<ChannelAccount | null>(null);
   const [keys, setKeys] = useState<{ key: string; value: string }[]>([]);
+  const [selectedChannelId, setSelectedChannelId] = useState(editingChannelAccount?.channel_id?._id || "");
 
   useEffect(() => {
     fetchInitialData();
@@ -98,6 +99,25 @@ const ChannelAccounts: React.FC = () => {
       }
     }
   };
+
+  const handleChannelChange = (e: any) => {
+    const selectedId = e.target.value;
+    setSelectedChannelId(selectedId);
+
+    const selectedChannel = channels.find((c) => c._id === selectedId);
+
+    if (selectedChannel?.channel_name.toLowerCase() === "shopify") {
+      setKeys([
+        { key: "api_key", value: "" },
+        { key: "api_secret", value: "" },
+        { key: "api_access_token", value: "" },
+        { key: "store_url", value: "" }
+      ]);
+    } else {
+      setKeys([]); // or keep existing keys if needed
+    }
+  };
+
 
   const handleKeyChange = (
     index: number,
@@ -171,8 +191,8 @@ const ChannelAccounts: React.FC = () => {
           {row.status === "active"
             ? "🟢"
             : row.status === "inactive"
-            ? "🔴"
-            : "❌"}{" "}
+              ? "🔴"
+              : "❌"}{" "}
           <strong>{row.channel_account_name}</strong>
         </div>
       ),
@@ -211,10 +231,10 @@ const ChannelAccounts: React.FC = () => {
       selector: (row: ChannelAccount) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       sortable: true,
     },
@@ -309,6 +329,7 @@ const ChannelAccounts: React.FC = () => {
               <Form.Label>Channel</Form.Label>
               <Form.Select
                 name="channel_id"
+                onChange={handleChannelChange}
                 defaultValue={editingChannelAccount?.channel_id?._id || ""}
               >
                 <option value="">Select Channel</option>
@@ -342,6 +363,7 @@ const ChannelAccounts: React.FC = () => {
                   <Form.Control
                     placeholder="Key"
                     value={item.key}
+                    disabled
                     onChange={(e) =>
                       handleKeyChange(index, "key", e.target.value)
                     }

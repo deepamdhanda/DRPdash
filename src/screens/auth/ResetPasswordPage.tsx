@@ -1,47 +1,64 @@
-// LoginPage.tsx
-import React from "react";
+// ResetPasswordPage.tsx
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./style.module.css";
-import { LoginUser } from "../../APIs/authAPIs";
+import { ResetPassword } from "../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
+
 
 // Define the form schema with Zod
-const loginSchema = z.object({
+const resetPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 // TypeScript type derived from the schema
-export type LoginFormData = z.infer<typeof loginSchema>;
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-const LoginPage: React.FC = () => {
+const ResetPasswordPage: React.FC = () => {
+  // Step 1: Extract email from query params
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const emailFromUrl = queryParams.get('email') || '';
+  const resetToken = queryParams.get('token') || '';
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!emailFromUrl || !resetToken || emailFromUrl == '' || resetToken == '') {
+      console.error("Email or Token not found in query params");
+      navigate("/login");
+    }
+  }, [emailFromUrl, resetToken, navigate]);
+
+  if (!emailFromUrl) return null; // Optional fallback
+
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      // email: "admin@admin.com",
+      // name: "Admin",
+      email: emailFromUrl,
       // password: "Admin@123",
     },
   });
 
-  const navigate = useNavigate();
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     // Simulate API call
-    await LoginUser(data, () => {
-      navigate("/dashboard");
-    });
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request
-      console.log("Login successful!");
+      await ResetPassword({ ...data, resetToken }, () => {
+        navigate("/login");
+      });
       // Navigate to dashboard or home page
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("ResetPassword failed:", error);
     }
   };
 
@@ -50,7 +67,7 @@ const LoginPage: React.FC = () => {
       <div className={styles.loginCard}>
         <div className={styles.loginHeader}>
           <h2>DRP CRM</h2>
-          <p>Please sign in to continue</p>
+          <p>Reset your Password</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.loginForm}>
@@ -61,6 +78,7 @@ const LoginPage: React.FC = () => {
             <input
               id="email"
               type="email"
+              disabled={true}
               className={`form-control ${errors.email ? "is-invalid" : ""}`}
               placeholder="your@email.com"
               {...register("email")}
@@ -73,11 +91,8 @@ const LoginPage: React.FC = () => {
           <div className="mb-3">
             <div className="d-flex justify-content-between">
               <label htmlFor="password" className="form-label">
-                Password
+                New Password
               </label>
-              <a href="#" className={styles.forgotPassword} onClick={()=>{navigate('/forgotPassword')}}>
-                Forgot Password?
-              </a>
             </div>
             <input
               id="password"
@@ -98,13 +113,13 @@ const LoginPage: React.FC = () => {
             className={`btn btn-primary ${styles.loginButton}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing in..." : "Sign In"}
+            {isSubmitting ? "Reseting Password..." : "Reset Password"}
           </button>
         </form>
 
         <div className={styles.loginFooter}>
           <p>
-            Don't have an account? <a href="#" onClick={() => { navigate('/register') }}>Sign up</a>
+            Remember Password? <a href="#" onClick={() => { navigate('/login') }}>Sign in</a>
           </p>
         </div>
       </div>
@@ -112,4 +127,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default ResetPasswordPage;

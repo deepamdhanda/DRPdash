@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import _ from "lodash";
 import { drpCrmBaseUrl } from "./urls";
 
+
 // Create Axios instance with base URL and content-type headers
 const Axios = axios.create({
   baseURL: drpCrmBaseUrl,
@@ -35,11 +36,15 @@ Axios.interceptors.response.use(
     return res;
   },
   (error) => {
-    let errorMessage = "Something went wrong, please try again later.";
+    console.log(error)
+    let errorMessage = error?.response?.data?.message || "Something went wrong, please try again later.";
 
-    if (error?.response?.status === 500) {
-      errorMessage =
-        "Please check your internet connection, and try again later.";
+
+    if (error?.response?.status === 403) {
+      Cookies.remove("authToken")
+      errorMessage = "Verification Failed.";
+      console.log(error)
+      window.location.href = "/verify?email=" + error?.response?.data?.email;
     }
     if (error?.response?.status === 401) {
       errorMessage = "Login Failed.";
@@ -47,9 +52,6 @@ Axios.interceptors.response.use(
       window.location.href = "/login";
     }
 
-    if (error?.response?.data?.errorMessage) {
-      errorMessage = error.response.data.errorMessage;
-    }
 
     // Set custom error structure in the error response
     _.set(error, "response.data", {
@@ -58,7 +60,7 @@ Axios.interceptors.response.use(
       success: false,
       errorMessage,
     });
-
+    _.set(error, "message", errorMessage)
     return Promise.reject(error); // Reject the error
   }
 );

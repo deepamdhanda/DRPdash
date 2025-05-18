@@ -18,6 +18,7 @@
     "lodash": "^4.17.21",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
+    "react-barcode": "^1.6.1",
     "react-bootstrap": "^2.10.9",
     "react-data-table-component": "^7.7.0",
     "react-dom": "^19.0.0",

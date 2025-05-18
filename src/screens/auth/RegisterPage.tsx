@@ -35,8 +35,8 @@ const RegisterPage: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     // Simulate API call
-    await RegisterUser(data, () => {
-      navigate("/dashboard");
+    await RegisterUser(data, (email) => {
+      navigate("/verify:email=" + email);
     });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request

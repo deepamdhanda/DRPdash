@@ -47,9 +47,9 @@ export const createOrder = async (data: any) => {
 
 export const updateOrder = async (id: string, data: any) => {
   try {
-    const response = await appAxios.patch(`${orders_url}/${id}`, data);
+    await appAxios.patch(`${orders_url}/${id}`, data);
     toast.success("Order updated successfully!");
-    return response.data;
+    return true;
   } catch (error: any) {
     toast.error("Failed to update order.");
     throw error;

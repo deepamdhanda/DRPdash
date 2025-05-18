@@ -316,11 +316,10 @@ const Products: React.FC = () => {
                   <Form.Label>Weight (kg)</Form.Label>
                   <Form.Control
                     type="number"
-                    step="0.01"
+                    step="0.001"
                     name="product_weight"
                     defaultValue={editingProduct?.product_weight || ""}
                     required
-                    disabled={!!editingProduct}
                   />
                 </Form.Group>
 

@@ -1,47 +1,73 @@
-// LoginPage.tsx
-import React from "react";
+// VerifyPage.tsx
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./style.module.css";
-import { LoginUser } from "../../APIs/authAPIs";
+import { ResendOTP, VerifyUser } from "../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
+
 
 // Define the form schema with Zod
-const loginSchema = z.object({
+const verifySchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  otp: z.string().min(6, "OTP must be at least 6 characters"),
 });
 
 // TypeScript type derived from the schema
-export type LoginFormData = z.infer<typeof loginSchema>;
+export type VerifyFormData = z.infer<typeof verifySchema>;
 
-const LoginPage: React.FC = () => {
+const VerifyPage: React.FC = () => {
+  // Step 1: Extract email from query params
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const emailFromUrl = queryParams.get('email') || '';
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!emailFromUrl) {
+      console.error("Email not found in query params");
+      navigate("/login");
+    }
+  }, [emailFromUrl, navigate]);
+
+  if (!emailFromUrl) return null; // Optional fallback
+
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<VerifyFormData>({
+    resolver: zodResolver(verifySchema),
     defaultValues: {
-      // email: "admin@admin.com",
+      // name: "Admin",
+      email: emailFromUrl,
       // password: "Admin@123",
     },
   });
 
-  const navigate = useNavigate();
-
-  const onSubmit = async (data: LoginFormData) => {
-    // Simulate API call
-    await LoginUser(data, () => {
-      navigate("/dashboard");
-    });
+  const handleResendOtp = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request
-      console.log("Login successful!");
+      await ResendOTP({ email: emailFromUrl }, () => {
+        console.log("OTP Resent")
+      })
+    } catch (error) {
+      console.error("Error while resending OTP", error)
+    }
+  }
+
+  const onSubmit = async (data: VerifyFormData) => {
+    // Simulate API call
+
+    try {
+      await VerifyUser(data, () => {
+        console.log('sdf')
+        navigate("/dashboard");
+      });
       // Navigate to dashboard or home page
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Verify failed:", error);
     }
   };
 
@@ -50,7 +76,7 @@ const LoginPage: React.FC = () => {
       <div className={styles.loginCard}>
         <div className={styles.loginHeader}>
           <h2>DRP CRM</h2>
-          <p>Please sign in to continue</p>
+          <p>Please verify your email</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.loginForm}>
@@ -61,6 +87,7 @@ const LoginPage: React.FC = () => {
             <input
               id="email"
               type="email"
+              disabled={true}
               className={`form-control ${errors.email ? "is-invalid" : ""}`}
               placeholder="your@email.com"
               {...register("email")}
@@ -73,22 +100,22 @@ const LoginPage: React.FC = () => {
           <div className="mb-3">
             <div className="d-flex justify-content-between">
               <label htmlFor="password" className="form-label">
-                Password
+                One Time Password
               </label>
-              <a href="#" className={styles.forgotPassword} onClick={()=>{navigate('/forgotPassword')}}>
-                Forgot Password?
+              <a href="#" className={styles.forgotPassword} onClick={handleResendOtp}>
+                Resend OTP
               </a>
             </div>
             <input
-              id="password"
-              type="password"
-              className={`form-control ${errors.password ? "is-invalid" : ""}`}
+              id="otp"
+              type="otp"
+              className={`form-control ${errors.otp ? "is-invalid" : ""}`}
               placeholder="••••••••"
-              {...register("password")}
+              {...register("otp")}
             />
-            {errors.password && (
+            {errors.otp && (
               <div className={styles.errorMessage}>
-                {errors.password.message}
+                {errors.otp.message}
               </div>
             )}
           </div>
@@ -98,13 +125,13 @@ const LoginPage: React.FC = () => {
             className={`btn btn-primary ${styles.loginButton}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing in..." : "Sign In"}
+            {isSubmitting ? "Verifying..." : "Verify"}
           </button>
         </form>
 
         <div className={styles.loginFooter}>
           <p>
-            Don't have an account? <a href="#" onClick={() => { navigate('/register') }}>Sign up</a>
+            Want to use different account? <a href="#" onClick={() => { navigate('/login') }}>Sign in</a>
           </p>
         </div>
       </div>
@@ -112,4 +139,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default VerifyPage;
