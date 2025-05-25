@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
-import { finances_url, payment } from "../URLs/dash";
+import { finances_url } from "../URLs/dash";
 import { Finance } from "../screens/dashboard/Finances";
 
 
@@ -22,45 +22,6 @@ export const getAllFinances = async () => {
     }
 };
 
-export const makePayment = async () => {
-    try {
-        const response = await appAxios.post(payment, {
-            amount: 1, // Amount in rupees
-            currency: 'INR',
-        });
-        const { id: order_id, amount, currency } = response.data;
-
-        // Set up RazorPay options
-        const options = {
-            key: "rzp_live_stL91oujHW3VLL", // Replace with your RazorPay Key ID
-            amount: amount,
-            currency: currency,
-            name: "OrderzUp",
-            description: "Recharge your Wallet",
-            image: "https://example.com/your_logo",
-            order_id: order_id,
-            handler: (response: any) => {
-                alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
-            },
-            prefill: {
-                name: "John Doe",
-                email: "john.doe@example.com",
-                contact: "9999999999",
-            },
-            theme: {
-                color: "#3399cc",
-            },
-        };
-
-        const paymentObject = new window.Razorpay(options);
-        paymentObject.open();
-
-    }
-    catch (error: any) {
-        toast.error("Failed to make payment.");
-        throw error;
-    }
-}
 
 export const createFinance = async (data: any) => {
     try {

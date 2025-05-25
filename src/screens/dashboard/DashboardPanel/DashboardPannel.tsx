@@ -16,6 +16,7 @@ import {
 import Cookies from "js-cookie";
 import logoImg from "../../../assets/logo.png";
 import logoImg1 from "../../../assets/logo1.png";
+import { FaWallet } from "react-icons/fa6";
 
 type NavLink = {
   name: string;
@@ -51,6 +52,7 @@ const navLinks: NavLink[] = [
   { name: "ChannelSKU", icon: <FaLink />, path: "/dashboard/ChannelSKU" },
   { name: "NDR", icon: <FaTruckLoading />, path: "/dashboard/NDR" },
   { name: "Finance", icon: <FaRupeeSign />, path: "/dashboard/Finance" },
+  { name: "Wallet", icon: <FaWallet />, path: "/dashboard/Wallet" },
   { name: "Warehouse", icon: <FaRupeeSign />, path: "/dashboard/Warehouses" },
   { name: "SignOut", icon: <FaSignOutAlt /> },
 ];

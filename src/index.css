@@ -1,0 +1,81 @@
+@keyframes fadeSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes brandGlow {
+    0% {
+        box-shadow: 0 0 8px #F5891E;
+    }
+
+    50% {
+        box-shadow: 0 0 16px #F5891E;
+    }
+
+    100% {
+        box-shadow: 0 0 8px #F5891E;
+    }
+}
+
+@keyframes aiGlow {
+    0% {
+      box-shadow: 0 0 12px #F5891E, 0 0 24px rgba(245, 137, 30, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 20px #F5891E, 0 0 32px rgba(245, 137, 30, 0.6);
+    }
+    100% {
+      box-shadow: 0 0 12px #F5891E, 0 0 24px rgba(245, 137, 30, 0.4);
+    }
+  }
+  
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 10px #F5891E;
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 18px #F5891E;
+      transform: scale(1.03);
+    }
+  }
+  
+
+@keyframes pulseEta {
+    0% {
+        background-color: #F5891E;
+        box-shadow: 0 0 0 0 rgba(245, 137, 30, 0.7);
+    }
+
+    70% {
+        background-color: #ff9f3d;
+        box-shadow: 0 0 0 8px rgba(245, 137, 30, 0);
+    }
+
+    100% {
+        background-color: #F5891E;
+        box-shadow: 0 0 0 0 rgba(245, 137, 30, 0);
+    }
+}
+
+.smart-estimate {
+    animation: fadeSlideIn 0.5s ease-in-out;
+}
+
+.pulse-eta {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background-color: #F5891E;
+    color: white;
+    font-weight: bold;
+    animation: pulseEta 2s infinite;
+    font-size: 12px;
+}

@@ -19,6 +19,7 @@ import { ProductPacks } from "./screens/dashboard/ProductPacks.tsx";
 import VerifyPage from "./screens/auth/VerifyPage.tsx";
 import ForgotPasswordPage from "./screens/auth/ForgotPasswordPage.tsx";
 import ResetPasswordPage from "./screens/auth/ResetPasswordPage.tsx";
+import { Wallets } from "./screens/dashboard/Wallets.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
           {
             path: "finance", // /Dashboard/pools
             element: <Finances />,
+          },
+          {
+            path: "wallet", // /Dashboard/pools
+            element: <Wallets />,
           },
           {
             path: "channel_accounts", // /Dashboard/pools

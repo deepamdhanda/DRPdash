@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllFinances, createFinance, updateFinance, makePayment } from "../../APIs/finance";
+import { getAllFinances, createFinance, updateFinance } from "../../APIs/finance";
 
 export interface User {
   _id: string;
@@ -183,7 +183,6 @@ const Finances: React.FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Finances</h4>
         <Button onClick={handleShow}>+ New Finance</Button>
-        <Button onClick={() => { makePayment() }}>+ Add Money</Button>
       </div>
 
       <DataTable

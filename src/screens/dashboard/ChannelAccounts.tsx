@@ -32,7 +32,7 @@ const ChannelAccounts: React.FC = () => {
   const [editingChannelAccount, setEditingChannelAccount] =
     useState<ChannelAccount | null>(null);
   const [keys, setKeys] = useState<{ key: string; value: string }[]>([]);
-  const [selectedChannelId, setSelectedChannelId] = useState(editingChannelAccount?.channel_id?._id || "");
+  // const [selectedChannelId, setSelectedChannelId] = useState(editingChannelAccount?.channel_id?._id || "");
 
   useEffect(() => {
     fetchInitialData();
@@ -102,7 +102,7 @@ const ChannelAccounts: React.FC = () => {
 
   const handleChannelChange = (e: any) => {
     const selectedId = e.target.value;
-    setSelectedChannelId(selectedId);
+    // setSelectedChannelId(selectedId);
 
     const selectedChannel = channels.find((c) => c._id === selectedId);
 

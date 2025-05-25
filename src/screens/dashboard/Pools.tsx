@@ -17,6 +17,7 @@ export interface Pool {
   status: "active" | "inactive" | "suspended";
   createdAt?: string;
   updatedAt?: string;
+  wallet_balance?: number; // Optional field for wallet balance
 }
 
 const Pools: React.FC = () => {
@@ -119,6 +120,14 @@ const Pools: React.FC = () => {
         </div>
       ),
       wrap: true,
+    },
+    {
+      name: "Wallet Balance",
+      cell: (row: Pool) => (
+        <span className={row?.wallet_balance && row?.wallet_balance > 1000 ? "text-success" : "text-danger"}>
+          {row?.wallet_balance ? `₹${row.wallet_balance.toFixed(2)}` : "—"}
+        </span>
+      )
     },
     {
       name: "Created By",
