@@ -201,7 +201,7 @@ const WalletTransactionsComponent = () => {
   );
 };
 
-const WalletRechargeComponent = () => {
+const WalletRechargeComponent = ({ pools }: { pools: Pool[] }) => {
   const [walletRecharges, setwalletRecharges] = useState<TWalletRecharge[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -210,6 +210,7 @@ const WalletRechargeComponent = () => {
   });
   const [loading, setLoading] = useState(true);
   const [transactionId, setTransactionId] = useState("");
+  const [selectedPoolId, setSelectedPoolId] = useState("");
   const [dateRange, setDateRange] = useState({
     from: moment().subtract(1, "month").toDate(),
     to: moment().toDate(),
@@ -263,6 +264,7 @@ const WalletRechargeComponent = () => {
         page,
         limit,
         transactionId,
+        selectedPoolId,
         dateRange.from,
         dateRange.to
       );
@@ -295,48 +297,71 @@ const WalletRechargeComponent = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <div className="d-flex gap-2 mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search Transaction ID"
-          value={transactionId}
-          onChange={(e) => setTransactionId(e.target.value)}
-        />
+      <div className="row ">
+        <div className="col-md-3">
+          <label htmlFor="">Transaction Id</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search Transaction ID"
+            value={transactionId}
+            onChange={(e) => setTransactionId(e.target.value)}
+          />
+        </div>
+        <div className="col-md-3">
+          <label htmlFor="">Select Pool</label>
 
-        <label>Start Date</label>
-        <input
-          type="date"
-          className="form-control"
-          value={moment(dateRange.from).format("YYYY-MM-DD")}
-          onChange={(e) =>
-            setDateRange((old) => ({
-              ...old,
-              from: moment(e.target.value).toDate(),
-            }))
-          }
-        />
-
-        <label>End Date</label>
-        <input
-          type="date"
-          className="form-control"
-          value={moment(dateRange.to).format("YYYY-MM-DD")}
-          onChange={(e) =>
-            setDateRange((old) => ({
-              ...old,
-              to: moment(e.target.value).toDate(),
-            }))
-          }
-        />
-
-        <Button
-          onClick={() => {
-            fetchWalletsRecharges(1, pagination.limit);
-          }}
-        >
-          Search
-        </Button>
+          <select
+            name=""
+            value={selectedPoolId}
+            id=""
+            className="form-select"
+            onChange={(e) => setSelectedPoolId(e.target.value)}
+          >
+            <option value="">All Pools</option>
+            {pools.map((pool) => {
+              return <option value={pool._id}>{pool.name}</option>;
+            })}
+          </select>
+        </div>
+        <div className="col-md-3">
+          <label>Start Date</label>
+          <input
+            type="date"
+            className="form-control"
+            value={moment(dateRange.from).format("YYYY-MM-DD")}
+            onChange={(e) =>
+              setDateRange((old) => ({
+                ...old,
+                from: moment(e.target.value).toDate(),
+              }))
+            }
+          />
+        </div>
+        <div className="col-md-3">
+          <label>End Date</label>
+          <input
+            type="date"
+            className="form-control"
+            value={moment(dateRange.to).format("YYYY-MM-DD")}
+            onChange={(e) =>
+              setDateRange((old) => ({
+                ...old,
+                to: moment(e.target.value).toDate(),
+              }))
+            }
+          />
+        </div>
+        <div className="text-end">
+          <Button
+            className="mt-2 "
+            onClick={() => {
+              fetchWalletsRecharges(1, pagination.limit);
+            }}
+          >
+            Apply Filter
+          </Button>
+        </div>
       </div>
       <DataTable
         title="Wallet Recharges"
@@ -427,7 +452,7 @@ const Wallets: React.FC = () => {
         <WalletTransactionsComponent />
       )}
       {activeTab === EnumWalletTabs.WALLET_RECHARGE && (
-        <WalletRechargeComponent />
+        <WalletRechargeComponent pools={pools} />
       )}
 
       {/* Add Money Modal */}

@@ -34,6 +34,7 @@ export const getAllWalletsRecharges = async (
   page: number,
   limit: number,
   transactionId = "",
+  poolId = "",
   startDate: Date | null = null,
   endDate: Date | null = null
 ) => {
@@ -43,6 +44,7 @@ export const getAllWalletsRecharges = async (
         page,
         limit,
         wallet_rechargeId: transactionId,
+        poolId,
         startDate,
         endDate,
       },
