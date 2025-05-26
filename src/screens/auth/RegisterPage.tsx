@@ -36,7 +36,7 @@ const RegisterPage: React.FC = () => {
   const onSubmit = async (data: RegisterFormData) => {
     // Simulate API call
     await RegisterUser(data, (email) => {
-      navigate("/verify:email=" + email);
+      navigate("/verify?email=" + email);
     });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request
@@ -112,7 +112,7 @@ const RegisterPage: React.FC = () => {
             className={`btn btn-primary ${styles.loginButton}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing in..." : "Sign In"}
+            {isSubmitting ? "Signing up..." : "Sign Up"}
           </button>
         </form>
 

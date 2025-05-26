@@ -2,21 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./dashboardPannel.css";
 import {
-  FaBoxOpen,
-  FaClipboardList,
   FaSignOutAlt,
-  FaTachometerAlt,
-  FaLayerGroup,
-  FaSatelliteDish,
-  FaBarcode,
-  FaLink,
-  FaTruckLoading,
-  FaRupeeSign,
 } from "react-icons/fa";
 import Cookies from "js-cookie";
 import logoImg from "../../../assets/logo.png";
 import logoImg1 from "../../../assets/logo1.png";
-import { FaWallet } from "react-icons/fa6";
 
 type NavLink = {
   name: string;
@@ -36,26 +26,24 @@ type TNavLinkName =
   | "NDR"
   | "Finance"
   | "SignOut";
-
 const navLinks: NavLink[] = [
-  { name: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" },
-  { name: "Orders", icon: <FaClipboardList />, path: "/dashboard/orders" },
-  { name: "Pools", icon: <FaLayerGroup />, path: "/dashboard/pools" },
-  {
-    name: "Channels Accounts",
-    icon: <FaSatelliteDish />,
-    path: "/dashboard/channel_accounts",
-  },
-  { name: "Products", icon: <FaBoxOpen />, path: "/dashboard/Products" },
-  { name: "Product SKUs", icon: <FaBarcode />, path: "/dashboard/ProductSKU" },
-  { name: "Product Packs", icon: <FaBarcode />, path: "/dashboard/ProductPacks" },
-  { name: "ChannelSKU", icon: <FaLink />, path: "/dashboard/ChannelSKU" },
-  { name: "NDR", icon: <FaTruckLoading />, path: "/dashboard/NDR" },
-  { name: "Finance", icon: <FaRupeeSign />, path: "/dashboard/Finance" },
-  { name: "Wallet", icon: <FaWallet />, path: "/dashboard/Wallet" },
-  { name: "Warehouse", icon: <FaRupeeSign />, path: "/dashboard/Warehouses" },
-  { name: "SignOut", icon: <FaSignOutAlt /> },
+  { name: "Dashboard", icon: "📊", path: "/dashboard" },
+  { name: "Orders", icon: "📋", path: "/dashboard/orders" },
+  { name: "Scan Orders", icon: "📦", path: "/dashboard/scanOrders" },
+  { name: "Pools", icon: "🌀", path: "/dashboard/pools" },
+  { name: "Channels Accounts", icon: "📡", path: "/dashboard/channel_accounts" },
+  { name: "Products", icon: "📦", path: "/dashboard/Products" },
+  { name: "Product SKUs", icon: "🔖", path: "/dashboard/ProductSKU" },
+  { name: "Product Packs", icon: "🎁", path: "/dashboard/ProductPacks" },
+  { name: "Profit Calculator", icon: "🧮", path: "/dashboard/ProfitCalculator" },
+  { name: "ChannelSKU", icon: "🔗", path: "/dashboard/ChannelSKU" },
+  { name: "NDR", icon: "🚚", path: "/dashboard/NDR" },
+  { name: "Finance", icon: "💰", path: "/dashboard/Finance" },
+  { name: "Wallet", icon: "👛", path: "/dashboard/Wallet" },
+  { name: "Warehouse", icon: "🏬", path: "/dashboard/Warehouses" },
+  { name: "SignOut", icon: "🚪" },
 ];
+
 
 const DashboardPanel: React.FC = () => {
   const [activeLink, setActiveLink] = useState<TNavLinkName>("");
@@ -86,7 +74,7 @@ const DashboardPanel: React.FC = () => {
   return (
     <div id="user-panel" className="nav-visible">
       <div className={`sidebar sidebar-visible`}>
-        <nav className="nav">
+        <nav className="nav-1">
           <div>
             <div className="nav-logo">
               <span className="nav-logo-icon"><img src={logoImg} style={{ width: '30px ' }} /></span>
@@ -95,12 +83,12 @@ const DashboardPanel: React.FC = () => {
             <div style={{ margin: '5px 0 15px 0', padding: '10px 10px', borderWidth: "1px 0", borderColor: '#F5891E', borderStyle: 'solid', fontSize: '14px', fontWeight: '200' }}>
               Hello, {Cookies.get('username')}!
             </div>
-            <div className="nav-list">
+            <div className="nav-list-1">
               <center>
                 {navLinks.slice(0, -1).map((link) => (
                   <div
                     key={link.name}
-                    className={`nav-link ${activeLink === link.name ? "active" : ""
+                    className={`nav-link-1 ${activeLink === link.name ? "active" : ""
                       }`}
                     onClick={() => handleLinkClick(link.name, link.path)}
                   >
@@ -112,7 +100,7 @@ const DashboardPanel: React.FC = () => {
             </div>
           </div>
           <div
-            className={`nav-link ${activeLink === "SignOut" ? "active" : ""}`}
+            className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""}`}
             onClick={() => handleLinkClick("SignOut")}
           >
             <span className="nav-icon">

@@ -341,33 +341,12 @@ const ChannelAccounts: React.FC = () => {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Fulfillment Type</Form.Label>
-              <Form.Control
-                as="select"
-                name="fulfillment_type"
-                defaultValue={editingChannelAccount?.fulfillment_type || ""}
-              >
-                <option value="">Select</option>
-                <option value="Self">Self</option>
-                <option value="Optional">Optional</option>
-                <option value="Channel">Channel</option>
-                <option value="Other">Other</option>
-              </Form.Control>
-            </Form.Group>
-
             <Form.Label className="mt-3">Keys</Form.Label>
             {keys.map((item, index) => (
               <Row key={index} className="mb-2">
                 <Col>
-                  <Form.Control
-                    placeholder="Key"
-                    value={item.key}
-                    disabled
-                    onChange={(e) =>
-                      handleKeyChange(index, "key", e.target.value)
-                    }
-                  />
+                  <Form.Label className="mt-3">{item.key.replace(/_/g, " ").toUpperCase()}</Form.Label>
+
                 </Col>
                 <Col>
                   <Form.Control

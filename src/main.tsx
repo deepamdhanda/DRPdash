@@ -20,6 +20,8 @@ import VerifyPage from "./screens/auth/VerifyPage.tsx";
 import ForgotPasswordPage from "./screens/auth/ForgotPasswordPage.tsx";
 import ResetPasswordPage from "./screens/auth/ResetPasswordPage.tsx";
 import { Wallets } from "./screens/dashboard/Wallets.tsx";
+import { ScanOrders } from "./screens/dashboard/ScanOrders.tsx";
+import { ProfitCalculator } from "./screens/dashboard/ProfitCalculator.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -82,12 +84,20 @@ const router = createBrowserRouter([
             element: <ProductPacks />,
           },
           {
+            path: "profitCalculator", // /Dashboard/pools
+            element: <ProfitCalculator />,
+          },
+          {
             path: "channelSKU", // /Dashboard/pools
             element: <ChannelSKU />,
           },
           {
             path: "orders", // /Dashboard/pools
             element: <Orders />,
+          },
+          {
+            path: "scanOrders", // /Dashboard/pools
+            element: <ScanOrders />,
           },
           {
             path: "warehouses", // /Dashboard/pools
