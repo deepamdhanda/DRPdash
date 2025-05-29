@@ -8,10 +8,10 @@ export const createAmazonS3 = async (fileName: any, file: any) => {
     // console.log(data)
     // return 0;
     const response = await appAxios.post(amazonS3s_url, { fileName, fileContent: file });
-    toast.success("Channel created successfully!");
+    toast.success("Image uploaded successfully!");
     return response.data;
   } catch (error: any) {
-    toast.error("Failed to create amazonS3.");
+    toast.error("Failed to upload the Image.");
     throw error;
   }
 };

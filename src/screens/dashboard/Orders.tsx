@@ -14,6 +14,7 @@ import { ProductSKU } from "./ProductSKUs";
 import { bookCourier, checkShipmentServiceavailablity, getCommonWarehouses } from "../../APIs/courier";
 import { toast } from "react-toastify";
 import Barcode from "react-barcode";
+import axios from "axios";
 
 export interface User {
   _id: string;
@@ -49,6 +50,11 @@ export interface Order {
   createdAt?: string;
   updatedAt?: string;
   label?: any;
+  recommended_courier_id?: string;
+  recommended_courier_name?: string;
+  shipping_courier_id?: string;
+  recommended_warehouse_id?: string;
+  shipping_warehouse_id?: string;
 }
 
 interface FilterParams {
@@ -191,17 +197,18 @@ const Orders: React.FC = () => {
   const [bestAddress, setBestAddress] = useState<string>("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
   const [commonWarehouses, setCommonWarehouses] = useState<any>(null)
-  const [labelData, setLabelData] = useState<any>(null);
-
+  const [labelData, setLabelData] = useState<any>([]);
+  const [shipNowLoading, setShipNowLoading] = useState<boolean>(false);
 
   const labelRef = useRef<HTMLDivElement>(null);;
   useEffect(() => {
+    setIsLoading(false);
     fetchOrders(currentPage, rowsPerPage, filters);
     calculateTableHeight();
     fetchChannelAccounts();
   }, [currentPage, rowsPerPage]);
   useEffect(() => {
-    if (labelData) {
+    if (labelData && labelData.length > 0) {
       handlePrint();
     }
   }, [labelData]);
@@ -280,7 +287,7 @@ const Orders: React.FC = () => {
       const response = await bookCourier(shipmentOrder?._id, courier_id, selectedWarehouse.warehouseAddress.warehouse_id)
       toast.success(response.message)
       if (response) {
-        setLabelData(response.data)
+        setLabelData([response.data])
         handleShipmentClose()
       }
     } catch (error) {
@@ -288,7 +295,57 @@ const Orders: React.FC = () => {
     }
   }
 
+  const handleBookBulkShipment = async (orders: Order[]) => {
+    const len = orders.length;
+    if (len === 0) {
+      toast.error("No orders selected for shipment.");
+      return;
+    }
 
+    setShipNowLoading(true);
+    len > 1 && toast.info(`Booking couriers for ${len} orders. Please do not refresh...`);
+
+    let doneCount = 0;
+
+    await Promise.allSettled(
+      orders.map(async (order) => {
+        const courier_id = order.recommended_courier_id || order.shipping_courier_id;
+        const warehouse_id = order.recommended_warehouse_id;
+
+        if (!courier_id) {
+          toast.error(`No courier selected for order ${order.order_id}`);
+          return;
+        }
+
+        try {
+          const response = await bookCourier(order._id, courier_id, warehouse_id);
+          toast.success(`Order ${order.order_id}: ${response.message}`);
+          doneCount++;
+
+          if (len === 1 && response) {
+            // setLabelData(response.data);
+            handleShipmentClose();
+          }
+
+          if (doneCount === len) {
+            toast.success("All shipments booked successfully.");
+            fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+          }
+        } catch (err) {
+          console.error(`Failed booking for order ${order.order_id}:`, err);
+          toast.error(`Order ${order.order_id}: Failed to book shipment.`);
+        }
+      })
+    );
+
+    setShipNowLoading(false);
+  };
+
+
+  const handleBulkPrint = (orders: Order[]) => {
+    console.log("Printing labels for orders:", orders);
+    setLabelData(orders.map(order => order.label));
+  }
 
 
   const handlePrint = () => {
@@ -395,20 +452,44 @@ const Orders: React.FC = () => {
   };
 
 
-  const handleShipment = async (row: Order) => {
-    if (row.issues && row.issues.length > 0) {
-      handleEdit(row);
-      toast.error("Please resolve the issues before proceeding with shipment.");
-    } else {
-      setShipmentOrder(row);
-      const commonWarehouse = getCommonWarehouses(row)
-      setCommonWarehouses(commonWarehouse)
-      setShowShipmentModal(true);
-      const response = await checkShipmentServiceavailablity(row, commonWarehouse);
-      setShipmentOptions(response.results);
-      setBestAddress(response.best_address);
-      setSelectedWarehouse(response.selectedWarehouse)
+  const handleShipment = async (rows: Order[]) => {
+    if (rows.length === 0) {
+      toast.error("No orders selected for shipment.");
+      return;
     }
+    const len = rows.length;
+    setShipNowLoading(true);
+    len > 1 && toast.info(`Processing ${len} orders for shipment. Please do not refresh the page...`)
+    let doneCount = 0;
+    Promise.all(rows.map(async (row) => {
+      if (row.issues && row.issues.length > 0 && len === 1) {
+        handleEdit(row);
+        setShipNowLoading(false);
+        toast.error("Please resolve the issues before proceeding with shipment.");
+      } else {
+        const commonWarehouse = getCommonWarehouses(row)
+        setCommonWarehouses(commonWarehouse)
+        if (len == 1) {
+          setShipmentOrder(row);
+        }
+        const response = await checkShipmentServiceavailablity(row, commonWarehouse);
+        if (response) {
+          doneCount++;
+          len > 1 && toast.success(`Shipment service available for order ${doneCount} of ${len}`);
+          if (doneCount === len) {
+            fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+            toast.success("Processed successfully.");
+          }
+          if (len == 1) {
+            setShowShipmentModal(true);
+            setShipNowLoading(false);
+            setShipmentOptions(response.results);
+            setBestAddress(response.best_address);
+            setSelectedWarehouse(response.selectedWarehouse)
+          }
+        }
+      }
+    }))
   };
 
   const handleEdit = (order: Order) => {
@@ -618,7 +699,74 @@ const Orders: React.FC = () => {
       sortable: false,
       width: "150px",
       style: { margin: "10px 0" },
+    }, {
+      name: "Risk Flags",
+      cell: (row: any) => (
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {row.risk_flag.customer_order_count_in_channel > 0 && (
+            <span style={{ backgroundColor: row.risk_flag.customer_order_count_in_channel < 3 ? "#2a9d8f" : "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Other Orders: {row.risk_flag.customer_order_count_in_channel}
+            </span>
+          )}
+          {row.risk_flag.is_duplicate && (
+            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Duplicate Order
+            </span>
+          )}
+          {row.risk_flag.is_improper_address && (
+            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Improper Address
+            </span>
+          )}
+          {row.risk_flag.is_reused_phone && (
+            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Reused Phone
+            </span>
+          )}
+          {row.risk_flag.is_suspicious_address && (
+            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Suspicious Address
+            </span>
+          )}
+          {row.risk_flag.is_suspicious_email && (
+            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Suspicious Email
+            </span>
+          )}
+          {row.risk_flag.is_suspicious_ip && (
+            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Suspicious IP
+            </span>
+          )}
+          {row.risk_flag.is_suspicious_phone && (
+            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Suspicious Phone
+            </span>
+          )}
+          {row.risk_flag.pincode_return_percent > 0 && (
+            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              Return %: {row.risk_flag.pincode_return_percent.toFixed(1)}%
+            </span>
+          )}
+          {row.risk_flag.pincode_rto_percent > 0 && (
+            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+              RTO %: {row.risk_flag.pincode_rto_percent.toFixed(1)}%
+            </span>
+          )}
+          {!row.risk_flag.is_duplicate && !row.risk_flag.is_improper_address && !row.risk_flag.is_reused_phone &&
+            !row.risk_flag.is_suspicious_address && !row.risk_flag.is_suspicious_email && !row.risk_flag.is_suspicious_ip &&
+            !row.risk_flag.is_suspicious_phone &&
+            row.risk_flag.pincode_return_percent === 0 && row.risk_flag.pincode_rto_percent === 0 && row.risk_flag.customer_order_count_in_channel === 0 && (
+              <span style={{ backgroundColor: "#2a9d8f", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+                No Risk Flags
+              </span>
+            )}
+        </div>
+      ),
+      sortable: false,
+      width: "250px",
     },
+
     {
       name: "Fetched On",
       selector: (row: Order) =>
@@ -654,7 +802,7 @@ const Orders: React.FC = () => {
               {hasAwb ? (
                 <Button
                   variant="success"
-                  onClick={() => setLabelData(row.label)}
+                  onClick={() => setLabelData([row.label])}
                 >
                   🖨️ Print Label
                 </Button>
@@ -667,7 +815,8 @@ const Orders: React.FC = () => {
                     textTransform: "uppercase",
                     color: "white",
                   }}
-                  onClick={() => handleShipment(row)}
+                  disabled={shipNowLoading}
+                  onClick={() => handleShipment([row])}
                 >
                   🚚 Ship Now
                 </Button>
@@ -762,7 +911,7 @@ const Orders: React.FC = () => {
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Orders</h4>
-        <div>
+        <div className="d-flex align-items-center justify-content-center">
           <Button
             variant="outline-secondary"
             onClick={() => setShowFilters(!showFilters)}
@@ -771,14 +920,62 @@ const Orders: React.FC = () => {
             {showFilters ? "Hide Filters" : "Show Filters"}
           </Button>
           <Button
+            variant="outline-primary"
             onClick={async () => {
               (await fetchNewOrders()) && fetchOrders(1, rowsPerPage, filters);
             }}
             className="me-2"
           >
-            Fetch New Orders
+            📥 Fetch New Orders
           </Button>
-          {/* <Button onClick={handleShow}>+ New Order</Button> */}
+          <Button
+            disabled={shipNowLoading}
+            onClick={() => { handleShipment(orders.filter((o: any) => (!o.recommended_courier_id && !o.shipping_courier_id && o))) }}
+            className="me-2"
+            style={{
+              background: "linear-gradient(90deg, #000434, #F5891E)",
+              color: "#FFFFFF",
+              padding: "4px 12px",
+              borderRadius: 24,
+              fontSize: 12,
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              border: "none",
+              letterSpacing: "0.03em",
+              boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+              // marginBottom: 8,
+              animation: "pulseGlow 1.8s infinite ease-in-out"
+            }}
+          >
+            💡 OI AI Recommend Couriers
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => { handleBookBulkShipment(orders.filter((o: any) => (o.recommended_courier_id && o.issues.length === 0 && !o.shipping_courier_id && o))) }}
+            className="me-2"
+          >
+            🚚 Book Couriers
+          </Button>
+          <Button
+            variant="success"
+            onClick={() => {
+              handleBulkPrint(
+                orders.filter((o: any) => {
+                  if (!o.label || !o.status || !Array.isArray(o.status) || o.status.length === 0) return false;
+
+                  const latestStatus = o.status
+                    .sort((a: any, b: any) => new Date(b.status_date).getTime() - new Date(a.status_date).getTime())[0];
+
+                  return latestStatus?.status?.toLowerCase().includes("label generated");
+                })
+              );
+            }}
+          >
+            🖨️ Print Labels
+          </Button>
+
         </div>
       </div>
 
@@ -944,25 +1141,40 @@ const Orders: React.FC = () => {
             </Form.Group>
             <Form.Group className='col-lg-6'>
               <Form.Label className="col-form-label pt-0" >{"Customer Pin Code"}</Form.Label>
-              <Form.Control className="form-control" type="number" onChange={(e) => {
-                if (e.target.value.length == 6) {
-                  let tempData = { ...editOrder }
-                  tempData['shipping_pincode'] = Number(e.target.value)
-                  setEditOrder(tempData as Order);
+              <Form.Control className="form-control" type="number" onChange={async (e) => {
+                const pincode = e.target.value;
 
-                  // CheckPinCode(e.target.value, (data) => {
-                  //   if (data['Status'] == "Success") {
-                  //     let tempData = { ...editOrder }
-                  //     tempData['customer_pincode'] = e.target.value
-                  //     tempData['customer_city'] = data['PostOffice'][0]['Block']
-                  //     tempData['customer_state'] = data['PostOffice'][0]['State']
-                  //     document.getElementById("pin_error").innerText = ""
-                  //      setEditOrder(tempData as Order);
-                  //     console.log(tempData);
-                  //   } else {
-                  //     document.getElementById("pin_error").innerText = "Error: " + data['Message']
-                  //   }
-                  // })
+                // Validate pincode format (6-digit number)
+                if (!/^\d{6}$/.test(pincode)) {
+                  // toast.error("Invalid Pincode");
+                  return;
+                }
+
+                try {
+                  const { data } = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+                  const postOffices = data?.[0]?.PostOffice;
+
+                  if (Array.isArray(postOffices) && postOffices.length > 0) {
+                    const postOffice = postOffices[0];
+
+                    setEditOrder((prev: any) => {
+                      if (!prev) return prev; // safeguard in case prev is null
+
+                      return {
+                        ...prev,
+                        // shipping_address: postOffice?.Name || "",
+                        shipping_city: postOffice?.District || "",
+                        shipping_state: postOffice?.State || "",
+                        shipping_country: "India",
+                        shipping_pincode: pincode,
+                      };
+                    });
+                  } else {
+                    toast.error("No address found for this pincode");
+                  }
+                } catch (error) {
+                  toast.error("Failed to fetch pincode details");
+                  console.error("Pincode API error:", error);
                 }
               }} defaultValue={editOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
               <div id="pin_error" style={{ color: 'red' }}></div>
@@ -1384,7 +1596,7 @@ const Orders: React.FC = () => {
       </Modal>
       <div style={{ display: 'none' }}>
         <div ref={labelRef}>
-          {labelData && <ShippingLabel labelData={labelData} />}
+          {labelData && labelData.map((ld: any) => (<ShippingLabel labelData={ld} />))}
         </div>
       </div>
 

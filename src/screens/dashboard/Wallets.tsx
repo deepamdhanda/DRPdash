@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
 import DataTable, { TableColumn } from "react-data-table-component";
 import {
@@ -167,10 +167,10 @@ const WalletTransactionsComponent = () => {
       selector: (row: Wallet) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
     },
   ];
@@ -435,11 +435,10 @@ const Wallets: React.FC = () => {
                 role="button"
                 onClick={() => setActiveTab(tab_value)}
                 key={tab_key}
-                className={`me-3 fs-5 ${
-                  activeTab === tab_value
-                    ? "text-decoration-underline "
-                    : "text-secondary"
-                }`}
+                className={`me-3 fs-5 ${activeTab === tab_value
+                  ? "text-decoration-underline "
+                  : "text-secondary"
+                  }`}
               >
                 {tab_key.replace("_", " ")}
               </div>

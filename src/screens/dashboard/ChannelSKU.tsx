@@ -7,12 +7,14 @@ import { getAllOrders } from "../../APIs/order"; // API to fetch unlinked produc
 import { ProductSKU } from "./ProductSKUs";
 import { ChannelAccount } from "./ChannelAccounts";
 import { linkProductSkuToChannelAccount } from "../../APIs/productSKUChannelLink";
+import { toast } from "react-toastify";
 
 
 export type ProductChannelLink = {
   product_sku_id: string;
   channel_account_id: string;
   variant_id: string | null;
+  price: number;
 };
 
 type newProductSKU = {
@@ -34,7 +36,7 @@ const ChannelSKU: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false); // Modal for linking a specific product
   const [selectedVariant, setSelectedVariant] = useState<newProductSKU['variant_id'] | null>(null); // Row being edited
-
+  const [price, setPrice] = useState<number>(0); // Price state for the modal
 
   useEffect(() => {
     fetchInitialData();
@@ -61,7 +63,11 @@ const ChannelSKU: React.FC = () => {
 
   const handleLinkProduct = async () => {
     if (selectedProductSKUs.length === 0 || selectedChannelAccounts.length === 0) {
-      alert("Please select at least one Product SKU and one Channel Account.");
+      toast.error("Please select at least one Product SKU and one Channel Account.");
+      return;
+    }
+    if (price <= 0) {
+      toast.error("Please enter a valid price greater than 0.");
       return;
     }
     try {
@@ -71,7 +77,8 @@ const ChannelSKU: React.FC = () => {
           linkProductSkuToChannelAccount({
             product_sku_id: skuId,
             channel_account_id: channelId,
-            variant_id: selectedVariant || null
+            variant_id: selectedVariant || null,
+            price: price,
           });
 
         }
@@ -211,13 +218,22 @@ const ChannelSKU: React.FC = () => {
                 >
                   {channelAccounts.map((channel) => (
                     <option key={channel._id} value={channel._id}>
-                      {channel.channel_account_name}
+                      {channel.channel_account_name} ({channel.pool_id?.name})
                     </option>
                   ))}
                 </Form.Select>
                 <Form.Text className="text-muted">
                   Hold <kbd>Ctrl</kbd> (Windows) or <kbd>Cmd</kbd> (Mac) to select multiple accounts.
                 </Form.Text>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Price</Form.Label>
+                <Form.Control
+                  type="number"
+                  placeholder="Enter Price"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                />
               </Form.Group>
             </div>
           </Form>

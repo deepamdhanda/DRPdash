@@ -46,7 +46,7 @@ const Products: React.FC = () => {
   >([]);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
-
+  const [imageName, setImageName] = useState<string>("");
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -122,6 +122,7 @@ const Products: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -180,7 +181,7 @@ const Products: React.FC = () => {
     try {
       let imageData = null;
       if (imagePreview) {
-        imageData = await createAmazonS3(`product/${Date.now()}`, imagePreview);
+        imageData = await createAmazonS3(`product/${Date.now()}-${imageName.replace(/ /g, "_")}`, imagePreview);
         newProduct.product_image = imageData.url;
       }
       if (editingProduct) {

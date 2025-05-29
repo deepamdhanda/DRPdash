@@ -90,7 +90,7 @@ const ProductSKUs: React.FC = () => {
   const [productSKUId, setProductSKUId] = useState<string>(""); // New state for ProductSKU ID
   const [calculatedWeight, setCalculatedWeight] = useState<number>(0); // New state for calculated weight
   const [description, setDescription] = useState<string>("");
-  const [image, setImage] = useState<File | null>(null);
+  const [imageName, setImageName] = useState<string | null>(null);
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
@@ -165,7 +165,8 @@ const ProductSKUs: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImage(file);
+      setImageName(file?.name);
+      console.log("Selected file:", file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -318,8 +319,8 @@ const ProductSKUs: React.FC = () => {
 
     try {
       let imageData = null;
-      if (image) {
-        imageData = await createAmazonS3(`productSKU/${Date.now()}`, imagePreview);
+      if (imageName) {
+        imageData = await createAmazonS3(`productSKU/${Date.now()}-${imageName.replace(/ /g, "_")}`, imagePreview);
         newProductSKU.product_sku_image = imageData.url;
       }
       if (editingProductSKU) {
@@ -506,9 +507,6 @@ const ProductSKUs: React.FC = () => {
                       className="mt-3 w-100 rounded shadow-sm"
                       style={{ maxHeight: "200px", objectFit: "cover" }}
                     />
-                  )}
-                  {image && (
-                    <Button onClick={() => { handleSubmit('e') }}>Upload</Button>
                   )}
                 </Form.Group>
                 <Form.Group className="mb-3">
