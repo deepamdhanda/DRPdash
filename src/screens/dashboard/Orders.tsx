@@ -46,7 +46,11 @@ export interface Order {
   payment_method: string;
   awb_number: string;
   channel_account: { channel_account_name: string; _id: string };
-  status: "active" | "inactive" | "suspended";
+  status: Array<{
+    status: string;
+    status_date: string;
+    description?: string; // Added description for status
+  }>;
   createdAt?: string;
   updatedAt?: string;
   label?: any;
@@ -492,6 +496,28 @@ const Orders: React.FC = () => {
     }))
   };
 
+  const handleCancelOrder = async (order: Order) => {
+    try {
+      order.status.push({
+        status: "cancelled",
+        status_date: new Date().toISOString(),
+        description: "Order cancelled by brand admin"
+      })
+      const response = await updateOrder(order._id, {
+        status: order.status
+      });
+      if (response) {
+        toast.success("Order cancelled successfully.");
+        fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+      } else {
+        toast.error("Failed to cancel order.");
+      }
+    } catch (error) {
+      console.error("Error cancelling order", error);
+      toast.error("Failed to cancel order.");
+    }
+  }
+
   const handleEdit = (order: Order) => {
     setEditOrder(order);
     setShowModal(true);
@@ -840,6 +866,20 @@ const Orders: React.FC = () => {
                 Change Courier
               </Button>
             )}
+            {/*Cancel Order*/}
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={() => {
+                if (window.confirm("Are you sure you want to cancel this order?")) {
+                  // Call your cancel order function here
+                  handleCancelOrder(row);
+                }
+              }}
+              className="mt-2"
+            >
+              ❌ Cancel Order
+            </Button>
           </div>
         );
       },
@@ -930,7 +970,25 @@ const Orders: React.FC = () => {
           </Button>
           <Button
             disabled={shipNowLoading}
-            onClick={() => { handleShipment(orders.filter((o: any) => (!o.recommended_courier_id && !o.shipping_courier_id && o))) }}
+            onClick={() => {
+              handleShipment(
+
+                orders.filter((o: any) => {
+                  const latestStatus = o.status?.length
+                    ? o.status.sort((a: any, b: any) =>
+                      new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
+                    )[0]
+                    : null;
+                  console.log(o.recommended_courier_id, o.shipping_courier_id, latestStatus)
+                  return (
+                    !o.recommended_courier_id &&
+                    !o.shipping_courier_id &&
+                    (!latestStatus || latestStatus.type !== "cancelled") &&
+                    o
+                  );
+                })
+              )
+            }}
             className="me-2"
             style={{
               background: "linear-gradient(90deg, #000434, #F5891E)",
@@ -953,7 +1011,25 @@ const Orders: React.FC = () => {
           </Button>
           <Button
             variant="primary"
-            onClick={() => { handleBookBulkShipment(orders.filter((o: any) => (o.recommended_courier_id && o.issues.length === 0 && !o.shipping_courier_id && o))) }}
+            onClick={() => {
+              handleBookBulkShipment(
+                orders.filter((o: any) => {
+                  const latestStatus = o.status?.length
+                    ? o.status.sort((a: any, b: any) =>
+                      new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
+                    )[0]
+                    : null;
+
+                  return (
+                    o.recommended_courier_id &&
+                    o.issues.length === 0 &&
+                    !o.shipping_courier_id &&
+                    o &&
+                    (!latestStatus || latestStatus.type !== "cancelled")
+                  );
+                })
+              )
+            }}
             className="me-2"
           >
             🚚 Book Couriers
@@ -979,73 +1055,75 @@ const Orders: React.FC = () => {
         </div>
       </div>
 
-      {showFilters && (
-        <Card className="mb-3">
-          <Card.Body>
-            <Row>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Product Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Search by product name"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Channel Account</Form.Label>
-                  <Form.Select
-                    value={channelAccountId}
-                    onChange={(e) => setChannelAccountId(e.target.value)}
-                  >
-                    <option value="">All Channel Accounts</option>
-                    {channelAccounts.map((account) => (
-                      <option key={account._id} value={account._id}>
-                        {account.channel_account_name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>From Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>To Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <div className="d-flex justify-content-end">
-              <Button
-                variant="secondary"
-                className="me-2"
-                onClick={resetFilters}
-              >
-                Reset
-              </Button>
-              <Button variant="primary" onClick={applyFilters}>
-                Apply Filters
-              </Button>
-            </div>
-          </Card.Body>
-        </Card>
-      )}
+      {
+        showFilters && (
+          <Card className="mb-3">
+            <Card.Body>
+              <Row>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Product Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Search by product name"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Channel Account</Form.Label>
+                    <Form.Select
+                      value={channelAccountId}
+                      onChange={(e) => setChannelAccountId(e.target.value)}
+                    >
+                      <option value="">All Channel Accounts</option>
+                      {channelAccounts.map((account) => (
+                        <option key={account._id} value={account._id}>
+                          {account.channel_account_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>From Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>To Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <div className="d-flex justify-content-end">
+                <Button
+                  variant="secondary"
+                  className="me-2"
+                  onClick={resetFilters}
+                >
+                  Reset
+                </Button>
+                <Button variant="primary" onClick={applyFilters}>
+                  Apply Filters
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
+        )
+      }
 
       <DataTable
         title="Your Orders"
