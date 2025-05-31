@@ -822,7 +822,7 @@ const Orders: React.FC = () => {
           : null;
         return (
           < div style={{ textAlign: "center" }} >
-            < div style={{ display: "flex", flexDirection: "row", gap: "5px" }} >
+            < div style={{ display: "flex", flexDirection: "row", justifyContent: 'center', gap: "5px" }} >
               {/* Edit or Schedule Pickup */}
               <Button
                 variant="outline-primary"
