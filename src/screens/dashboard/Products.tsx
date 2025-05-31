@@ -8,6 +8,7 @@ import {
 } from "../../APIs/product";
 import { getAllWarehouses } from "../../APIs/warehouse";
 import { Warehouse } from "./Warehouse";
+import { createAmazonS3 } from "../../APIs/amazonS3";
 
 interface ProductAttribute {
   key: string;
@@ -127,6 +128,7 @@ const Products: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+
   };
 
   const handleAttributeChange = (
@@ -176,6 +178,11 @@ const Products: React.FC = () => {
     };
 
     try {
+      let imageData = null;
+      if (imagePreview) {
+        imageData = await createAmazonS3(`product/${Date.now()}`, imagePreview);
+        newProduct.product_image = imageData.url;
+      }
       if (editingProduct) {
         await updateProduct(editingProduct._id!, newProduct);
         setProducts((prev) =>

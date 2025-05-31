@@ -195,8 +195,8 @@ const ProductPacks: React.FC = () => {
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>ProductPacks</h4>
-        <Button onClick={handleShow}>+ New ProductPack</Button>
+        <h4>Product Packs</h4>
+        <Button onClick={handleShow}>+ New Product Pack</Button>
       </div>
 
       {loading ? (
@@ -205,7 +205,7 @@ const ProductPacks: React.FC = () => {
         <p>No product packs found.</p>
       ) : (
         <DataTable
-          title="Your ProductPacks"
+          title="Your Product Packs"
           data={product_packs}
           columns={columns as any}
           highlightOnHover

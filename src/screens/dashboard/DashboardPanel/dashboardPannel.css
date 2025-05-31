@@ -1,11 +1,14 @@
 /* Reset and base styling */
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
-  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif!important;
-  background-color: #000434; /* Navy */
-  color: #FFFFFF; /* White */
-  font-size: 11px!important;
+  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif !important;
+  background-color: #000434;
+  /* Navy */
+  color: #FFFFFF;
+  /* White */
+  font-size: 11px !important;
 }
 
 /* Layout container */
@@ -17,8 +20,10 @@ body, html {
 
 /* Sidebar */
 .sidebar {
-  background-color: #000434; /* Navy */
-  color: #FFFFFF; /* White */
+  background-color: #000434;
+  /* Navy */
+  color: #FFFFFF;
+  /* White */
   width: 60px;
   min-width: 60px;
   transition: width 0.3s ease;
@@ -45,30 +50,58 @@ body, html {
 
 .nav-logo-icon {
   font-size: 1.5rem;
-  color: #F5891E; /* Orange */
+  color: #F5891E;
+  /* Orange */
 }
 
 .nav-logo-name {
   font-size: 1.1rem;
   font-weight: bold;
   display: none;
-  color: #FFFFFF; /* White */
+  color: #FFFFFF;
+  /* White */
 }
 
 .sidebar:hover .nav-logo-name {
   display: inline;
 }
 
-.nav {
+.nav-1 {
   display: flex;
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
 }
 
-.nav-list {
+.nav-list-1 {
   display: flex;
   flex-direction: column;
+}
+
+.nav-link-1 {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  color: #FFFFFF;
+  /* White */
+  transition: background-color 0.2s ease, color 0.2s ease;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.nav-link-1:hover {
+  background-color: #F5891E;
+  /* Orange */
+  color: #FFFFFF;
+  /* White */
+}
+
+.nav-link-1.active {
+  background-color: #F5891E;
+  /* Orange */
+  color: #FFFFFF;
+  /* White */
 }
 
 .nav-link {
@@ -76,31 +109,38 @@ body, html {
   align-items: center;
   padding: 0.75rem 1rem;
   cursor: pointer;
-  color: #FFFFFF!important; /* White */
+  color: #000434;
+  /* White */
   transition: background-color 0.2s ease, color 0.2s ease;
   gap: 10px;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  background-color: #F5891E; /* Orange */
-  color: #FFFFFF; /* White */
+  background-color: #F5891E !important;
+  /* Orange */
+  color: #000434;
+  /* White */
 }
 
 .nav-link.active {
-  background-color: #F5891E; /* Orange */
-  color: #FFFFFF; /* White */
+  background-color: #F5891E !important;
+  /* Orange */
+  color: #000434;
+  /* White */
 }
 
 .nav-icon {
   font-size: 1.25rem;
-  color: #FFFFFF; /* White */
+  color: #FFFFFF;
+  /* White */
 }
 
 .nav-name {
   display: none;
   font-size: 1rem;
-  color: #FFFFFF; /* White */
+  color: #FFFFFF;
+  /* White */
 }
 
 .sidebar:hover .nav-name {
@@ -112,15 +152,52 @@ body, html {
   flex-grow: 1;
   padding: 1.25rem 0.5rem;
   overflow-y: auto;
-  background-color: #FFFFFF; /* White */
-  color: #000434; /* Navy */
+  background-color: #FFFFFF;
+  /* White */
+  color: #000434;
+  /* Navy */
 }
 
 /* Scrollbar Styling */
 .main-content::-webkit-scrollbar {
   width: 6px;
 }
+
 .main-content::-webkit-scrollbar-thumb {
-  background-color: #F5891E; /* Orange */
+  background-color: #F5891E;
+  /* Orange */
   border-radius: 10px;
+}
+
+
+/* Container for the scanner */
+.scanner-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+}
+
+/* Overlay to highlight the scanning area */
+.scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  z-index: 1;
+}
+
+/* Transparent box for the barcode scanning area */
+.scanner-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 100px; /* Adjust height to match barcode shape */
+  transform: translate(-50%, -50%);
+  border: 2px solid #00ff00; /* Green border for the scanning area */
+  background: transparent;
+  z-index: 2;
 }

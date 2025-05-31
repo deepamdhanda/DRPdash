@@ -1,6 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import DataTable from "react-data-table-component";
+import "quill/dist/quill.snow.css";
+
+import Quill from "quill/core";
+
+import Toolbar from "quill/modules/toolbar";
+import Snow from "quill/themes/snow";
+
+import Bold from "quill/formats/bold";
+import Italic from "quill/formats/italic";
+import Header from "quill/formats/header";
+
+Quill.register({
+  "modules/toolbar": Toolbar,
+  "themes/snow": Snow,
+  "formats/bold": Bold,
+  "formats/italic": Italic,
+  "formats/header": Header,
+});
+
 import {
   createProductSKU,
   getAllProductSKUs,
@@ -11,6 +30,8 @@ import { getAllProducts } from "../../APIs/product";
 import { Product } from "./Products";
 import { getAllProductPacks } from "../../APIs/productPack";
 import { ProductPack } from "./ProductPacks";
+import DescriptionEditor from "./description";
+import { createAmazonS3 } from "../../APIs/amazonS3";
 
 interface ProductSKUAttribute {
   key: string;
@@ -68,7 +89,8 @@ const ProductSKUs: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<Partial<any>[]>([]);
   const [productSKUId, setProductSKUId] = useState<string>(""); // New state for ProductSKU ID
   const [calculatedWeight, setCalculatedWeight] = useState<number>(0); // New state for calculated weight
-
+  const [description, setDescription] = useState<string>("");
+  const [image, setImage] = useState<File | null>(null);
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
@@ -124,6 +146,7 @@ const ProductSKUs: React.FC = () => {
 
   const handleEdit = (productSKU: ProductSKU) => {
     setEditingProductSKU(productSKU);
+    setDescription(productSKU.product_sku_description || "");
     setProductSKUAttributes(productSKU.product_sku_attributes || []);
     setImagePreview(productSKU.product_sku_image);
     setProductSKUId(productSKU.product_sku_id || ""); // Set ProductSKU ID
@@ -142,6 +165,7 @@ const ProductSKUs: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -271,7 +295,8 @@ const ProductSKUs: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: any) => {
+
     e.preventDefault();
     const form = e.currentTarget;
 
@@ -280,9 +305,7 @@ const ProductSKUs: React.FC = () => {
       product_sku_name: (
         form.elements.namedItem("product_sku_name") as HTMLInputElement
       ).value,
-      product_sku_description: (
-        form.elements.namedItem("product_sku_description") as HTMLInputElement
-      ).value,
+      product_sku_description: description,
       product_sku_weight: calculatedWeight,
       product_sku_attributes: productSKUAttributes,
       product_sku_image: imagePreview || "",
@@ -294,6 +317,11 @@ const ProductSKUs: React.FC = () => {
     };
 
     try {
+      let imageData = null;
+      if (image) {
+        imageData = await createAmazonS3(`productSKU/${Date.now()}`, imagePreview);
+        newProductSKU.product_sku_image = imageData.url;
+      }
       if (editingProductSKU) {
         await updateProductSKU(editingProductSKU._id!, newProductSKU);
         setProductSKUs((prev) =>
@@ -396,7 +424,7 @@ const ProductSKUs: React.FC = () => {
         />
       )}
 
-      <Modal show={showModal} onHide={handleClose} size="lg">
+      <Modal show={showModal} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>
             {editingProductSKU ? "Edit Product SKU" : "Create Product SKU"}
@@ -406,39 +434,36 @@ const ProductSKUs: React.FC = () => {
           <Modal.Body>
             <Row>
               {/* Left Column */}
+              <Col md={12}>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Product SKU ID</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="product_sku_id"
+                        value={productSKUId}
+                        onChange={(e) => setProductSKUId(e.target.value)}
+                        required
+                        disabled={!!editingProductSKU}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Product SKU Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="product_sku_name"
+                        defaultValue={editingProductSKU?.product_sku_name || ""}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <DescriptionEditor value={description} onChange={setDescription} />
+              </Col>
               <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Product SKU ID</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="product_sku_id"
-                    value={productSKUId}
-                    onChange={(e) => setProductSKUId(e.target.value)}
-                    required
-                    disabled={!!editingProductSKU}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="product_sku_name"
-                    defaultValue={editingProductSKU?.product_sku_name || ""}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Description</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    name="product_sku_description"
-                    defaultValue={
-                      editingProductSKU?.product_sku_description || ""
-                    }
-                    required
-                  />
-                </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Weight (gm)</Form.Label>
                   <Form.Control
@@ -481,6 +506,9 @@ const ProductSKUs: React.FC = () => {
                       className="mt-3 w-100 rounded shadow-sm"
                       style={{ maxHeight: "200px", objectFit: "cover" }}
                     />
+                  )}
+                  {image && (
+                    <Button onClick={() => { handleSubmit('e') }}>Upload</Button>
                   )}
                 </Form.Group>
                 <Form.Group className="mb-3">
@@ -584,7 +612,7 @@ const ProductSKUs: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div>
+    </div >
   );
 };
 
