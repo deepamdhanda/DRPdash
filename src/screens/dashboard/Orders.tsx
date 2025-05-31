@@ -877,7 +877,7 @@ const Orders: React.FC = () => {
               </Button>
             )}
             {/*Cancel Order*/}
-            <Button
+            {!hasAwb && <Button
               variant={latestStatus?.status === "cancelled" ? "outline-success" : "outline-danger"}
               size="sm"
               onClick={() => {
@@ -889,7 +889,7 @@ const Orders: React.FC = () => {
               className="mt-2"
             >
               {latestStatus?.status === "cancelled" ? "Re-Activate" : "❌ Cancel Order"}
-            </Button>
+            </Button>}
           </div>
         );
       },
@@ -961,7 +961,6 @@ const Orders: React.FC = () => {
             new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
           )[0]
           : null;
-        console.log(latestStatus.status)
         return latestStatus && latestStatus.status === "cancelled";
       },
       style: {
