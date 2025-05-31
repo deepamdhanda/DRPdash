@@ -496,14 +496,18 @@ const Orders: React.FC = () => {
     }))
   };
 
-  const handleCancelOrder = async (order: Order) => {
+  const handleCancelOrder = async (order: Order, status: any) => {
     try {
       order.status.push({
-        status: "cancelled",
+        status: status.toLowerCase(),
         status_date: new Date().toISOString(),
         description: "Order cancelled by brand admin"
       })
       const response = await updateOrder(order._id, {
+        customer_name: order.customer_name,
+        customer_phone: order.customer_phone,
+        shipping_address: order.shipping_address,
+        shipping_pincode: order.shipping_pincode,
         status: order.status
       });
       if (response) {
@@ -811,7 +815,11 @@ const Orders: React.FC = () => {
       name: "Actions",
       cell: (row: Order) => {
         const hasAwb = Boolean(row.awb_number);
-
+        const latestStatus = row.status?.length
+          ? row.status.sort((a: any, b: any) =>
+            new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
+          )[0]
+          : null;
         return (
           < div style={{ textAlign: "center" }} >
             < div style={{ display: "flex", flexDirection: "row", gap: "5px" }} >
@@ -825,28 +833,30 @@ const Orders: React.FC = () => {
               </Button>
 
               {/* Print Label or Ship Now */}
-              {hasAwb ? (
+              {hasAwb && latestStatus && latestStatus.status !== "cancelled" && (
                 <Button
                   variant="success"
                   onClick={() => setLabelData([row.label])}
                 >
                   🖨️ Print Label
                 </Button>
-              ) : (
-                <Button
-                  style={{
-                    backgroundColor: "#F5891E",
-                    border: 0,
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                    color: "white",
-                  }}
-                  disabled={shipNowLoading}
-                  onClick={() => handleShipment([row])}
-                >
-                  🚚 Ship Now
-                </Button>
               )}
+              {!hasAwb && latestStatus && latestStatus.status !== "cancelled" &&
+                (
+                  <Button
+                    style={{
+                      backgroundColor: "#F5891E",
+                      border: 0,
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                      color: "white",
+                    }}
+                    disabled={shipNowLoading}
+                    onClick={() => handleShipment([row])}
+                  >
+                    🚚 Ship Now
+                  </Button>
+                )}
 
             </div>
             {/* Change Courier */}
@@ -868,17 +878,17 @@ const Orders: React.FC = () => {
             )}
             {/*Cancel Order*/}
             <Button
-              variant="outline-danger"
+              variant={latestStatus?.status === "cancelled" ? "outline-success" : "outline-danger"}
               size="sm"
               onClick={() => {
                 if (window.confirm("Are you sure you want to cancel this order?")) {
                   // Call your cancel order function here
-                  handleCancelOrder(row);
+                  handleCancelOrder(row, latestStatus?.status === "cancelled" ? "re_activate" : "cancelled");
                 }
               }}
               className="mt-2"
             >
-              ❌ Cancel Order
+              {latestStatus?.status === "cancelled" ? "Re-Activate" : "❌ Cancel Order"}
             </Button>
           </div>
         );
@@ -943,6 +953,22 @@ const Orders: React.FC = () => {
         backgroundColor: "#ffb3b3", // Light pink for duplicate orders
         color: "black",
       },
+    },
+    {
+      when: (row: any) => {
+        const latestStatus = row.status?.length
+          ? row.status.sort((a: any, b: any) =>
+            new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
+          )[0]
+          : null;
+        console.log(latestStatus.status)
+        return latestStatus && latestStatus.status === "cancelled";
+      },
+      style: {
+        backgroundColor: "#f8d7da", // Light red for cancelled orders
+        color: "#721c24", // Dark red text for cancelled orders
+        textDecoration: "line-through!important", // Strikethrough text for cancelled orders
+      }
     },
   ];
 
