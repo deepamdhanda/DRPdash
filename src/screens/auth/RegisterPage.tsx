@@ -12,6 +12,7 @@ const registerSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  phone: z.string().regex(/^(?:\+?91|0091|91|0)?[6-9]\d{9}$/, "Phone number must be valid"),
 });
 
 // TypeScript type derived from the schema
@@ -84,6 +85,21 @@ const RegisterPage: React.FC = () => {
             />
             {errors.email && (
               <div className={styles.errorMessage}>{errors.email.message}</div>
+            )}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="phone" className="form-label">
+              Phone Number
+            </label>
+            <input
+              id="phone"
+              type="phone"
+              className={`form-control ${errors.phone ? "is-invalid" : ""}`}
+              placeholder="+91 12345 67890"
+              {...register("phone")}
+            />
+            {errors.phone && (
+              <div className={styles.errorMessage}>{errors.phone.message}</div>
             )}
           </div>
 

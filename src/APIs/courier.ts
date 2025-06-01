@@ -63,7 +63,24 @@ export const getCommonWarehouses = (order: any): CommonWarehouse[] => {
 
 export const checkShipmentServiceavailablity = async (order: any, warehouse: any = null) => {
   try {
-
+    if (!order || !order.product_details || order.product_details.length === 0) {
+      throw new Error("Invalid order data");
+    }
+    if (!order.shipping_address || !order.shipping_city || !order.shipping_state || !order.shipping_pincode) {
+      throw new Error("Incomplete shipping information in order");
+    }
+    if (!order.pack_deatils || !order.pack_deatils.length) {
+      throw new Error("Incomplete packing details in order");
+    }
+    if (!order.payment_method) {
+      throw new Error("Payment method not specified in order");
+    }
+    if (!order.total_amount) {
+      throw new Error("Total amount not specified in order");
+    }
+    if (!order._id) {
+      throw new Error("Order ID not specified");
+    }
     const weight = (order.product_details.reduce((total: number, product: any) =>
       total + (product.product_weight || 0) * (product.quantity || 0), 0)) || 100;
 

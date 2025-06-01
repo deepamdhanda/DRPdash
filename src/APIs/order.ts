@@ -47,6 +47,7 @@ export const createOrder = async (data: any) => {
 
 export const updateOrder = async (id: string, data: any) => {
   try {
+    data.product_sku_id = undefined
     await appAxios.patch(`${orders_url}/${id}`, data);
     toast.success("Order updated successfully!");
     return true;

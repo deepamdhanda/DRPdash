@@ -56,6 +56,7 @@ export interface Order {
   label?: any;
   recommended_courier_id?: string;
   recommended_courier_name?: string;
+  recommended_courier_rate?: number;
   shipping_courier_id?: string;
   recommended_warehouse_id?: string;
   shipping_warehouse_id?: string;
@@ -224,7 +225,7 @@ const Orders: React.FC = () => {
       const data = await response.data;
       setChannelAccounts(data);
     } catch (error) {
-      console.error("Error fetching channel accounts", error);
+      toast.error("Error fetching channel accounts" + error);
     }
   };
 
@@ -248,7 +249,7 @@ const Orders: React.FC = () => {
       setOrders(response.orders);
       setTotalOrders(response.total);
     } catch (error) {
-      console.error("Error fetching orders", error);
+      toast.error("Error fetching orders" + error);
     } finally {
       setIsLoading(false);
     }
@@ -295,7 +296,7 @@ const Orders: React.FC = () => {
         handleShipmentClose()
       }
     } catch (error) {
-      console.log(error)
+      toast.error("Error: " + error)
     }
   }
 
@@ -307,6 +308,29 @@ const Orders: React.FC = () => {
     }
 
     setShipNowLoading(true);
+    const courierTotals = orders.reduce((acc: any, order: any) => {
+      const courierName = order.recommended_courier_name || 'Unknown';
+      const rate = order.recommended_courier_rate || 0;
+
+      if (!acc[courierName]) {
+        acc[courierName] = 0;
+      }
+
+      acc[courierName] += rate;
+      return acc;
+    }, {});
+    const breakdownText = Object.entries(courierTotals)
+      .map(([name, amount]: any) => `${name}: ₹${amount.toFixed(2)}`)
+      .join('\n');
+
+    const totalAmount: any = Object.values(courierTotals).reduce((sum: any, val: any) => sum + val, 0);
+
+    if (confirm(
+      `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(2)}\n\nDo you want to proceed?`
+    ) === false) {
+      setShipNowLoading(false);
+      return;
+    }
     len > 1 && toast.info(`Booking couriers for ${len} orders. Please do not refresh...`);
 
     let doneCount = 0;
@@ -336,7 +360,7 @@ const Orders: React.FC = () => {
             fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
           }
         } catch (err) {
-          console.error(`Failed booking for order ${order.order_id}:`, err);
+          toast.error(`Failed booking for order ${order.order_id}:` + err);
           toast.error(`Order ${order.order_id}: Failed to book shipment.`);
         }
       })
@@ -347,7 +371,7 @@ const Orders: React.FC = () => {
 
 
   const handleBulkPrint = (orders: Order[]) => {
-    console.log("Printing labels for orders:", orders);
+    toast.info("Printing labels for orders:" + orders);
     setLabelData(orders.map(order => order.label));
   }
 
@@ -517,7 +541,7 @@ const Orders: React.FC = () => {
         toast.error("Failed to cancel order.");
       }
     } catch (error) {
-      console.error("Error cancelling order", error);
+      toast.error("Error cancelling order" + error);
       toast.error("Failed to cancel order.");
     }
   }
@@ -533,7 +557,7 @@ const Orders: React.FC = () => {
         fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
         handleClose();
       } catch (error) {
-        console.error("Error updating order", error);
+        toast.error("Error updating order" + error);
       }
     }
   };
@@ -1004,11 +1028,10 @@ const Orders: React.FC = () => {
                       new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
                     )[0]
                     : null;
-                  console.log(o.recommended_courier_id, o.shipping_courier_id, latestStatus)
                   return (
                     !o.recommended_courier_id &&
                     !o.shipping_courier_id &&
-                    (!latestStatus || latestStatus.type !== "cancelled") &&
+                    (!latestStatus || latestStatus.status !== "cancelled") &&
                     o
                   );
                 })
@@ -1050,7 +1073,7 @@ const Orders: React.FC = () => {
                     o.issues.length === 0 &&
                     !o.shipping_courier_id &&
                     o &&
-                    (!latestStatus || latestStatus.type !== "cancelled")
+                    (!latestStatus || latestStatus.status !== "cancelled")
                   );
                 })
               )
@@ -1277,7 +1300,7 @@ const Orders: React.FC = () => {
                   }
                 } catch (error) {
                   toast.error("Failed to fetch pincode details");
-                  console.error("Pincode API error:", error);
+                  toast.error("Pincode API error:" + error);
                 }
               }} defaultValue={editOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
               <div id="pin_error" style={{ color: 'red' }}></div>

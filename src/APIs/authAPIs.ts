@@ -18,7 +18,6 @@ export const LoginUser = async (userdata: LoginFormData, next: () => void) => {
       next();
     }
   } catch (error: any) {
-    alert(JSON.stringify(error));
     toast.error(error.message || "something went wrong");
   }
 };
