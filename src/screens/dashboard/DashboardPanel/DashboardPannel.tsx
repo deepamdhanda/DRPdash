@@ -56,6 +56,9 @@ const DashboardPanel: React.FC = () => {
     const matchedLink = navLinks.find((link) => link.path === currentPath);
     if (matchedLink) {
       setActiveLink(matchedLink.name as TNavLinkName);
+      document.title = `${matchedLink.name} - Orderz Up`; // Dynamically update the title
+    } else {
+      document.title = "Dashboard - Orderz Up"; // Default title
     }
   }, [location.pathname]);
 
@@ -112,6 +115,7 @@ const DashboardPanel: React.FC = () => {
       </div>
 
       <div className="main-content">
+        {/* hello */}
         <Outlet />
       </div>
     </div>

@@ -75,7 +75,8 @@ const VerifyPage: React.FC = () => {
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
         <div className={styles.loginHeader}>
-          <h2>DRP CRM</h2>
+          <h2>Orderz Up</h2>
+<h5  style={{color:"black", textDecoration:"underline"}}>Where Every Order Takes Off.</h5>
           <p>Please verify your email</p>
         </div>
 
