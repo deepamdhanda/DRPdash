@@ -1722,7 +1722,11 @@ const Orders: React.FC = () => {
       </Modal>
       <div style={{ display: 'none' }}>
         <div ref={labelRef}>
-          {labelData && labelData.map((ld: any) => (<ShippingLabel labelData={ld} />))}
+          {labelData && labelData.map((ld: any, index: number) => (
+            <div key={index} style={{ pageBreakAfter: 'always' }}>
+              <ShippingLabel labelData={ld} />
+            </div>
+          ))}
         </div>
       </div>
 
