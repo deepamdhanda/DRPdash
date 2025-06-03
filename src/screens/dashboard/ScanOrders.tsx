@@ -272,6 +272,7 @@ const ScanOrders: React.FC = () => {
               <Form.Label>Select Status</Form.Label>
               <Form.Select value={selectedStatus} onChange={handleStatusChange}>
                 <option value="">Select a status</option>
+                <option value="ready_for_pickup">Ready for Pickup</option>
                 <option value="picked_up">Picked Up</option>
                 <option value="rto_recieved">RTO Recieved</option>
                 <option value="damaged_rto_recieved">

@@ -159,7 +159,9 @@ const ShippingLabel = ({ labelData }: any) => {
           <Barcode value={data.seller_order_id} height={60} fontSize={16} />
         </div>
         <div style={{ textAlign: 'center' }}><b><u>Return Address</u></b></div>
-        <div><b>{data.seller_name}</b> (Contact: {data.seller_phone || '-'})</div>
+        <div><b>{data.seller_name}</b> 
+        {/* (Contact: {data.seller_phone || '-'}) */}
+        </div>
         <div>{data.seller_address}, {data.seller_address2} - {data.seller_pincode}</div>
 
       </div>
@@ -371,7 +373,7 @@ const Orders: React.FC = () => {
 
 
   const handleBulkPrint = (orders: Order[]) => {
-    toast.info("Printing labels for orders:" + orders);
+    toast.info("Printing labels for " + orders.length + " orders. Please wait...");
     setLabelData(orders.map(order => order.label));
   }
 
