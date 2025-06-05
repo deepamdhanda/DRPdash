@@ -33,9 +33,7 @@ const ScanOrders: React.FC = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [scanOrdersData] = await Promise.all([
-        getAllScanOrders(),
-      ]);
+      const [scanOrdersData] = await Promise.all([getAllScanOrders()]);
       setScanOrders(scanOrdersData);
     } catch (error) {
       console.error("Error loading pools or users", error);
@@ -72,7 +70,9 @@ const ScanOrders: React.FC = () => {
   const handleUpdateOrders = async () => {
     try {
       // Call the update order function with the scanned barcodes and selected status
-      toast.success("Updating orders:" + scannedBarcodes + "to status:" + selectedStatus);
+      toast.success(
+        "Updating orders:" + scannedBarcodes + "to status:" + selectedStatus
+      );
       if (await createScanOrder({ ids: scannedBarcodes, selectedStatus })) {
         fetchInitialData();
       }
@@ -87,7 +87,7 @@ const ScanOrders: React.FC = () => {
 
   const handleToggleStatus = (row: any) => {
     console.log("Toggling status for order:", row);
-  }
+  };
 
   const columns = [
     {
@@ -96,17 +96,17 @@ const ScanOrders: React.FC = () => {
         <>
           {row.createdAt
             ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
             : "—"}
           <br />
           {row.createdAt
             ? new Date(row.createdAt).toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+                hour: "2-digit",
+                minute: "2-digit",
+              })
             : "—"}
         </>
       ),
@@ -119,17 +119,26 @@ const ScanOrders: React.FC = () => {
     },
     {
       name: "Requested Status",
-      selector: (row: ScanOrder) => row.requested_status.replace(/_/g, " ").toUpperCase() || "—",
+      selector: (row: ScanOrder) =>
+        row.requested_status.replace(/_/g, " ").toUpperCase() || "—",
       minWidth: "150px",
     },
     {
       name: "Barcodes Scanned",
       cell: (row: ScanOrder) => (
         <div>
-          Total:  <span className={"text-primary"}>{row.requested_barcodes.length}</span><br />
-          Updated:  <span className={"text-success"}>{row.updated_orders.length}</span><br />
-          Skipped:  <span className={"text-danger"}>{row.skipped_orders.length}</span><br />
-        </div >
+          Total:{" "}
+          <span className={"text-primary"}>
+            {row.requested_barcodes.length}
+          </span>
+          <br />
+          Updated:{" "}
+          <span className={"text-success"}>{row.updated_orders.length}</span>
+          <br />
+          Skipped:{" "}
+          <span className={"text-danger"}>{row.skipped_orders.length}</span>
+          <br />
+        </div>
       ),
       minWidth: "200px",
     },
@@ -192,7 +201,8 @@ const ScanOrders: React.FC = () => {
                 if (result) {
                   handleBarcodeDetected(result);
                 }
-                if (err) { }
+                if (err) {
+                }
               }}
             />
             <div className="scanner-overlay">
@@ -201,15 +211,14 @@ const ScanOrders: React.FC = () => {
           </div>
           <Form.Group className="mb-3">
             <Form.Label>Enter Maunally</Form.Label>
-            <Form.Control
-              type="number"
-              name="barcode"
-            />
+            <Form.Control type="number" name="barcode" />
             <Button
               variant="primary"
               className="mt-2"
               onClick={() => {
-                const barcodeInput = document.querySelector('input[name="barcode"]') as HTMLInputElement;
+                const barcodeInput = document.querySelector(
+                  'input[name="barcode"]'
+                ) as HTMLInputElement;
                 if (barcodeInput && barcodeInput.value) {
                   const barcode = barcodeInput.value.trim();
                   if (!scannedBarcodes.includes(barcode)) {
@@ -249,7 +258,11 @@ const ScanOrders: React.FC = () => {
       </Modal>
 
       {/* Status Selection Modal */}
-      <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)} centered>
+      <Modal
+        show={showStatusModal}
+        onHide={() => setShowStatusModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Update Order Status</Modal.Title>
         </Modal.Header>
@@ -261,9 +274,13 @@ const ScanOrders: React.FC = () => {
                 <option value="">Select a status</option>
                 <option value="picked_up">Picked Up</option>
                 <option value="rto_recieved">RTO Recieved</option>
-                <option value="damaged_rto_recieved">Damaged RTO Recieved</option>
+                <option value="damaged_rto_recieved">
+                  Damaged RTO Recieved
+                </option>
                 <option value="return_recieved">Return Recieved</option>
-                <option value="damaged_return_recieved">Damaged Return Recieved</option>
+                <option value="damaged_return_recieved">
+                  Damaged Return Recieved
+                </option>
                 <option value="cancelled">Cancelled</option>
               </Form.Select>
             </Form.Group>

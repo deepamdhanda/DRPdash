@@ -22,6 +22,7 @@ import ResetPasswordPage from "./screens/auth/ResetPasswordPage.tsx";
 import { Wallets } from "./screens/dashboard/Wallets.tsx";
 import { ScanOrders } from "./screens/dashboard/ScanOrders.tsx";
 import { ProfitCalculator } from "./screens/dashboard/ProfitCalculator.tsx";
+import NDROrders from "./screens/dashboard/NDROders.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -90,6 +91,10 @@ const router = createBrowserRouter([
           {
             path: "channelSKU", // /Dashboard/pools
             element: <ChannelSKU />,
+          },
+          {
+            path: "NDR", // /Dashboard/pools
+            element: <NDROrders />,
           },
           {
             path: "orders", // /Dashboard/pools
