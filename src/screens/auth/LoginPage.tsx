@@ -34,7 +34,9 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     // Simulate API call
     await LoginUser(data, () => {
-      navigate("/dashboard");
+      const params = new URLSearchParams(window.location.search);
+      const redirectPath = params.get("redirect") || "/dashboard";
+      navigate(redirectPath)
     });
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request
@@ -50,7 +52,7 @@ const LoginPage: React.FC = () => {
       <div className={styles.loginCard}>
         <div className={styles.loginHeader}>
           <h2>Orderz Up</h2>
-<h5  style={{color:"black", textDecoration:"underline"}}>Where Every Order Takes Off.</h5>
+          <h5 style={{ color: "black", textDecoration: "underline" }}>Where Every Order Takes Off.</h5>
           <p>Please sign in to continue</p>
         </div>
 
@@ -76,7 +78,7 @@ const LoginPage: React.FC = () => {
               <label htmlFor="password" className="form-label">
                 Password
               </label>
-              <a href="#" className={styles.forgotPassword} onClick={()=>{navigate('/forgotPassword')}}>
+              <a href="#" className={styles.forgotPassword} onClick={() => { navigate('/forgotPassword') }}>
                 Forgot Password?
               </a>
             </div>

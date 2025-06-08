@@ -49,7 +49,20 @@ Axios.interceptors.response.use(
     if (error?.response?.status === 401) {
       errorMessage = "Login Failed.";
       Cookies.remove("authToken"); // Remove the token from cookies
-      window.location.href = "/login";
+      const search = window.location.search;
+      const urlParams = new URLSearchParams(search);
+
+      let finalRedirect = "";
+
+      if (urlParams.has("redirect")) {
+        // If redirect param already exists, use the full search string
+        finalRedirect = search;
+      } else {
+        // Else create a redirect param with the current path
+        finalRedirect = `?redirect=${encodeURIComponent(window.location.pathname + search)}`;
+      }
+
+      window.location.href = `/login${finalRedirect}`;
     }
 
 

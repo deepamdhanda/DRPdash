@@ -8,6 +8,7 @@ import {
 } from "../../APIs/channelAccount";
 import { getAllChannels } from "../../APIs/channel";
 import { getAllPools } from "../../APIs/pool";
+import { useLocation } from "react-router-dom";
 
 export interface ChannelAccount {
   _id?: string;
@@ -32,11 +33,31 @@ const ChannelAccounts: React.FC = () => {
   const [editingChannelAccount, setEditingChannelAccount] =
     useState<ChannelAccount | null>(null);
   const [keys, setKeys] = useState<{ key: string; value: string }[]>([]);
+  const [url_channel, setUrlChannel] = useState<any>();
   // const [selectedChannelId, setSelectedChannelId] = useState(editingChannelAccount?.channel_id?._id || "");
 
+  const location = useLocation();
   useEffect(() => {
     fetchInitialData();
   }, []);
+  useEffect(() => {
+    checkNewToken()
+
+  }, [channels])
+  const checkNewToken = async () => {
+
+    // Parse query params
+    const params = new URLSearchParams(location.search);
+    if (params.get("channel") === "shopify" && params.get("token") && params.get("store_url")) {
+      setKeys([
+        { key: "api_access_token", value: params.get("token") || "" },
+        { key: "store_url", value: params.get("store_url") || "" }
+      ])
+
+      setUrlChannel(channels.find(c => c.channel_name.toLowerCase() === "shopify"))
+      setShowModal(true)
+    }
+  }
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -59,6 +80,7 @@ const ChannelAccounts: React.FC = () => {
   const handleClose = () => {
     setShowModal(false);
     setEditingChannelAccount(null);
+    setUrlChannel(null)
     setKeys([]);
   };
 
@@ -163,13 +185,12 @@ const ChannelAccounts: React.FC = () => {
       channel_id: form.channel_id.value
         ? channels.find((channel) => channel._id === form.channel_id.value)
         : undefined,
-      fulfillment_type: form.fulfillment_type.value as ChannelAccount["fulfillment_type"],
+      fulfillment_type: "Self",
       keys: keysObject,
       status: editingChannelAccount?.status || "active",
       created_by: "",
       ownership: { _id: "", name: "" },
     };
-
     try {
       if (editingChannelAccount) {
         await updateChannelAccount(editingChannelAccount._id!, formData);
@@ -330,7 +351,8 @@ const ChannelAccounts: React.FC = () => {
               <Form.Select
                 name="channel_id"
                 onChange={handleChannelChange}
-                defaultValue={editingChannelAccount?.channel_id?._id || ""}
+                value={editingChannelAccount?.channel_id?._id || url_channel?._id || ""}
+                defaultValue={editingChannelAccount?.channel_id?._id || url_channel?._id || ""}
               >
                 <option value="">Select Channel</option>
                 {channels.map((channel) => (

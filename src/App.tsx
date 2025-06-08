@@ -10,16 +10,17 @@ function App() {
   const location = useLocation();
   const authRoutes = ["/login", "/register", "/verify", "/forgotPassword", "/resetPassword"];
   useEffect(() => {
+    const currentPath = window.location.pathname + window.location.search;
     const token = Cookies.get("authToken");
     if (!token) {
       if (!authRoutes.includes(location.pathname)) {
         console.log("No token found, Invalid Path, redirecting to login");
-        navigator("/login");
+        navigator(`/login?redirect=${encodeURIComponent(currentPath)}`);
       }
       // console.log("No token found, Valid Path, redirecting to path");
     } else {
       // console.log("Token found, redirecting to dashboard");
-      navigator("/dashboard");
+      navigator(currentPath);
     }
   }, []);
   return (

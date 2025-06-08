@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import 'react-datepicker/dist/react-datepicker.css';
 import "./dashboardPannel.css";
 import {
   FaSignOutAlt,

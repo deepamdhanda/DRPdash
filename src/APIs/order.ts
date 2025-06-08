@@ -57,6 +57,18 @@ export const updateOrder = async (id: string, data: any) => {
   }
 };
 
+export const getAllFilters = async () => {
+  try {
+    const response = await appAxios.get(`${orders_url}/filters`, {
+      withCredentials: true,
+    });
+    return response.data as any;
+  } catch (error: any) {
+    toast.error("Failed to fetch pools.");
+    throw error;
+  }
+}
+
 export const deleteOrder = async (id: string) => {
   try {
     await appAxios.delete(`${orders_url}/${id}`);

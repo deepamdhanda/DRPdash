@@ -15,3 +15,4 @@ export const channelAccounts_url = `${drpCrmBaseUrl}/api/channelAccount`;
 export const channels_url = `${drpCrmBaseUrl}/api/channel`;
 export const amazonS3s_url = `${drpCrmBaseUrl}/api/amazonS3`;
 export const walletRecharge_url = `${drpCrmBaseUrl}/api/walletRecharge`;
+export const dashboard_url = `${drpCrmBaseUrl}/api/dashboard`;

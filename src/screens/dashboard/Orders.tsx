@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Form, Row, Col, Card, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllOrders, updateOrder } from "../../APIs/order";
+import { getAllOrders, updateOrder, getAllFilters } from "../../APIs/order";
 import { fetchNewOrders } from "../../APIs/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/dash";
@@ -15,6 +15,11 @@ import { bookCourier, checkShipmentServiceavailablity, getCommonWarehouses } fro
 import { toast } from "react-toastify";
 import Barcode from "react-barcode";
 import axios from "axios";
+import { Warehouse } from "./Warehouse";
+import { getAllWarehouses } from "../../APIs/warehouse";
+import { getAllProductSKUs } from "../../APIs/productSKU";
+import DatePicker from "react-datepicker";
+
 
 export interface User {
   _id: string;
@@ -64,13 +69,19 @@ export interface Order {
 
 interface FilterParams {
   productName?: string;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   channelAccountId?: string;
+  selectedStatuses?: string[];
+  searchQuery?: string;
+  productSKUId?: string;
+  warehouseId?: string;
+  paymentMethod?: string;
 }
-export interface IChannelAccount {
-  _id: string;
-  channel_account_name: string;
+
+interface PaymentMethod {
+  method?: string;
+  count?: Number;
 }
 
 const ShippingLabel = ({ labelData }: any) => {
@@ -159,8 +170,8 @@ const ShippingLabel = ({ labelData }: any) => {
           <Barcode value={data.seller_order_id} height={60} fontSize={16} />
         </div>
         <div style={{ textAlign: 'center' }}><b><u>Return Address</u></b></div>
-        <div><b>{data.seller_name}</b> 
-        {/* (Contact: {data.seller_phone || '-'}) */}
+        <div><b>{data.seller_name}</b>
+          {/* (Contact: {data.seller_phone || '-'}) */}
         </div>
         <div>{data.seller_address}, {data.seller_address2} - {data.seller_pincode}</div>
 
@@ -195,8 +206,8 @@ const Orders: React.FC = () => {
   // Filter states
   const [filters, setFilters] = useState<FilterParams>({});
   const [productName, setProductName] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<Date>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [endDate, setEndDate] = useState<Date>(new Date());
   const [channelAccountId, setChannelAccountId] = useState<string>("");
   const [channelAccounts, setChannelAccounts] = useState<Array<any>>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -206,7 +217,15 @@ const Orders: React.FC = () => {
   const [commonWarehouses, setCommonWarehouses] = useState<any>(null)
   const [labelData, setLabelData] = useState<any>([]);
   const [shipNowLoading, setShipNowLoading] = useState<boolean>(false);
-
+  const [allStatus, setAllStatus] = useState<any[]>([])
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [warehouseId, setWarehouseId] = useState<string>()
+  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([])
+  const [productSKUId, setProductSKUId] = useState<string>()
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
+  const [paymentMethod, setPaymentMethod] = useState<string>()
   const labelRef = useRef<HTMLDivElement>(null);;
   useEffect(() => {
     setIsLoading(false);
@@ -219,7 +238,18 @@ const Orders: React.FC = () => {
       handlePrint();
     }
   }, [labelData]);
-
+  useEffect(() => {
+    innitialFetch()
+  }, [])
+  const innitialFetch = async () => {
+    const allFiltersData = await getAllFilters()
+    const allWarehouseData = await getAllWarehouses();
+    const allProductSKUData = await getAllProductSKUs();
+    setAllStatus(allFiltersData.statuses)
+    setPaymentMethods(allFiltersData.paymentMethods)
+    setWarehouses(allWarehouseData)
+    setProductSKUs(allProductSKUData)
+  }
   const fetchChannelAccounts = async () => {
     try {
       // Replace with your actual API endpoint for fetching channel accounts
@@ -263,6 +293,11 @@ const Orders: React.FC = () => {
     if (startDate) newFilters.startDate = startDate;
     if (endDate) newFilters.endDate = endDate;
     if (channelAccountId) newFilters.channelAccountId = channelAccountId;
+    if (selectedStatuses) newFilters.selectedStatuses = selectedStatuses
+    if (searchQuery) newFilters.searchQuery = searchQuery
+    if (productSKUId) newFilters.productSKUId = productSKUId
+    if (warehouseId) newFilters.warehouseId = warehouseId
+    if (paymentMethod) newFilters.paymentMethod = paymentMethod
 
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page when applying filters
@@ -270,12 +305,15 @@ const Orders: React.FC = () => {
   };
 
   const resetFilters = () => {
+    setSearchQuery("")
     setProductName("");
-    setStartDate("");
-    setEndDate("");
+    setStartDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+    setEndDate(new Date());
     setChannelAccountId("");
     setFilters({});
     setCurrentPage(1);
+    setSelectedStatuses([]);
+    setShowFilters(false)
     fetchOrders(1, rowsPerPage, {});
   };
 
@@ -1105,75 +1143,162 @@ const Orders: React.FC = () => {
         </div>
       </div>
 
-      {
-        showFilters && (
-          <Card className="mb-3">
-            <Card.Body>
-              <Row>
-                <Col md={3}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Product Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      placeholder="Search by product name"
-                      value={productName}
-                      onChange={(e) => setProductName(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Channel Account</Form.Label>
-                    <Form.Select
-                      value={channelAccountId}
-                      onChange={(e) => setChannelAccountId(e.target.value)}
-                    >
-                      <option value="">All Channel Accounts</option>
-                      {channelAccounts.map((account) => (
-                        <option key={account._id} value={account._id}>
-                          {account.channel_account_name}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>From Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>To Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="secondary"
-                  className="me-2"
-                  onClick={resetFilters}
-                >
-                  Reset
-                </Button>
-                <Button variant="primary" onClick={applyFilters}>
-                  Apply Filters
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        )
-      }
+      <Modal show={showFilters} onHide={() => setShowFilters(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Filter Orders</Modal.Title>
+        </Modal.Header>
+
+
+        <Modal.Body>
+          <Form>
+            {/* Search Input */}
+            <Row className="mb-4">
+              <Col>
+                <Form.Group>
+                  <Form.Label>Search</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by customer name, contact, address, order IDs, AWB number"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Filters */}
+            <Row className="mb-4">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Channel Account</Form.Label>
+                  <Form.Select
+                    value={channelAccountId}
+                    onChange={(e) => setChannelAccountId(e.target.value)}
+                  >
+                    <option value="">All Channel Accounts</option>
+                    {channelAccounts.map((account) => (
+                      <option key={account._id} value={account._id}>
+                        {account.channel_account_name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Warehouse</Form.Label>
+                  <Form.Select
+                    value={warehouseId}
+                    onChange={(e) => setWarehouseId(e.target.value)}
+                  >
+                    <option value="">All Warehouses</option>
+                    {warehouses.map((warehouse) => (
+                      <option key={warehouse._id} value={warehouse._id}>
+                        {warehouse.name}, {warehouse.address1}, {warehouse.City} - {warehouse.State} ({warehouse.pincode})
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-4">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Product SKU</Form.Label>
+                  <Form.Select
+                    value={productSKUId}
+                    onChange={(e) => setProductSKUId(e.target.value)}
+                  >
+                    <option value="">All Product SKUs</option>
+                    {productSKUs.map((sku) => (
+                      <option key={sku._id} value={sku._id}>
+                        {sku.product_sku_id} - {sku.product_sku_name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Payment Method</Form.Label>
+                  <Form.Select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <option value="">All Payment Methods</option>
+                    {paymentMethods.map((method) => (
+                      <option key={method.method} value={method.method}>
+                        {method.method} ({(method.count || 0).toString()})
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-4">
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label>Status</Form.Label>
+                  <Form.Select
+                    multiple
+                    value={selectedStatuses}
+                    onChange={(e) =>
+                      setSelectedStatuses(Array.from(e.target.selectedOptions, (opt) => opt.value))
+                    }
+                  >
+                    {allStatus.map((status) => (
+                      <option key={status.status} value={status.status}>
+                        {status.status} ({status.count})
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Date Range Picker */}
+            <Row>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label>Date Range</Form.Label>
+                  <DatePicker
+                    selectsRange
+                    startDate={startDate}
+                    endDate={endDate}
+                    maxDate={new Date()}
+                    monthsShown={2}
+
+                    onChange={(dates: any) => {
+                      const [start, end] = dates;
+                      setStartDate(start);
+                      setEndDate(end);
+                    }}
+                    isClearable
+                    className="form-control"
+                    placeholderText="Select date range"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={resetFilters}>
+            Reset
+          </Button>
+          <Button variant="primary" onClick={() => {
+            applyFilters();
+            setShowFilters(false);
+          }}>
+            Apply Filters
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <DataTable
         title="Your Orders"

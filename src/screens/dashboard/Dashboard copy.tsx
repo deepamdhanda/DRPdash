@@ -16,45 +16,12 @@ export const Dashboard: React.FC = () => {
   // Filters and data states
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date>(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  );
+  const [startDate, setStartDate] = useState<Date>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
-  const [productSKUId, setProductSKUId] = useState<string>();
+  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([])
+  const [productSKUId, setProductSKUId] = useState<string>()
   const [dateWiseSummary, setDateWiseSummary] = useState<any[]>([]);
   const [stateWiseSummary, setStateWiseSummary] = useState<any[]>([]);
-
-  // Chart state for dynamic updates
-  const [chartSeries, setChartSeries] = useState<any[]>([]);
-  const [chartOptions, setChartOptions] = useState<any>({});
-  const [stateChartSeries, setStateChartSeries] = useState<any[]>([]);
-  const [stateChartOptions, setStateChartOptions] = useState<any>({});
-  const [statusChartSeries, setStatusChartSeries] = useState<number[]>([]);
-  const [statusChartOptions, setStatusChartOptions] = useState<any>({});
-
-  // Colors for statuses
-  const statusColors: Record<string, string> = {
-    Delivered: "#28a745",    // Green - Success, Growth, Positive outcome
-    RTO: "#dc3545",          // Red - Danger, Error, Urgency
-    Transit: "#007bff",      // Blue - Trust, Calm, Information in progress
-    Pickup: "#fd7e14",       // Orange - Energy, Attention, Active process
-    New: "#17a2b8",          // Gray - Neutral, Inactive, Unknown
-    Cancelled: "#a71d2a",    // Dark Red - Seriousness, Stop, Critical error
-
-    // Additional states with psychological colors:
-    Pending: "#ffc107",      // Amber/Yellow - Warning, Caution, Needs attention
-    Failed: "#b22222",       // Firebrick Red - Strong danger, failure
-    Processing: "#17a2b8",   // Cyan/Teal - Stability, reliability, in-progress
-    OnHold: "#ff8800",       // Dark Orange - Paused, waiting state
-    Returned: "#800080",     // Purple - Complexity, returned/refund
-    Partial: "#20c997",      // Mint/Teal - Partial success, ongoing
-    Scheduled: "#00796b",    // Teal/Dark Green - Planned, scheduled
-    Completed: "#2e7d32",    // Dark Green - Final success, completion
-    Error: "#e53935",        // Bright Red - Error, alert
-    Other: "#6c757d",        // Gray - Default fallback neutral
-  };
-
 
   useEffect(() => {
     innitialFetch();
@@ -63,192 +30,154 @@ export const Dashboard: React.FC = () => {
   const innitialFetch = async () => {
     const productSKUData = await getAllProductSKUs();
     const channelAccountsData = await getAllChannelAccounts();
-    setProductSKUs(productSKUData);
-    setChannelAccounts(channelAccountsData);
-  };
+    setProductSKUs(productSKUData)
+    setChannelAccounts(channelAccountsData)
+  }
 
   const fetchSummary = async () => {
     try {
-      setStatusChartSeries([]);
-      let data: any = {};
+      let data: any = {}
       if (selectedChannel) data.channel_account_id = selectedChannel;
       if (startDate) data.startDate = startDate;
-      endDate
-        ? (data.endDate = endDate)
-        : (data.endDate = new Date().toISOString().slice(0, 10));
+      endDate ? data.endDate = endDate : data.endDate = (new Date()).toISOString().slice(0, 10);;
 
       const res: any = await getOrdersSummary(data);
       if (res) {
         setDateWiseSummary(res.data.dateLevel);
-        setStateWiseSummary(res.data.state);
+        setStateWiseSummary(res.data.state)
       }
     } catch (error) {
       console.error("Failed to fetch order dateWiseSummary", error);
     }
   };
 
-  // Fetch summary when filters change
+  // Fetch initial dateWiseSummary on mount and whenever filters change
   useEffect(() => {
     fetchSummary();
   }, [selectedChannel, startDate, endDate]);
 
-  // Update chart data for dateWiseSummary chart
-  useEffect(() => {
-    if (!dateWiseSummary || dateWiseSummary.length === 0) {
-      setChartSeries([]);
-      setChartOptions({});
-      return;
+  // Prepare chart data
+  const allStatuses = Array.from(
+    new Set(dateWiseSummary.flatMap(d => d.statuses.map((s: any) => s.status)))
+  );
+  const statusColors: Record<string, string> = {
+    Delivered: '#28a745',  // green
+    RTO: '#dc3545',        // red
+    Transit: '#007bff',    // blue
+    Pickup: '#fd7e14',     // orange
+    New: '#6c757d',        // gray
+    Cancelled: '#a71d2a',  // dark red
+    Other: '#6c757d'       // fallback gray
+  };
+
+  const chartSeries = allStatuses.map(status => ({
+    name: status,
+    data: dateWiseSummary.map((day: any) => {
+      const statusData = day.statuses.find((s: any) => s.status === status);
+      return statusData ? statusData.count : 0;
+    }),
+    color: statusColors[status]
+  }));
+
+  const chartOptions: ApexCharts.ApexOptions = {
+    chart: {
+      type: "bar",
+      stacked: true,
+      toolbar: { show: true },
+    },
+    xaxis: {
+      categories: dateWiseSummary.map((day: any) => day.date),
+      title: { text: "Date" }
+    },
+    yaxis: {
+      title: { text: "Orders Count" }
+    },
+    colors: ["#F5891E", "#000434", "#A1A1A1", "#34A853", "#EA4335"],
+    legend: {
+      position: "top"
+    },
+    tooltip: {
+      shared: true,
+      intersect: false
     }
+  };
+  const allStateStatuses = Array.from(
+    new Set(stateWiseSummary.flatMap((s: any) => s.statuses.map((status: any) => status.status)))
+  );
 
-    const allStatuses = Array.from(
-      new Set(dateWiseSummary.flatMap((d) => d.statuses.map((s: any) => s.status)))
-    );
+  const stateChartSeries = allStateStatuses.map(status => ({
+    name: status,
+    data: stateWiseSummary.map((state: any) => {
+      const found = state.statuses.find((s: any) => s.status === status);
+      return found ? found.count : 0;
+    }),
+    color: statusColors[status] || statusColors["Other"],
+  }));
 
-    const series = allStatuses.map((status) => ({
-      name: status,
-      data: dateWiseSummary.map((day: any) => {
-        const statusData = day.statuses.find((s: any) => s.status === status);
-        return statusData ? statusData.count : 0;
+  const stateChartOptions: ApexCharts.ApexOptions = {
+    chart: {
+      type: "bar",
+      stacked: true,
+      toolbar: { show: true }
+    },
+    plotOptions: {
+      bar: {
+        horizontal: true
+      }
+    },
+    xaxis: {
+      categories: stateWiseSummary.map((state: any) => {
+        console.log(state.state)
+        return (state.state || "Other")
       }),
-      color: statusColors[status] || statusColors.Other,
-    }));
-
-    const options: ApexCharts.ApexOptions = {
-      chart: {
-        type: "bar",
-        stacked: true,
-        toolbar: { show: true },
-        zoom:{
-type:"y"
-        }
-      },
-      xaxis: {
-        categories: dateWiseSummary.map((day: any) => day.date),
-        title: { text: "Date" },
-      },
-      yaxis: {
-        title: { text: "Orders Count" },
-      },
-      colors: series.map((s) => s.color),
-      legend: {
-        position: "top",
-      },
-      tooltip: {
-        shared: true,
-        intersect: false,
-      },
-    };
-
-    setChartSeries(series);
-    setChartOptions(options);
-  }, [dateWiseSummary]);
-
-  // Update chart data for stateWiseSummary chart (horizontal bar)
-  useEffect(() => {
-    if (!stateWiseSummary || stateWiseSummary.length === 0) {
-      setStateChartSeries([]);
-      setStateChartOptions({});
-      return;
+      title: { text: "Orders Count" }
+    },
+    yaxis: {
+      title: { text: "State" }
+    },
+    colors: Object.values(statusColors),
+    legend: {
+      position: "top"
+    },
+    tooltip: {
+      shared: true,
+      intersect: false
     }
+  };
 
-    const allStateStatuses = Array.from(
-      new Set(
-        stateWiseSummary.flatMap((s: any) =>
-          s.statuses.map((status: any) => status.status)
-        )
-      )
-    );
+  const doughnutStatuses = stateWiseSummary.flatMap((state) => state.statuses.map((s: any) => s.status));
+  const uniqueStatuses = Array.from(new Set(doughnutStatuses));
 
-    const series = allStateStatuses.map((status) => ({
-      name: status,
-      data: stateWiseSummary.map((state: any) => {
-        const found = state.statuses.find((s: any) => s.status === status);
-        return found ? found.count : 0;
-      }),
-      color: statusColors[status] || statusColors.Other,
-    }));
+  // Aggregate counts across all states (or dates)
+  const statusChartSeries = uniqueStatuses.map((status) => {
+    return stateWiseSummary.reduce((sum, state) => {
+      const s = state.statuses.find((st: any) => st.status === status);
+      return sum + (s ? s.count : 0);
+    }, 0);
+  });
+  const colors = uniqueStatuses.map(status => statusColors[status] || '#6c757d');
+  const labels = uniqueStatuses;
 
-    const options: ApexCharts.ApexOptions = {
-      chart: {
-        type: "bar",
-        stacked: true,
-        toolbar: { show: true },
+  const statusChartOptions: ApexCharts.ApexOptions = {
+    chart: {
+      type: "donut",
+    },
+    labels: labels,
+    legend: {
+      position: "bottom",
+    },
+    dataLabels: {
+      formatter: function (val: number) {
+        return `${val.toFixed(1)}%`;
       },
-      plotOptions: {
-        bar: {
-          horizontal: true,
-        },
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val} orders`,
       },
-      xaxis: {
-        categories: stateWiseSummary.map((state: any) => state.state || "Other"),
-        title: { text: "Orders Count" },
-      },
-      yaxis: {
-        title: { text: "State" },
-      },
-      colors: series.map((s) => s.color),
-      legend: {
-        position: "top",
-      },
-      tooltip: {
-        shared: true,
-        intersect: false,
-      },
-    };
-
-    setStateChartSeries(series);
-    setStateChartOptions(options);
-  }, [stateWiseSummary]);
-
-  // Update Doughnut chart data
-  useEffect(() => {
-    if (!stateWiseSummary || stateWiseSummary.length === 0) {
-      setStatusChartSeries([]);
-      setStatusChartOptions({});
-      return;
-    }
-
-    const doughnutStatuses = stateWiseSummary.flatMap((state) =>
-      state.statuses.map((s: any) => s.status)
-    );
-    const uniqueStatuses = Array.from(new Set(doughnutStatuses));
-
-    // Aggregate counts across all states
-    const series = uniqueStatuses.map((status) =>
-      stateWiseSummary.reduce((sum, state) => {
-        const s = state.statuses.find((st: any) => st.status === status);
-        return sum + (s ? s.count : 0);
-      }, 0)
-    );
-
-    const colors = uniqueStatuses.map(
-      (status) => statusColors[status] || "#6c757d"
-    );
-
-    const options: ApexCharts.ApexOptions = {
-      chart: {
-        type: "donut",
-      },
-      labels: uniqueStatuses,
-      legend: {
-        position: "bottom",
-      },
-      dataLabels: {
-        formatter: function (val: number) {
-          return `${val.toFixed(1)}%`;
-        },
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val} orders`,
-        },
-      },
-      colors,
-    };
-
-    setStatusChartSeries(series);
-    setStatusChartOptions(options);
-  }, [stateWiseSummary]);
+    },
+    colors: colors
+  };
 
 
   return (
@@ -354,7 +283,7 @@ type:"y"
               </div>
             </Col>
           )}
-          {statusChartSeries.length > 0 && (
+          {stateWiseSummary.length > 0 && (
             <Col md={6}>
               <div style={{ padding: "3rem", }}>
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
