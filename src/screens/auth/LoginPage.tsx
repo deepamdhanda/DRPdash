@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginUser, RegisterUser } from "../../APIs/authAPIs";
+import BG from "../../assets/bg.jpg";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -64,7 +65,7 @@ export const AuthPage: React.FC = () => {
       justifyContent: "center",
       alignItems: "center",
       height: "100vh",
-      backgroundColor: "#f5f7fa",
+      backgroundColor: "#f5f7fae6",
       padding: isMobile ? "1rem" : "20rem",
       gap: "1rem",
     },
@@ -139,115 +140,122 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
-      {/* Left Info Card */}
-      <div style={{ ...styles.card, ...styles.infoCard, top: isMobile ? "5%" : 0, position: isMobile ? "relative" : "static" }}>
-        <h2>{isLogin ? "New Here?" : "Already have an account?"}</h2>
-        <p style={styles.infoText}>
-          {isLogin
-            ? "Create your account and start reducing RTOs today."
-            : "Login to your dashboard and manage your orders effortlessly."}
-        </p>
-        <button onClick={toggleForm} style={styles.switchBtn}>
-          {isLogin ? "Create Account" : "Login"}
-        </button>
-      </div>
+    <div style={{
+      backgroundImage: `url(${BG})`,
+      backgroundRepeat: "repeat",
+      backgroundSize: "contain",
+      backgroundPosition: "center",
+    }}>
+      <div style={styles.container}>
+        {/* Left Info Card */}
+        <div style={{ ...styles.card, ...styles.infoCard, top: isMobile ? "5%" : 0, position: isMobile ? "relative" : "static" }}>
+          <h2>{isLogin ? "New Here?" : "Already have an account?"}</h2>
+          <p style={styles.infoText}>
+            {isLogin
+              ? "Create your account and start reducing RTOs today."
+              : "Login to your dashboard and manage your orders effortlessly."}
+          </p>
+          <button onClick={toggleForm} style={styles.switchBtn}>
+            {isLogin ? "Create Account" : "Login"}
+          </button>
+        </div>
 
-      {/* Right Form Card */}
-      <div style={{ ...styles.card, position: isMobile ? "relative" : "static", top: isMobile ? "-5%" : 0 }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={isLogin ? "login" : "register"}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h3 style={styles.formTitle}>
-              {isLogin ? "Welcome Back 👋" : "Create Account 🚀"}
-            </h3>
-            <p style={styles.subtitle}>
-              {isLogin
-                ? "Login to continue managing your orders"
-                : "Start your journey with OrderzUp"}
-            </p>
-
-            <form
-              onSubmit={
-                isLogin
-                  ? handleLoginSubmit(onLogin)
-                  : handleRegisterSubmit(onRegister)
-              }
-              style={styles.form}
+        {/* Right Form Card */}
+        <div style={{ ...styles.card, position: isMobile ? "relative" : "static", top: isMobile ? "-5%" : 0 }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isLogin ? "login" : "register"}
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.5 }}
             >
-              {!isLogin && (
-                <>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Full Name"
-                    {...registerRegister("name")}
-                  />
-                  {registerErrors.name && (
-                    <span style={styles.error}>
-                      {registerErrors.name.message}
-                    </span>
-                  )}
-                </>
-              )}
+              <h3 style={styles.formTitle}>
+                {isLogin ? "Welcome Back 👋" : "Create Account 🚀"}
+              </h3>
+              <p style={styles.subtitle}>
+                {isLogin
+                  ? "Login to continue managing your orders"
+                  : "Start your journey with OrderzUp"}
+              </p>
 
-              <input
-                style={styles.input}
-                type="email"
-                placeholder="Email"
-                {...(isLogin
-                  ? loginRegister("email")
-                  : registerRegister("email"))}
-              />
-              {(loginErrors.email || registerErrors.email) && (
-                <span style={styles.error}>
-                  {loginErrors.email?.message ||
-                    registerErrors.email?.message}
-                </span>
-              )}
+              <form
+                onSubmit={
+                  isLogin
+                    ? handleLoginSubmit(onLogin)
+                    : handleRegisterSubmit(onRegister)
+                }
+                style={styles.form}
+              >
+                {!isLogin && (
+                  <>
+                    <input
+                      style={styles.input}
+                      type="text"
+                      placeholder="Full Name"
+                      {...registerRegister("name")}
+                    />
+                    {registerErrors.name && (
+                      <span style={styles.error}>
+                        {registerErrors.name.message}
+                      </span>
+                    )}
+                  </>
+                )}
 
-              {!isLogin && (
-                <>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Phone Number"
-                    {...registerRegister("phone")}
-                  />
-                  {registerErrors.phone && (
-                    <span style={styles.error}>
-                      {registerErrors.phone.message}
-                    </span>
-                  )}
-                </>
-              )}
+                <input
+                  style={styles.input}
+                  type="email"
+                  placeholder="Email"
+                  {...(isLogin
+                    ? loginRegister("email")
+                    : registerRegister("email"))}
+                />
+                {(loginErrors.email || registerErrors.email) && (
+                  <span style={styles.error}>
+                    {loginErrors.email?.message ||
+                      registerErrors.email?.message}
+                  </span>
+                )}
 
-              <input
-                style={styles.input}
-                type="password"
-                placeholder="Password"
-                {...(isLogin
-                  ? loginRegister("password")
-                  : registerRegister("password"))}
-              />
-              {(loginErrors.password || registerErrors.password) && (
-                <span style={styles.error}>
-                  {loginErrors.password?.message ||
-                    registerErrors.password?.message}
-                </span>
-              )}
+                {!isLogin && (
+                  <>
+                    <input
+                      style={styles.input}
+                      type="text"
+                      placeholder="Phone Number"
+                      {...registerRegister("phone")}
+                    />
+                    {registerErrors.phone && (
+                      <span style={styles.error}>
+                        {registerErrors.phone.message}
+                      </span>
+                    )}
+                  </>
+                )}
 
-              <button style={styles.submitBtn} type="submit">
-                {isLogin ? "Login" : "Sign Up"}
-              </button>
-            </form>
-          </motion.div>
-        </AnimatePresence>
+                <input
+                  style={styles.input}
+                  type="password"
+                  placeholder="Password"
+                  {...(isLogin
+                    ? loginRegister("password")
+                    : registerRegister("password"))}
+                />
+                {(loginErrors.password || registerErrors.password) && (
+                  <span style={styles.error}>
+                    {loginErrors.password?.message ||
+                      registerErrors.password?.message}
+                  </span>
+                )}
+
+                <button style={styles.submitBtn} type="submit">
+                  {isLogin ? "Login" : "Sign Up"}
+                </button>
+              </form>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
