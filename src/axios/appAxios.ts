@@ -41,10 +41,10 @@ Axios.interceptors.response.use(
 
 
     if (error?.response?.status === 403) {
-      Cookies.remove("authToken")
+      // Cookies.remove("authToken")
       errorMessage = "Verification Failed.";
       console.log(error)
-      window.location.href = "/verify?email=" + error?.response?.data?.email;
+      // window.location.href = "/verify?email=" + error?.response?.data?.email;
     }
     if (error?.response?.status === 401) {
       errorMessage = "Login Failed.";

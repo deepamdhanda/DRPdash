@@ -5,24 +5,35 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 function App() {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const authRoutes = ["/login", "/register", "/verify", "/forgotPassword", "/resetPassword"];
+
   useEffect(() => {
-    const currentPath = window.location.pathname + window.location.search;
+    const currentPath = location.pathname + location.search;
     const token = Cookies.get("authToken");
+    const role = Cookies.get("roleType");
+
     if (!token) {
       if (!authRoutes.includes(location.pathname)) {
         console.log("No token found, Invalid Path, redirecting to login");
-        navigator(`/login?redirect=${encodeURIComponent(currentPath)}`);
+        navigate(`/login?redirect=${encodeURIComponent(currentPath)}`, { replace: true });
       }
-      // console.log("No token found, Valid Path, redirecting to path");
     } else {
-      // console.log("Token found, redirecting to dashboard");
-      navigator(currentPath);
+      // If user has token, check role and path match
+      if (
+        (role === "user" && !location.pathname.startsWith("/user")) ||
+        (role === "warehouse" && !location.pathname.startsWith("/warehouse"))
+      ) {
+        const redirectPath = role === "user" ? "/user" : "/warehouse";
+        console.log(`Role ${role} accessing wrong path, redirecting to ${redirectPath}`);
+        navigate(redirectPath, { replace: true });
+      }
     }
-  }, []);
+  }, [location.pathname, location.search, navigate]);
+
   return (
     <>
       <ToastContainer />

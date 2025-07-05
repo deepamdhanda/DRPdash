@@ -62,8 +62,7 @@ const VerifyPage: React.FC = () => {
 
     try {
       await VerifyUser(data, () => {
-        console.log('sdf')
-        navigate("/dashboard");
+        navigate("/user");
       });
       // Navigate to dashboard or home page
     } catch (error) {

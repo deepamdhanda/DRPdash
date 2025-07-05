@@ -1,0 +1,446 @@
+import React, { useEffect, useState } from "react";
+import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
+import DataTable from "react-data-table-component";
+import {
+  getAllChannelAccounts,
+  createChannelAccount,
+  updateChannelAccount,
+} from "../../APIs/user/channelAccount";
+import { getAllChannels } from "../../APIs/user/channel";
+import { getAllPools } from "../../APIs/user/pool";
+import { useLocation } from "react-router-dom";
+
+export interface ChannelAccount {
+  _id?: string;
+  channel_account_name: string;
+  pool_id?: { _id: string; name: string };
+  channel_id?: { _id: string; channel_name: string };
+  keys?: Record<string, any>;
+  fulfillment_type?: "Self" | "Optional" | "Channel" | "Other";
+  status: "active" | "inactive" | "suspended";
+  admins?: Array<{ _id: string; name: string }>;
+  created_by?: string;
+  ownership?: { _id: string; name: string };
+  createdAt?: string;
+}
+
+const ChannelAccounts: React.FC = () => {
+  const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
+  const [channels, setChannels] = useState<any[]>([]);
+  const [pools, setPools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingChannelAccount, setEditingChannelAccount] =
+    useState<ChannelAccount | null>(null);
+  const [keys, setKeys] = useState<{ key: string; value: string }[]>([]);
+  const [url_channel, setUrlChannel] = useState<any>();
+  const [selectedPoolAdmins, setSelectedPoolAdmins] = useState<any[]>([]);
+  const [adminAccess, setAdminAccess] = useState<string[]>([]);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    checkNewToken();
+  }, [channels]);
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      const [channelAccountsData, channelsData, poolsData] = await Promise.all([
+        getAllChannelAccounts(),
+        getAllChannels(),
+        getAllPools(),
+      ]);
+      setChannelAccounts(channelAccountsData);
+      setChannels(channelsData);
+      setPools(poolsData);
+    } catch (error) {
+      console.error("Error loading initial data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkNewToken = () => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("channel") === "shopify" && params.get("token") && params.get("store_url")) {
+      setKeys([
+        { key: "api_access_token", value: params.get("token") || "" },
+        { key: "store_url", value: params.get("store_url") || "" }
+      ]);
+      setUrlChannel(channels.find(c => c.channel_name.toLowerCase() === "shopify"));
+      setShowModal(true);
+    }
+  };
+
+  const handleClose = () => {
+    setShowModal(false);
+    setEditingChannelAccount(null);
+    setUrlChannel(null);
+    setKeys([]);
+    setAdminAccess([]);
+    setSelectedPoolAdmins([]);
+  };
+
+  const handleShow = () => setShowModal(true);
+
+  const handleEdit = (channelAccount: ChannelAccount) => {
+    setEditingChannelAccount(channelAccount);
+    if (channelAccount.keys) {
+      setKeys(Object.entries(channelAccount.keys).map(([key, value]) => ({ key, value: String(value) })));
+    } else {
+      setKeys([]);
+    }
+    if (channelAccount.pool_id?._id) {
+      handlePoolChange(channelAccount.pool_id._id);
+    }
+    if (channelAccount.admins) {
+      setAdminAccess(channelAccount.admins.map(a => a._id));
+    }
+    setShowModal(true);
+  };
+
+  const handlePoolChange = (poolId: string) => {
+    const selectedPool = pools.find((pool) => pool._id === poolId);
+    if (selectedPool?.admins) {
+      setSelectedPoolAdmins(selectedPool.admins);
+    } else {
+      setSelectedPoolAdmins([]);
+    }
+  };
+
+  const handleAdminAccessChange = (isChecked: boolean, adminId: string) => {
+    setAdminAccess((prevAccess) =>
+      isChecked
+        ? [...prevAccess, adminId]
+        : prevAccess.filter((id) => id !== adminId)
+    );
+  };
+
+  const handleChannelChange = (e: any) => {
+    const selectedId = e.target.value;
+    const selectedChannel = channels.find((c) => c._id === selectedId);
+    if (selectedChannel?.channel_name.toLowerCase() === "shopify") {
+      setKeys([
+        { key: "api_key", value: "" },
+        { key: "api_secret", value: "" },
+        { key: "api_access_token", value: "" },
+        { key: "store_url", value: "" }
+      ]);
+    } else {
+      setKeys([]);
+    }
+  };
+
+  const handleKeyChange = (index: number, field: "key" | "value", value: string) => {
+    const updated = [...keys];
+    updated[index][field] = value;
+    setKeys(updated);
+  };
+
+  const handleAddKey = () => {
+    setKeys([...keys, { key: "", value: "" }]);
+  };
+
+  const handleRemoveKey = (index: number) => {
+    const updated = [...keys];
+    updated.splice(index, 1);
+    setKeys(updated);
+  };
+
+  const handleToggleStatus = async (channelAccount: ChannelAccount) => {
+    const newStatus = channelAccount.status === "active" ? "inactive" : "active";
+    if (window.confirm(`Are you sure you want to mark this channel account as ${newStatus}?`)) {
+      try {
+        await updateChannelAccount(channelAccount._id!, {
+          ...channelAccount,
+          status: newStatus,
+        });
+        fetchInitialData();
+      } catch (error) {
+        console.error("Error toggling status", error);
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as typeof e.target & {
+      channel_account_name: { value: string };
+      pool_id: { value: string };
+      channel_id: { value: string };
+    };
+
+    const keysObject: Record<string, any> = {};
+    keys.forEach(({ key, value }) => {
+      if (key.trim()) {
+        keysObject[key.trim()] = value;
+      }
+    });
+
+    const formData: ChannelAccount = {
+      channel_account_name: form.channel_account_name.value.trim(),
+      pool_id: pools.find(pool => pool._id === form.pool_id.value),
+      channel_id: channels.find(channel => channel._id === form.channel_id.value),
+      fulfillment_type: "Self",
+      keys: keysObject,
+      status: editingChannelAccount?.status || "active",
+      admins: (selectedPoolAdmins.filter((admin) => adminAccess.includes(admin._id))).map((admin) => (admin._id)),
+    };
+
+    try {
+      if (editingChannelAccount) {
+        await updateChannelAccount(editingChannelAccount._id!, formData);
+      } else {
+        await createChannelAccount(formData);
+      }
+      fetchInitialData();
+      handleClose();
+    } catch (error) {
+      console.error("Error saving channel account", error);
+    }
+  };
+
+  const columns = [
+    {
+      name: "Name",
+      selector: (row: ChannelAccount) => (
+        <div>
+          {row.status === "active" ? "🟢" : row.status === "inactive" ? "🔴" : "❌"}{" "}
+          <strong>{row.channel_account_name}</strong>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      name: "Pool",
+      selector: (row: ChannelAccount) => row.pool_id?.name || "—",
+      sortable: true,
+    },
+    {
+      name: "Channel",
+      selector: (row: ChannelAccount) => row.channel_id?.channel_name || "—",
+      sortable: true,
+    },
+    {
+      name: "Admins",
+      selector: (row: ChannelAccount) => (
+        <div>
+          {row.admins?.map((admin) => {
+            // Define a list of colors
+            const colors = ["info", "warning", "danger", "light", "primary", "secondary", "dark"];
+
+            // Generate a unique index for the admin based on their _id
+            const uniqueIndex = admin._id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+
+            // Assign a color based on the unique index
+            const badgeColor = colors[uniqueIndex];
+
+            return (
+              <Badge className="me-1" key={admin._id} bg={badgeColor}>
+                {admin.name}
+              </Badge>
+            );
+          })}
+        </div>
+      ),
+      wrap: true,
+    },
+    {
+      name: "Ownership",
+      selector: (row: ChannelAccount) => row.ownership?.name || "—",
+      sortable: true,
+    },
+    {
+      name: "Fulfillment",
+      selector: (row: ChannelAccount) => row.fulfillment_type || "—",
+      sortable: true,
+    },
+    {
+      name: "Created On",
+      selector: (row: ChannelAccount) =>
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+          : "—",
+      sortable: true,
+    },
+    {
+      name: "Actions",
+      cell: (row: ChannelAccount) => (
+        <>
+          <Button
+            variant="outline-primary"
+            size="sm"
+            className="me-2"
+            onClick={() => handleEdit(row)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            size="sm"
+            onClick={() => handleToggleStatus(row)}
+          >
+            {row.status === "active" ? "Deactivate" : "Activate"}
+          </Button>
+        </>
+      ),
+      button: true,
+      width: "160px",
+    },
+  ];
+
+  return (
+    <div className="container mt-4 ms-2 me-2">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4>Channel Accounts</h4>
+        <Button onClick={handleShow}>+ New Channel Account</Button>
+      </div>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : channelAccounts.length === 0 ? (
+        <p>No channel accounts found.</p>
+      ) : (
+        <DataTable
+          title="Your Channel Accounts"
+          data={channelAccounts}
+          columns={columns}
+          highlightOnHover
+          defaultSortFieldId={1}
+          pagination
+          paginationRowsPerPageOptions={[10, 20, 50, 100]}
+          responsive
+          fixedHeader
+          persistTableHead
+          striped
+        />
+      )}
+
+      <Modal show={showModal} onHide={handleClose} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {editingChannelAccount ? "Edit" : "Create"} Channel Account
+          </Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSubmit}>
+          <Modal.Body>
+            <Form.Group className="mb-2">
+              <Form.Label>Channel Account Name</Form.Label>
+              <Form.Control
+                name="channel_account_name"
+                defaultValue={editingChannelAccount?.channel_account_name}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Pool</Form.Label>
+              <Form.Select
+                name="pool_id"
+                onChange={(e) => handlePoolChange(e.target.value)}
+                defaultValue={editingChannelAccount?.pool_id?._id || ""}
+              >
+                <option value="">Select Pool</option>
+                {pools.map((pool) => (
+                  <option key={pool._id} value={pool._id}>
+                    {pool.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            {selectedPoolAdmins.length > 0 && (
+              <Form.Group className="mb-2">
+                <Form.Label>Admins</Form.Label>
+                <div>
+                  {selectedPoolAdmins.map((admin) => (
+                    <Form.Check
+                      key={admin._id}
+                      type="checkbox"
+                      label={admin.name}
+                      value={admin._id}
+                      checked={adminAccess.includes(admin._id)}
+                      onChange={(e) =>
+                        handleAdminAccessChange(e.target.checked, admin._id)
+                      }
+                    />
+                  ))}
+                </div>
+              </Form.Group>
+            )}
+
+            <Form.Group className="mb-2">
+              <Form.Label>Channel</Form.Label>
+              <Form.Select
+                name="channel_id"
+                onChange={handleChannelChange}
+                defaultValue={
+                  editingChannelAccount?.channel_id?._id || url_channel?._id || ""
+                }
+              >
+                <option value="">Select Channel</option>
+                {channels.map((channel) => (
+                  <option key={channel._id} value={channel._id}>
+                    {channel.channel_name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Label className="mt-3">Keys</Form.Label>
+            {keys.map((item, index) => (
+              <Row key={index} className="mb-2">
+                <Col>
+                  <Form.Label className="mt-3">
+                    {item.key.replace(/_/g, " ").toUpperCase()}
+                  </Form.Label>
+                </Col>
+                <Col>
+                  <Form.Control
+                    placeholder="Value"
+                    value={item.value}
+                    onChange={(e) =>
+                      handleKeyChange(index, "value", e.target.value)
+                    }
+                  />
+                </Col>
+                <Col xs="auto">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleRemoveKey(index)}
+                  >
+                    ×
+                  </Button>
+                </Col>
+              </Row>
+            ))}
+            <Button variant="outline-primary" size="sm" onClick={handleAddKey}>
+              + Add Key
+            </Button>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              {editingChannelAccount ? "Update" : "Create"}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+    </div>
+  );
+};
+
+export { ChannelAccounts };

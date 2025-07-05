@@ -1,118 +1,256 @@
-// LoginPage.tsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import styles from "./style.module.css";
-import { LoginUser } from "../../APIs/authAPIs";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { LoginUser, RegisterUser } from "../../APIs/authAPIs";
 
-// Define the form schema with Zod
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email(),
+  password: z.string().min(8),
 });
 
-// TypeScript type derived from the schema
-export type LoginFormData = z.infer<typeof loginSchema>;
+const registerSchema = z.object({
+  name: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(8),
+  phone: z.string().regex(/^(?:\+?91|0)?[6-9]\d{9}$/),
+});
 
-const LoginPage: React.FC = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      // email: "admin@admin.com",
-      // password: "Admin@123",
-    },
-  });
-
+export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  const onSubmit = async (data: LoginFormData) => {
-    // Simulate API call
-    await LoginUser(data, () => {
-      const params = new URLSearchParams(window.location.search);
-      const redirectPath = params.get("redirect") || "/dashboard";
-      navigate(redirectPath)
-    });
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network request
-      console.log("Login successful!");
-      // Navigate to dashboard or home page
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const {
+    register: loginRegister,
+    handleSubmit: handleLoginSubmit,
+    formState: { errors: loginErrors },
+    reset: resetLogin,
+  } = useForm({ resolver: zodResolver(loginSchema) });
+
+  const {
+    register: registerRegister,
+    handleSubmit: handleRegisterSubmit,
+    formState: { errors: registerErrors },
+    reset: resetRegister,
+  } = useForm({ resolver: zodResolver(registerSchema) });
+
+  const onLogin = async (data: any) => {
+    await LoginUser(data, () => navigate("/user"));
+  };
+
+  const onRegister = async (data: any) => {
+    await RegisterUser(data, (email) => navigate("/verify?email=" + email));
+  };
+
+  const toggleForm = () => {
+    setIsLogin((prev) => !prev);
+    resetLogin();
+    resetRegister();
+  };
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const styles = {
+    container: {
+      display: "flex",
+      flexDirection: isMobile ? "column" as const : "row" as const,
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      backgroundColor: "#f5f7fa",
+      padding: isMobile ? "1rem" : "20rem",
+      gap: "1rem",
+    },
+    card: {
+      flex: "1 1 400px",
+      width: isMobile ? "100%" : "480px",
+      backgroundColor: "#fff",
+      borderRadius: "16px",
+      boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
+      padding: "2rem",
+      display: "flex",
+      flexDirection: "column" as const,
+      justifyContent: "center",
+      minHeight: isMobile ? "25%" : "480px",
+    },
+    infoCard: {
+      background: "linear-gradient(135deg, #000434, #191970)",
+      color: "#fff",
+      textAlign: "center" as const,
+    },
+    infoText: {
+      fontSize: "1.2rem",
+      marginBottom: "1.5rem",
+    },
+    switchBtn: {
+      backgroundColor: "#f5891e",
+      color: "#fff",
+      border: "none",
+      padding: "0.75rem 1.5rem",
+      fontSize: "1rem",
+      borderRadius: "8px",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+    },
+    formTitle: {
+      fontSize: "1.8rem",
+      fontWeight: "bold",
+      marginBottom: "0.5rem",
+      color: "#000434",
+    },
+    subtitle: {
+      fontSize: "1rem",
+      marginBottom: "1.5rem",
+      color: "#555",
+    },
+    form: {
+      display: "flex",
+      flexDirection: "column" as const,
+      gap: "1rem",
+    },
+    input: {
+      padding: "0.75rem 1rem",
+      border: "1px solid #ddd",
+      borderRadius: "8px",
+      fontSize: "1rem",
+    },
+    submitBtn: {
+      padding: "0.75rem",
+      fontSize: "1rem",
+      fontWeight: "bold",
+      backgroundColor: "#f5891e",
+      border: "none",
+      borderRadius: "8px",
+      color: "white",
+      cursor: "pointer",
+    },
+    error: {
+      color: "red",
+      fontSize: "0.8rem",
+      marginTop: "-0.5rem",
+    },
   };
 
   return (
-    <div className={styles.loginContainer}>
-      <div className={styles.loginCard}>
-        <div className={styles.loginHeader}>
-          <h2>Orderz Up</h2>
-          <h5 style={{ color: "black", textDecoration: "underline" }}>Where Every Order Takes Off.</h5>
-          <p>Please sign in to continue</p>
-        </div>
+    <div style={styles.container}>
+      {/* Left Info Card */}
+      <div style={{ ...styles.card, ...styles.infoCard, top: isMobile ? "5%" : 0, position: isMobile ? "relative" : "static" }}>
+        <h2>{isLogin ? "New Here?" : "Already have an account?"}</h2>
+        <p style={styles.infoText}>
+          {isLogin
+            ? "Create your account and start reducing RTOs today."
+            : "Login to your dashboard and manage your orders effortlessly."}
+        </p>
+        <button onClick={toggleForm} style={styles.switchBtn}>
+          {isLogin ? "Create Account" : "Login"}
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className={styles.loginForm}>
-          <div className="mb-3">
-            <label htmlFor="email" className="form-label">
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              className={`form-control ${errors.email ? "is-invalid" : ""}`}
-              placeholder="your@email.com"
-              {...register("email")}
-            />
-            {errors.email && (
-              <div className={styles.errorMessage}>{errors.email.message}</div>
-            )}
-          </div>
-
-          <div className="mb-3">
-            <div className="d-flex justify-content-between">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <a href="#" className={styles.forgotPassword} onClick={() => { navigate('/forgotPassword') }}>
-                Forgot Password?
-              </a>
-            </div>
-            <input
-              id="password"
-              type="password"
-              className={`form-control ${errors.password ? "is-invalid" : ""}`}
-              placeholder="••••••••"
-              {...register("password")}
-            />
-            {errors.password && (
-              <div className={styles.errorMessage}>
-                {errors.password.message}
-              </div>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            className={`btn btn-primary ${styles.loginButton}`}
-            disabled={isSubmitting}
+      {/* Right Form Card */}
+      <div style={{ ...styles.card, position: isMobile ? "relative" : "static", top: isMobile ? "-5%" : 0 }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={isLogin ? "login" : "register"}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.5 }}
           >
-            {isSubmitting ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+            <h3 style={styles.formTitle}>
+              {isLogin ? "Welcome Back 👋" : "Create Account 🚀"}
+            </h3>
+            <p style={styles.subtitle}>
+              {isLogin
+                ? "Login to continue managing your orders"
+                : "Start your journey with OrderzUp"}
+            </p>
 
-        <div className={styles.loginFooter}>
-          <p>
-            Don't have an account? <a href="#" onClick={() => { navigate('/register') }}>Sign up</a>
-          </p>
-        </div>
+            <form
+              onSubmit={
+                isLogin
+                  ? handleLoginSubmit(onLogin)
+                  : handleRegisterSubmit(onRegister)
+              }
+              style={styles.form}
+            >
+              {!isLogin && (
+                <>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    placeholder="Full Name"
+                    {...registerRegister("name")}
+                  />
+                  {registerErrors.name && (
+                    <span style={styles.error}>
+                      {registerErrors.name.message}
+                    </span>
+                  )}
+                </>
+              )}
+
+              <input
+                style={styles.input}
+                type="email"
+                placeholder="Email"
+                {...(isLogin
+                  ? loginRegister("email")
+                  : registerRegister("email"))}
+              />
+              {(loginErrors.email || registerErrors.email) && (
+                <span style={styles.error}>
+                  {loginErrors.email?.message ||
+                    registerErrors.email?.message}
+                </span>
+              )}
+
+              {!isLogin && (
+                <>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    placeholder="Phone Number"
+                    {...registerRegister("phone")}
+                  />
+                  {registerErrors.phone && (
+                    <span style={styles.error}>
+                      {registerErrors.phone.message}
+                    </span>
+                  )}
+                </>
+              )}
+
+              <input
+                style={styles.input}
+                type="password"
+                placeholder="Password"
+                {...(isLogin
+                  ? loginRegister("password")
+                  : registerRegister("password"))}
+              />
+              {(loginErrors.password || registerErrors.password) && (
+                <span style={styles.error}>
+                  {loginErrors.password?.message ||
+                    registerErrors.password?.message}
+                </span>
+              )}
+
+              <button style={styles.submitBtn} type="submit">
+                {isLogin ? "Login" : "Sign Up"}
+              </button>
+            </form>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default AuthPage;

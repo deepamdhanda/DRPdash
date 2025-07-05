@@ -1,11 +1,10 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../axios/appAxios";
 import { loginURL, registerURL, verifyURL, resendOtpURL, forgotPasswordURL, resetPasswordURL } from "../URLs/auth";
-import { LoginFormData } from "../screens/auth/LoginPage";
 import Cookies from "js-cookie";
 import { RegisterFormData } from "../screens/auth/RegisterPage";
 
-export const LoginUser = async (userdata: LoginFormData, next: () => void) => {
+export const LoginUser = async (userdata: any, next: () => void) => {
   try {
     const apiRes = await appAxios.post(loginURL, userdata, {
       withCredentials: true,

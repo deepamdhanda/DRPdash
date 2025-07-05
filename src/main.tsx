@@ -2,27 +2,18 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Dashboard } from "./screens/dashboard/Dashboard.tsx";
-import DashboardPanel from "./screens/dashboard/DashboardPanel/DashboardPannel.tsx";
-import { Pools } from "./screens/dashboard/Pools.tsx";
-import { Finances } from "./screens/dashboard/Finances.tsx";
-import LoginPage from "./screens/auth/LoginPage.tsx";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { ChannelAccounts } from "./screens/dashboard/ChannelAccounts.tsx";
-import { Products } from "./screens/dashboard/Products.tsx";
-import { ProductSKUs } from "./screens/dashboard/ProductSKUs.tsx";
-import { Orders } from "./screens/dashboard/Orders.tsx";
-import { Warehouses } from "./screens/dashboard/Warehouse.tsx";
-import { ChannelSKU } from "./screens/dashboard/ChannelSKU.tsx";
+import LoginPage from "./screens/auth/LoginPage.tsx";
 import RegisterPage from "./screens/auth/RegisterPage.tsx";
-import { ProductPacks } from "./screens/dashboard/ProductPacks.tsx";
 import VerifyPage from "./screens/auth/VerifyPage.tsx";
 import ForgotPasswordPage from "./screens/auth/ForgotPasswordPage.tsx";
 import ResetPasswordPage from "./screens/auth/ResetPasswordPage.tsx";
-import { Wallets } from "./screens/dashboard/Wallets.tsx";
-import { ScanOrders } from "./screens/dashboard/ScanOrders.tsx";
-import { ProfitCalculator } from "./screens/dashboard/ProfitCalculator.tsx";
-import NDROrders from "./screens/dashboard/NDROders.tsx";
+import LandingPage from "./screens/auth/landingPage.tsx";
+import UserPanel from "./screens/user/DashboardPanel/DashboardPannel.tsx";
+import { userRoutes } from "./screens/user/index.tsx";
+import WarehouseDashboardPanel from "./screens/warehouse/DashboardPanel/DashboardPannel.tsx";
+import { warehouseRoutes } from "./screens/warehouse/index.tsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -37,6 +28,10 @@ const router = createBrowserRouter([
         element: <RegisterPage />,
       },
       {
+        path: "landing-page",
+        element: <LandingPage />,
+      },
+      {
         path: "verify",
         element: <VerifyPage />,
       },
@@ -49,66 +44,14 @@ const router = createBrowserRouter([
         element: <ResetPasswordPage />,
       },
       {
-        path: "dashboard",
-        element: <DashboardPanel />, // <-- This becomes the layout for all /Dashboard/* routes
-        children: [
-          {
-            index: true, // /Dashboard
-            element: <Dashboard />, // or a default dashboard
-          },
-          {
-            path: "pools", // /Dashboard/pools
-            element: <Pools />,
-          },
-          {
-            path: "finance", // /Dashboard/pools
-            element: <Finances />,
-          },
-          {
-            path: "wallet", // /Dashboard/pools
-            element: <Wallets />,
-          },
-          {
-            path: "channel_accounts", // /Dashboard/pools
-            element: <ChannelAccounts />,
-          },
-          {
-            path: "products", // /Dashboard/pools
-            element: <Products />,
-          },
-          {
-            path: "productSKU", // /Dashboard/pools
-            element: <ProductSKUs />,
-          },
-          {
-            path: "productPacks", // /Dashboard/pools
-            element: <ProductPacks />,
-          },
-          {
-            path: "profitCalculator", // /Dashboard/pools
-            element: <ProfitCalculator />,
-          },
-          {
-            path: "channelSKU", // /Dashboard/pools
-            element: <ChannelSKU />,
-          },
-          {
-            path: "NDR", // /Dashboard/pools
-            element: <NDROrders />,
-          },
-          {
-            path: "orders", // /Dashboard/pools
-            element: <Orders />,
-          },
-          {
-            path: "scanOrders", // /Dashboard/pools
-            element: <ScanOrders />,
-          },
-          {
-            path: "warehouses", // /Dashboard/pools
-            element: <Warehouses />,
-          },
-        ],
+        path: "user",
+        element: <UserPanel />, // <-- This becomes the layout for all /Dashboard/* routes
+        children: userRoutes,
+      },
+      {
+        path: "warehouse",
+        element: <WarehouseDashboardPanel />, // <-- This becomes the layout for all /Dashboard/* routes
+        children: warehouseRoutes,
       },
     ],
   },
