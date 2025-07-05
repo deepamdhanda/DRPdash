@@ -15,7 +15,10 @@ function App() {
     const currentPath = location.pathname + location.search;
     const token = Cookies.get("authToken");
     const role = Cookies.get("roleType");
+    if (currentPath === "/") {
+      navigate(`/login`, { replace: true });
 
+    }
     if (!token) {
       if (!authRoutes.includes(location.pathname)) {
         console.log("No token found, Invalid Path, redirecting to login");
