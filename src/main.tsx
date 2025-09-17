@@ -9,6 +9,7 @@ import VerifyPage from "./screens/auth/VerifyPage.tsx";
 import ForgotPasswordPage from "./screens/auth/ForgotPasswordPage.tsx";
 import ResetPasswordPage from "./screens/auth/ResetPasswordPage.tsx";
 import LandingPage from "./screens/auth/landingPage.tsx";
+import JoinWaitList from "./screens/auth/LandingPages/JoinWaitlist.tsx";
 import UserPanel from "./screens/user/DashboardPanel/DashboardPannel.tsx";
 import { userRoutes } from "./screens/user/index.tsx";
 import WarehouseDashboardPanel from "./screens/warehouse/DashboardPanel/DashboardPannel.tsx";
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />, // General app layout
     children: [
+      {
+        index: true, // This will be the default route
+        element: <JoinWaitList />, // or a default landing page
+      },
       {
         path: "login",
         element: <LoginPage />,

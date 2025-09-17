@@ -3,10 +3,9 @@ import { Modal, Button, Form } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import { getAllChannelAccounts } from "../../APIs/user/channelAccount";
-import { getAllOrders } from "../../APIs/user/order";
 import { ProductSKU } from "./ProductSKUs";
 import { ChannelAccount } from "./ChannelAccounts";
-import { linkProductSkuToChannelAccount } from "../../APIs/user/productSKUChannelLink";
+import { linkProductSkuToChannelAccount, getUnlinkedProductSku } from "../../APIs/user/productSKUChannelLink";
 import { toast } from "react-toastify";
 
 export type ProductChannelLink = {
@@ -20,8 +19,8 @@ type newProductSKU = {
   _id: string;
   product_name: string;
   variant_id: string;
+  product_sku_id?: string;
   price: number;
-  quantity: number;
   channel_account_id: string;
   channel_account_name: string;
 };
@@ -46,11 +45,11 @@ const ChannelSKU: React.FC = () => {
       const [productSKUsData, channelAccountsData, unlinkedProductsData] = await Promise.all([
         getAllProductSKUs(),
         getAllChannelAccounts(),
-        getAllOrders(1, 1000, { nulledProductSKU: true }),
+        getUnlinkedProductSku(),
       ]);
       setProductSKUs(productSKUsData);
       setChannelAccounts(channelAccountsData);
-      setUnlinkedProducts(unlinkedProductsData["orders"]);
+      setUnlinkedProducts(unlinkedProductsData);
     } catch (error) {
       console.error("Error fetching initial data", error);
     }
@@ -136,31 +135,60 @@ const ChannelSKU: React.FC = () => {
       sortable: true,
     },
     {
-      name: "Price (INR)",
-      selector: (row: newProductSKU) => `₹${row.price || "0.00"}`,
+      name: "Price",
+      selector: (row: newProductSKU) => `${row.price || "0.00"}`,//₹
       sortable: true,
     },
     {
-      name: "Quantity",
-      selector: (row: newProductSKU) => row.quantity || 0,
+      name: "Linked To",
+      selector: (row: newProductSKU) => `${row.product_sku_id || "N/A"}`,
       sortable: true,
     },
     {
       name: "Actions",
       cell: (row: newProductSKU) => (
-        <Button
-          variant="outline-success"
-          size="lg"
-          className="me-2"
-          onClick={() => {
-            setSelectedProductSKUs([row._id]);
-            setSelectedChannelAccounts([row.channel_account_id]);
-            setSelectedVariant(row.variant_id);
-            setShowLinkModal(true);
-          }}
-        >
-          Link Product
-        </Button>
+        (!row.product_sku_id ? (
+          <>
+            <Button
+              variant="outline-success"
+              className="me-2"
+              onClick={() => {
+                setSelectedProductSKUs([row._id]);
+                setSelectedChannelAccounts([row.channel_account_id]);
+                setSelectedVariant(row.variant_id);
+                setShowLinkModal(true);
+              }}
+            >
+              Link Product
+            </Button>
+            {/* <Button
+              variant="outline-primary"
+              className="me-2"
+              onClick={() => {
+                setSelectedProductSKUs([row._id]);
+                setSelectedChannelAccounts([row.channel_account_id]);
+                setSelectedVariant(row.variant_id);
+                setShowLinkModal(true);
+              }}
+            >
+              Create New Product
+            </Button> */}
+          </>
+        ) :
+          <></>
+          // <Button
+          //   variant="outline-danger"
+          //   className="me-2"
+          //   onClick={() => {
+          //     setSelectedProductSKUs([row._id]);
+          //     setSelectedChannelAccounts([row.channel_account_id]);
+          //     setSelectedVariant(row.variant_id);
+          //     setShowLinkModal(true);
+          //   }}
+          // >
+          //   Unlink Product
+          // </Button>
+        )
       ),
       width: "180px",
     },
@@ -172,15 +200,13 @@ const ChannelSKU: React.FC = () => {
         <h4>Channel SKU Management</h4>
         <Button onClick={() => setShowModal(true)}>+ Link New Products</Button>
       </div>
-
-      <h5>Unlinked Products</h5>
       <DataTable
-        title="Unlinked Products"
+        title="Channel SKUs"
         data={unlinkedProducts}
         columns={columns}
         highlightOnHover
         pagination
-        paginationRowsPerPageOptions={[10, 20, 50]}
+        paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
         responsive
         striped
         persistTableHead

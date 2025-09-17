@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
+import { Modal, Button, Form, Badge } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import {
   getAllChannelAccounts,
@@ -9,6 +9,8 @@ import {
 import { getAllChannels } from "../../APIs/user/channel";
 import { getAllPools } from "../../APIs/user/pool";
 import { useLocation } from "react-router-dom";
+import { initialChannelAccountFetch } from "../../APIs/user/initialChannelAccountFetch";
+import { toast } from "react-toastify";
 
 export interface ChannelAccount {
   _id?: string;
@@ -25,6 +27,9 @@ export interface ChannelAccount {
 }
 
 const ChannelAccounts: React.FC = () => {
+  const [fetchingProducts, setFetchingProducts] = useState<boolean>(false)
+  const [fetchingOrders, setFetchingOrders] = useState<boolean>(false)
+  const [showFetchingModal, setShowFetchingModal] = useState<boolean>(false)
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [channels, setChannels] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
@@ -32,11 +37,11 @@ const ChannelAccounts: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingChannelAccount, setEditingChannelAccount] =
     useState<ChannelAccount | null>(null);
-  const [keys, setKeys] = useState<{ key: string; value: string }[]>([]);
+  const [keys, setKeys] = useState<{ key: string; value: string, disabled?: boolean }[]>([]);
   const [url_channel, setUrlChannel] = useState<any>();
   const [selectedPoolAdmins, setSelectedPoolAdmins] = useState<any[]>([]);
   const [adminAccess, setAdminAccess] = useState<string[]>([]);
-
+  const [selectedChannel, setSelectedChannel] = useState<string>("Custom");
   const location = useLocation();
 
   useEffect(() => {
@@ -65,12 +70,55 @@ const ChannelAccounts: React.FC = () => {
     }
   };
 
+  const handleFetchingClose = () => {
+    setFetchingProducts(false);
+    setShowFetchingModal(false)
+    setFetchingOrders(false);
+  }
+  const startInitialChannelAccountFetch = async (channel: ChannelAccount) => {
+    setFetchingProducts(true);
+    setShowFetchingModal(true)
+    setFetchingOrders(true);
+    const productsPromise = initialChannelAccountFetch(channel._id, "products")
+      .then(result => {
+        handleFetchingClose()
+        return result; // pass the result along
+      })
+      .catch(err => {
+        handleFetchingClose()
+        throw err; // still fail if products fetch fails
+      });
+
+    const ordersPromise = initialChannelAccountFetch(channel._id, "orders").then(result => {
+      handleFetchingClose()
+      return result; // pass the result along
+    })
+      .catch(err => {
+        handleFetchingClose()
+        throw err; // still fail if products fetch fails
+      });;
+
+    await Promise.all([productsPromise, ordersPromise]);
+
+  }
+
   const checkNewToken = () => {
     const params = new URLSearchParams(location.search);
     if (params.get("channel") === "shopify" && params.get("token") && params.get("store_url")) {
+      let existingAccount = channelAccounts.find(ca => ca.channel_id?.channel_name.toLowerCase() === "shopify" && ca.keys?.store_url === params.get("store_url"));
+      if (existingAccount) {
+        toast.info("A Shopify channel account with this store URL already exists. Just click on update if you want to update the keys.");
+        existingAccount.keys = {
+          ...existingAccount.keys,
+          api_access_token: params.get("token") || "",
+        }
+        handleEdit(existingAccount);
+        return;
+      }
+      setSelectedChannel((params.get("channel") || "").toLowerCase());
       setKeys([
-        { key: "api_access_token", value: params.get("token") || "" },
-        { key: "store_url", value: params.get("store_url") || "" }
+        { key: "api_access_token", value: params.get("token") || "", disabled: true },
+        { key: "store_url", value: params.get("store_url") || "", disabled: true }
       ]);
       setUrlChannel(channels.find(c => c.channel_name.toLowerCase() === "shopify"));
       setShowModal(true);
@@ -84,6 +132,7 @@ const ChannelAccounts: React.FC = () => {
     setKeys([]);
     setAdminAccess([]);
     setSelectedPoolAdmins([]);
+
   };
 
   const handleShow = () => setShowModal(true);
@@ -126,31 +175,28 @@ const ChannelAccounts: React.FC = () => {
     const selectedChannel = channels.find((c) => c._id === selectedId);
     if (selectedChannel?.channel_name.toLowerCase() === "shopify") {
       setKeys([
-        { key: "api_key", value: "" },
-        { key: "api_secret", value: "" },
-        { key: "api_access_token", value: "" },
-        { key: "store_url", value: "" }
+
       ]);
     } else {
       setKeys([]);
     }
   };
 
-  const handleKeyChange = (index: number, field: "key" | "value", value: string) => {
-    const updated = [...keys];
-    updated[index][field] = value;
-    setKeys(updated);
-  };
+  // const handleKeyChange = (index: number, field: "key" | "value", value: string) => {
+  //   const updated = [...keys];
+  //   updated[index][field] = value;
+  //   setKeys(updated);
+  // };
 
-  const handleAddKey = () => {
-    setKeys([...keys, { key: "", value: "" }]);
-  };
+  // const handleAddKey = () => {
+  //   setKeys([...keys, { key: "", value: "" }]);
+  // };
 
-  const handleRemoveKey = (index: number) => {
-    const updated = [...keys];
-    updated.splice(index, 1);
-    setKeys(updated);
-  };
+  // const handleRemoveKey = (index: number) => {
+  //   const updated = [...keys];
+  //   updated.splice(index, 1);
+  //   setKeys(updated);
+  // };
 
   const handleToggleStatus = async (channelAccount: ChannelAccount) => {
     const newStatus = channelAccount.status === "active" ? "inactive" : "active";
@@ -191,13 +237,14 @@ const ChannelAccounts: React.FC = () => {
       status: editingChannelAccount?.status || "active",
       admins: (selectedPoolAdmins.filter((admin) => adminAccess.includes(admin._id))).map((admin) => (admin._id)),
     };
-
+    let result: any = false
     try {
       if (editingChannelAccount) {
-        await updateChannelAccount(editingChannelAccount._id!, formData);
+        result = await updateChannelAccount(editingChannelAccount._id!, formData) as ChannelAccount;
       } else {
-        await createChannelAccount(formData);
+        result = await createChannelAccount(formData) as ChannelAccount;
       }
+      startInitialChannelAccountFetch(result)
       fetchInitialData();
       handleClose();
     } catch (error) {
@@ -291,6 +338,13 @@ const ChannelAccounts: React.FC = () => {
           >
             {row.status === "active" ? "Deactivate" : "Activate"}
           </Button>
+          <Button
+            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            size="sm"
+            onClick={() => startInitialChannelAccountFetch(row)}
+          >
+            Fetch Data
+          </Button>
         </>
       ),
       button: true,
@@ -383,21 +437,24 @@ const ChannelAccounts: React.FC = () => {
               <Form.Select
                 name="channel_id"
                 onChange={handleChannelChange}
-                defaultValue={
-                  editingChannelAccount?.channel_id?._id || url_channel?._id || ""
+                value={
+                  url_channel?._id || editingChannelAccount?.channel_id?._id || ""
                 }
               >
-                <option value="">Select Channel</option>
-                {channels.map((channel) => (
-                  <option key={channel._id} value={channel._id}>
+                {channels.filter(i => {
+
+                  { console.log(i.channel_name, "Selected Channel:", selectedChannel, i.channel_name == selectedChannel) }
+                  return i.channel_name.toLowerCase() == selectedChannel
+                }).map((channel) => (
+                  <option selected key={channel._id} value={channel._id}>
                     {channel.channel_name}
                   </option>
                 ))}
               </Form.Select>
             </Form.Group>
 
-            <Form.Label className="mt-3">Keys</Form.Label>
-            {keys.map((item, index) => (
+            {/* <Form.Label className="mt-3">Keys</Form.Label>
+            {keys.filter((i: any) => i.disabled === false || i.disabled === undefined).map((item, index) => (
               <Row key={index} className="mb-2">
                 <Col>
                   <Form.Label className="mt-3">
@@ -426,7 +483,7 @@ const ChannelAccounts: React.FC = () => {
             ))}
             <Button variant="outline-primary" size="sm" onClick={handleAddKey}>
               + Add Key
-            </Button>
+            </Button> */}
           </Modal.Body>
 
           <Modal.Footer>
@@ -438,6 +495,33 @@ const ChannelAccounts: React.FC = () => {
             </Button>
           </Modal.Footer>
         </Form>
+      </Modal>
+      <Modal show={showFetchingModal} onHide={handleClose} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Fetching Data from Channel Store
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ fontSize: "1.1rem", lineHeight: "1.6" }}>
+          <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ fontWeight: 600, marginRight: "8px" }}>📦 Fetching Products:</span>
+            {fetchingProducts ? (
+              <span style={{ color: "#f5891e", fontWeight: 500 }}>⏳ Processing...</span>
+            ) : (
+              <span style={{ color: "green", fontWeight: 500 }}>✅ Complete</span>
+            )}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={{ fontWeight: 600, marginRight: "8px" }}>🚚 Fetching Orders:</span>
+            {fetchingOrders ? (
+              <span style={{ color: "#f5891e", fontWeight: 500 }}>⏳ Processing...</span>
+            ) : (
+              <span style={{ color: "green", fontWeight: 500 }}>✅ Complete</span>
+            )}
+          </div>
+        </Modal.Body>
+
       </Modal>
     </div>
   );

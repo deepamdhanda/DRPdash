@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginUser, RegisterUser } from "../../APIs/authAPIs";
 import BG from "../../assets/bg.jpg";
@@ -21,6 +21,8 @@ const registerSchema = z.object({
 
 export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [isLogin, setIsLogin] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -39,7 +41,17 @@ export const AuthPage: React.FC = () => {
   } = useForm({ resolver: zodResolver(registerSchema) });
 
   const onLogin = async (data: any) => {
-    await LoginUser(data, () => navigate("/user"));
+    const params = new URLSearchParams(location.search);
+    const redirect = params.get("redirect");
+
+    await LoginUser(data, () => {
+      if (redirect) {
+        navigate(redirect);
+      } else {
+        navigate("/user");
+      }
+    });
+
   };
 
   const onRegister = async (data: any) => {

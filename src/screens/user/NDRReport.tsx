@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllProductPacks, createProductPack, updateProductPack } from "../../APIs/warehouse/productPack";
+import { getAllNDRReports, createNDRReport, updateNDRReport } from "../../APIs/user/ndrReport";
 
 export interface User {
   _id: string;
   name: string;
 }
 
-export interface ProductPack {
+export interface NDRReport {
   _id: string;
   name: string;
   length: number;
@@ -24,11 +24,11 @@ export interface ProductPack {
   updatedAt?: string;
 }
 
-const ProductPacks: React.FC = () => {
-  const [product_packs, setProductPacks] = useState<ProductPack[]>([]);
+const NDRReports: React.FC = () => {
+  const [ndr_reports, setNDRReports] = useState<NDRReport[]>([]);
   const [loading, setLoading] = useState(true); // Added loading state
   const [showModal, setShowModal] = useState(false);
-  const [editingProductPack, setEditingProductPack] = useState<ProductPack | null>(null);
+  const [editingNDRReport, setEditingNDRReport] = useState<NDRReport | null>(null);
   const [dimensions, setDimensions] = useState({
     length: 0,
     breadth: 0,
@@ -50,12 +50,12 @@ const ProductPacks: React.FC = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [product_packsData] = await Promise.all([
-        getAllProductPacks(),
+      const [ndr_reportsData] = await Promise.all([
+        getAllNDRReports(),
       ]);
-      setProductPacks(product_packsData);
+      setNDRReports(ndr_reportsData);
     } catch (error) {
-      console.error("Error loading product_packs or users", error);
+      console.error("Error loading ndr_reports or users", error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ const ProductPacks: React.FC = () => {
 
   const handleClose = () => {
     setShowModal(false);
-    setEditingProductPack(null);
+    setEditingNDRReport(null);
   };
 
   const handleShow = () => setShowModal(true);
@@ -74,18 +74,18 @@ const ProductPacks: React.FC = () => {
       [field]: value,
     }));
   };
-  const handleEdit = (product_pack: ProductPack) => {
-    setEditingProductPack(product_pack);
+  const handleEdit = (ndr_report: NDRReport) => {
+    setEditingNDRReport(ndr_report);
     setShowModal(true);
   };
 
-  const handleToggleStatus = async (product_pack: ProductPack) => {
-    const newStatus = product_pack.status === "active" ? "inactive" : "active";
+  const handleToggleStatus = async (ndr_report: NDRReport) => {
+    const newStatus = ndr_report.status === "active" ? "inactive" : "active";
     if (
-      window.confirm(`Are you sure you want to mark this product pack as ${newStatus}?`)
+      window.confirm(`Are you sure you want to mark this ndr report as ${newStatus}?`)
     ) {
       try {
-        await updateProductPack(product_pack._id, { status: newStatus });
+        await updateNDRReport(ndr_report._id, { status: newStatus });
         fetchInitialData();
       } catch (error) {
         console.error("Error updating status", error);
@@ -118,95 +118,134 @@ const ProductPacks: React.FC = () => {
     };
 
     try {
-      if (editingProductPack) {
-        await updateProductPack(editingProductPack._id, formData);
+      if (editingNDRReport) {
+        await updateNDRReport(editingNDRReport._id, formData);
       } else {
-        await createProductPack(formData);
+        await createNDRReport(formData);
       }
       fetchInitialData();
       handleClose();
     } catch (error) {
-      console.error("Error saving product pack", error);
+      console.error("Error saving ndr report", error);
     }
   };
 
   const columns = [
     {
-      name: "Name",
-      selector: (row: ProductPack) => (
-        <>
-          {row.status === "active"
-            ? "🟢"
-            : row.status === "inactive"
-              ? "🔴"
-              : "❌"}{" "}
-          <strong>{row.name}</strong>
-        </>
+      name: "AWB",
+      selector: (row:any) => row.awb,
+      sortable: true,
+    },
+    {
+      name: "Order ID",
+      selector: (row:any) => row.orderId,
+      sortable: true,
+    },
+    {
+      name: "Current Attempt",
+      selector: (row:any) => row.currentAttempt,
+      sortable: true,
+      center: true,
+    },
+    {
+      name: "Latest Status",
+      selector: (row:any) => row.latestStatus,
+      sortable: true,
+      cell: (row:any) => (
+        <span className={`badge bg-${row.latestStatus === 'pending' ? 'warning' : 'success'}`}>
+          {row.latestStatus}
+        </span>
       ),
+    },
+    {
+      name: "Last Attempt Date",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.scanDateTime,
+      format: (row:any) => new Date(row.attempts?.[row.currentAttempt - 1]?.scanDateTime).toLocaleString(),
       sortable: true,
     },
     {
-      name: "Created By",
-      selector: (row: ProductPack) => row.created_by?.name || "—",
+      name: "NDR Reason",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.ndrReason || "-",
+      wrap: true,
     },
     {
-      name: "Status",
-      selector: (row: ProductPack) => row.status,
+      name: "Resolution Action",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.resolutionAction || "-",
+      wrap: true,
+    },
+    {
+      name: "Customer Response",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.customerResponse || "-",
+      wrap: true,
+    },
+    {
+      name: "Seller Action",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.action || "-",
+      wrap: true,
+    },
+    {
+      name: "Reschedule Date",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.rescheduleDate,
+      format: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.rescheduleDate
+        ? new Date(row.attempts[row.currentAttempt - 1].sellerFeedback.rescheduleDate).toLocaleDateString()
+        : "-",
+    },
+    {
+      name: "Updated Address",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.updatedAddress || "-",
+      wrap: true,
+    },
+    {
+      name: "Remarks",
+      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.remarks || "-",
+      wrap: true,
+    },
+    {
+      name: "Created At",
+      selector: (row:any) => row.createdAt,
+      format: (row:any) => new Date(row.createdAt).toLocaleString(),
       sortable: true,
     },
     {
-      name: "Created On",
-      selector: (row: ProductPack) =>
-        row.createdAt
-          ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-          : "—",
+      name: "Updated At",
+      selector: (row:any) => row.updatedAt,
+      format: (row:any) => new Date(row.updatedAt).toLocaleString(),
+      sortable: true,
     },
     {
       name: "Actions",
-      cell: (row: ProductPack) => (
-        <>
-          <Button
-            variant="outline-primary"
-            size="sm"
-            className="me-2"
-            onClick={() => handleEdit(row)}
-          >
+      cell: (row:any) => (
+        <div>
+          <Button size="sm" variant="primary" onClick={() => onEdit(row)}>
             Edit
+          </Button>{" "}
+          <Button size="sm" variant="danger" onClick={() => onDelete(row)}>
+            Delete
           </Button>
-          <Button
-            variant={
-              row.status === "active" ? "outline-danger" : "outline-success"
-            }
-            size="sm"
-            onClick={() => handleToggleStatus(row)}
-          >
-            {row.status === "active" ? "Deactivate" : "Activate"}
-          </Button>
-        </>
+        </div>
       ),
-      width: "180px",
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
     },
   ];
+
 
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Product Packs</h4>
-        <Button onClick={handleShow}>+ New Product Pack</Button>
+        <h4>NDR Reports</h4>
+        <Button onClick={handleShow}>+ New NDR Report</Button>
       </div>
 
       {loading ? (
         <p>Loading...</p>
-      ) : product_packs.length === 0 ? (
-        <p>No product packs found.</p>
+      ) : ndr_reports.length === 0 ? (
+        <p>No ndr reports found.</p>
       ) : (
         <DataTable
-          title="Your Product Packs"
-          data={product_packs}
+          title="Your NDR Reports"
+          data={ndr_reports}
           columns={columns as any}
           highlightOnHover
           pagination
@@ -219,25 +258,29 @@ const ProductPacks: React.FC = () => {
 
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingProductPack ? "Edit ProductPack" : "Create ProductPack"}</Modal.Title>
+          <Modal.Title>
+            {editingNDRReport ? "Edit NDR Report" : "Create NDR Report"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Form.Group className="mb-2">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Report Name</Form.Label>
               <Form.Control
                 name="name"
-                defaultValue={editingProductPack?.name || ""}
+                defaultValue={editingNDRReport?.name || ""}
+                placeholder="e.g. Undelivered due to address issue"
                 required
               />
             </Form.Group>
+
             <div className="mb-2 row">
               <Form.Group className="mb-2 col-6">
                 <Form.Label>Weight (gm)</Form.Label>
                 <Form.Control
                   name="weight"
                   type="number"
-                  defaultValue={editingProductPack?.weight || ""}
+                  defaultValue={editingNDRReport?.weight || ""}
                   required
                 />
               </Form.Group>
@@ -245,14 +288,13 @@ const ProductPacks: React.FC = () => {
                 <Form.Label>Volumetric Weight (gm)</Form.Label>
                 <Form.Control
                   name="volumetric_weight"
-                  disabled
                   type="number"
-                  step={1}
                   value={volumetricWeight.toFixed(2)}
-                  required
+                  disabled
                 />
               </Form.Group>
             </div>
+
             <div className="mb-2 row">
               <Form.Group className="mb-2 col-4">
                 <Form.Label>Length (cm)</Form.Label>
@@ -291,40 +333,68 @@ const ProductPacks: React.FC = () => {
                 />
               </Form.Group>
             </div>
+
             <div className="mb-2 row">
               <Form.Group className="mb-2 col-6">
-                <Form.Label>Stock</Form.Label>
+                <Form.Label>Available Stock</Form.Label>
                 <Form.Control
                   name="stock"
                   type="number"
                   step={1}
-                  defaultValue={editingProductPack?.stock || ""}
+                  defaultValue={editingNDRReport?.stock || ""}
                   required
                 />
               </Form.Group>
               <Form.Group className="mb-2 col-6">
-                <Form.Label>Cost per peice</Form.Label>
+                <Form.Label>Cost per Piece (₹)</Form.Label>
                 <Form.Control
                   name="packing_cost"
                   type="number"
-                  defaultValue={editingProductPack?.packing_cost || ""}
+                  defaultValue={editingNDRReport?.packing_cost || ""}
                   required
                 />
               </Form.Group>
             </div>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Status</Form.Label>
+              <Form.Select
+                name="latestStatus"
+                defaultValue={editingNDRReport?.latestStatus || ""}
+                required
+              >
+                <option value="">Select Status</option>
+                <option value="pending">Pending</option>
+                <option value="contacted">Contacted</option>
+                <option value="in-transit">In Transit</option>
+                <option value="delivered">Delivered</option>
+                <option value="resolved">Resolved</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-2">
+              <Form.Label>Channel</Form.Label>
+              <Form.Control
+                name="channel_name"
+                value={editingNDRReport?.channel?.channel_account_name || ""}
+                disabled
+              />
+            </Form.Group>
           </Modal.Body>
+
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
-              {editingProductPack ? "Update" : "Create"}
+              {editingNDRReport ? "Update" : "Create"}
             </Button>
           </Modal.Footer>
         </Form>
       </Modal>
+
     </div>
   );
 };
 
-export { ProductPacks };
+export { NDRReports };

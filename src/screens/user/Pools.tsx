@@ -565,7 +565,9 @@ const Pools: React.FC = () => {
   };
 
   const handleUserSearch = async (email: string) => {
+    console.log(email)
     const trimmedEmail = email.trim();
+    console.log("te", trimmedEmail)
     if (!trimmedEmail) return;
 
     try {
@@ -875,7 +877,7 @@ const Pools: React.FC = () => {
                 <Form.Control
                   type="email"
                   placeholder="Enter admin email"
-                  onKeyDown={async (e) => {
+                  onKeyDown={async (e: any) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
                       await handleUserSearch((e.target as HTMLInputElement).value);
@@ -905,7 +907,7 @@ const Pools: React.FC = () => {
               </div>
             </Tab>
 
-            <Tab eventKey="bank" title="Bank Details">
+            {editingPool && (<Tab eventKey="bank" title="Bank Details">
               <Row className="align-items-center justify-content-between mb-3 mt-3">
                 <Col xs="auto">
                   <Modal.Title as="h5">Bank Details</Modal.Title>
@@ -993,11 +995,11 @@ const Pools: React.FC = () => {
                     {bankDetails?.status_message}
                   </div>
                 )}
-            </Tab>
+            </Tab>)}
 
-            <Tab eventKey="kyc" title="KYC Documents">
+            {editingPool && (<Tab eventKey="kyc" title="KYC Documents">
               {renderKycFields()}
-            </Tab>
+            </Tab>)}
           </Tabs>
         </Modal.Body>
         <Modal.Footer>
@@ -1017,9 +1019,7 @@ const Pools: React.FC = () => {
             }
             disabled={
               !businessDetails.name ||
-              !companyType ||
-              !bankDetails.account_number ||
-              bankDetails.account_number !== bankDetails.account_number_confirm
+              !companyType
             }
           >
             {editingPool ? "Update Pool" : "Create Pool"}

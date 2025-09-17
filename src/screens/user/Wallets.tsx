@@ -38,7 +38,7 @@ export interface Wallet {
 
 enum EnumWalletTabs {
   WALLET_TRANSACTIONS = "wallet_transactions",
-  WALLET_RECHARGE = "wallet_recharge",
+  WALLET_RECHARGE = "wallet_recharge_history",
 }
 export type TWalletRecharge = {
   _id: string;
@@ -102,7 +102,7 @@ const WalletTransactionsComponent = () => {
     {
       name: "Zone",
       selector: (row: Wallet) =>
-        row.zone.replace("z_", "").toUpperCase() || "—",
+        (row.zone || "").replace("z_", "").toUpperCase() || "—",
       sortable: true,
     },
     {
@@ -189,7 +189,7 @@ const WalletTransactionsComponent = () => {
           columns={columns as any}
           highlightOnHover
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50]}
+          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
           responsive
           striped
           persistTableHead
@@ -223,7 +223,7 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
     },
     {
       name: "Amount",
-      selector: (row: TWalletRecharge) => `₹${row.amount}`,
+      selector: (row: TWalletRecharge) => `₹${(row.amount / 100).toFixed(2)}`,
       sortable: true,
     },
     {
@@ -363,7 +363,7 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
         </div>
       </div>
       <DataTable
-        title="Wallet Recharges"
+        title="Wallet Recharge History"
         columns={columns}
         data={walletRecharges}
         progressPending={loading}
@@ -414,7 +414,11 @@ const Wallets: React.FC = () => {
 
   const handlePayment = async () => {
     try {
-      makePayment(amount, selectedPool);
+      const res = await makePayment(amount, selectedPool);
+      if (res) {
+        handleModalClose();
+        fetchPools(); // Refresh pools after payment
+      }
     } catch (error) {
       console.error("Error during payment:", error);
     }

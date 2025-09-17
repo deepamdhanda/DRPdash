@@ -63,54 +63,86 @@ export const verifyPayment = async (wallet_recharge_id: any, response: any) => {
       response
     );
     console.log("Payment response:", response1.data);
+    toast.success(response1.data);
+    return true
   } catch (error: any) {
     console.error("Error updating payment:", error);
-    toast.error("Failed to update payment.");
-  }
-};
-
-export const makePayment = async (amount: any, pool: any) => {
-  try {
-    amount = Math.round(amount * 100); // Convert to paise (1 INR = 100 paise)
-    const currency = "INR"; // Assuming INR for Indian Rupees
-    const response = await appAxios.post(walletRecharge_url, {
-      amount: amount, // Amount in rupees
-      currency: currency,
-      pool_id: pool, // Pool name or ID
-    });
-    const { _id: wallet_recharge_id, razorpay_order_id: order_id } =
-      response.data;
-
-    // Set up RazorPay options
-    const options = {
-      key: "rzp_live_stL91oujHW3VLL", // Replace with your RazorPay Key ID
-      amount: amount,
-      currency: currency,
-      name: "OrderzUp",
-      description: `Add ₹${amount} to ${pool}`,
-      image:
-        "https://orderzup.com/wp-content/uploads/2025/05/logo-orderzup-real.png",
-      order_id: order_id,
-      handler: async (response: any) => {
-        verifyPayment(wallet_recharge_id, response);
-      },
-      prefill: {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        contact: "9999999999",
-      },
-      theme: {
-        color: "#3399cc",
-      },
-    };
-
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
-  } catch (error: any) {
-    toast.error("Failed to make payment.");
+    toast.error("Failed to update payment: " + error.message);
     throw error;
   }
 };
+
+export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
+  try {
+    amount = Math.round(amount * 100); // Convert to paise
+    const currency = "INR";
+
+    const response = await appAxios.post(walletRecharge_url, {
+      amount,
+      currency,
+      pool_id: pool,
+    });
+
+    const { _id: wallet_recharge_id, razorpay_order_id: order_id } = response.data;
+
+    return new Promise((resolve) => {
+      const options = {
+        key: "rzp_live_stL91oujHW3VLL", // Replace with your RazorPay Key ID
+        amount,
+        currency,
+        name: "OrderzUp",
+        description: `Add ₹${amount / 100} to ${pool}`,
+        image: "https://orderzup.com/wp-content/uploads/2025/05/logo-orderzup-real.png",
+        order_id,
+        handler: async (response: any) => {
+          try {
+            await verifyPayment(wallet_recharge_id, response);
+            resolve(true); // ✅ Payment succeeded
+          } catch (error) {
+            toast.error("Payment verification failed.");
+            resolve(false); // ❌ Verification failed
+          }
+        },
+        prefill: {
+          name: "John Doe",
+          email: "john.doe@example.com",
+          contact: "9999999999",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+        modal: {
+          ondismiss: () => {
+            toast.info("Payment popup closed.");
+            resolve(false); // ❌ User closed Razorpay
+          },
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    });
+  } catch (error: any) {
+    console.error(error);
+    toast.error("Failed to make payment.");
+    return false; // ❌ Initial request or setup failed
+  }
+};
+export const transferPayment = async (amount: any, remittanceId: any): Promise<any> => {
+  try {
+    const response = await appAxios.post(walletRecharge_url + "/transfer", {
+      amount,
+      remittance_id: remittanceId,
+    });
+    toast.success("Transfered Successfully.");
+    return response
+  } catch (error: any) {
+    console.error(error);
+    toast.error("Failed to make payment." + error);
+    return false; // ❌ Initial request or setup failed
+  }
+};
+
 
 export const createWallet = async (data: any) => {
   try {

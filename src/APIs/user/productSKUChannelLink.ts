@@ -14,3 +14,13 @@ export const linkProductSkuToChannelAccount = async (data: ProductChannelLink) =
     throw error;
   }
 }
+
+export const getUnlinkedProductSku = async () => {
+  try {
+    const response = await appAxios.get(`${productSKUChannelLinks_url}/`);
+    return response.data;
+  } catch (error: any) {
+    toast.error("Failed to fetch Product SKU.");
+    throw error;
+  }
+}

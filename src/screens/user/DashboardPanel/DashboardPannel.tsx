@@ -42,6 +42,7 @@ const navLinks: NavLink[] = [
   { name: "ChannelSKU", icon: "🔗", path: "/user/ChannelSKU" },
   { name: "NDR", icon: "🚚", path: "/user/NDR" },
   { name: "Finance", icon: "💰", path: "/user/Finance" },
+  { name: "COD Remittance", icon: "💰", path: "/user/CODRemittance" },
   { name: "Wallet", icon: "👛", path: "/user/Wallet" },
   { name: "Warehouse", icon: "🏬", path: "/user/Warehouses" },
   { name: "Settings", icon: "🚪", path: "/user/Settings" },
@@ -68,6 +69,7 @@ const UserPanel: React.FC = () => {
   }, [location.pathname]);
 
   const handleLinkClick = (name: string, path?: string) => {
+    setSidebarOpen(false)
     if (name === "SignOut") {
       // Handle sign out logic here
       console.log("Signing out...");

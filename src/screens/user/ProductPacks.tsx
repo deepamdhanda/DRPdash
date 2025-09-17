@@ -210,7 +210,7 @@ const ProductPacks: React.FC = () => {
           columns={columns as any}
           highlightOnHover
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50]}
+          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
           responsive
           striped
           persistTableHead

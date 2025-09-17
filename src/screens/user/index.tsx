@@ -12,9 +12,10 @@ import { ProductPacks } from "./ProductPacks.tsx";
 import { Wallets } from "./Wallets.tsx";
 import { ScanOrders } from "./ScanOrders.tsx";
 import { ProfitCalculator } from "./ProfitCalculator.tsx";
-import { NDROrders } from "./NDROders.tsx";
+import { NDRReports } from "./NDRReport.tsx";
 import { FlaggedOrders } from "./FlaggedOrders.tsx";
 import SettingsPage from "./Settings.tsx";
+import { CODRemittances } from "./CODRemittances.tsx";
 
 export const userRoutes = [
     {
@@ -59,7 +60,7 @@ export const userRoutes = [
     },
     {
         path: "NDR", // /Dashboard/pools
-        element: <NDROrders />,
+        element: <NDRReports />,
     },
     {
         path: "orders", // /Dashboard/pools
@@ -76,6 +77,10 @@ export const userRoutes = [
     {
         path: "warehouses", // /Dashboard/pools
         element: <Warehouses />,
+    },
+    {
+        path: "CODRemittance", // /Dashboard/pools
+        element: <CODRemittances />,
     },
     {
         path: "settings", // /Dashboard/pools

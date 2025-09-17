@@ -85,7 +85,7 @@ export const checkShipmentServiceavailablity = async (order: any, warehouse: any
       throw new Error("Order ID not specified");
     }
     const weight = (order.product_details.reduce((total: number, product: any) =>
-      total + (product.product_weight || 0) * (product.quantity || 0), 0)) || 100;
+      total + (product.product_weight || 0) * (product.product_quantity || 0), 0)) || 0.100;
 
     let commonWarehouses = warehouse;
     if (commonWarehouses === null) {
@@ -106,7 +106,7 @@ export const checkShipmentServiceavailablity = async (order: any, warehouse: any
     const order_id = order._id;
     const params = {
       order_id,
-      weight,
+      weight: parseInt((weight * 1000).toFixed(2)),
       commonWarehouses,
       delivery_address,
       delivery_postcode,

@@ -32,6 +32,7 @@ import { getAllProductPacks } from "../../APIs/user/productPack";
 import { ProductPack } from "./ProductPacks";
 import DescriptionEditor from "./description";
 import { createAmazonS3 } from "../../APIs/user/amazonS3";
+import { toast } from "react-toastify";
 
 interface ProductSKUAttribute {
   key: string;
@@ -323,6 +324,10 @@ const ProductSKUs: React.FC = () => {
         imageData = await createAmazonS3(`productSKU/${Date.now()}-${imageName.replace(/ /g, "_")}`, imagePreview);
         newProductSKU.product_sku_image = imageData.url;
       }
+      if (!newProductSKU.product_sku_image) {
+        toast.error("Please upload an image for the Product SKU.");
+        return;
+      }
       if (editingProductSKU) {
         await updateProductSKU(editingProductSKU._id!, newProductSKU);
         setProductSKUs((prev) =>
@@ -478,6 +483,7 @@ const ProductSKUs: React.FC = () => {
                   <Form.Label>Select Pack</Form.Label>
                   <Form.Select
                     name="pack_id"
+                    required
                     defaultValue={editingProductSKU?.pack_id?._id || ""}
                   >
                     <option value="">Select Channel</option>
@@ -498,6 +504,7 @@ const ProductSKUs: React.FC = () => {
                   <Form.Control
                     type="file"
                     accept="image/*"
+                    required={!editingProductSKU}
                     onChange={handleImageChange}
                   />
                   {imagePreview && (

@@ -9,16 +9,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const authRoutes = ["/login", "/register", "/verify", "/forgotPassword", "/resetPassword"];
+  const authRoutes = ["/login", "/register", "/verify", "/forgotPassword", "/resetPassword", "/"];
 
   useEffect(() => {
     const currentPath = location.pathname + location.search;
     const token = Cookies.get("authToken");
     const role = Cookies.get("roleType");
-    if (currentPath === "/") {
-      navigate(`/login`, { replace: true });
+    // if (currentPath === "/") {
+    //   navigate(`/login`, { replace: true });
 
-    }
+    // }
     if (!token) {
       if (!authRoutes.includes(location.pathname)) {
         console.log("No token found, Invalid Path, redirecting to login");
@@ -39,7 +39,15 @@ function App() {
 
   return (
     <>
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={10000}
+        newestOnTop={true}
+        closeOnClick={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <Outlet />
     </>
   );

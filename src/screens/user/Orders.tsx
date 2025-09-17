@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Form, Row, Col, Badge, Tooltip, OverlayTrigger, Card } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Badge, Tooltip, OverlayTrigger, Card, Table } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllOrders, updateOrder, getAllFilters } from "../../APIs/user/order";
-import { fetchNewOrders } from "../../APIs/user/fetchOrder";
+import { getAllOrders, updateOrder, getAllFilters, createOrder } from "../../APIs/user/order";
+// import { fetchNewOrders } from "../../APIs/user/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/user";
 import { BsClockFill, BsPhoneFill } from "react-icons/bs";
@@ -30,6 +30,7 @@ export interface User {
 export interface Order {
   _id: string;
   order_id: number;
+  channel_id: string;
   channel_order_id: string;
   store_order_id: string;
   order_date: string;
@@ -66,6 +67,7 @@ export interface Order {
   shipping_courier_id?: string;
   recommended_warehouse_id?: string;
   shipping_warehouse_id?: string;
+  remittance_status?: string;
 }
 
 interface FilterParams {
@@ -205,6 +207,8 @@ const Orders: React.FC = () => {
   const [shipmentOrder, setShipmentOrder] = useState<Order | null>(null);
   const [tableHeight, setTableHeight] = useState<string>("400px");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false)
+  const [newOrder, setNewOrder] = useState<Order | null>()
   // Filter states
   const [filters, setFilters] = useState<FilterParams>({});
   const [productName, setProductName] = useState<string>("");
@@ -235,7 +239,7 @@ const Orders: React.FC = () => {
   const [pickupOrder, setPickupOrder] = useState<string | null>();
   const [pickupDate, setPickupDate] = useState<Date>();
   const [activeTab, setActiveTab] = useState<string>("new_orders");
-
+  const [statusList, setStatusList] = useState<any>([])
 
   useEffect(() => {
     setIsLoading(false);
@@ -668,6 +672,21 @@ const Orders: React.FC = () => {
     setCurrentPage(page);
     fetchOrders(page, newRowsPerPage, filters);
   };
+  const handleNewOrderClose = () => {
+    setShowNewOrderModal(false);
+    setNewOrder(null);
+  }
+  const handleNewOrderSubmit = async () => {
+    if (newOrder) {
+      try {
+        await createOrder(newOrder);
+        fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+        handleNewOrderClose();
+      } catch (error) {
+        toast.error("Error updating order" + error);
+      }
+    }
+  }
 
   const columns = [
     {
@@ -701,6 +720,18 @@ const Orders: React.FC = () => {
           <br />
           <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
           <strong>Amt:</strong> ₹{row.total_amount || "—"} ({row.payment_method || "—"})<br />
+          {
+            row.remittance_status && row.remittance_status !== "NA" && <span
+              className={`badge ${row.remittance_status === "pending"
+                ? "bg-warning"
+                : row.remittance_status === "completed"
+                  ? "bg-success"
+                  : row.remittance_status === "processing" ? "bg-primary" : "bg-secondary"
+                }`}
+            >
+              {row.remittance_status}
+            </span>
+          }
         </div>
       ),
       wrap: true,
@@ -803,30 +834,10 @@ const Orders: React.FC = () => {
 
             {/* Latest Status with Tooltip */}
             <BsClockFill />{" "}
-            <OverlayTrigger
-              placement="top"
-              overlay={
-                <Tooltip id={`tooltip-${row._id}`}>
-                  <div style={{ maxWidth: "250px" }}>
-                    {sortedStatus.length > 0 ? (
-                      sortedStatus.map((status: any, index: number) => (
-                        <div key={index}>
-                          {index + 1}. {status.status.replaceAll("_", " ")} at{" "}
-                          {new Date(status.status_date).toLocaleDateString()}{" "}
-                          {new Date(status.status_date).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          {index !== sortedStatus.length - 1 && <br />}
-                        </div>
-                      ))
-                    ) : (
-                      <span>No status updates</span>
-                    )}
-                  </div>
-                </Tooltip>
-              }
-            >
+            <div style={{ maxWidth: "250px" }} onClick={() => {
+              setStatusList(sortedStatus)
+            }}>
+
               <span
                 style={{
                   textTransform: "capitalize",
@@ -840,8 +851,8 @@ const Orders: React.FC = () => {
               >
                 {latestStatus}
               </span>
-            </OverlayTrigger>
-            <br />
+              <br />
+            </div >
           </div>
         );
       },
@@ -980,7 +991,10 @@ const Orders: React.FC = () => {
             < div style={{ display: "flex", flexDirection: "row", justifyContent: 'center', gap: "5px" }} >
               {/* Edit or Schedule Pickup */}
               {latestStatus &&
-                (latestStatus.status === "AWB & Label Generated" ||
+                (
+                  latestStatus.status === "AWB & Label Generated" ||
+                  latestStatus.status.toLowerCase().includes("label") ||
+                  latestStatus.status.toLowerCase().includes("manifested") ||
                   latestStatus.status.toLowerCase().includes("re_activate") ||
                   latestStatus.status.toLowerCase().includes("pickup") ||
                   latestStatus.status.toLowerCase().includes("fetch") ||
@@ -996,6 +1010,8 @@ const Orders: React.FC = () => {
               {/* Print Label or Ship Now */}
               {hasAwb && latestStatus && (latestStatus.status !== "cancelled") && (
                 (latestStatus.status === "AWB & Label Generated" ||
+                  latestStatus.status.toLowerCase().includes("label") ||
+                  latestStatus.status.toLowerCase().includes("manifested") ||
                   latestStatus.status.toLowerCase().includes("pickup"))
               ) && (
                   <Button
@@ -1026,7 +1042,8 @@ const Orders: React.FC = () => {
             {/* Change Courier */}
             {hasAwb && latestStatus &&
               (latestStatus.status === "AWB & Label Generated" ||
-                latestStatus.status === "Manifested" ||
+                latestStatus.status.toLowerCase().includes("label") ||
+                latestStatus.status.toLowerCase().includes("manifested") ||
                 latestStatus.status.toLowerCase().includes("pickup") ||
                 latestStatus.status.toLowerCase().includes("not picked")) &&
               (
@@ -1156,11 +1173,11 @@ const Orders: React.FC = () => {
           <Button
             variant="outline-primary"
             onClick={async () => {
-              (await fetchNewOrders()) && fetchOrders(1, rowsPerPage, filters);
+              setShowNewOrderModal(true)
             }}
             className="me-2"
           >
-            📥 Fetch New Orders
+            📥 Add New Orders
           </Button>
           <Button
             disabled={shipNowLoading}
@@ -1200,7 +1217,7 @@ const Orders: React.FC = () => {
               animation: "pulseGlow 1.8s infinite ease-in-out"
             }}
           >
-            💡 OI AI Recommend Couriers
+            💡 OU AI Recommend Couriers
           </Button>
           <Button
             variant="primary"
@@ -1424,6 +1441,65 @@ const Orders: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <Modal show={statusList.length > 0} onHide={() => { setStatusList([]) }} size="lg" centered scrollable>
+        <Modal.Header closeButton>
+          <Modal.Title>Status History</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <Table striped bordered hover size="sm">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Status</th>
+                <th>Status Date</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {statusList.map((item: any, index: any) => (
+                <tr>
+                  <td>{index + 1}</td>
+                  <td>{item.status}</td>
+                  <td>{new Date(item.status_date).toLocaleString()}</td>
+                  <td> {item.status_details ? (
+                    typeof item.status_details === "object" ? (
+                      Object.entries(item.status_details).map(([key, value]) => (
+                        <div key={key}>
+                          <strong>{key}:</strong> {String(value)}
+                        </div>
+                      ))
+                    ) : (
+                      // If it's a JSON string, try parsing
+                      (() => {
+                        try {
+                          const parsed = JSON.parse(item.status_details);
+                          return Object.entries(parsed).map(([key, value]) => (
+                            <div key={key}>
+                              <strong>{key}:</strong> {String(value)}
+                            </div>
+                          ));
+                        } catch {
+                          return String(item.status_details);
+                        }
+                      })()
+                    )
+                  ) : (
+                    "-"
+                  )}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => { setStatusList([]) }}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Card className="shadow" style={{ border: "none", borderTop: "solid", minWidth: "450px", width: "103%", padding: 5 }}>
         <Tabs
           id="orders-tabs"
@@ -1528,6 +1604,14 @@ const Orders: React.FC = () => {
                   setEditOrder(tempData as Order);
                 }
               }} defaultValue={editOrder?.['customer_phone']} placeholder="Enter Customer Phone Number" />
+            </Form.Group>
+            <Form.Group className='col-lg-12'>
+              <Form.Label className="col-form-label pt-0" >{"Change Product Price"}</Form.Label>
+              <Form.Control className="form-control" type="number" onChange={(e) => {
+                let tempData = { ...editOrder }
+                tempData['total_amount'] = Number(e.target.value)
+                setEditOrder(tempData as Order);
+              }} defaultValue={editOrder?.['total_amount']} placeholder="Enter Product Amount" />
             </Form.Group>
             <Form.Group className='col-lg-6'>
               <Form.Label className="col-form-label pt-0" >{"Customer Address"}</Form.Label>
@@ -2028,6 +2112,186 @@ const Orders: React.FC = () => {
           ))}
         </div>
       </div>
+
+
+
+      <Modal show={showNewOrderModal} onHide={handleNewOrderClose} size="xl">
+        <Form action='#' onSubmit={handleNewOrderSubmit}>
+          <Modal.Header closeButton>
+            Add New Order
+          </Modal.Header>
+          <Modal.Body className="theme-form row">
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0">Select Product</Form.Label>
+              <Form.Control
+                as="select"
+                required
+                defaultValue={newOrder?.product_sku_id || ""}
+                onChange={(e) => {
+                  setNewOrder({
+                    ...newOrder,
+                    product_sku_id: e.target.value,
+                  } as Order);
+                }}
+              >
+                <option value="" disabled>Select a Product</option>
+                {productSKUs.map((sku) => (
+                  <option key={sku._id} value={sku._id}>
+                    {sku.product_sku_name}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0">Select Channel Account</Form.Label>
+              <Form.Control
+                as="select"
+                value={newOrder?.channel_id || ""}
+                required
+                onChange={(e) => {
+                  setNewOrder({
+                    ...newOrder,
+                    channel_id: e.target.value,
+                  } as Order);
+                }}
+              >
+                <option value="" disabled>Select a Channel Account</option>
+                {channelAccounts.map((account) => (
+                  <option key={account._id} value={account._id}>
+                    {account.channel_account_name}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Name"}</Form.Label>
+              <Form.Control className="form-control" type="text"
+                required
+                onChange={(e) => {
+                  let tempData = { ...newOrder }
+                  tempData['customer_name'] = e.target.value
+                  setNewOrder(tempData as Order);
+                }} defaultValue={newOrder?.['customer_name']} placeholder="Enter Customer Name" />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Phone Number"}</Form.Label>
+              <Form.Control className="form-control" type="number"
+                required
+                onChange={(e) => {
+                  if (e.target.value.length > 9) {
+                    let tempData = { ...newOrder }
+                    tempData['customer_phone'] = e.target.value
+                    setNewOrder(tempData as Order);
+                  }
+                }} defaultValue={newOrder?.['customer_phone']} placeholder="Enter Customer Phone Number" />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Address"}</Form.Label>
+              <Form.Control className="form-control" type="text"
+                required
+                onChange={(e) => {
+                  let tempData = { ...newOrder }
+                  tempData['shipping_address'] = e.target.value
+                  setNewOrder(tempData as Order);
+                }} defaultValue={newOrder?.['shipping_address']} placeholder="Enter Customer Address" />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer Pin Code"}</Form.Label>
+              <Form.Control className="form-control" type="number"
+                required
+                onChange={async (e) => {
+                  const pincode = e.target.value;
+
+                  // Validate pincode format (6-digit number)
+                  if (!/^\d{6}$/.test(pincode)) {
+                    // toast.error("Invalid Pincode");
+                    return;
+                  }
+
+                  try {
+                    const { data } = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+                    const postOffices = data?.[0]?.PostOffice;
+
+                    if (Array.isArray(postOffices) && postOffices.length > 0) {
+                      const postOffice = postOffices[0];
+
+                      setNewOrder((prev: any) => {
+                        if (!prev) return prev; // safeguard in case prev is null
+
+                        return {
+                          ...prev,
+                          // shipping_address: postOffice?.Name || "",
+                          shipping_city: postOffice?.District || "",
+                          shipping_state: postOffice?.State || "",
+                          shipping_country: "India",
+                          shipping_pincode: pincode,
+                        };
+                      });
+                    } else {
+                      toast.error("No address found for this pincode");
+                    }
+                  } catch (error) {
+                    toast.error("Failed to fetch pincode details");
+                    toast.error("Pincode API error:" + error);
+                  }
+                }} defaultValue={newOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
+              <div id="pin_error" style={{ color: 'red' }}></div>
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer City"}</Form.Label>
+              <Form.Control className="form-control" type="text" required value={newOrder?.['shipping_city']} placeholder="Enter Customer City" disabled={true} />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Customer State"}</Form.Label>
+              <Form.Control className="form-control" type="text" required value={newOrder?.['shipping_state']} placeholder="Enter Customer State" disabled={true} />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Product Price"}</Form.Label>
+              <Form.Control className="form-control" type="number" required onChange={(e) => {
+                let tempData = { ...newOrder }
+                tempData['total_amount'] = Number(e.target.value)
+                setNewOrder(tempData as Order);
+              }} defaultValue={newOrder?.['total_amount']} placeholder="Enter Product Amount" />
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0">Select Payment Method</Form.Label>
+              <Form.Control
+                required
+                as="select"
+                value={newOrder?.payment_method}
+                onChange={(e) => {
+                  setNewOrder({
+                    ...newOrder,
+                    payment_method: e.target.value,
+                  } as Order);
+                }}
+              >
+                <option value="" >Select a Payment Method</option>
+                <option key={"cod"} value={"COD"} >COD - Cash on Delivery</option>
+                <option key={"prepaid"} value={"PREPAID"}>Prepaid</option>
+              </Form.Control>
+            </Form.Group>
+            <Form.Group className='col-lg-6'>
+              <Form.Label className="col-form-label pt-0" >{"Qunatity"}</Form.Label>
+              <Form.Control className="form-control" type="number" required onChange={(e) => {
+                let tempData = { ...newOrder }
+                tempData['quantity'] = Number(e.target.value)
+                setNewOrder(tempData as Order);
+              }} defaultValue={newOrder?.['quantity']} placeholder="Enter Quantity" />
+            </Form.Group>
+
+
+          </Modal.Body>
+          <Modal.Footer>
+            <Button style={{ color: "primary", }} className="m-r-15" type="submit" >{"Submit"}</Button>
+            <Button style={{ color: "warning", }} className="m-r-15" onClick={handleNewOrderClose} >{"Close"}</Button>
+
+
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
 
     </div >
   );

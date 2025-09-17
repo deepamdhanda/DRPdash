@@ -8,7 +8,7 @@ export const getAllChannelAccounts = async () => {
     const response = await appAxios.get(channelAccounts_url);
     return response.data as ChannelAccount[];
   } catch (error: any) {
-    toast.error("Failed to fetch channelAccounts.");
+    toast.error("Failed to fetch channelAccounts. Error: " + (error.response?.data?.message || error.message));
     throw error;
   }
 };
@@ -21,7 +21,7 @@ export const createChannelAccount = async (data: any) => {
     toast.success("ChannelAccount created successfully!");
     return response.data;
   } catch (error: any) {
-    toast.error("Failed to create channelAccount.");
+    toast.error("Failed to create channelAccount. Error: " + (error.response?.data?.message || error.message));
     throw error;
   }
 };
@@ -32,7 +32,7 @@ export const updateChannelAccount = async (id: string, data: any) => {
     toast.success("ChannelAccount updated successfully!");
     return response.data;
   } catch (error: any) {
-    toast.error("Failed to update channelAccount.");
+    toast.error("Failed to update channelAccount. Error: " + (error.response?.data?.message || error.message));
     throw error;
   }
 };
@@ -42,7 +42,7 @@ export const deleteChannelAccount = async (id: string) => {
     await appAxios.delete(`${channelAccounts_url}/${id}`);
     toast.success("ChannelAccount deleted successfully!");
   } catch (error: any) {
-    toast.error("Failed to delete channelAccount.");
+    toast.error("Failed to delete channelAccount. Error: " + (error.response?.data?.message || error.message));
     throw error;
   }
 };
