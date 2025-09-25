@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import 'react-datepicker/dist/react-datepicker.css';
+import "react-datepicker/dist/react-datepicker.css";
 import "./dashboardPannel.css";
-import {
-  FaSignOutAlt,
-} from "react-icons/fa";
+import { FaSignOutAlt } from "react-icons/fa";
 import Cookies from "js-cookie";
 import logoImg from "../../../assets/logo.png";
 import logoImg1 from "../../../assets/logo1.png";
@@ -27,6 +25,7 @@ type TNavLinkName =
   | "Channels linked SKU"
   | "NDR"
   | "Finance"
+  | "invoices"
   | "SignOut";
 const navLinks: NavLink[] = [
   { name: "Dashboard", icon: "📊", path: "/user" },
@@ -45,10 +44,10 @@ const navLinks: NavLink[] = [
   { name: "COD Remittance", icon: "💰", path: "/user/CODRemittance" },
   { name: "Wallet", icon: "👛", path: "/user/Wallet" },
   { name: "Warehouse", icon: "🏬", path: "/user/Warehouses" },
+  { name: "Invoices", icon: "🚪", path: "/user/Invoices" },
   { name: "Settings", icon: "🚪", path: "/user/Settings" },
   { name: "SignOut", icon: "🚪" },
 ];
-
 
 const UserPanel: React.FC = () => {
   const [activeLink, setActiveLink] = useState<TNavLinkName>("");
@@ -69,7 +68,7 @@ const UserPanel: React.FC = () => {
   }, [location.pathname]);
 
   const handleLinkClick = (name: string, path?: string) => {
-    setSidebarOpen(false)
+    setSidebarOpen(false);
     if (name === "SignOut") {
       // Handle sign out logic here
       console.log("Signing out...");
@@ -83,30 +82,52 @@ const UserPanel: React.FC = () => {
 
   return (
     <div id="user-panel" className="nav-visible">
-      {isMobile && <button
-        className="hamburger-menu"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
+      {isMobile && (
+        <button
+          className="hamburger-menu"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          {sidebarOpen ? "X" : "☰"}
+        </button>
+      )}
+      <div
+        className={`sidebar sidebar-visible`}
+        style={{
+          display:
+            isMobile && !sidebarOpen ? "none!imporant" : "flex!important",
+        }}
       >
-        {sidebarOpen ? "X" : "☰"}
-      </button>}
-      <div className={`sidebar sidebar-visible`} style={{ display: isMobile && !sidebarOpen ? "none!imporant" : "flex!important" }}>
-
         <nav className="nav-1">
           <div>
             <div className="nav-logo">
-              <span className="nav-logo-icon"><img src={logoImg} style={{ width: '30px ' }} /></span>
-              <span className="nav-logo-name"><img src={logoImg1} style={{ width: '100px ' }} /></span>
+              <span className="nav-logo-icon">
+                <img src={logoImg} style={{ width: "30px " }} />
+              </span>
+              <span className="nav-logo-name">
+                <img src={logoImg1} style={{ width: "100px " }} />
+              </span>
             </div>
-            <div style={{ margin: '5px 0 15px 0', padding: '10px 10px', borderWidth: "1px 0", borderColor: '#F5891E', borderStyle: 'solid', fontSize: '14px', fontWeight: '200' }}>
-              Hello, {Cookies.get('username')}!
+            <div
+              style={{
+                margin: "5px 0 15px 0",
+                padding: "10px 10px",
+                borderWidth: "1px 0",
+                borderColor: "#F5891E",
+                borderStyle: "solid",
+                fontSize: "14px",
+                fontWeight: "200",
+              }}
+            >
+              Hello, {Cookies.get("username")}!
             </div>
             <div className="nav-list-1">
               <center>
                 {navLinks.slice(0, -1).map((link) => (
                   <div
                     key={link.name}
-                    className={`nav-link-1 ${activeLink === link.name ? "active" : ""
-                      }`}
+                    className={`nav-link-1 ${
+                      activeLink === link.name ? "active" : ""
+                    }`}
                     onClick={() => handleLinkClick(link.name, link.path)}
                   >
                     <span className="nav-icon">{link.icon}</span>
@@ -132,19 +153,34 @@ const UserPanel: React.FC = () => {
           <nav className="nav-1">
             <div>
               <div className="nav-logo">
-                <span className="nav-logo-icon"><img src={logoImg} style={{ width: '30px ' }} /></span>
-                <span className="nav-logo-name"><img src={logoImg1} style={{ width: '100px ' }} /></span>
+                <span className="nav-logo-icon">
+                  <img src={logoImg} style={{ width: "30px " }} />
+                </span>
+                <span className="nav-logo-name">
+                  <img src={logoImg1} style={{ width: "100px " }} />
+                </span>
               </div>
-              <div style={{ margin: '5px 0 15px 0', padding: '10px 10px', borderWidth: "1px 0", borderColor: '#F5891E', borderStyle: 'solid', fontSize: '14px', fontWeight: '200' }}>
-                Hello, {Cookies.get('username')}!
+              <div
+                style={{
+                  margin: "5px 0 15px 0",
+                  padding: "10px 10px",
+                  borderWidth: "1px 0",
+                  borderColor: "#F5891E",
+                  borderStyle: "solid",
+                  fontSize: "14px",
+                  fontWeight: "200",
+                }}
+              >
+                Hello, {Cookies.get("username")}!
               </div>
               <div className="nav-list-1">
                 <center>
                   {navLinks.slice(0, -1).map((link) => (
                     <div
                       key={link.name}
-                      className={`nav-link-1 ${activeLink === link.name ? "active" : ""
-                        }`}
+                      className={`nav-link-1 ${
+                        activeLink === link.name ? "active" : ""
+                      }`}
                       onClick={() => handleLinkClick(link.name, link.path)}
                     >
                       <span className="nav-icon">{link.icon}</span>
@@ -155,7 +191,9 @@ const UserPanel: React.FC = () => {
               </div>
             </div>
             <div
-              className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""}`}
+              className={`nav-link-1 ${
+                activeLink === "SignOut" ? "active" : ""
+              }`}
               onClick={() => handleLinkClick("SignOut")}
             >
               <span className="nav-icon">
@@ -165,14 +203,13 @@ const UserPanel: React.FC = () => {
             </div>
           </nav>
         </div>
-      )
-      }
+      )}
       <div className="main-content">
         {/* hello */}
         <Outlet />
         <SupportChatWidget />
       </div>
-    </div >
+    </div>
   );
 };
 
