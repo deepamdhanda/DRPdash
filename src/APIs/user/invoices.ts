@@ -2,15 +2,19 @@ import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
 import { getInvoicesUrl } from "../../URLs/invoicesUrls";
 
-export const fetchInvoices = async (
-  filters: { fromDate: string; toDate: string; userId: string },
-  role: string
-) => {
+export const fetchInvoices = async (filters: {
+  fromDate: string;
+  toDate: string;
+  userId: string;
+}) => {
   try {
     const payload: any = {
       filter: {},
     };
 
+    if (filters.userId) {
+      payload.filter.user_id = filters.userId;
+    }
     if (filters.fromDate || filters.toDate) {
       payload.filter.date = {
         ...(filters.fromDate && { from: filters.fromDate }),
@@ -18,12 +22,8 @@ export const fetchInvoices = async (
       };
     }
 
-    if (role === "admin" && filters.userId) {
-      payload.filter.user_id = filters.userId;
-    }
-
     const res = await appAxios.get(getInvoicesUrl, {
-      params: {},
+      params: payload,
     });
     if (res.status == 200 && res.data) {
       return res.data;
