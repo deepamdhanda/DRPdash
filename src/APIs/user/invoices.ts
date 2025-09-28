@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
-import { getInvoicesUrl } from "../../URLs/invoicesUrls";
+import { getInvoicesUrl, getInvoicesUsersUrl } from "../../URLs/invoicesUrls";
 
 export const fetchInvoices = async (filters: {
   fromDate: string;
@@ -30,5 +30,28 @@ export const fetchInvoices = async (filters: {
     }
   } catch (err: any) {
     toast.error(err?.message || "Error fetching invoices");
+  }
+};
+
+export interface InvoiceUser {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+// Function return type is Promise<InvoiceUser[]>
+export const fetchInvoiceUsers = async (): Promise<InvoiceUser[]> => {
+  try {
+    const apiRes = await appAxios.get<{ users: InvoiceUser[] }>(
+      getInvoicesUsersUrl
+    );
+
+    if (apiRes.data.users) {
+      return apiRes.data.users;
+    } else {
+      return [];
+    }
+  } catch (error: any) {
+    return [];
   }
 };

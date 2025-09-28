@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { fetchInvoices } from "../../APIs/user/invoices";
+import { useEffect, useState } from "react";
+import {
+  fetchInvoices,
+  fetchInvoiceUsers,
+  InvoiceUser,
+} from "../../APIs/user/invoices";
 import moment from "moment";
 import { toast } from "react-toastify";
 import {
@@ -11,35 +15,9 @@ import {
   Col,
   Card,
   Form,
-  Badge,
   Spinner,
 } from "react-bootstrap";
-
-type Invoice = {
-  _id: string;
-  user_id: string;
-  period_start: string;
-  period_end: string;
-  grand_total: number;
-  total_gst: number;
-  total_without_gst: number;
-  createdAt: string;
-  company_name?: string;
-  company_address?: string;
-  items?: Array<{
-    description: string;
-    quantity: number;
-    rate: number;
-    amount: number;
-  }>;
-};
-
-type Pagination = {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-};
+import { Invoice } from "./invoiceTypes";
 
 // Invoice Modal Component
 const InvoiceModal = ({
@@ -94,10 +72,7 @@ const InvoiceModal = ({
         <div id="invoice-content" className="p-4">
           {/* Invoice Header */}
           <div className="text-center mb-4">
-            <h1 className="display-4 text-primary mb-2">
-              <i className="fas fa-file-invoice-dollar me-2"></i>
-              INVOICE
-            </h1>
+            <h1 className="display-4 text-primary mb-2">₹ INVOICE</h1>
             <p className="text-muted">Invoice #{invoice._id}</p>
           </div>
 
@@ -209,10 +184,7 @@ const InvoiceModal = ({
                       <i className="fas fa-hashtag me-1"></i>
                       Qty
                     </th>
-                    <th className="text-end">
-                      <i className="fas fa-dollar-sign me-1"></i>
-                      Rate
-                    </th>
+                    <th className="text-end">Rate</th>
                     <th className="text-end">
                       <i className="fas fa-calculator me-1"></i>
                       Amount
@@ -225,8 +197,8 @@ const InvoiceModal = ({
                       <tr key={index}>
                         <td>{item.description}</td>
                         <td className="text-center">{item.quantity}</td>
-                        <td className="text-end">${item.rate.toFixed(2)}</td>
-                        <td className="text-end">${item.amount.toFixed(2)}</td>
+                        <td className="text-end">₹{item.rate.toFixed(2)}</td>
+                        <td className="text-end">₹{item.amount.toFixed(2)}</td>
                       </tr>
                     ))
                   ) : (
@@ -234,10 +206,10 @@ const InvoiceModal = ({
                       <td>Services Rendered</td>
                       <td className="text-center">1</td>
                       <td className="text-end">
-                        ${invoice.total_without_gst.toFixed(2)}
+                        ₹{invoice.total_without_gst.toFixed(2)}
                       </td>
                       <td className="text-end">
-                        ${invoice.total_without_gst.toFixed(2)}
+                        ₹{invoice.total_without_gst.toFixed(2)}
                       </td>
                     </tr>
                   )}
@@ -255,19 +227,17 @@ const InvoiceModal = ({
                     <span>
                       <i className="fas fa-minus me-1"></i>Subtotal:
                     </span>
-                    <span>${invoice.total_without_gst.toFixed(2)}</span>
+                    <span>₹{invoice.total_without_gst.toFixed(2)}</span>
                   </div>
                   <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
                     <span>
                       <i className="fas fa-percentage me-1"></i>GST:
                     </span>
-                    <span>${invoice.total_gst.toFixed(2)}</span>
+                    <span>₹{invoice.total_gst.toFixed(2)}</span>
                   </div>
                   <div className="d-flex justify-content-between border-top border-2 border-dark pt-2 fw-bold fs-5">
-                    <span>
-                      <i className="fas fa-dollar-sign me-1"></i>Total:
-                    </span>
-                    <span>${invoice.grand_total.toFixed(2)}</span>
+                    <span>Total:</span>
+                    <span>₹{invoice.grand_total.toFixed(2)}</span>
                   </div>
                 </Card.Body>
               </Card>
@@ -294,6 +264,7 @@ export const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [invoiceUsers, setInvoiceUsers] = useState<InvoiceUser[]>([]);
   const [page, setPage] = useState(1);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -344,7 +315,7 @@ export const Invoices = () => {
         <body>
           <div class="container-fluid">
             <div class="text-center mb-4">
-              <h1 class="display-4 text-primary"><i class="fas fa-file-invoice-dollar"></i> INVOICE</h1>
+              <h1 class="display-4 text-primary">₹ INVOICE</h1>
               <p class="text-muted">Invoice #${invoice._id}</p>
             </div>
             <div class="card mb-4 bg-light">
@@ -367,17 +338,17 @@ export const Invoices = () => {
             <table class="table table-bordered">
               <tr>
                 <td><i class="fas fa-minus"></i> <strong>Subtotal:</strong></td>
-                <td class="text-end">$${invoice.total_without_gst.toFixed(
+                <td class="text-end">₹${invoice.total_without_gst.toFixed(
                   2
                 )}</td>
               </tr>
               <tr>
                 <td><i class="fas fa-percentage"></i> <strong>GST:</strong></td>
-                <td class="text-end">$${invoice.total_gst.toFixed(2)}</td>
+                <td class="text-end">₹${invoice.total_gst.toFixed(2)}</td>
               </tr>
               <tr class="table-primary fw-bold">
-                <td><i class="fas fa-dollar-sign"></i> <strong>Grand Total:</strong></td>
-                <td class="text-end"><strong>$${invoice.grand_total.toFixed(
+                ₹ <strong>Grand Total:</strong></td>
+                <td class="text-end"><strong>₹${invoice.grand_total.toFixed(
                   2
                 )}</strong></td>
               </tr>
@@ -392,6 +363,77 @@ export const Invoices = () => {
     printWindow?.document.close();
     printWindow?.print();
   };
+
+  const getInvoiceUser = async () => {
+    setLoading(true);
+    const users = await fetchInvoiceUsers();
+    if (users.length) {
+      setInvoiceUsers(users);
+    }
+  };
+
+  const downloadTransactionsCSV = (invoice: Invoice) => {
+    if (!invoice.transactions || invoice.transactions.length === 0) {
+      toast.warn("No transactions available for this invoice");
+      return;
+    }
+
+    const headers = [
+      "Transaction ID",
+      "CR/DR",
+      "Order ID",
+      "Type",
+      "Freight Charge",
+      "COD Charges",
+      "Commission",
+      "GST (18%)",
+      "Total Amount",
+      "Zone",
+      "Charged Weight",
+      "Status",
+      "Created At",
+    ];
+
+    const rows = invoice.transactions.map((t: any) => {
+      const subtotal =
+        (t.freight_charge || 0) + (t.cod_charges || 0) + (t.commission || 0);
+      const gst = subtotal * 0.18;
+      const totalAmount = subtotal + gst;
+
+      return [
+        t._id,
+        t.cr_dr,
+        t.order_id,
+        t.type,
+        t.freight_charge,
+        t.cod_charges,
+        t.commission,
+        gst.toFixed(2),
+        totalAmount.toFixed(2),
+        t.zone,
+        t.charged_weight,
+        t.full_details?.status || "",
+        new Date(t.createdAt).toLocaleString(),
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((v) => `"${v ?? ""}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `invoice_${invoice._id}_transactions.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  useEffect(() => {
+    getInvoiceUser();
+  }, []);
 
   useEffect(() => {
     getInvoices();
@@ -451,6 +493,7 @@ export const Invoices = () => {
                     From Date
                   </Form.Label>
                   <Form.Control
+                    max={filters.toDate}
                     type="date"
                     value={moment(filters?.fromDate).format("YYYY-MM-DD")}
                     onChange={(e) =>
@@ -470,6 +513,7 @@ export const Invoices = () => {
                     To Date
                   </Form.Label>
                   <Form.Control
+                    min={filters.fromDate}
                     type="date"
                     value={moment(filters?.toDate).format("YYYY-MM-DD")}
                     onChange={(e) =>
@@ -487,10 +531,12 @@ export const Invoices = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>
                       <i className="fas fa-user me-1"></i>
-                      User ID
+                      User
                     </Form.Label>
-                    <Form.Control
-                      type="text"
+                    <select
+                      className="form-control"
+                      name=""
+                      id=""
                       value={filters.userId}
                       onChange={(e) =>
                         setFilters((old) => ({
@@ -498,8 +544,17 @@ export const Invoices = () => {
                           userId: e.target.value,
                         }))
                       }
-                      placeholder="Enter User ID"
-                    />
+                    >
+                      <option value={""}>All Users</option>
+                      {!!invoiceUsers.length &&
+                        invoiceUsers.map((user) => {
+                          return (
+                            <option key={user._id} value={user._id}>
+                              {user.email} ({user.name})
+                            </option>
+                          );
+                        })}
+                    </select>
                   </Form.Group>
                 </Col>
               )}
@@ -551,17 +606,14 @@ export const Invoices = () => {
                         {role === "admin" && (
                           <th>
                             <i className="fas fa-user me-1"></i>
-                            User ID
+                            User Email
                           </th>
                         )}
                         <th>
                           <i className="fas fa-calendar me-1"></i>
                           Period
                         </th>
-                        <th>
-                          <i className="fas fa-dollar-sign me-1"></i>
-                          Grand Total
-                        </th>
+                        <th>₹ Grand Total</th>
                         <th>
                           <i className="fas fa-percentage me-1"></i>
                           GST
@@ -590,7 +642,7 @@ export const Invoices = () => {
                           {role === "admin" && (
                             <td>
                               <i className="fas fa-user-circle me-1 text-muted"></i>
-                              {inv.user_id}
+                              {inv.user?.email}
                             </td>
                           )}
                           <td>
@@ -599,13 +651,9 @@ export const Invoices = () => {
                             {new Date(inv.period_end).toLocaleDateString()}
                           </td>
                           <td className="fw-bold text-success">
-                            <i className="fas fa-dollar-sign me-1"></i>
-                            {inv.grand_total.toFixed(2)}
+                            ₹{inv.grand_total.toFixed(2)}
                           </td>
-                          <td>
-                            <i className="fas fa-percentage me-1 text-muted"></i>
-                            {inv.total_gst.toFixed(2)}
-                          </td>
+                          <td>₹{inv.total_gst.toFixed(2)}</td>
                           <td>
                             <i className="fas fa-minus me-1 text-muted"></i>
                             {inv.total_without_gst.toFixed(2)}
@@ -633,6 +681,15 @@ export const Invoices = () => {
                               >
                                 <i className="fas fa-download me-1"></i>
                                 Download
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-warning"
+                                onClick={() => downloadTransactionsCSV(inv)}
+                                title="Download Transactions CSV"
+                              >
+                                <i className="fas fa-file-csv me-1"></i>
+                                CSV
                               </Button>
                             </div>
                           </td>
