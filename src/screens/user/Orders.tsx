@@ -14,12 +14,12 @@ import { ProductSKU } from "./ProductSKUs";
 import { bookCourier, checkShipmentServiceavailablity, getCommonWarehouses, schedulePickup } from "../../APIs/user/courier";
 import { toast } from "react-toastify";
 import Barcode from "react-barcode";
-import axios from "axios";
 import { Warehouse } from "./Warehouse";
 import { getAllWarehouses } from "../../APIs/user/warehouse";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import DatePicker from "react-datepicker";
 import { Tabs, Tab } from "react-bootstrap";
+import { pincodeDetails } from "../../APIs/pincodeAPIs";
 
 
 export interface User {
@@ -833,11 +833,10 @@ const Orders: React.FC = () => {
             )}
 
             {/* Latest Status with Tooltip */}
-            <BsClockFill />{" "}
             <div style={{ maxWidth: "250px" }} onClick={() => {
               setStatusList(sortedStatus)
             }}>
-
+              <BsClockFill />{" "}
               <span
                 style={{
                   textTransform: "capitalize",
@@ -994,6 +993,7 @@ const Orders: React.FC = () => {
                 (
                   latestStatus.status === "AWB & Label Generated" ||
                   latestStatus.status.toLowerCase().includes("label") ||
+                  latestStatus.status.toLowerCase().includes("data received") ||
                   latestStatus.status.toLowerCase().includes("manifested") ||
                   latestStatus.status.toLowerCase().includes("re_activate") ||
                   latestStatus.status.toLowerCase().includes("pickup") ||
@@ -1011,6 +1011,7 @@ const Orders: React.FC = () => {
               {hasAwb && latestStatus && (latestStatus.status !== "cancelled") && (
                 (latestStatus.status === "AWB & Label Generated" ||
                   latestStatus.status.toLowerCase().includes("label") ||
+                  latestStatus.status.toLowerCase().includes("data received") ||
                   latestStatus.status.toLowerCase().includes("manifested") ||
                   latestStatus.status.toLowerCase().includes("pickup"))
               ) && (
@@ -1043,6 +1044,7 @@ const Orders: React.FC = () => {
             {hasAwb && latestStatus &&
               (latestStatus.status === "AWB & Label Generated" ||
                 latestStatus.status.toLowerCase().includes("label") ||
+                latestStatus.status.toLowerCase().includes("data received") ||
                 latestStatus.status.toLowerCase().includes("manifested") ||
                 latestStatus.status.toLowerCase().includes("pickup") ||
                 latestStatus.status.toLowerCase().includes("not picked")) &&
@@ -1633,30 +1635,33 @@ const Orders: React.FC = () => {
                 }
 
                 try {
-                  const { data } = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-                  const postOffices = data?.[0]?.PostOffice;
+                  const data = await pincodeDetails({ pincode })
 
-                  if (Array.isArray(postOffices) && postOffices.length > 0) {
-                    const postOffice = postOffices[0];
+                  if (Array.isArray(data) && data.length > 0) {
+                    const postOffice = data[0];
 
                     setEditOrder((prev: any) => {
-                      if (!prev) return prev; // safeguard in case prev is null
-
                       return {
                         ...prev,
                         // shipping_address: postOffice?.Name || "",
-                        shipping_city: postOffice?.District || "",
-                        shipping_state: postOffice?.State || "",
+                        shipping_city: postOffice?.district || "",
+                        shipping_state: postOffice?.statename || "",
                         shipping_country: "India",
                         shipping_pincode: pincode,
                       };
                     });
                   } else {
-                    toast.error("No address found for this pincode");
+                    setEditOrder((prev: any) => {
+                      return {
+                        ...prev,
+                        // shipping_address: postOffice?.Name || "",
+                        shipping_city: "",
+                        shipping_state: "",
+                      };
+                    });
                   }
                 } catch (error) {
-                  toast.error("Failed to fetch pincode details");
-                  toast.error("Pincode API error:" + error);
+                  toast.error("Invalid Pincode or Pincode not found");
                 }
               }} defaultValue={editOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
               <div id="pin_error" style={{ color: 'red' }}></div>
@@ -2210,30 +2215,35 @@ const Orders: React.FC = () => {
                   }
 
                   try {
-                    const { data } = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-                    const postOffices = data?.[0]?.PostOffice;
+                    const data = await pincodeDetails({ pincode })
 
-                    if (Array.isArray(postOffices) && postOffices.length > 0) {
-                      const postOffice = postOffices[0];
+                    if (Array.isArray(data) && data.length > 0) {
+                      const postOffice = data[0];
 
                       setNewOrder((prev: any) => {
-                        if (!prev) return prev; // safeguard in case prev is null
 
                         return {
                           ...prev,
                           // shipping_address: postOffice?.Name || "",
-                          shipping_city: postOffice?.District || "",
-                          shipping_state: postOffice?.State || "",
+                          shipping_city: postOffice?.district || "",
+                          shipping_state: postOffice?.statename || "",
                           shipping_country: "India",
                           shipping_pincode: pincode,
                         };
                       });
                     } else {
-                      toast.error("No address found for this pincode");
+                      setNewOrder((prev: any) => {
+
+                        return {
+                          ...prev,
+                          // shipping_address: postOffice?.Name || "",
+                          shipping_city: "",
+                          shipping_state: "",
+                        };
+                      });
                     }
                   } catch (error) {
-                    toast.error("Failed to fetch pincode details");
-                    toast.error("Pincode API error:" + error);
+                    toast.error("Invalid Pincode or Pincode not found");
                   }
                 }} defaultValue={newOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
               <div id="pin_error" style={{ color: 'red' }}></div>

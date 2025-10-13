@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllNDRReports, createNDRReport, updateNDRReport } from "../../APIs/user/ndrReport";
+import { getAllNDRReports, updateNDRReport } from "../../APIs/user/ndrReport";
 
 export interface User {
   _id: string;
@@ -10,37 +10,23 @@ export interface User {
 
 export interface NDRReport {
   _id: string;
-  name: string;
-  length: number;
-  breadth: number;
-  height: number;
-  weight: number;
-  stock: number;
-  packing_cost: number;
-  volumetric_weight: number;
-  created_by: User;
-  status: "active" | "inactive" | "suspended";
-  createdAt?: string;
-  updatedAt?: string;
+  awb: string;
+  courier: string;
+  order: any;
+  attempts: any[];
+  currentAttempt: number;
+  latestStatus: string;
+  action?: string;
+  rescheduleDate?: string;
 }
 
 const NDRReports: React.FC = () => {
   const [ndr_reports, setNDRReports] = useState<NDRReport[]>([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
+  const [rescheduleDate, setRescheduleDate] = useState<any>();
+  const [sellerAction, setSellerAction] = useState<any>();
   const [showModal, setShowModal] = useState(false);
   const [editingNDRReport, setEditingNDRReport] = useState<NDRReport | null>(null);
-  const [dimensions, setDimensions] = useState({
-    length: 0,
-    breadth: 0,
-    height: 0,
-  });
-  const [volumetricWeight, setVolumetricWeight] = useState<number>(0);
-  useEffect(() => {
-    // Recalculate volumetric weight whenever dimensions change
-    const { length, breadth, height } = dimensions;
-    const calculatedVolumetricWeight = (length * breadth * height) / 5000;
-    setVolumetricWeight(calculatedVolumetricWeight * 1000);
-  }, [dimensions]);
 
 
   useEffect(() => {
@@ -66,62 +52,21 @@ const NDRReports: React.FC = () => {
     setEditingNDRReport(null);
   };
 
-  const handleShow = () => setShowModal(true);
 
-  const handleDimensionChange = (field: "length" | "breadth" | "height", value: number) => {
-    setDimensions((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
   const handleEdit = (ndr_report: NDRReport) => {
     setEditingNDRReport(ndr_report);
     setShowModal(true);
   };
 
-  const handleToggleStatus = async (ndr_report: NDRReport) => {
-    const newStatus = ndr_report.status === "active" ? "inactive" : "active";
-    if (
-      window.confirm(`Are you sure you want to mark this ndr report as ${newStatus}?`)
-    ) {
-      try {
-        await updateNDRReport(ndr_report._id, { status: newStatus });
-        fetchInitialData();
-      } catch (error) {
-        console.error("Error updating status", error);
-      }
-    }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as typeof e.target & {
-      name: { value: string };
-      weight: { value: number };
-      length: { value: number };
-      breadth: { value: number };
-      height: { value: number };
-      stock: { value: number };
-      packing_cost: { value: number };
-      volumetric_weight: { value: number };
-    };
-
-    const formData = {
-      name: form.name.value.trim(),
-      weight: form.weight.value,
-      length: form.length.value,
-      breadth: form.breadth.value,
-      height: form.height.value,
-      stock: form.stock.value,
-      packing_cost: form.packing_cost.value,
-      volumetric_weight: form.volumetric_weight.value,
-    };
+  const handleSubmit = async () => {
 
     try {
       if (editingNDRReport) {
-        await updateNDRReport(editingNDRReport._id, formData);
-      } else {
-        await createNDRReport(formData);
+        await updateNDRReport(editingNDRReport._id, {
+          action: sellerAction,
+          rescheduleDate: rescheduleDate || null,
+        });
       }
       fetchInitialData();
       handleClose();
@@ -130,97 +75,76 @@ const NDRReports: React.FC = () => {
     }
   };
 
+  const onEdit = (row: any) => {
+    handleEdit(row);
+  };
   const columns = [
     {
       name: "AWB",
-      selector: (row:any) => row.awb,
-      sortable: true,
-    },
-    {
-      name: "Order ID",
-      selector: (row:any) => row.orderId,
-      sortable: true,
-    },
-    {
-      name: "Current Attempt",
-      selector: (row:any) => row.currentAttempt,
-      sortable: true,
-      center: true,
-    },
-    {
-      name: "Latest Status",
-      selector: (row:any) => row.latestStatus,
-      sortable: true,
-      cell: (row:any) => (
-        <span className={`badge bg-${row.latestStatus === 'pending' ? 'warning' : 'success'}`}>
-          {row.latestStatus}
-        </span>
+      selector: (row: any) => row.awb,
+      cell: (row: any) => (
+        <div>
+          <i>#{row.order.order_id}</i><br />
+          <strong>{row.awb}</strong><br />
+          <small className="text-muted">{row.courier || "—"}</small>
+        </div>
       ),
+      sortable: true,
     },
+
     {
       name: "Last Attempt Date",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.scanDateTime,
-      format: (row:any) => new Date(row.attempts?.[row.currentAttempt - 1]?.scanDateTime).toLocaleString(),
+      selector: (row: any) => {
+        const lastAttempt = row.attempts?.[row.currentAttempt - 1];
+        return lastAttempt?.scanDateTime?.split("T")[0] || "-";
+      },
+      cell: (row: any) => {
+        const lastAttempt = row.attempts?.[row.currentAttempt - 1];
+        const date = lastAttempt?.scanDateTime?.split("T")[0] || "-";
+        const reason = lastAttempt?.ndrReason || "—";
+        const badgeClass = row.latestStatus === "pending" ? "warning" : "success";
+
+        return (
+          <div >
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+              <span style={{ fontWeight: 600, marginRight: 6 }}>#{row.currentAttempt}</span>
+              <span
+                className={`badge bg-${badgeClass}`}
+                style={{ textTransform: "capitalize", fontSize: "0.85em" }}
+              >
+                {row.latestStatus}
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
+              <i className="bi bi-calendar-event" style={{ marginRight: 4 }}></i>
+              <span style={{ fontSize: "0.9em" }}>{date}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", color: "#555" }}>
+              <i className="bi bi-info-circle" style={{ marginRight: 4 }}></i>
+              <span style={{ fontSize: "0.85em", fontStyle: "italic" }}>{reason}</span>
+            </div>
+          </div>
+
+        );
+      },
       sortable: true,
-    },
-    {
-      name: "NDR Reason",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.ndrReason || "-",
-      wrap: true,
     },
     {
       name: "Resolution Action",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.resolutionAction || "-",
-      wrap: true,
-    },
-    {
-      name: "Customer Response",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.customerResponse || "-",
+      selector: (row: any) => row.attempts?.[row.currentAttempt - 1]?.resolutionAction || "-",
       wrap: true,
     },
     {
       name: "Seller Action",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.action || "-",
+      selector: (row: any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.action || "-",
       wrap: true,
-    },
-    {
-      name: "Reschedule Date",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.rescheduleDate,
-      format: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.rescheduleDate
-        ? new Date(row.attempts[row.currentAttempt - 1].sellerFeedback.rescheduleDate).toLocaleDateString()
-        : "-",
-    },
-    {
-      name: "Updated Address",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.updatedAddress || "-",
-      wrap: true,
-    },
-    {
-      name: "Remarks",
-      selector: (row:any) => row.attempts?.[row.currentAttempt - 1]?.remarks || "-",
-      wrap: true,
-    },
-    {
-      name: "Created At",
-      selector: (row:any) => row.createdAt,
-      format: (row:any) => new Date(row.createdAt).toLocaleString(),
-      sortable: true,
-    },
-    {
-      name: "Updated At",
-      selector: (row:any) => row.updatedAt,
-      format: (row:any) => new Date(row.updatedAt).toLocaleString(),
-      sortable: true,
     },
     {
       name: "Actions",
-      cell: (row:any) => (
+      cell: (row: any) => (
         <div>
           <Button size="sm" variant="primary" onClick={() => onEdit(row)}>
-            Edit
-          </Button>{" "}
-          <Button size="sm" variant="danger" onClick={() => onDelete(row)}>
-            Delete
+            Update NDR
           </Button>
         </div>
       ),
@@ -235,7 +159,6 @@ const NDRReports: React.FC = () => {
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>NDR Reports</h4>
-        <Button onClick={handleShow}>+ New NDR Report</Button>
       </div>
 
       {loading ? (
@@ -255,143 +178,55 @@ const NDRReports: React.FC = () => {
           persistTableHead
         />
       )}
-
-      <Modal show={showModal} onHide={handleClose}>
+      <Modal show={showModal} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingNDRReport ? "Edit NDR Report" : "Create NDR Report"}
+            Update NDR Report — {editingNDRReport?.awb} (#{editingNDRReport?.order?.order_id})
           </Modal.Title>
         </Modal.Header>
+
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
+
+            {/* Seller Action */}
             <Form.Group className="mb-2">
-              <Form.Label>Report Name</Form.Label>
-              <Form.Control
-                name="name"
-                defaultValue={editingNDRReport?.name || ""}
-                placeholder="e.g. Undelivered due to address issue"
-                required
-              />
-            </Form.Group>
-
-            <div className="mb-2 row">
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Weight (gm)</Form.Label>
-                <Form.Control
-                  name="weight"
-                  type="number"
-                  defaultValue={editingNDRReport?.weight || ""}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Volumetric Weight (gm)</Form.Label>
-                <Form.Control
-                  name="volumetric_weight"
-                  type="number"
-                  value={volumetricWeight.toFixed(2)}
-                  disabled
-                />
-              </Form.Group>
-            </div>
-
-            <div className="mb-2 row">
-              <Form.Group className="mb-2 col-4">
-                <Form.Label>Length (cm)</Form.Label>
-                <Form.Control
-                  name="length"
-                  type="number"
-                  value={dimensions.length}
-                  onChange={(e) =>
-                    handleDimensionChange("length", Number(e.target.value))
-                  }
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-4">
-                <Form.Label>Breadth (cm)</Form.Label>
-                <Form.Control
-                  name="breadth"
-                  type="number"
-                  value={dimensions.breadth}
-                  onChange={(e) =>
-                    handleDimensionChange("breadth", Number(e.target.value))
-                  }
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-4">
-                <Form.Label>Height (cm)</Form.Label>
-                <Form.Control
-                  name="height"
-                  type="number"
-                  value={dimensions.height}
-                  onChange={(e) =>
-                    handleDimensionChange("height", Number(e.target.value))
-                  }
-                  required
-                />
-              </Form.Group>
-            </div>
-
-            <div className="mb-2 row">
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Available Stock</Form.Label>
-                <Form.Control
-                  name="stock"
-                  type="number"
-                  step={1}
-                  defaultValue={editingNDRReport?.stock || ""}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Cost per Piece (₹)</Form.Label>
-                <Form.Control
-                  name="packing_cost"
-                  type="number"
-                  defaultValue={editingNDRReport?.packing_cost || ""}
-                  required
-                />
-              </Form.Group>
-            </div>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Status</Form.Label>
+              <Form.Label>Seller Action</Form.Label>
               <Form.Select
-                name="latestStatus"
-                defaultValue={editingNDRReport?.latestStatus || ""}
+                value={sellerAction}
+                onChange={(e) => setSellerAction(e.target.value)}
                 required
               >
-                <option value="">Select Status</option>
-                <option value="pending">Pending</option>
-                <option value="contacted">Contacted</option>
-                <option value="in-transit">In Transit</option>
-                <option value="delivered">Delivered</option>
-                <option value="resolved">Resolved</option>
+                <option value="">Select Action</option>
+                <option value="cancel">Cancel Order</option>
+                <option value="reschedule">Reschedule Pickup</option>
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Channel</Form.Label>
-              <Form.Control
-                name="channel_name"
-                value={editingNDRReport?.channel?.channel_account_name || ""}
-                disabled
-              />
-            </Form.Group>
+            {/* Reschedule Date */}
+            {sellerAction === "reschedule" && (
+              <Form.Group className="mb-2">
+                <Form.Label>Reschedule Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={rescheduleDate || ""}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  required
+                />
+              </Form.Group>
+            )}
           </Modal.Body>
 
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
+            <Button variant="primary" onClick={handleSubmit}>
               {editingNDRReport ? "Update" : "Create"}
             </Button>
           </Modal.Footer>
         </Form>
       </Modal>
+
 
     </div>
   );

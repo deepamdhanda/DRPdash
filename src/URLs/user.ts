@@ -19,6 +19,7 @@ export const amazonS3s_url = `${drpCrmBaseUrl}/api/user/amazonS3`;
 export const walletRecharge_url = `${drpCrmBaseUrl}/api/user/walletRecharge`;
 export const dashboard_url = `${drpCrmBaseUrl}/api/user/dashboard`;
 export const user_url = `${drpCrmBaseUrl}/api/user/user`;
+export const gst_url = `${drpCrmBaseUrl}/api/user/gst`;
 export const tickets_url = `${drpCrmBaseUrl}/api/user/ticket`;
 export const supportChat_url = `${drpCrmBaseUrl}/api/user/supportChat`;
 export const initialChannelAccountFetchs_url = `${drpCrmBaseUrl}/api/user/initialChannelAccountFetch`

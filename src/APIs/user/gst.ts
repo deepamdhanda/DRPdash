@@ -1,9 +1,9 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
-import { user_url } from "../../URLs/user";
-export const getUser = async (email: string | null = null) => {
+import { gst_url } from "../../URLs/user";
+export const getGST = async (gst: string) => {
   try {
-    const apiRes = email ? await appAxios.get(user_url + `?email=${email}`) : await appAxios.get(user_url);
+    const apiRes = gst ? await appAxios.get(gst_url + `?gst=${gst}`) : await appAxios.get(gst_url);
     if (apiRes.data) {
       return apiRes.data;
     }

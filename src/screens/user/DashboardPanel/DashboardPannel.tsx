@@ -45,7 +45,7 @@ const navLinks: NavLink[] = [
   { name: "COD Remittance", icon: "💰", path: "/user/CODRemittance" },
   { name: "Wallet", icon: "👛", path: "/user/Wallet" },
   { name: "Warehouse", icon: "🏬", path: "/user/Warehouses" },
-  { name: "Settings", icon: "🚪", path: "/user/Settings" },
+  // { name: "Settings", icon: "🚪", path: "/user/Settings" },
   { name: "SignOut", icon: "🚪" },
 ];
 

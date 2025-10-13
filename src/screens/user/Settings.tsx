@@ -10,6 +10,7 @@ import {
     Table,
 } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { getUser, getUserById } from "../../APIs/user/user";
 
 type PermissionAction = "read" | "write";
 type ModuleName =
@@ -97,18 +98,13 @@ const Settings: React.FC = () => {
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const fetchedProfile: UserProfile = {
-                name: "John Doe",
-                email: "john@example.com",
-                phone: "+91 9876543210",
-                gstNumber: "22AAAAA0000A1Z5",
-            };
-            setProfile(fetchedProfile);
-        };
         fetchData();
     }, []);
 
+    const fetchData = async () => {
+        const fetchedProfile: UserProfile = await getUser();
+        setProfile(fetchedProfile);
+    };
     const openProfileModal = () => {
         setTempProfile(profile);
         setShowProfileModal(true);

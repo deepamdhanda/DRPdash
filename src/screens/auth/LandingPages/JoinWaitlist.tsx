@@ -4,6 +4,7 @@ import image1 from "../../../assets/1.jpg";
 import image2 from "../../../assets/2.jpg";
 import image3 from "../../../assets/3.jpg";
 import logoWide from "../../../assets/logo-wide.png";
+import { registerLead } from "../../../APIs/landingPageAPIs";
 
 const JoinWaitingList: React.FC = () => {
   // Spots state and constants
@@ -32,7 +33,7 @@ const JoinWaitingList: React.FC = () => {
   const exitIntentRef = useRef<HTMLDivElement | null>(null);
 
   // Launch date used in original file
-  const launchDate = new Date("2025-09-01T12:00:00Z").getTime();
+  const launchDate = new Date("2025-10-01T12:00:00Z").getTime();
 
 
   // Helper pad
@@ -103,23 +104,15 @@ const JoinWaitingList: React.FC = () => {
     const form = e.currentTarget;
     const fd = new FormData(form);
     const data = {
+      sourceTypeId: 1001,
       name: fd.get("name"),
       email: fd.get("email"),
       phone: fd.get("phone"),
       orders: fd.get("orders"),
       platform: fd.get("platform"),
     };
-    try {
-      await fetch("https://your-api-endpoint.com/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-    } catch (err) {
-      // swallow errors like original
-    }
-
-    // Mirror behaviour: hide form, show success, auto-close & reset after 2500ms
+    const res = await registerLead(data);
+    if (!res) return;
     setFormHidden(true);
     setShowSuccess(true);
     setTimeout(() => {
@@ -127,7 +120,7 @@ const JoinWaitingList: React.FC = () => {
       setFormHidden(false);
       setShowSuccess(false);
       form.reset();
-    }, 2500);
+    }, 250000);
   };
 
   // Canvas particles logic (converted from original)
@@ -569,9 +562,9 @@ const JoinWaitingList: React.FC = () => {
               See OrderzUp in Action
             </span>
           </h3>
-          <div style={{ display: "flex", flexDirection:"column",alignItems:"center", justifyContent: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <div style={{ width: "100%", maxWidth: 900, position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.10)" }}>
-              <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="OrderzUp Explainer Video" allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }} loading="lazy" />
+              <iframe src="https://www.youtube.com/embed/TngWmsax8Rw" title="OrderzUp Explainer Video" allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }} loading="lazy" />
             </div>
             <div style={{ textAlign: "center", marginTop: 12 }}>
               <p style={{ color: "var(--orange)", fontSize: "1.15rem", fontWeight: 600 }}>
@@ -757,10 +750,50 @@ const JoinWaitingList: React.FC = () => {
                 Join Now
               </button>
             </form>
-
-            <div id="waitlist-success" style={{ display: showSuccess ? "block" : "none", marginTop: 20, color: "#000434", fontWeight: 600 }}>
+            <div
+              id="waitlist-success"
+              style={{
+                display: showSuccess ? "block" : "none",
+                marginTop: 20,
+                color: "#000434",
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
               🎉 Thank you! You're on the list — we'll reach out soon.
+              <div style={{ marginTop: 20 }}>
+                <a
+                  href="https://chat.whatsapp.com/KfXknYz3Zgg9MPu3l2WvTT"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    padding: "14px 22px",
+                    background: "linear-gradient(90deg, #0f1668ff, #010317ff)",
+                    color: "#fff!important",
+                    borderRadius: "50px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                    transition: "all 0.3s ease",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = "scale(1.05)";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.3)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+                  }}
+                >
+                  🚀 Join Our WhatsApp Community Now!
+                </a>
+                <p style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
+                  👉 Get insider RTO hacks, updates & early access!
+                </p>
+              </div>
             </div>
+
           </div>
         </div>
       )}
