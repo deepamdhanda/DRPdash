@@ -64,7 +64,9 @@ export interface WalletTransaction {
 
 export type Invoice = {
   _id: string;
-  user_id: string;
+  pending_amount?: Number;
+  pool_id: string;
+  pool_name: string;
   period_start: string;
   period_end: string;
   grand_total: number;
@@ -80,8 +82,4 @@ export type Invoice = {
     amount: number;
   }>;
   transactions?: WalletTransaction[];
-  user?: {
-    email: string;
-    name: string;
-  };
 };

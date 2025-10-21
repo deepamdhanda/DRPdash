@@ -1,19 +1,19 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
-import { getInvoicesUrl, getInvoicesUsersUrl } from "../../URLs/invoicesUrls";
+import { getInvoicesUrl, getInvoicesPoolsUrl } from "../../URLs/invoicesUrls";
 
 export const fetchInvoices = async (filters: {
   fromDate: string;
   toDate: string;
-  userId: string;
+  pool_id: string;
 }) => {
   try {
     const payload: any = {
       filter: {},
     };
 
-    if (filters.userId) {
-      payload.filter.user_id = filters.userId;
+    if (filters.pool_id) {
+      payload.filter.pool_id = filters.pool_id;
     }
     if (filters.fromDate || filters.toDate) {
       payload.filter.date = {
@@ -33,21 +33,21 @@ export const fetchInvoices = async (filters: {
   }
 };
 
-export interface InvoiceUser {
+export interface InvoicePool {
   _id: string;
   name: string;
-  email: string;
+  description: string;
 }
 
 // Function return type is Promise<InvoiceUser[]>
-export const fetchInvoiceUsers = async (): Promise<InvoiceUser[]> => {
+export const fetchInvoicePools = async (): Promise<InvoicePool[]> => {
   try {
-    const apiRes = await appAxios.get<{ users: InvoiceUser[] }>(
-      getInvoicesUsersUrl
+    const apiRes = await appAxios.get<{ pools: InvoicePool[] }>(
+      getInvoicesPoolsUrl
     );
 
-    if (apiRes.data.users) {
-      return apiRes.data.users;
+    if (apiRes.data.pools) {
+      return apiRes.data.pools;
     } else {
       return [];
     }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   fetchInvoices,
-  fetchInvoiceUsers,
-  InvoiceUser,
+  fetchInvoicePools,
+  InvoicePool,
 } from "../../APIs/user/invoices";
 import moment from "moment";
 import { toast } from "react-toastify";
@@ -121,7 +121,7 @@ const InvoiceModal = ({
                     </p>
                     <p className="mb-0">
                       <i className="fas fa-id-card me-1 text-muted"></i>
-                      User ID: {invoice.user_id}
+                      Pool Name: {invoice.pool_name}
                     </p>
                   </div>
                 </Card.Body>
@@ -239,6 +239,12 @@ const InvoiceModal = ({
                     <span>Total:</span>
                     <span>₹{invoice.grand_total.toFixed(2)}</span>
                   </div>
+                  {invoice?.pending_amount && (
+                    <div className="d-flex justify-content-between border-top border-2 border-dark pt-2 fw-bold fs-5">
+                      <span>Pending :</span>
+                      <span>₹{invoice?.pending_amount?.toFixed(2)}</span>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -264,14 +270,14 @@ export const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [invoiceUsers, setInvoiceUsers] = useState<InvoiceUser[]>([]);
+  const [invoicePools, setInvoicePools] = useState<InvoicePool[]>([]);
   const [page, setPage] = useState(1);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState({
-    fromDate: moment().startOf("month").toString(),
+    fromDate: moment().startOf("year").toString(),
     toDate: moment().toString(),
-    userId: "",
+    pool_id: "",
   });
 
   // assume we get user role from auth context or props
@@ -330,7 +336,7 @@ export const Invoices = () => {
                 ).toLocaleDateString()}</p>
                 ${
                   role === "admin"
-                    ? `<p><i class="fas fa-user"></i> <strong>User ID:</strong> ${invoice.user_id}</p>`
+                    ? `<p><i class="fas fa-user"></i> <strong>Pool Name:</strong> ${invoice.pool_name}</p>`
                     : ""
                 }
               </div>
@@ -364,11 +370,11 @@ export const Invoices = () => {
     printWindow?.print();
   };
 
-  const getInvoiceUser = async () => {
+  const getInvoicePools = async () => {
     setLoading(true);
-    const users = await fetchInvoiceUsers();
+    const users = await fetchInvoicePools();
     if (users.length) {
-      setInvoiceUsers(users);
+      setInvoicePools(users);
     }
   };
 
@@ -432,7 +438,7 @@ export const Invoices = () => {
   };
 
   useEffect(() => {
-    getInvoiceUser();
+    getInvoicePools();
   }, []);
 
   useEffect(() => {
@@ -531,26 +537,27 @@ export const Invoices = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>
                       <i className="fas fa-user me-1"></i>
-                      User
+                      Pool
                     </Form.Label>
                     <select
                       className="form-control"
                       name=""
                       id=""
-                      value={filters.userId}
+                      value={filters.pool_id}
                       onChange={(e) =>
                         setFilters((old) => ({
                           ...old,
-                          userId: e.target.value,
+                          pool_id: e.target.value,
                         }))
                       }
                     >
-                      <option value={""}>All Users</option>
-                      {!!invoiceUsers.length &&
-                        invoiceUsers.map((user) => {
+                      <option value={""}>All Pools</option>
+                      {!!invoicePools.length &&
+                        invoicePools.map((pool) => {
                           return (
-                            <option key={user._id} value={user._id}>
-                              {user.email} ({user.name})
+                            <option key={pool._id} value={pool._id}>
+                              {pool.name}{" "}
+                              {pool?.description && `(${pool.description})`}
                             </option>
                           );
                         })}
@@ -606,7 +613,7 @@ export const Invoices = () => {
                         {role === "admin" && (
                           <th>
                             <i className="fas fa-user me-1"></i>
-                            User Email
+                            Pool
                           </th>
                         )}
                         <th>
@@ -614,6 +621,9 @@ export const Invoices = () => {
                           Period
                         </th>
                         <th>₹ Grand Total</th>
+                        {invoices.some((i) => i?.pending_amount) && (
+                          <th>₹ Pending</th>
+                        )}
                         <th>
                           <i className="fas fa-percentage me-1"></i>
                           GST
@@ -642,17 +652,24 @@ export const Invoices = () => {
                           {role === "admin" && (
                             <td>
                               <i className="fas fa-user-circle me-1 text-muted"></i>
-                              {inv.user?.email}
+                              {inv.pool_name}
                             </td>
                           )}
                           <td>
                             <i className="fas fa-calendar-alt me-1 text-muted"></i>
-                            {new Date(inv.period_start).toLocaleDateString()} -{" "}
-                            {new Date(inv.period_end).toLocaleDateString()}
+                            {moment(inv.period_start).format("DD MMM, YYYY")} -{" "}
+                            {moment(inv.period_end).format("DD MMM, YYYY")}
                           </td>
                           <td className="fw-bold text-success">
                             ₹{inv.grand_total.toFixed(2)}
                           </td>
+                          {invoices.some((i) => i?.pending_amount) && (
+                            <td className="fw-bold text-danger">
+                              {inv?.pending_amount
+                                ? `₹${inv.pending_amount.toFixed(2)}`
+                                : ""}
+                            </td>
+                          )}
                           <td>₹{inv.total_gst.toFixed(2)}</td>
                           <td>
                             <i className="fas fa-minus me-1 text-muted"></i>
@@ -660,7 +677,7 @@ export const Invoices = () => {
                           </td>
                           <td className="text-muted">
                             <i className="fas fa-clock me-1"></i>
-                            {new Date(inv.createdAt).toLocaleString()}
+                            {moment(inv.createdAt).format("DD MMM, YYYY")}
                           </td>
                           <td>
                             <div className="d-flex gap-1">
