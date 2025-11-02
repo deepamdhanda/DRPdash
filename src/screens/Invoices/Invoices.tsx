@@ -60,7 +60,11 @@ const InvoiceModal = ({
   };
 
   const gstType =
-    invoice.gst_breakup?.type === "intra_state" ? "Intra-State" : "Inter-State";
+    invoice.gst_breakup?.type === "intra_state"
+      ? "Intra-State"
+      : invoice.gst_breakup?.type === "union_territory"
+      ? "Union Territory"
+      : "Inter-State";
 
   return (
     <Modal show={show} onHide={onHide} size="xl" centered>
@@ -79,7 +83,11 @@ const InvoiceModal = ({
             <p className="text-muted mb-1">Invoice #{invoice._id}</p>
             <Badge
               bg={
-                invoice.gst_breakup?.type === "intra_state" ? "info" : "warning"
+                invoice.gst_breakup?.type === "intra_state"
+                  ? "info"
+                  : invoice.gst_breakup?.type === "union_territory"
+                  ? "success"
+                  : "warning"
               }
             >
               {gstType} GST
@@ -106,9 +114,13 @@ const InvoiceModal = ({
                       <i className="fas fa-envelope me-1 text-muted"></i>
                       contact@yourcompany.com
                     </p>
-                    <p className="mb-0">
+                    <p className="mb-1">
                       <i className="fas fa-phone me-1 text-muted"></i>
                       +1 (555) 123-4567
+                    </p>
+                    <p className="mb-0">
+                      <i className="fas fa-file-invoice me-1 text-muted"></i>
+                      <span className="fw-semibold">GSTIN:</span> XXXXXXXXXXXX
                     </p>
                   </div>
                 </Card.Body>
@@ -122,16 +134,21 @@ const InvoiceModal = ({
                     To:
                   </h5>
                   <div>
-                    <p className="fw-bold mb-1">
-                      {invoice.company_name || invoice.pool_name}
-                    </p>
+                    <p className="fw-bold mb-2">{invoice.pool_name}</p>
                     <p className="mb-1">
                       <i className="fas fa-map-marker-alt me-1 text-muted"></i>
-                      {invoice.company_address || "Client Address"}
+                      <span className="fw-semibold">State:</span>{" "}
+                      {invoice.party_state || "N/A"}
+                    </p>
+                    <p className="mb-1">
+                      <i className="fas fa-file-invoice me-1 text-muted"></i>
+                      <span className="fw-semibold">GSTIN:</span>{" "}
+                      {invoice.gstin || "Not Available"}
                     </p>
                     <p className="mb-0">
                       <i className="fas fa-id-card me-1 text-muted"></i>
-                      Pool Name: {invoice.pool_name}
+                      <span className="fw-semibold">Pool Name:</span>{" "}
+                      {invoice.pool_name}
                     </p>
                   </div>
                 </Card.Body>
@@ -139,11 +156,11 @@ const InvoiceModal = ({
             </Col>
           </Row>
 
-          {/* Period Information */}
+          {/* Period and Service Information */}
           <Card className="bg-info bg-opacity-10 border-info mb-4">
             <Card.Body>
               <Row>
-                <Col md={4}>
+                <Col md={3}>
                   <p className="text-muted mb-1">
                     <i className="fas fa-calendar-alt me-1"></i>
                     Invoice Date
@@ -152,7 +169,7 @@ const InvoiceModal = ({
                     {moment(invoice.createdAt).format("DD MMM, YYYY")}
                   </p>
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
                   <p className="text-muted mb-1">
                     <i className="fas fa-calendar-check me-1"></i>
                     Period Start
@@ -161,7 +178,7 @@ const InvoiceModal = ({
                     {moment(invoice.period_start).format("DD MMM, YYYY")}
                   </p>
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
                   <p className="text-muted mb-1">
                     <i className="fas fa-calendar-times me-1"></i>
                     Period End
@@ -170,9 +187,31 @@ const InvoiceModal = ({
                     {moment(invoice.period_end).format("DD MMM, YYYY")}
                   </p>
                 </Col>
+                <Col md={3}>
+                  <p className="text-muted mb-1">
+                    <i className="fas fa-truck me-1"></i>
+                    Service Type
+                  </p>
+                  <p className="fw-semibold mb-0">
+                    {invoice.service_name || "Courier"}
+                  </p>
+                </Col>
               </Row>
             </Card.Body>
           </Card>
+
+          {/* Service Description */}
+          {invoice.service_description && (
+            <Card className="mb-4 border-primary">
+              <Card.Body className="bg-light">
+                <h6 className="text-primary mb-2">
+                  <i className="fas fa-info-circle me-2"></i>
+                  Service Description
+                </h6>
+                <p className="mb-0 text-muted">{invoice.service_description}</p>
+              </Card.Body>
+            </Card>
+          )}
 
           {/* Transaction Summary */}
           {invoice.transactions && invoice.transactions.length > 0 && (
@@ -254,7 +293,10 @@ const InvoiceModal = ({
                     ))
                   ) : (
                     <tr>
-                      <td>Services Rendered for Period</td>
+                      <td>
+                        {invoice.service_description ||
+                          "Services Rendered for Period"}
+                      </td>
                       <td className="text-center">1</td>
                       <td className="text-end">
                         ₹{invoice.total_without_gst.toFixed(2)}
@@ -304,14 +346,21 @@ const InvoiceModal = ({
                             ₹{(invoice.gst_breakup.sgst || 0).toFixed(2)}
                           </span>
                         </div>
-                        {invoice.gst_breakup.utgst > 0 && (
-                          <div className="d-flex justify-content-between mb-1 small">
-                            <span className="ms-3">UTGST (9%):</span>
-                            <span>
-                              ₹{(invoice.gst_breakup.utgst || 0).toFixed(2)}
-                            </span>
-                          </div>
-                        )}
+                      </>
+                    ) : invoice.gst_breakup?.type === "union_territory" ? (
+                      <>
+                        <div className="d-flex justify-content-between mb-1 small">
+                          <span className="ms-3">CGST (9%):</span>
+                          <span>
+                            ₹{(invoice.gst_breakup.cgst || 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="d-flex justify-content-between mb-1 small">
+                          <span className="ms-3">UTGST (9%):</span>
+                          <span>
+                            ₹{(invoice.gst_breakup.utgst || 0).toFixed(2)}
+                          </span>
+                        </div>
                       </>
                     ) : (
                       <div className="d-flex justify-content-between mb-1 small">
@@ -371,6 +420,18 @@ const InvoiceModal = ({
               </Card>
             </Col>
           </Row>
+
+          {/* Footer Note */}
+          <div className="text-center mt-4 pt-3 border-top">
+            <p className="text-muted small mb-1">
+              <i className="fas fa-info-circle me-1"></i>
+              This is a computer-generated invoice and does not require a
+              signature.
+            </p>
+            <p className="text-muted small mb-0">
+              Thank you for your business!
+            </p>
+          </div>
         </div>
       </Modal.Body>
 
@@ -387,7 +448,6 @@ const InvoiceModal = ({
     </Modal>
   );
 };
-
 export const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [pagination, setPagination] = useState({
@@ -435,135 +495,6 @@ export const Invoices = () => {
   const handleViewInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setShowModal(true);
-  };
-
-  const handleQuickDownload = (invoice: Invoice) => {
-    const printWindow = window.open("", "_blank");
-    const gstType =
-      invoice.gst_breakup?.type === "intra_state"
-        ? "Intra-State"
-        : "Inter-State";
-
-    printWindow?.document.write(`
-      <html>
-        <head>
-          <title>Invoice ${invoice._id}</title>
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-            @media print { body { margin: 0; } }
-          </style>
-        </head>
-        <body>
-          <div class="container-fluid">
-            <div class="text-center mb-4">
-              <h1 class="display-4 text-primary">₹ INVOICE</h1>
-              <p class="text-muted">Invoice #${invoice._id}</p>
-              <span class="badge bg-info">${gstType} GST</span>
-            </div>
-            <div class="card mb-4 bg-light">
-              <div class="card-body">
-                <p><i class="fas fa-calendar-alt"></i> <strong>Period:</strong> ${moment(
-                  invoice.period_start
-                ).format("DD MMM, YYYY")} - ${moment(invoice.period_end).format(
-      "DD MMM, YYYY"
-    )}</p>
-                <p><i class="fas fa-calendar-check"></i> <strong>Created:</strong> ${moment(
-                  invoice.createdAt
-                ).format("DD MMM, YYYY")}</p>
-                ${
-                  role === "admin"
-                    ? `<p><i class="fas fa-user"></i> <strong>Pool Name:</strong> ${invoice.pool_name}</p>`
-                    : ""
-                }
-                <p><i class="fas fa-exchange-alt"></i> <strong>Transactions:</strong> ${
-                  invoice.transactions?.length || 0
-                }</p>
-              </div>
-            </div>
-            <table class="table table-bordered">
-              <tr>
-                <td><strong>Subtotal (Before GST):</strong></td>
-                <td class="text-end">₹${invoice.total_without_gst.toFixed(
-                  2
-                )}</td>
-              </tr>
-              ${
-                invoice.gst_breakup?.type === "intra_state"
-                  ? `
-              <tr>
-                <td class="ps-4">CGST (9%):</td>
-                <td class="text-end">₹${(invoice.gst_breakup.cgst || 0).toFixed(
-                  2
-                )}</td>
-              </tr>
-              <tr>
-                <td class="ps-4">SGST (9%):</td>
-                <td class="text-end">₹${(invoice.gst_breakup.sgst || 0).toFixed(
-                  2
-                )}</td>
-              </tr>
-              `
-                  : `
-              <tr>
-                <td class="ps-4">IGST (18%):</td>
-                <td class="text-end">₹${(
-                  invoice.gst_breakup?.igst || 0
-                ).toFixed(2)}</td>
-              </tr>
-              `
-              }
-              <tr>
-                <td><strong>Total GST:</strong></td>
-                <td class="text-end">₹${invoice.total_gst.toFixed(2)}</td>
-              </tr>
-              <tr class="table-primary fw-bold">
-                <td><strong>Grand Total:</strong></td>
-                <td class="text-end"><strong>₹${invoice.grand_total.toFixed(
-                  2
-                )}</strong></td>
-              </tr>
-              ${
-                invoice.total_refund_amount > 0
-                  ? `
-              <tr class="text-danger">
-                <td>Total Refund:</td>
-                <td class="text-end">- ₹${invoice.total_refund_amount.toFixed(
-                  2
-                )}</td>
-              </tr>
-              <tr class="table-info fw-bold">
-                <td><strong>Net Total (After Refund):</strong></td>
-                <td class="text-end"><strong>₹${(
-                  invoice.net_total_after_refund || invoice.grand_total
-                ).toFixed(2)}</strong></td>
-              </tr>
-              `
-                  : ""
-              }
-              ${
-                invoice?.pending_amount && invoice?.pending_amount > 0
-                  ? `
-              <tr class="table-warning fw-bold">
-                <td><strong>Pending Amount:</strong></td>
-                <td class="text-end"><strong>₹${invoice?.pending_amount?.toFixed(
-                  2
-                )}</strong></td>
-              </tr>
-              `
-                  : ""
-              }
-            </table>
-            <div class="text-center mt-4">
-              <p class="text-muted"><i class="fas fa-heart text-danger"></i> Thank you for your business!</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow?.document.close();
-    printWindow?.print();
   };
 
   const getInvoicePools = async () => {

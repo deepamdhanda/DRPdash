@@ -73,9 +73,13 @@ export type Invoice = {
   total_without_gst: number;
   pending_amount?: number;
 
+  gstin: string;
+  party_state: string;
+  service_name: string;
+  service_description: string;
   // GST Breakup
   gst_breakup: {
-    type: "intra_state" | "inter_state";
+    type: string;
     cgst: number;
     sgst: number;
     utgst: number;
