@@ -16,6 +16,7 @@ import {
   Card,
   Form,
   Spinner,
+  Badge,
 } from "react-bootstrap";
 import { Invoice } from "./invoiceTypes";
 
@@ -32,7 +33,6 @@ const InvoiceModal = ({
   if (!invoice) return null;
 
   const handleDownload = () => {
-    // Create a new window with the invoice content
     const printWindow = window.open("", "_blank");
     const invoiceElement = document.getElementById("invoice-content");
     const invoiceContent = invoiceElement ? invoiceElement.innerHTML : "";
@@ -59,6 +59,9 @@ const InvoiceModal = ({
     printWindow?.print();
   };
 
+  const gstType =
+    invoice.gst_breakup?.type === "intra_state" ? "Intra-State" : "Inter-State";
+
   return (
     <Modal show={show} onHide={onHide} size="xl" centered>
       <Modal.Header closeButton className="bg-primary text-white">
@@ -73,7 +76,14 @@ const InvoiceModal = ({
           {/* Invoice Header */}
           <div className="text-center mb-4">
             <h1 className="display-4 text-primary mb-2">₹ INVOICE</h1>
-            <p className="text-muted">Invoice #{invoice._id}</p>
+            <p className="text-muted mb-1">Invoice #{invoice._id}</p>
+            <Badge
+              bg={
+                invoice.gst_breakup?.type === "intra_state" ? "info" : "warning"
+              }
+            >
+              {gstType} GST
+            </Badge>
           </div>
 
           {/* Company Information */}
@@ -113,7 +123,7 @@ const InvoiceModal = ({
                   </h5>
                   <div>
                     <p className="fw-bold mb-1">
-                      {invoice.company_name || "Client Company"}
+                      {invoice.company_name || invoice.pool_name}
                     </p>
                     <p className="mb-1">
                       <i className="fas fa-map-marker-alt me-1 text-muted"></i>
@@ -139,7 +149,7 @@ const InvoiceModal = ({
                     Invoice Date
                   </p>
                   <p className="fw-semibold mb-0">
-                    {new Date(invoice.createdAt).toLocaleDateString()}
+                    {moment(invoice.createdAt).format("DD MMM, YYYY")}
                   </p>
                 </Col>
                 <Col md={4}>
@@ -148,7 +158,7 @@ const InvoiceModal = ({
                     Period Start
                   </p>
                   <p className="fw-semibold mb-0">
-                    {new Date(invoice.period_start).toLocaleDateString()}
+                    {moment(invoice.period_start).format("DD MMM, YYYY")}
                   </p>
                 </Col>
                 <Col md={4}>
@@ -157,12 +167,53 @@ const InvoiceModal = ({
                     Period End
                   </p>
                   <p className="fw-semibold mb-0">
-                    {new Date(invoice.period_end).toLocaleDateString()}
+                    {moment(invoice.period_end).format("DD MMM, YYYY")}
                   </p>
                 </Col>
               </Row>
             </Card.Body>
           </Card>
+
+          {/* Transaction Summary */}
+          {invoice.transactions && invoice.transactions.length > 0 && (
+            <Card className="mb-4">
+              <Card.Header className="bg-secondary text-white">
+                <h5 className="mb-0">
+                  <i className="fas fa-receipt me-2"></i>
+                  Transaction Summary
+                </h5>
+              </Card.Header>
+              <Card.Body>
+                <Row className="text-center">
+                  <Col md={4}>
+                    <div className="p-3 bg-light rounded">
+                      <i className="fas fa-exchange-alt text-primary mb-2 d-block fs-4"></i>
+                      <h6 className="text-muted mb-1">Total Transactions</h6>
+                      <h4 className="mb-0">{invoice.transactions.length}</h4>
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="p-3 bg-light rounded">
+                      <i className="fas fa-undo text-warning mb-2 d-block fs-4"></i>
+                      <h6 className="text-muted mb-1">Refund Transactions</h6>
+                      <h4 className="mb-0">
+                        {invoice.refund_transactions?.length || 0}
+                      </h4>
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="p-3 bg-light rounded">
+                      <i className="fas fa-money-bill-wave text-danger mb-2 d-block fs-4"></i>
+                      <h6 className="text-muted mb-1">Total Refund Amount</h6>
+                      <h4 className="mb-0">
+                        ₹{(invoice.total_refund_amount || 0).toFixed(2)}
+                      </h4>
+                    </div>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          )}
 
           {/* Invoice Items Table */}
           <Card className="mb-4">
@@ -203,7 +254,7 @@ const InvoiceModal = ({
                     ))
                   ) : (
                     <tr>
-                      <td>Services Rendered</td>
+                      <td>Services Rendered for Period</td>
                       <td className="text-center">1</td>
                       <td className="text-end">
                         ₹{invoice.total_without_gst.toFixed(2)}
@@ -220,31 +271,102 @@ const InvoiceModal = ({
 
           {/* Invoice Totals */}
           <Row className="justify-content-end mb-4">
-            <Col md={6} lg={4}>
+            <Col md={6} lg={5}>
               <Card>
                 <Card.Body>
                   <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
                     <span>
-                      <i className="fas fa-minus me-1"></i>Subtotal:
+                      <i className="fas fa-minus me-1"></i>Subtotal (Before
+                      GST):
                     </span>
-                    <span>₹{invoice.total_without_gst.toFixed(2)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
-                    <span>
-                      <i className="fas fa-percentage me-1"></i>GST:
+                    <span className="fw-semibold">
+                      ₹{invoice.total_without_gst.toFixed(2)}
                     </span>
-                    <span>₹{invoice.total_gst.toFixed(2)}</span>
                   </div>
-                  <div className="d-flex justify-content-between border-top border-2 border-dark pt-2 fw-bold fs-5">
-                    <span>Total:</span>
-                    <span>₹{invoice.grand_total.toFixed(2)}</span>
-                  </div>
-                  {invoice?.pending_amount && (
-                    <div className="d-flex justify-content-between border-top border-2 border-dark pt-2 fw-bold fs-5">
-                      <span>Pending :</span>
-                      <span>₹{invoice?.pending_amount?.toFixed(2)}</span>
+
+                  {/* GST Breakup */}
+                  <div className="bg-light p-2 rounded mb-2">
+                    <div className="fw-semibold mb-2 text-primary">
+                      <i className="fas fa-percentage me-1"></i>
+                      GST Breakup ({gstType}):
                     </div>
+                    {invoice.gst_breakup?.type === "intra_state" ? (
+                      <>
+                        <div className="d-flex justify-content-between mb-1 small">
+                          <span className="ms-3">CGST (9%):</span>
+                          <span>
+                            ₹{(invoice.gst_breakup.cgst || 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="d-flex justify-content-between mb-1 small">
+                          <span className="ms-3">SGST (9%):</span>
+                          <span>
+                            ₹{(invoice.gst_breakup.sgst || 0).toFixed(2)}
+                          </span>
+                        </div>
+                        {invoice.gst_breakup.utgst > 0 && (
+                          <div className="d-flex justify-content-between mb-1 small">
+                            <span className="ms-3">UTGST (9%):</span>
+                            <span>
+                              ₹{(invoice.gst_breakup.utgst || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="d-flex justify-content-between mb-1 small">
+                        <span className="ms-3">IGST (18%):</span>
+                        <span>
+                          ₹{(invoice.gst_breakup?.igst || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="d-flex justify-content-between border-top pt-1 mt-1">
+                      <span className="fw-semibold">Total GST:</span>
+                      <span className="fw-semibold">
+                        ₹{invoice.total_gst.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-between border-top border-2 border-dark pt-2 mb-2 fw-bold fs-5">
+                    <span>Grand Total:</span>
+                    <span className="text-success">
+                      ₹{invoice.grand_total.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {invoice.total_refund_amount > 0 && (
+                    <>
+                      <div className="d-flex justify-content-between pb-2 mb-2 text-danger">
+                        <span>
+                          <i className="fas fa-undo me-1"></i>Total Refund:
+                        </span>
+                        <span>- ₹{invoice.total_refund_amount.toFixed(2)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between border-top border-2 pt-2 mb-2 fw-bold fs-5">
+                        <span>Net Total (After Refund):</span>
+                        <span className="text-primary">
+                          ₹
+                          {(
+                            invoice.net_total_after_refund ||
+                            invoice.grand_total
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </>
                   )}
+
+                  {invoice.pending_amount !== undefined &&
+                    invoice.pending_amount > 0 && (
+                      <div className="d-flex justify-content-between border-top border-2 border-warning pt-2 fw-bold fs-5 text-warning">
+                        <span>
+                          <i className="fas fa-exclamation-circle me-1"></i>
+                          Pending Amount:
+                        </span>
+                        <span>₹{invoice.pending_amount.toFixed(2)}</span>
+                      </div>
+                    )}
                 </Card.Body>
               </Card>
             </Col>
@@ -268,10 +390,14 @@ const InvoiceModal = ({
 
 export const Invoices = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 0,
+    total: 0,
+    totalPages: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [invoicePools, setInvoicePools] = useState<InvoicePool[]>([]);
-  const [page, setPage] = useState(1);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState({
@@ -280,13 +406,20 @@ export const Invoices = () => {
     pool_id: "",
   });
 
-  // assume we get user role from auth context or props
   const role = "admin"; // change this to "user" for testing
 
-  const getInvoices = async () => {
+  const getInvoices = async (
+    page = pagination.page,
+    limit = pagination.limit
+  ) => {
     try {
+      if (loading) return;
       setLoading(true);
-      const data = await fetchInvoices(filters);
+      const data = await fetchInvoices({
+        ...filters,
+        page: page,
+        limit: limit,
+      });
 
       if (data?.invoices && data?.pagination) {
         setInvoices(data.invoices);
@@ -305,8 +438,12 @@ export const Invoices = () => {
   };
 
   const handleQuickDownload = (invoice: Invoice) => {
-    // Quick download without modal
     const printWindow = window.open("", "_blank");
+    const gstType =
+      invoice.gst_breakup?.type === "intra_state"
+        ? "Intra-State"
+        : "Inter-State";
+
     printWindow?.document.write(`
       <html>
         <head>
@@ -323,41 +460,100 @@ export const Invoices = () => {
             <div class="text-center mb-4">
               <h1 class="display-4 text-primary">₹ INVOICE</h1>
               <p class="text-muted">Invoice #${invoice._id}</p>
+              <span class="badge bg-info">${gstType} GST</span>
             </div>
             <div class="card mb-4 bg-light">
               <div class="card-body">
-                <p><i class="fas fa-calendar-alt"></i> <strong>Period:</strong> ${new Date(
+                <p><i class="fas fa-calendar-alt"></i> <strong>Period:</strong> ${moment(
                   invoice.period_start
-                ).toLocaleDateString()} - ${new Date(
-      invoice.period_end
-    ).toLocaleDateString()}</p>
-                <p><i class="fas fa-calendar-check"></i> <strong>Created:</strong> ${new Date(
+                ).format("DD MMM, YYYY")} - ${moment(invoice.period_end).format(
+      "DD MMM, YYYY"
+    )}</p>
+                <p><i class="fas fa-calendar-check"></i> <strong>Created:</strong> ${moment(
                   invoice.createdAt
-                ).toLocaleDateString()}</p>
+                ).format("DD MMM, YYYY")}</p>
                 ${
                   role === "admin"
                     ? `<p><i class="fas fa-user"></i> <strong>Pool Name:</strong> ${invoice.pool_name}</p>`
                     : ""
                 }
+                <p><i class="fas fa-exchange-alt"></i> <strong>Transactions:</strong> ${
+                  invoice.transactions?.length || 0
+                }</p>
               </div>
             </div>
             <table class="table table-bordered">
               <tr>
-                <td><i class="fas fa-minus"></i> <strong>Subtotal:</strong></td>
+                <td><strong>Subtotal (Before GST):</strong></td>
                 <td class="text-end">₹${invoice.total_without_gst.toFixed(
                   2
                 )}</td>
               </tr>
+              ${
+                invoice.gst_breakup?.type === "intra_state"
+                  ? `
               <tr>
-                <td><i class="fas fa-percentage"></i> <strong>GST:</strong></td>
+                <td class="ps-4">CGST (9%):</td>
+                <td class="text-end">₹${(invoice.gst_breakup.cgst || 0).toFixed(
+                  2
+                )}</td>
+              </tr>
+              <tr>
+                <td class="ps-4">SGST (9%):</td>
+                <td class="text-end">₹${(invoice.gst_breakup.sgst || 0).toFixed(
+                  2
+                )}</td>
+              </tr>
+              `
+                  : `
+              <tr>
+                <td class="ps-4">IGST (18%):</td>
+                <td class="text-end">₹${(
+                  invoice.gst_breakup?.igst || 0
+                ).toFixed(2)}</td>
+              </tr>
+              `
+              }
+              <tr>
+                <td><strong>Total GST:</strong></td>
                 <td class="text-end">₹${invoice.total_gst.toFixed(2)}</td>
               </tr>
               <tr class="table-primary fw-bold">
-                ₹ <strong>Grand Total:</strong></td>
+                <td><strong>Grand Total:</strong></td>
                 <td class="text-end"><strong>₹${invoice.grand_total.toFixed(
                   2
                 )}</strong></td>
               </tr>
+              ${
+                invoice.total_refund_amount > 0
+                  ? `
+              <tr class="text-danger">
+                <td>Total Refund:</td>
+                <td class="text-end">- ₹${invoice.total_refund_amount.toFixed(
+                  2
+                )}</td>
+              </tr>
+              <tr class="table-info fw-bold">
+                <td><strong>Net Total (After Refund):</strong></td>
+                <td class="text-end"><strong>₹${(
+                  invoice.net_total_after_refund || invoice.grand_total
+                ).toFixed(2)}</strong></td>
+              </tr>
+              `
+                  : ""
+              }
+              ${
+                invoice?.pending_amount && invoice?.pending_amount > 0
+                  ? `
+              <tr class="table-warning fw-bold">
+                <td><strong>Pending Amount:</strong></td>
+                <td class="text-end"><strong>₹${invoice?.pending_amount?.toFixed(
+                  2
+                )}</strong></td>
+              </tr>
+              `
+                  : ""
+              }
             </table>
             <div class="text-center mt-4">
               <p class="text-muted"><i class="fas fa-heart text-danger"></i> Thank you for your business!</p>
@@ -376,6 +572,7 @@ export const Invoices = () => {
     if (users.length) {
       setInvoicePools(users);
     }
+    setLoading(false);
   };
 
   const downloadTransactionsCSV = (invoice: Invoice) => {
@@ -400,28 +597,30 @@ export const Invoices = () => {
       "Created At",
     ];
 
-    const rows = invoice.transactions.map((t: any) => {
-      const subtotal =
-        (t.freight_charge || 0) + (t.cod_charges || 0) + (t.commission || 0);
-      const gst = subtotal * 0.18;
-      const totalAmount = subtotal + gst;
+    const rows = [...invoice.transactions, ...invoice.refund_transactions].map(
+      (t: any) => {
+        const subtotal =
+          (t.freight_charge || 0) + (t.cod_charges || 0) + (t.commission || 0);
+        const gst = subtotal * 0.18;
+        const totalAmount = subtotal + gst;
 
-      return [
-        t._id,
-        t.cr_dr,
-        t.order_id,
-        t.type,
-        t.freight_charge,
-        t.cod_charges,
-        t.commission,
-        gst.toFixed(2),
-        totalAmount.toFixed(2),
-        t.zone,
-        t.charged_weight,
-        t.full_details?.status || "",
-        new Date(t.createdAt).toLocaleString(),
-      ];
-    });
+        return [
+          t._id,
+          t.cr_dr,
+          t.order_id,
+          t.type,
+          t.freight_charge,
+          t.cod_charges,
+          t.commission,
+          gst.toFixed(2),
+          totalAmount.toFixed(2),
+          t.zone,
+          t.charged_weight,
+          t.full_details?.status || "",
+          new Date(t.createdAt).toLocaleString(),
+        ];
+      }
+    );
 
     const csvContent = [headers, ...rows]
       .map((row) => row.map((v) => `"${v ?? ""}"`).join(","))
@@ -442,12 +641,11 @@ export const Invoices = () => {
   }, []);
 
   useEffect(() => {
-    getInvoices();
-  }, [filters]);
+    getInvoices(1);
+  }, [filters.fromDate, filters.toDate, filters.pool_id]);
 
   return (
     <>
-      {/* Bootstrap and Font Awesome CDN */}
       <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -570,10 +768,7 @@ export const Invoices = () => {
                 <Button
                   variant="primary"
                   className="w-100"
-                  onClick={() => {
-                    setPage(1);
-                    getInvoices();
-                  }}
+                  onClick={() => getInvoices(1)}
                 >
                   <i className="fas fa-search me-2"></i>
                   Apply Filters
@@ -620,21 +815,27 @@ export const Invoices = () => {
                           <i className="fas fa-calendar me-1"></i>
                           Period
                         </th>
-                        <th>₹ Grand Total</th>
-                        {invoices.some((i) => i?.pending_amount) && (
-                          <th>₹ Pending</th>
-                        )}
                         <th>
+                          <i className="fas fa-exchange-alt me-1"></i>
+                          Transactions
+                        </th>
+                        <th className="text-end">Net Total</th>
+                        <th className="text-end">Grand Total</th>
+                        {invoices.some(
+                          (i) => i?.pending_amount && i?.pending_amount > 0
+                        ) && <th className="text-end">Pending</th>}
+                        <th className="text-end">
                           <i className="fas fa-percentage me-1"></i>
                           GST
                         </th>
+                        <th className="text-end">Before GST</th>
                         <th>
-                          <i className="fas fa-minus me-1"></i>
-                          Without GST
+                          <i className="fas fa-tag me-1"></i>
+                          GST Type
                         </th>
                         <th>
                           <i className="fas fa-clock me-1"></i>
-                          Created At
+                          Created
                         </th>
                         <th>
                           <i className="fas fa-cogs me-1"></i>
@@ -647,7 +848,7 @@ export const Invoices = () => {
                         <tr key={inv._id}>
                           <td className="text-primary fw-semibold">
                             <i className="fas fa-file-alt me-1"></i>
-                            {inv._id}
+                            {inv._id.substring(0, 8)}...
                           </td>
                           {role === "admin" && (
                             <td>
@@ -656,48 +857,74 @@ export const Invoices = () => {
                             </td>
                           )}
                           <td>
-                            <i className="fas fa-calendar-alt me-1 text-muted"></i>
-                            {moment(inv.period_start).format("DD MMM, YYYY")} -{" "}
-                            {moment(inv.period_end).format("DD MMM, YYYY")}
+                            <small className="d-block">
+                              {moment(inv.period_start).format("DD MMM")} -{" "}
+                              {moment(inv.period_end).format("DD MMM, YY")}
+                            </small>
                           </td>
-                          <td className="fw-bold text-success">
+                          <td>
+                            <Badge bg="info" className="me-1">
+                              {inv.transactions?.length || 0}
+                            </Badge>
+                            {inv.refund_transactions &&
+                              inv.refund_transactions.length > 0 && (
+                                <Badge bg="warning">
+                                  <i className="fas fa-undo me-1"></i>
+                                  {inv.refund_transactions.length}
+                                </Badge>
+                              )}
+                          </td>
+                          <td className="text-end fw-bold text-primary">
+                            ₹
+                            {(
+                              inv.net_total_after_refund || inv.grand_total
+                            ).toFixed(2)}
+                          </td>
+                          <td className="text-end fw-bold text-success">
                             ₹{inv.grand_total.toFixed(2)}
                           </td>
-                          {invoices.some((i) => i?.pending_amount) && (
-                            <td className="fw-bold text-danger">
-                              {inv?.pending_amount
+                          {invoices.some(
+                            (i) => i?.pending_amount && i?.pending_amount > 0
+                          ) && (
+                            <td className="text-end fw-bold text-danger">
+                              {inv?.pending_amount && inv?.pending_amount > 0
                                 ? `₹${inv.pending_amount.toFixed(2)}`
-                                : ""}
+                                : "-"}
                             </td>
                           )}
-                          <td>₹{inv.total_gst.toFixed(2)}</td>
+                          <td className="text-end">
+                            ₹{inv.total_gst.toFixed(2)}
+                          </td>
+                          <td className="text-end">
+                            ₹{inv.total_without_gst.toFixed(2)}
+                          </td>
                           <td>
-                            <i className="fas fa-minus me-1 text-muted"></i>
-                            {inv.total_without_gst.toFixed(2)}
+                            <Badge
+                              bg={
+                                inv.gst_breakup?.type === "intra_state"
+                                  ? "info"
+                                  : "warning"
+                              }
+                            >
+                              {inv.gst_breakup?.type === "intra_state"
+                                ? "Intra"
+                                : "Inter"}
+                            </Badge>
                           </td>
                           <td className="text-muted">
-                            <i className="fas fa-clock me-1"></i>
-                            {moment(inv.createdAt).format("DD MMM, YYYY")}
+                            <small>
+                              {moment(inv.createdAt).format("DD MMM, YYYY")}
+                            </small>
                           </td>
                           <td>
-                            <div className="d-flex gap-1">
+                            <div className="d-flex gap-1 flex-wrap">
                               <Button
                                 size="sm"
                                 variant="outline-primary"
                                 onClick={() => handleViewInvoice(inv)}
                                 title="View Invoice"
                               >
-                                <i className="fas fa-eye me-1"></i>
-                                View
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline-success"
-                                onClick={() => handleQuickDownload(inv)}
-                                title="Download Invoice"
-                              >
-                                <i className="fas fa-download me-1"></i>
-                                Download
+                                <i className="fas fa-eye"></i>
                               </Button>
                               <Button
                                 size="sm"
@@ -705,8 +932,7 @@ export const Invoices = () => {
                                 onClick={() => downloadTransactionsCSV(inv)}
                                 title="Download Transactions CSV"
                               >
-                                <i className="fas fa-file-csv me-1"></i>
-                                CSV
+                                <i className="fas fa-file-csv"></i>
                               </Button>
                             </div>
                           </td>
@@ -723,8 +949,9 @@ export const Invoices = () => {
                       <Col>
                         <p className="text-muted mb-0">
                           <i className="fas fa-info-circle me-1"></i>
-                          Showing page <strong>{page}</strong> of{" "}
-                          <strong>{pagination.totalPages}</strong>
+                          Showing page <strong>
+                            {pagination.page}
+                          </strong> of <strong>{pagination.totalPages}</strong>
                         </p>
                       </Col>
                       <Col xs="auto">
@@ -732,10 +959,8 @@ export const Invoices = () => {
                           <Button
                             variant="outline-primary"
                             size="sm"
-                            onClick={() =>
-                              setPage((prev) => Math.max(1, prev - 1))
-                            }
-                            disabled={page === 1}
+                            onClick={() => getInvoices(pagination.page - 1)}
+                            disabled={pagination.page === 1}
                           >
                             <i className="fas fa-chevron-left me-1"></i>
                             Previous
@@ -743,14 +968,8 @@ export const Invoices = () => {
                           <Button
                             variant="outline-primary"
                             size="sm"
-                            onClick={() =>
-                              setPage((prev) =>
-                                pagination && page < pagination.totalPages
-                                  ? prev + 1
-                                  : prev
-                              )
-                            }
-                            disabled={page === pagination.totalPages}
+                            onClick={() => getInvoices(pagination.page + 1)}
+                            disabled={pagination.page === pagination.totalPages}
                           >
                             Next
                             <i className="fas fa-chevron-right ms-1"></i>

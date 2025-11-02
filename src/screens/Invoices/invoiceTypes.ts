@@ -64,7 +64,6 @@ export interface WalletTransaction {
 
 export type Invoice = {
   _id: string;
-  pending_amount?: Number;
   pool_id: string;
   pool_name: string;
   period_start: string;
@@ -72,7 +71,28 @@ export type Invoice = {
   grand_total: number;
   total_gst: number;
   total_without_gst: number;
+  pending_amount?: number;
+
+  // GST Breakup
+  gst_breakup: {
+    type: "intra_state" | "inter_state";
+    cgst: number;
+    sgst: number;
+    utgst: number;
+    igst: number;
+  };
+
+  // Transactions
+  transactions: Array<string | WalletTransaction>; // Can be IDs or populated objects
+  refund_transactions: Array<string | WalletTransaction>;
+  total_refund_amount: number;
+  net_total_after_refund: number;
+
+  // Metadata
   createdAt: string;
+  __v?: number;
+
+  // Optional fields
   company_name?: string;
   company_address?: string;
   items?: Array<{
@@ -81,5 +101,4 @@ export type Invoice = {
     rate: number;
     amount: number;
   }>;
-  transactions?: WalletTransaction[];
 };

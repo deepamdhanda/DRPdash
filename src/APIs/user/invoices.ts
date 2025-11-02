@@ -6,15 +6,20 @@ export const fetchInvoices = async (filters: {
   fromDate: string;
   toDate: string;
   pool_id: string;
+  page: number;
+  limit: number;
 }) => {
   try {
     const payload: any = {
       filter: {},
+      page: filters.page,
+      limit: filters.limit,
     };
 
     if (filters.pool_id) {
       payload.filter.pool_id = filters.pool_id;
     }
+
     if (filters.fromDate || filters.toDate) {
       payload.filter.date = {
         ...(filters.fromDate && { from: filters.fromDate }),
