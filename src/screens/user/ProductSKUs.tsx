@@ -486,7 +486,7 @@ const ProductSKUs: React.FC = () => {
                     required
                     defaultValue={editingProductSKU?.pack_id?._id || ""}
                   >
-                    <option value="">Select Channel</option>
+                    <option value="">Select Packaging</option>
                     {productPacks.map((productPack) => (
                       <option key={productPack._id} value={productPack._id}>
                         {productPack.name}

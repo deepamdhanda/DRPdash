@@ -87,7 +87,7 @@ export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
 
     return new Promise((resolve) => {
       const options = {
-        key: "rzp_live_stL91oujHW3VLL", // Replace with your RazorPay Key ID
+        key: "rzp_live_RYVEYLfEZUVkWA", // Replace with your RazorPay Key ID
         amount,
         currency,
         name: "OrderzUp",
@@ -104,9 +104,9 @@ export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
           }
         },
         prefill: {
-          name: "John Doe",
-          email: "john.doe@example.com",
-          contact: "9999999999",
+          // name: "John Doe",
+          // email: "john.doe@example.com",
+          // contact: "9999999999",
         },
         theme: {
           color: "#3399cc",
