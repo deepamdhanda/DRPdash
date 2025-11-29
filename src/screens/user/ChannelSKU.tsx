@@ -5,7 +5,10 @@ import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import { getAllChannelAccounts } from "../../APIs/user/channelAccount";
 import { ProductSKU } from "./ProductSKUs";
 import { ChannelAccount } from "./ChannelAccounts";
-import { linkProductSkuToChannelAccount, getUnlinkedProductSku } from "../../APIs/user/productSKUChannelLink";
+import {
+  linkProductSkuToChannelAccount,
+  getUnlinkedProductSku,
+} from "../../APIs/user/productSKUChannelLink";
 import { toast } from "react-toastify";
 
 export type ProductChannelLink = {
@@ -29,11 +32,17 @@ const ChannelSKU: React.FC = () => {
   const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [unlinkedProducts, setUnlinkedProducts] = useState<newProductSKU[]>([]);
-  const [selectedProductSKUs, setSelectedProductSKUs] = useState<ProductSKU['_id'][]>([]);
-  const [selectedChannelAccounts, setSelectedChannelAccounts] = useState<ChannelAccount['_id'][]>([]);
+  const [selectedProductSKUs, setSelectedProductSKUs] = useState<
+    ProductSKU["_id"][]
+  >([]);
+  const [selectedChannelAccounts, setSelectedChannelAccounts] = useState<
+    ChannelAccount["_id"][]
+  >([]);
   const [showModal, setShowModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<newProductSKU['variant_id'] | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<
+    newProductSKU["variant_id"] | null
+  >(null);
   const [skuPrices, setSkuPrices] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
@@ -42,12 +51,13 @@ const ChannelSKU: React.FC = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [productSKUsData, channelAccountsData, unlinkedProductsData] = await Promise.all([
-        getAllProductSKUs(),
-        getAllChannelAccounts(),
-        getUnlinkedProductSku(),
-      ]);
-      setProductSKUs(productSKUsData);
+      const [productSKUsData, channelAccountsData, unlinkedProductsData] =
+        await Promise.all([
+          getAllProductSKUs(),
+          getAllChannelAccounts(),
+          getUnlinkedProductSku(),
+        ]);
+      setProductSKUs(productSKUsData.data);
       setChannelAccounts(channelAccountsData);
       setUnlinkedProducts(unlinkedProductsData);
     } catch (error) {
@@ -57,7 +67,9 @@ const ChannelSKU: React.FC = () => {
 
   const handleProductSelect = (skuId: string) => {
     setSelectedProductSKUs((prev) =>
-      prev.includes(skuId) ? prev.filter((id) => id !== skuId) : [...prev, skuId]
+      prev.includes(skuId)
+        ? prev.filter((id) => id !== skuId)
+        : [...prev, skuId]
     );
   };
 
@@ -70,7 +82,9 @@ const ChannelSKU: React.FC = () => {
 
   const handleChannelSelect = (channelId: string) => {
     setSelectedChannelAccounts((prev) =>
-      prev.includes(channelId) ? prev.filter((id) => id !== channelId) : [...prev, channelId]
+      prev.includes(channelId)
+        ? prev.filter((id) => id !== channelId)
+        : [...prev, channelId]
     );
   };
 
@@ -79,8 +93,13 @@ const ChannelSKU: React.FC = () => {
   };
 
   const handleLinkProduct = async () => {
-    if (selectedProductSKUs.length === 0 || selectedChannelAccounts.length === 0) {
-      toast.error("Please select at least one Product SKU and one Channel Account.");
+    if (
+      selectedProductSKUs.length === 0 ||
+      selectedChannelAccounts.length === 0
+    ) {
+      toast.error(
+        "Please select at least one Product SKU and one Channel Account."
+      );
       return;
     }
 
@@ -136,7 +155,7 @@ const ChannelSKU: React.FC = () => {
     },
     {
       name: "Price",
-      selector: (row: newProductSKU) => `${row.price || "0.00"}`,//₹
+      selector: (row: newProductSKU) => `${row.price || "0.00"}`, //₹
       sortable: true,
     },
     {
@@ -146,8 +165,8 @@ const ChannelSKU: React.FC = () => {
     },
     {
       name: "Actions",
-      cell: (row: newProductSKU) => (
-        (!row.product_sku_id ? (
+      cell: (row: newProductSKU) =>
+        !row.product_sku_id ? (
           <>
             <Button
               variant="outline-success"
@@ -174,22 +193,21 @@ const ChannelSKU: React.FC = () => {
               Create New Product
             </Button> */}
           </>
-        ) :
+        ) : (
           <></>
-          // <Button
-          //   variant="outline-danger"
-          //   className="me-2"
-          //   onClick={() => {
-          //     setSelectedProductSKUs([row._id]);
-          //     setSelectedChannelAccounts([row.channel_account_id]);
-          //     setSelectedVariant(row.variant_id);
-          //     setShowLinkModal(true);
-          //   }}
-          // >
-          //   Unlink Product
-          // </Button>
-        )
-      ),
+        ),
+        // <Button
+        //   variant="outline-danger"
+        //   className="me-2"
+        //   onClick={() => {
+        //     setSelectedProductSKUs([row._id]);
+        //     setSelectedChannelAccounts([row.channel_account_id]);
+        //     setSelectedVariant(row.variant_id);
+        //     setShowLinkModal(true);
+        //   }}
+        // >
+        //   Unlink Product
+        // </Button>
       width: "180px",
     },
   ];
@@ -212,27 +230,38 @@ const ChannelSKU: React.FC = () => {
         persistTableHead
       />
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title className="text-primary">Link Product SKUs to Channel Accounts</Modal.Title>
+          <Modal.Title className="text-primary">
+            Link Product SKUs to Channel Accounts
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {/* Step 1: Select Product SKUs & Set Price */}
           <h5 className="mb-3 text-primary fw-semibold">
             🧾 Step 1: Select Product SKUs & Set Price
           </h5>
-          <div className="row g-3 mb-4" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <div
+            className="row g-3 mb-4"
+            style={{ maxHeight: "300px", overflowY: "auto" }}
+          >
             {productSKUs.map((sku) => {
               const isSelected = selectedProductSKUs.includes(sku._id);
               return (
                 <div key={sku._id} className="col-md-6">
                   <div
-                    className={`card p-3 shadow-sm border-2 rounded-3 ${isSelected ? 'border-primary bg-light' : 'border-light'
-                      }`}
+                    className={`card p-3 shadow-sm border-2 rounded-3 ${
+                      isSelected ? "border-primary bg-light" : "border-light"
+                    }`}
                     style={{
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
-                      userSelect: 'none',
+                      cursor: "pointer",
+                      transition: "all 0.2s ease-in-out",
+                      userSelect: "none",
                     }}
                     onClick={() => sku._id && handleProductSelect(sku._id)}
                   >
@@ -240,21 +269,27 @@ const ChannelSKU: React.FC = () => {
                       <img
                         src={sku.product_sku_image}
                         alt={sku.product_sku_name}
-                        style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '8px', marginRight: '12px' }}
+                        style={{
+                          width: 60,
+                          height: 60,
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          marginRight: "12px",
+                        }}
                       />
                       <div className="flex-grow-1">
                         <strong>{sku.product_sku_name}</strong>
                         <p className="mb-0 text-muted">
-                          <small>SKU ID: {sku.product_sku_id || 'N/A'}</small>
+                          <small>SKU ID: {sku.product_sku_id || "N/A"}</small>
                         </p>
                       </div>
                       {/* Instead of checkbox, show a nice checkmark icon when selected */}
                       {isSelected && (
                         <span
                           style={{
-                            fontSize: '1.5rem',
-                            color: '#0d6efd', // bootstrap primary color
-                            userSelect: 'none',
+                            fontSize: "1.5rem",
+                            color: "#0d6efd", // bootstrap primary color
+                            userSelect: "none",
                           }}
                           aria-label="Selected"
                           title="Selected"
@@ -265,13 +300,18 @@ const ChannelSKU: React.FC = () => {
                     </div>
                     {isSelected && (
                       <Form.Group className="mt-2">
-                        <Form.Label className="small text-muted mb-1">Enter Price (INR)</Form.Label>
+                        <Form.Label className="small text-muted mb-1">
+                          Enter Price (INR)
+                        </Form.Label>
                         <Form.Control
                           type="number"
                           className="form-control-sm"
-                          value={(sku._id && skuPrices[sku._id]) || ''}
+                          value={(sku._id && skuPrices[sku._id]) || ""}
                           placeholder="e.g. 299"
-                          onChange={(e) => sku._id && handlePriceChange(sku._id, e.target.value)}
+                          onChange={(e) =>
+                            sku._id &&
+                            handlePriceChange(sku._id, e.target.value)
+                          }
                           onClick={(e) => e.stopPropagation()} // prevent card toggle when editing price
                         />
                       </Form.Group>
@@ -283,35 +323,43 @@ const ChannelSKU: React.FC = () => {
           </div>
 
           {/* Step 2: Select Channel Accounts */}
-          <h5 className="mb-3 text-primary fw-semibold">📦 Step 2: Select Channel Accounts</h5>
-          <div className="row g-3 mb-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+          <h5 className="mb-3 text-primary fw-semibold">
+            📦 Step 2: Select Channel Accounts
+          </h5>
+          <div
+            className="row g-3 mb-2"
+            style={{ maxHeight: "200px", overflowY: "auto" }}
+          >
             {channelAccounts.map((channel) => {
               const isSelected = selectedChannelAccounts.includes(channel._id);
               return (
                 <div key={channel._id} className="col-md-6">
                   <div
-                    className={`card p-3 shadow-sm border-2 rounded-3 ${isSelected ? 'border-primary bg-light' : 'border-light'
-                      }`}
+                    className={`card p-3 shadow-sm border-2 rounded-3 ${
+                      isSelected ? "border-primary bg-light" : "border-light"
+                    }`}
                     style={{
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
-                      userSelect: 'none',
+                      cursor: "pointer",
+                      transition: "all 0.2s ease-in-out",
+                      userSelect: "none",
                     }}
-                    onClick={() => channel._id && handleChannelSelect(channel._id)}
+                    onClick={() =>
+                      channel._id && handleChannelSelect(channel._id)
+                    }
                   >
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
                         <strong>{channel.channel_account_name}</strong>
                         <p className="mb-0 text-muted">
-                          <small>Pool: {channel.pool_id?.name || 'N/A'}</small>
+                          <small>Pool: {channel.pool_id?.name || "N/A"}</small>
                         </p>
                       </div>
                       {isSelected && (
                         <span
                           style={{
-                            fontSize: '1.5rem',
-                            color: '#0d6efd',
-                            userSelect: 'none',
+                            fontSize: "1.5rem",
+                            color: "#0d6efd",
+                            userSelect: "none",
                           }}
                           aria-label="Selected"
                           title="Selected"
@@ -328,12 +376,24 @@ const ChannelSKU: React.FC = () => {
         </Modal.Body>
 
         <Modal.Footer className="justify-content-between">
-          <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleLinkProduct}>Link Selected SKUs</Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleLinkProduct}>
+            Link Selected SKUs
+          </Button>
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showLinkModal} onHide={handleHideLinkModal} size="lg" centered>
+      <Modal
+        show={showLinkModal}
+        onHide={handleHideLinkModal}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title className="text-primary">Link Product SKU</Modal.Title>
         </Modal.Header>
@@ -348,7 +408,8 @@ const ChannelSKU: React.FC = () => {
                 <option value="">Select a Product SKU</option>
                 {productSKUs.map((sku) => (
                   <option key={sku._id} value={sku._id}>
-                    {sku.product_sku_name} (SKU ID: {sku.product_sku_id || "N/A"})
+                    {sku.product_sku_name} (SKU ID:{" "}
+                    {sku.product_sku_id || "N/A"})
                   </option>
                 ))}
               </Form.Select>
@@ -356,7 +417,10 @@ const ChannelSKU: React.FC = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowLinkModal(false)}>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowLinkModal(false)}
+          >
             Cancel
           </Button>
           <Button variant="primary" onClick={handleLinkProduct}>

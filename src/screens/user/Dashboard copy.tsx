@@ -16,10 +16,12 @@ export const Dashboard: React.FC = () => {
   // Filters and data states
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [startDate, setStartDate] = useState<Date>(
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  );
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([])
-  const [productSKUId, setProductSKUId] = useState<string>()
+  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
+  const [productSKUId, setProductSKUId] = useState<string>();
   const [dateWiseSummary, setDateWiseSummary] = useState<any[]>([]);
   const [stateWiseSummary, setStateWiseSummary] = useState<any[]>([]);
 
@@ -30,21 +32,23 @@ export const Dashboard: React.FC = () => {
   const innitialFetch = async () => {
     const productSKUData = await getAllProductSKUs();
     const channelAccountsData = await getAllChannelAccounts();
-    setProductSKUs(productSKUData)
-    setChannelAccounts(channelAccountsData)
-  }
+    setProductSKUs(productSKUData.data);
+    setChannelAccounts(channelAccountsData);
+  };
 
   const fetchSummary = async () => {
     try {
-      let data: any = {}
+      let data: any = {};
       if (selectedChannel) data.channel_account_id = selectedChannel;
       if (startDate) data.startDate = startDate;
-      endDate ? data.endDate = endDate : data.endDate = (new Date()).toISOString().slice(0, 10);;
+      endDate
+        ? (data.endDate = endDate)
+        : (data.endDate = new Date().toISOString().slice(0, 10));
 
       const res: any = await getOrdersSummary(data);
       if (res) {
         setDateWiseSummary(res.data.dateLevel);
-        setStateWiseSummary(res.data.state)
+        setStateWiseSummary(res.data.state);
       }
     } catch (error) {
       console.error("Failed to fetch order dateWiseSummary", error);
@@ -58,25 +62,27 @@ export const Dashboard: React.FC = () => {
 
   // Prepare chart data
   const allStatuses = Array.from(
-    new Set(dateWiseSummary.flatMap(d => d.statuses.map((s: any) => s.status)))
+    new Set(
+      dateWiseSummary.flatMap((d) => d.statuses.map((s: any) => s.status))
+    )
   );
   const statusColors: Record<string, string> = {
-    Delivered: '#28a745',  // green
-    RTO: '#dc3545',        // red
-    Transit: '#007bff',    // blue
-    Pickup: '#fd7e14',     // orange
-    New: '#6c757d',        // gray
-    Cancelled: '#a71d2a',  // dark red
-    Other: '#6c757d'       // fallback gray
+    Delivered: "#28a745", // green
+    RTO: "#dc3545", // red
+    Transit: "#007bff", // blue
+    Pickup: "#fd7e14", // orange
+    New: "#6c757d", // gray
+    Cancelled: "#a71d2a", // dark red
+    Other: "#6c757d", // fallback gray
   };
 
-  const chartSeries = allStatuses.map(status => ({
+  const chartSeries = allStatuses.map((status) => ({
     name: status,
     data: dateWiseSummary.map((day: any) => {
       const statusData = day.statuses.find((s: any) => s.status === status);
       return statusData ? statusData.count : 0;
     }),
-    color: statusColors[status]
+    color: statusColors[status],
   }));
 
   const chartOptions: ApexCharts.ApexOptions = {
@@ -87,25 +93,29 @@ export const Dashboard: React.FC = () => {
     },
     xaxis: {
       categories: dateWiseSummary.map((day: any) => day.date),
-      title: { text: "Date" }
+      title: { text: "Date" },
     },
     yaxis: {
-      title: { text: "Orders Count" }
+      title: { text: "Orders Count" },
     },
     colors: ["#F5891E", "#000434", "#A1A1A1", "#34A853", "#EA4335"],
     legend: {
-      position: "top"
+      position: "top",
     },
     tooltip: {
       shared: true,
-      intersect: false
-    }
+      intersect: false,
+    },
   };
   const allStateStatuses = Array.from(
-    new Set(stateWiseSummary.flatMap((s: any) => s.statuses.map((status: any) => status.status)))
+    new Set(
+      stateWiseSummary.flatMap((s: any) =>
+        s.statuses.map((status: any) => status.status)
+      )
+    )
   );
 
-  const stateChartSeries = allStateStatuses.map(status => ({
+  const stateChartSeries = allStateStatuses.map((status) => ({
     name: status,
     data: stateWiseSummary.map((state: any) => {
       const found = state.statuses.find((s: any) => s.status === status);
@@ -118,34 +128,36 @@ export const Dashboard: React.FC = () => {
     chart: {
       type: "bar",
       stacked: true,
-      toolbar: { show: true }
+      toolbar: { show: true },
     },
     plotOptions: {
       bar: {
-        horizontal: true
-      }
+        horizontal: true,
+      },
     },
     xaxis: {
       categories: stateWiseSummary.map((state: any) => {
-        console.log(state.state)
-        return (state.state || "Other")
+        console.log(state.state);
+        return state.state || "Other";
       }),
-      title: { text: "Orders Count" }
+      title: { text: "Orders Count" },
     },
     yaxis: {
-      title: { text: "State" }
+      title: { text: "State" },
     },
     colors: Object.values(statusColors),
     legend: {
-      position: "top"
+      position: "top",
     },
     tooltip: {
       shared: true,
-      intersect: false
-    }
+      intersect: false,
+    },
   };
 
-  const doughnutStatuses = stateWiseSummary.flatMap((state) => state.statuses.map((s: any) => s.status));
+  const doughnutStatuses = stateWiseSummary.flatMap((state) =>
+    state.statuses.map((s: any) => s.status)
+  );
   const uniqueStatuses = Array.from(new Set(doughnutStatuses));
 
   // Aggregate counts across all states (or dates)
@@ -155,7 +167,9 @@ export const Dashboard: React.FC = () => {
       return sum + (s ? s.count : 0);
     }, 0);
   });
-  const colors = uniqueStatuses.map(status => statusColors[status] || '#6c757d');
+  const colors = uniqueStatuses.map(
+    (status) => statusColors[status] || "#6c757d"
+  );
   const labels = uniqueStatuses;
 
   const statusChartOptions: ApexCharts.ApexOptions = {
@@ -176,26 +190,46 @@ export const Dashboard: React.FC = () => {
         formatter: (val: number) => `${val} orders`,
       },
     },
-    colors: colors
+    colors: colors,
   };
 
-
   return (
-    <div style={{ padding: "2rem", margin: "0 auto", backgroundColor: "#FFFFFF" }}>
+    <div
+      style={{ padding: "2rem", margin: "0 auto", backgroundColor: "#FFFFFF" }}
+    >
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
         <h2 style={{ color: "#000434", marginBottom: "0.25rem" }}>
           Welcome back, {username} 👋
         </h2>
         <p style={{ fontSize: "16px", color: "#555" }}>
-          Your control panel for managing orders, inventory, finances, and fulfillment.
+          Your control panel for managing orders, inventory, finances, and
+          fulfillment.
         </p>
         <section style={{ marginTop: "2.5rem" }}>
-          <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>📊 Business Overview</h3>
+          <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
+            📊 Business Overview
+          </h3>
           <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
             {["Total Orders", "Wallet Balance", "Pending NDRs"].map((label) => (
               <div key={label} style={cardStyle}>
-                <h4 style={{ fontSize: "16px", marginBottom: "0.5rem", color: "#000434" }}>{label}</h4>
-                <p style={{ fontSize: "20px", fontWeight: 600, color: "#F5891E" }}>--</p>
+                <h4
+                  style={{
+                    fontSize: "16px",
+                    marginBottom: "0.5rem",
+                    color: "#000434",
+                  }}
+                >
+                  {label}
+                </h4>
+                <p
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: 600,
+                    color: "#F5891E",
+                  }}
+                >
+                  --
+                </p>
               </div>
             ))}
           </div>
@@ -212,8 +246,19 @@ export const Dashboard: React.FC = () => {
         }}
       >
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <h3 style={{ color: "#000434", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span role="img" aria-label="filter">🎛️</span> Filter & View Summary
+          <h3
+            style={{
+              color: "#000434",
+              marginBottom: "1.5rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <span role="img" aria-label="filter">
+              🎛️
+            </span>{" "}
+            Filter & View Summary
           </h3>
 
           <div
@@ -224,7 +269,6 @@ export const Dashboard: React.FC = () => {
               marginBottom: "2rem",
             }}
           >
-
             <Form.Group>
               <Form.Label>Channel Accounts</Form.Label>
               <Form.Select
@@ -233,7 +277,9 @@ export const Dashboard: React.FC = () => {
               >
                 <option value="">All Channel Accounts</option>
                 {channelAccounts.map((ch) => (
-                  <option key={ch._id} value={ch._id}>{ch.channel_account_name} ({ch.pool_id?.name})</option>
+                  <option key={ch._id} value={ch._id}>
+                    {ch.channel_account_name} ({ch.pool_id?.name})
+                  </option>
                 ))}
               </Form.Select>
             </Form.Group>
@@ -259,7 +305,6 @@ export const Dashboard: React.FC = () => {
                 endDate={endDate}
                 maxDate={new Date()}
                 monthsShown={2}
-
                 onChange={(dates: any) => {
                   const [start, end] = dates;
                   setStartDate(start);
@@ -279,50 +324,132 @@ export const Dashboard: React.FC = () => {
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
                   📈 Order Status Summary
                 </h3>
-                <Chart options={chartOptions} series={chartSeries} type="bar" height={400} />
+                <Chart
+                  options={chartOptions}
+                  series={chartSeries}
+                  type="bar"
+                  height={400}
+                />
               </div>
             </Col>
           )}
           {stateWiseSummary.length > 0 && (
             <Col md={6}>
-              <div style={{ padding: "3rem", }}>
+              <div style={{ padding: "3rem" }}>
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
                   🗺️ Order Status Distribution
                 </h3>
-                <Chart options={statusChartOptions} series={statusChartSeries} type="donut" height={400} />
+                <Chart
+                  options={statusChartOptions}
+                  series={statusChartSeries}
+                  type="donut"
+                  height={400}
+                />
               </div>
             </Col>
           )}
           {stateWiseSummary.length > 0 && (
             <Col md={12}>
-              <div style={{ padding: "3rem", }}>
+              <div style={{ padding: "3rem" }}>
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
                   🗺️ State-wise Order Status Summary
                 </h3>
-                <Chart options={stateChartOptions} series={stateChartSeries} type="bar" height={500} />
+                <Chart
+                  options={stateChartOptions}
+                  series={stateChartSeries}
+                  type="bar"
+                  height={500}
+                />
               </div>
             </Col>
           )}
         </Row>
-
       </Card>
 
-
       <Card style={{ marginTop: "3rem", padding: "30px" }}>
-        <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>🚀 Getting Started Guide</h3>
-        <ol style={{ paddingLeft: "1.25rem", fontSize: "16px", lineHeight: "1.9", color: "#000434" }}>
-          <li><Link to="/dashboard/pools" style={linkStyle}><strong>Create a Pool</strong></Link> – Define dispatch hubs to manage order flow and allocation.</li>
-          <li><Link to="/dashboard/channel_accounts" style={linkStyle}><strong>Add Channel Accounts</strong></Link> – Connect marketplaces like Amazon, Flipkart, etc.</li>
-          <li><Link to="/dashboard/Warehouses" style={linkStyle}><strong>Set Up Warehouses</strong></Link> – Register storage locations for inventory tracking.</li>
-          <li><Link to="/dashboard/ProductPacks" style={linkStyle}><strong>Configure Packages</strong></Link> – Setup packaging info for accurate courier selection.</li>
-          <li><Link to="/dashboard/Products" style={linkStyle}><strong>Create Products</strong></Link> – Add your catalog with detailed product info.</li>
-          <li><Link to="/dashboard/ProductSKU" style={linkStyle}><strong>Define Product SKUs</strong></Link> – Assign unique SKUs for each variant.</li>
-          <li><Link to="/dashboard/ChannelSKU" style={linkStyle}><strong>Link SKUs to Channels</strong></Link> – Map internal SKUs to external listings.</li>
-          <li><Link to="/dashboard/orders" style={linkStyle}><strong>Monitor Incoming Orders</strong></Link> – View real-time orders across platforms.</li>
-          <li><Link to="/dashboard/Wallet" style={linkStyle}><strong>Recharge Your Wallet</strong></Link> – Maintain balance for seamless courier bookings.</li>
-          <li><Link to="/dashboard/orders" style={linkStyle}><strong>Enhance Orders with AI</strong></Link> – Enrich order details using AI-driven content.</li>
-          <li><Link to="/dashboard/orders" style={linkStyle}><strong>Track Deliveries</strong></Link> – Monitor fulfillment progress end-to-end.</li>
-          <li><Link to="/dashboard/NDR" style={linkStyle}><strong>Manage NDR Effortlessly</strong></Link> – Handle non-delivery cases quickly and clearly.</li>
+        <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
+          🚀 Getting Started Guide
+        </h3>
+        <ol
+          style={{
+            paddingLeft: "1.25rem",
+            fontSize: "16px",
+            lineHeight: "1.9",
+            color: "#000434",
+          }}
+        >
+          <li>
+            <Link to="/dashboard/pools" style={linkStyle}>
+              <strong>Create a Pool</strong>
+            </Link>{" "}
+            – Define dispatch hubs to manage order flow and allocation.
+          </li>
+          <li>
+            <Link to="/dashboard/channel_accounts" style={linkStyle}>
+              <strong>Add Channel Accounts</strong>
+            </Link>{" "}
+            – Connect marketplaces like Amazon, Flipkart, etc.
+          </li>
+          <li>
+            <Link to="/dashboard/Warehouses" style={linkStyle}>
+              <strong>Set Up Warehouses</strong>
+            </Link>{" "}
+            – Register storage locations for inventory tracking.
+          </li>
+          <li>
+            <Link to="/dashboard/ProductPacks" style={linkStyle}>
+              <strong>Configure Packages</strong>
+            </Link>{" "}
+            – Setup packaging info for accurate courier selection.
+          </li>
+          <li>
+            <Link to="/dashboard/Products" style={linkStyle}>
+              <strong>Create Products</strong>
+            </Link>{" "}
+            – Add your catalog with detailed product info.
+          </li>
+          <li>
+            <Link to="/dashboard/ProductSKU" style={linkStyle}>
+              <strong>Define Product SKUs</strong>
+            </Link>{" "}
+            – Assign unique SKUs for each variant.
+          </li>
+          <li>
+            <Link to="/dashboard/ChannelSKU" style={linkStyle}>
+              <strong>Link SKUs to Channels</strong>
+            </Link>{" "}
+            – Map internal SKUs to external listings.
+          </li>
+          <li>
+            <Link to="/dashboard/orders" style={linkStyle}>
+              <strong>Monitor Incoming Orders</strong>
+            </Link>{" "}
+            – View real-time orders across platforms.
+          </li>
+          <li>
+            <Link to="/dashboard/Wallet" style={linkStyle}>
+              <strong>Recharge Your Wallet</strong>
+            </Link>{" "}
+            – Maintain balance for seamless courier bookings.
+          </li>
+          <li>
+            <Link to="/dashboard/orders" style={linkStyle}>
+              <strong>Enhance Orders with AI</strong>
+            </Link>{" "}
+            – Enrich order details using AI-driven content.
+          </li>
+          <li>
+            <Link to="/dashboard/orders" style={linkStyle}>
+              <strong>Track Deliveries</strong>
+            </Link>{" "}
+            – Monitor fulfillment progress end-to-end.
+          </li>
+          <li>
+            <Link to="/dashboard/NDR" style={linkStyle}>
+              <strong>Manage NDR Effortlessly</strong>
+            </Link>{" "}
+            – Handle non-delivery cases quickly and clearly.
+          </li>
         </ol>
       </Card>
     </div>

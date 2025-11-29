@@ -42,7 +42,7 @@ type Owner = {
   email_verified?: boolean;
   phone?: string;
   phone_verified?: boolean;
-}
+};
 type Pool = {
   _id: string;
   name: string;
@@ -226,8 +226,14 @@ const Pools: React.FC = () => {
       ifsc: pool.bank_details?.ifsc || "",
       holder_name: pool.bank_details?.holder_name || "",
       cheque: pool.bank_details?.cheque || null,
-      verification_status: ["", "verified", "failed", "pending"].includes(pool.bank_details?.approval_status || "")
-        ? (pool.bank_details?.approval_status as "" | "verified" | "failed" | "pending")
+      verification_status: ["", "verified", "failed", "pending"].includes(
+        pool.bank_details?.approval_status || ""
+      )
+        ? (pool.bank_details?.approval_status as
+            | ""
+            | "verified"
+            | "failed"
+            | "pending")
         : "",
       verification_message: pool.bank_details?.status_message || "",
     });
@@ -296,7 +302,8 @@ const Pools: React.FC = () => {
         gstin,
         loading: false,
         verified: true,
-        company_type: (data.company_type).replaceAll(" ", "_").toLowerCase() || "",
+        company_type:
+          data.company_type.replaceAll(" ", "_").toLowerCase() || "",
         business_name: data.business_name || "",
         legal_name: data.business_name || "",
         address: data.address || "",
@@ -310,7 +317,12 @@ const Pools: React.FC = () => {
       }));
       toast.success("GST verified and autofilled");
     } catch {
-      setGst((s) => ({ ...s, loading: false, verified: false, message: "Verification failed" }));
+      setGst((s) => ({
+        ...s,
+        loading: false,
+        verified: false,
+        message: "Verification failed",
+      }));
       toast.error("GST verification failed");
     }
   };
@@ -323,11 +335,11 @@ const Pools: React.FC = () => {
     // set a flag or call verify endpoint in real flow
   };
 
-  const verifyEmailOtp = async (email: string, otp: string) => {
-    // Placeholder: call verify endpoint
-    setOwner((o) => ({ ...o, email_verified: true }));
-    toast.success("Email verified (placeholder)");
-  };
+  // const verifyEmailOtp = async (email: string, otp: string) => {
+  //   // Placeholder: call verify endpoint
+  //   setOwner((o) => ({ ...o, email_verified: true }));
+  //   toast.success("Email verified (placeholder)");
+  // };
 
   const sendPhoneOtp = async (phone: string) => {
     if (!phone) return toast.warn("Enter phone");
@@ -335,30 +347,30 @@ const Pools: React.FC = () => {
     toast.info("OTP sent to phone (placeholder)");
   };
 
-  const verifyPhoneOtp = async (phone: string, otp: string) => {
-    setOwner((o) => ({ ...o, phone_verified: true }));
-    toast.success("Phone verified (placeholder)");
-  };
+  // const verifyPhoneOtp = async (phone: string, otp: string) => {
+  //   setOwner((o) => ({ ...o, phone_verified: true }));
+  //   toast.success("Phone verified (placeholder)");
+  // };
 
   /* --- Bank verify placeholder --- */
-  const verifyBank = async () => {
-    // Example: you could call a microservice that validates IFSC/account via NPCI or bank API
-    if (!bankDetails.account_number || !bankDetails.ifsc) {
-      toast.warn("Enter account number and IFSC to verify");
-      return;
-    }
-    setBankDetails((b) => ({ ...b, verification_status: "pending", verification_message: "Verifying..." }));
-    try {
-      // Placeholder delay to simulate verification
-      await new Promise((r) => setTimeout(r, 1000));
-      // Set verified in this placeholder flow
-      setBankDetails((b) => ({ ...b, verification_status: "verified", verification_message: "Account verified (placeholder)" }));
-      toast.success("Bank verified (placeholder)");
-    } catch {
-      setBankDetails((b) => ({ ...b, verification_status: "failed", verification_message: "Verification failed" }));
-      toast.error("Bank verification failed");
-    }
-  };
+  // const verifyBank = async () => {
+  //   // Example: you could call a microservice that validates IFSC/account via NPCI or bank API
+  //   if (!bankDetails.account_number || !bankDetails.ifsc) {
+  //     toast.warn("Enter account number and IFSC to verify");
+  //     return;
+  //   }
+  //   setBankDetails((b) => ({ ...b, verification_status: "pending", verification_message: "Verifying..." }));
+  //   try {
+  //     // Placeholder delay to simulate verification
+  //     await new Promise((r) => setTimeout(r, 1000));
+  //     // Set verified in this placeholder flow
+  //     setBankDetails((b) => ({ ...b, verification_status: "verified", verification_message: "Account verified (placeholder)" }));
+  //     toast.success("Bank verified (placeholder)");
+  //   } catch {
+  //     setBankDetails((b) => ({ ...b, verification_status: "failed", verification_message: "Verification failed" }));
+  //     toast.error("Bank verification failed");
+  //   }
+  // };
 
   /* --- Transform and submit to backend (createPool / updatePool) --- */
   async function transformAndSubmit(status: "active" | "draft" = "active") {
@@ -368,7 +380,8 @@ const Pools: React.FC = () => {
         name: businessDetails.name,
         address: gst.verified ? gst.address : undefined,
         state: gst.verified ? gst.state : undefined,
-        company_type: companyType || (gst.verified ? gst.company_type : null) || undefined,
+        company_type:
+          companyType || (gst.verified ? gst.company_type : null) || undefined,
         business_logo: businessDetails.logo || undefined,
         website: businessDetails.website || undefined,
         admins: adminList.map((a) => a._id),
@@ -425,7 +438,10 @@ const Pools: React.FC = () => {
       // Upload Business Logo
       if (payload.business_logo instanceof File) {
         const logoData = await createAmazonS3(
-          `logos/${Date.now()}-${payload.business_logo.name.replace(/ /g, "_")}`,
+          `logos/${Date.now()}-${payload.business_logo.name.replace(
+            / /g,
+            "_"
+          )}`,
           await fileToBase64(payload.business_logo)
         );
         payload.business_logo = logoData.url;
@@ -434,7 +450,10 @@ const Pools: React.FC = () => {
       // Upload Bank Cheque if file exists in bank_details.cheque
       if (payload.bank_details && payload.bank_details.cheque instanceof File) {
         const chequeData = await createAmazonS3(
-          `cheques/${Date.now()}-${payload.bank_details.cheque.name.replace(/ /g, "_")}`,
+          `cheques/${Date.now()}-${payload.bank_details.cheque.name.replace(
+            / /g,
+            "_"
+          )}`,
           await fileToBase64(payload.bank_details.cheque)
         );
         payload.bank_details.cheque = chequeData.url;
@@ -442,10 +461,14 @@ const Pools: React.FC = () => {
 
       if (editingPool) {
         await updatePool(editingPool._id, payload);
-        toast.success(status === "active" ? "Pool updated successfully" : "Progress saved!");
+        toast.success(
+          status === "active" ? "Pool updated successfully" : "Progress saved!"
+        );
       } else {
         await createPool(payload);
-        toast.success(status === "active" ? "Pool created successfully" : "Progress saved!");
+        toast.success(
+          status === "active" ? "Pool created successfully" : "Progress saved!"
+        );
       }
 
       fetchInitialData();
@@ -460,13 +483,22 @@ const Pools: React.FC = () => {
       name: "Pool Name",
       selector: (row: Pool) => row.name,
       sortable: true,
-      cell: (row: Pool) => <Button variant="link" onClick={() => handleEdit(row)}>{row.name}</Button>,
+      cell: (row: Pool) => (
+        <Button variant="link" onClick={() => handleEdit(row)}>
+          {row.name}
+        </Button>
+      ),
     },
     {
       name: "Status",
       selector: (row: Pool) => row.status,
       cell: (row: Pool) => {
-        const color = row.status === "active" ? "success" : row.status === "inactive" ? "secondary" : "warning";
+        const color =
+          row.status === "active"
+            ? "success"
+            : row.status === "inactive"
+            ? "secondary"
+            : "warning";
         return <Badge bg={color}>{row.status}</Badge>;
       },
       sortable: true,
@@ -475,7 +507,13 @@ const Pools: React.FC = () => {
       name: "Wallet",
       selector: (row: Pool) => row.wallet_balance || 0,
       cell: (row: Pool) => (
-        <Badge bg={row.wallet_balance && row.wallet_balance > 0 ? "success" : "secondary"}>
+        <Badge
+          bg={
+            row.wallet_balance && row.wallet_balance > 0
+              ? "success"
+              : "secondary"
+          }
+        >
           ₹{row.wallet_balance?.toFixed(2) || "0.00"}
         </Badge>
       ),
@@ -487,14 +525,19 @@ const Pools: React.FC = () => {
     },
     {
       name: "Created At",
-      selector: (row: Pool) => new Date(row.createdAt || "").toLocaleDateString(),
+      selector: (row: Pool) =>
+        new Date(row.createdAt || "").toLocaleDateString(),
       sortable: true,
     },
     {
       name: "Actions",
       cell: (row: Pool) => (
         <>
-          <Button size="sm" variant={row.status === "active" ? "danger" : "success"} onClick={() => handleToggleStatus(row)}>
+          <Button
+            size="sm"
+            variant={row.status === "active" ? "danger" : "success"}
+            onClick={() => handleToggleStatus(row)}
+          >
             {row.status === "active" ? "Deactivate" : "Activate"}
           </Button>
         </>
@@ -516,29 +559,48 @@ const Pools: React.FC = () => {
               value={gst.gstin}
               onChange={(e) => setGst((s) => ({ ...s, gstin: e.target.value }))}
             />
-            <Button variant="outline-primary" onClick={verifyGst} disabled={gst.loading}>
-              {gst.loading ? <Spinner animation="border" size="sm" /> : "Verify GST"}
+            <Button
+              variant="outline-primary"
+              onClick={verifyGst}
+              disabled={gst.loading}
+            >
+              {gst.loading ? (
+                <Spinner animation="border" size="sm" />
+              ) : (
+                "Verify GST"
+              )}
             </Button>
           </InputGroup>
-          <Form.Text className="text-muted">If GSTIN is valid we'll autofill company details.</Form.Text>
+          <Form.Text className="text-muted">
+            If GSTIN is valid we'll autofill company details.
+          </Form.Text>
         </Form.Group>
         {gst.verified && (
           <Card className="mt-2 p-2">
             <strong>{gst.business_name}</strong>
             <div className="small text-muted">{gst.legal_name}</div>
             <div className="small">{gst.address}</div>
-            <Badge bg="success" className="mt-2">GST Verified</Badge>
+            <Badge bg="success" className="mt-2">
+              GST Verified
+            </Badge>
           </Card>
         )}
-        {!gst.verified && gst.message && <div className="text-warning mt-2">{gst.message}</div>}
+        {!gst.verified && gst.message && (
+          <div className="text-warning mt-2">{gst.message}</div>
+        )}
         <hr />
         <Form.Group className="mb-3" controlId="businessNameManual">
-          <Form.Label>Company / Brand Name <span className="text-muted">(if GST not provided)</span></Form.Label>
+          <Form.Label>
+            Company / Brand Name{" "}
+            <span className="text-muted">(if GST not provided)</span>
+          </Form.Label>
           <Form.Control
             type="text"
             placeholder="Enter business name"
             value={gst.business_name || businessDetails.name}
-            onChange={(e) => setBusinessDetails({ ...businessDetails, name: e.target.value })}
+            onChange={(e) =>
+              setBusinessDetails({ ...businessDetails, name: e.target.value })
+            }
           />
         </Form.Group>
       </Card>
@@ -548,10 +610,16 @@ const Pools: React.FC = () => {
         <h5>Company Info</h5>
         <Form.Group className="mb-3">
           <Form.Label>Company Type</Form.Label>
-          <Form.Select value={gst.company_type || companyType} disabled onChange={(e) => setCompanyType(e.target.value)}>
+          <Form.Select
+            value={gst.company_type || companyType}
+            disabled
+            onChange={(e) => setCompanyType(e.target.value)}
+          >
             <option value="">Select Company Type</option>
             {companyTypeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </Form.Select>
         </Form.Group>
@@ -561,7 +629,12 @@ const Pools: React.FC = () => {
             type="text"
             placeholder="https://"
             value={businessDetails.website}
-            onChange={(e) => setBusinessDetails({ ...businessDetails, website: e.target.value })}
+            onChange={(e) =>
+              setBusinessDetails({
+                ...businessDetails,
+                website: e.target.value,
+              })
+            }
           />
         </Form.Group>
         <Form.Group className="mb-3">
@@ -575,7 +648,11 @@ const Pools: React.FC = () => {
           />
           {businessDetails.logo && typeof businessDetails.logo === "string" && (
             <div className="mt-2">
-              <img src={businessDetails.logo} alt="logo" style={{ width: 100 }} />
+              <img
+                src={businessDetails.logo}
+                alt="logo"
+                style={{ width: 100 }}
+              />
             </div>
           )}
         </Form.Group>
@@ -601,13 +678,24 @@ const Pools: React.FC = () => {
                 <Form.Control
                   type="email"
                   value={owner.email}
-                  onChange={(e) => setOwner({ ...owner, email: e.target.value })}
+                  onChange={(e) =>
+                    setOwner({ ...owner, email: e.target.value })
+                  }
                   placeholder="Email"
                 />
-                <Button variant="outline-secondary" onClick={() => sendEmailOtp(owner.email)}>Send OTP</Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => sendEmailOtp(owner.email)}
+                >
+                  Send OTP
+                </Button>
               </InputGroup>
               <div className="small mt-1">
-                {owner.email_verified ? <Badge bg="success">Verified</Badge> : <span className="text-muted">Not verified</span>}
+                {owner.email_verified ? (
+                  <Badge bg="success">Verified</Badge>
+                ) : (
+                  <span className="text-muted">Not verified</span>
+                )}
               </div>
             </Form.Group>
           </Col>
@@ -618,13 +706,24 @@ const Pools: React.FC = () => {
                 <Form.Control
                   type="text"
                   value={owner.phone}
-                  onChange={(e) => setOwner({ ...owner, phone: e.target.value })}
+                  onChange={(e) =>
+                    setOwner({ ...owner, phone: e.target.value })
+                  }
                   placeholder="Phone number"
                 />
-                <Button variant="outline-secondary" onClick={() => sendPhoneOtp(owner.phone)}>Send OTP</Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => sendPhoneOtp(owner.phone)}
+                >
+                  Send OTP
+                </Button>
               </InputGroup>
               <div className="small mt-1">
-                {owner.phone_verified ? <Badge bg="success">Verified</Badge> : <span className="text-muted">Not verified</span>}
+                {owner.phone_verified ? (
+                  <Badge bg="success">Verified</Badge>
+                ) : (
+                  <span className="text-muted">Not verified</span>
+                )}
               </div>
             </Form.Group>
           </Col>
@@ -644,7 +743,13 @@ const Pools: React.FC = () => {
           />
           <div className="mt-2">
             {adminList.map((admin) => (
-              <Badge pill bg="primary" key={admin._id} style={{ marginRight: 5, cursor: "pointer" }} onClick={() => removeAdmin(admin._id)}>
+              <Badge
+                pill
+                bg="primary"
+                key={admin._id}
+                style={{ marginRight: 5, cursor: "pointer" }}
+                onClick={() => removeAdmin(admin._id)}
+              >
                 {admin.name} &times;
               </Badge>
             ))}
@@ -660,7 +765,9 @@ const Pools: React.FC = () => {
           <Form.Control
             type="text"
             value={bankDetails.account_number}
-            onChange={(e) => setBankDetails({ ...bankDetails, account_number: e.target.value })}
+            onChange={(e) =>
+              setBankDetails({ ...bankDetails, account_number: e.target.value })
+            }
             placeholder="Account number"
           />
         </Form.Group>
@@ -669,12 +776,22 @@ const Pools: React.FC = () => {
           <Form.Control
             type="text"
             value={bankDetails.account_number_confirm}
-            onChange={(e) => setBankDetails({ ...bankDetails, account_number_confirm: e.target.value })}
+            onChange={(e) =>
+              setBankDetails({
+                ...bankDetails,
+                account_number_confirm: e.target.value,
+              })
+            }
             placeholder="Confirm account number"
           />
-          {bankDetails.account_number && bankDetails.account_number_confirm && bankDetails.account_number !== bankDetails.account_number_confirm && (
-            <Form.Text className="text-danger">Account numbers do not match</Form.Text>
-          )}
+          {bankDetails.account_number &&
+            bankDetails.account_number_confirm &&
+            bankDetails.account_number !==
+              bankDetails.account_number_confirm && (
+              <Form.Text className="text-danger">
+                Account numbers do not match
+              </Form.Text>
+            )}
         </Form.Group>
         <Row>
           <Col md={6}>
@@ -683,7 +800,9 @@ const Pools: React.FC = () => {
               <Form.Control
                 type="text"
                 value={bankDetails.ifsc}
-                onChange={(e) => setBankDetails({ ...bankDetails, ifsc: e.target.value })}
+                onChange={(e) =>
+                  setBankDetails({ ...bankDetails, ifsc: e.target.value })
+                }
                 placeholder="IFSC"
               />
             </Form.Group>
@@ -694,7 +813,12 @@ const Pools: React.FC = () => {
               <Form.Control
                 type="text"
                 value={bankDetails.holder_name}
-                onChange={(e) => setBankDetails({ ...bankDetails, holder_name: e.target.value })}
+                onChange={(e) =>
+                  setBankDetails({
+                    ...bankDetails,
+                    holder_name: e.target.value,
+                  })
+                }
                 placeholder="Holder name"
               />
             </Form.Group>
@@ -713,7 +837,11 @@ const Pools: React.FC = () => {
             }}
           />
           <div className="small mt-1">
-            {bankDetails.verification_status === "verified" ? <Badge bg="success">Verified</Badge> : <span className="text-muted">Verification not done</span>}
+            {bankDetails.verification_status === "verified" ? (
+              <Badge bg="success">Verified</Badge>
+            ) : (
+              <span className="text-muted">Verification not done</span>
+            )}
           </div>
         </Form.Group>
       </Card>
@@ -721,7 +849,10 @@ const Pools: React.FC = () => {
     kyc: (
       <Card className="p-3">
         <h5>Minimal KYC</h5>
-        <div className="mb-2 text-muted">Only essential documents required to start remittances & reduce friction.</div>
+        <div className="mb-2 text-muted">
+          Only essential documents required to start remittances & reduce
+          friction.
+        </div>
         <Form.Group className="mb-3">
           <Form.Label>PAN Card (upload)</Form.Label>
           <Form.Control
@@ -732,11 +863,17 @@ const Pools: React.FC = () => {
             }}
           />
           {kycFiles.pan && typeof kycFiles.pan === "string" && (
-            <div className="mt-2"><a href={kycFiles.pan} target="_blank" rel="noreferrer">View uploaded PAN</a></div>
+            <div className="mt-2">
+              <a href={kycFiles.pan} target="_blank" rel="noreferrer">
+                View uploaded PAN
+              </a>
+            </div>
           )}
         </Form.Group>
         <Form.Group className="mb-3">
-          <Form.Label>Cancelled Cheque (will be used for remittance)</Form.Label>
+          <Form.Label>
+            Cancelled Cheque (will be used for remittance)
+          </Form.Label>
           <Form.Control
             type="file"
             onChange={(e: any) => {
@@ -747,7 +884,9 @@ const Pools: React.FC = () => {
               }
             }}
           />
-          <Form.Text className="text-muted">If you already uploaded in Bank step, no need to re-upload.</Form.Text>
+          <Form.Text className="text-muted">
+            If you already uploaded in Bank step, no need to re-upload.
+          </Form.Text>
         </Form.Group>
       </Card>
     ),
@@ -757,24 +896,64 @@ const Pools: React.FC = () => {
         <div className="mb-3">
           <strong>Company</strong>
           <div>{businessDetails.name}</div>
-          <div className="text-muted small">{companyType ? companyTypeOptions.find(c => c.value === companyType)?.label : "—"}</div>
-          {gst.verified && <Badge bg="success" className="mt-2">GST Verified</Badge>}
+          <div className="text-muted small">
+            {companyType
+              ? companyTypeOptions.find((c) => c.value === companyType)?.label
+              : "—"}
+          </div>
+          {gst.verified && (
+            <Badge bg="success" className="mt-2">
+              GST Verified
+            </Badge>
+          )}
         </div>
         <div className="mb-3">
           <strong>Owner</strong>
           <div>{owner.full_name}</div>
-          <div className="small">{owner.email} {owner.email_verified ? <Badge bg="success">E</Badge> : null} {owner.phone} {owner.phone_verified ? <Badge bg="success">P</Badge> : null}</div>
+          <div className="small">
+            {owner.email}{" "}
+            {owner.email_verified ? <Badge bg="success">E</Badge> : null}{" "}
+            {owner.phone}{" "}
+            {owner.phone_verified ? <Badge bg="success">P</Badge> : null}
+          </div>
         </div>
         <div className="mb-3">
           <strong>Bank</strong>
-          <div>Account: {bankDetails.account_number ? `****${bankDetails.account_number.slice(-4)}` : "—"}</div>
+          <div>
+            Account:{" "}
+            {bankDetails.account_number
+              ? `****${bankDetails.account_number.slice(-4)}`
+              : "—"}
+          </div>
           <div>IFSC: {bankDetails.ifsc || "—"}</div>
-          <div className="small">{bankDetails.verification_status ? bankDetails.verification_status : "Not verified"}</div>
+          <div className="small">
+            {bankDetails.verification_status
+              ? bankDetails.verification_status
+              : "Not verified"}
+          </div>
         </div>
         <div className="mb-3">
           <strong>KYC</strong>
-          <div>PAN: {kycFiles.pan ? (typeof kycFiles.pan === "string" ? <a href={kycFiles.pan} target="_blank" rel="noreferrer">Uploaded</a> : (kycFiles.pan as File).name) : "Not provided"}</div>
-          <div>Cancelled Cheque: {kycFiles.cheque ? ((kycFiles.cheque as File).name || "Uploaded") : "Not provided"}</div>
+          <div>
+            PAN:{" "}
+            {kycFiles.pan ? (
+              typeof kycFiles.pan === "string" ? (
+                <a href={kycFiles.pan} target="_blank" rel="noreferrer">
+                  Uploaded
+                </a>
+              ) : (
+                (kycFiles.pan as File).name
+              )
+            ) : (
+              "Not provided"
+            )}
+          </div>
+          <div>
+            Cancelled Cheque:{" "}
+            {kycFiles.cheque
+              ? (kycFiles.cheque as File).name || "Uploaded"
+              : "Not provided"}
+          </div>
         </div>
         <Form.Group className="mb-3">
           <Form.Check
@@ -782,10 +961,13 @@ const Pools: React.FC = () => {
             id="agree"
             label="I confirm all details are correct"
             checked={agree}
-            onChange={e => setAgree(e.target.checked)}
+            onChange={(e) => setAgree(e.target.checked)}
           />
         </Form.Group>
-        <div className="small text-muted">After submission our team may verify documents within 48 working hours.</div>
+        <div className="small text-muted">
+          After submission our team may verify documents within 48 working
+          hours.
+        </div>
       </Card>
     ),
   });
@@ -808,35 +990,73 @@ const Pools: React.FC = () => {
         highlightOnHover
       />
       {/* Wizard Modal */}
-      <Modal size="lg" show={showModal} onHide={handleClose} backdrop="static" keyboard={false}>
+      <Modal
+        size="lg"
+        show={showModal}
+        onHide={handleClose}
+        backdrop="static"
+        keyboard={false}
+      >
         <Modal.Header closeButton>
-          <Modal.Title>{editingPool ? "Edit Pool" : "Create New Pool"}</Modal.Title>
+          <Modal.Title>
+            {editingPool ? "Edit Pool" : "Create New Pool"}
+          </Modal.Title>
         </Modal.Header>
         <Form
-          onSubmit={e => {
+          onSubmit={(e) => {
             e.preventDefault();
-            if (!agree) return toast.warn("Please confirm all details are correct.");
-            if (!businessDetails.name) return toast.warn("Business name required");
+            if (!agree)
+              return toast.warn("Please confirm all details are correct.");
+            if (!businessDetails.name)
+              return toast.warn("Business name required");
             if (!companyType) return toast.warn("Select company type");
             if (!owner.full_name) return toast.warn("Owner name required");
-            if (!bankDetails.account_number || bankDetails.account_number !== bankDetails.account_number_confirm) return toast.warn("Valid bank details required");
+            if (
+              !bankDetails.account_number ||
+              bankDetails.account_number !== bankDetails.account_number_confirm
+            )
+              return toast.warn("Valid bank details required");
             if (!kycFiles.pan) return toast.warn("PAN required");
             transformAndSubmit("active");
           }}
         >
           <Modal.Body>
-            <Tabs activeKey={tabKey} onSelect={k => setTabKey(k || "gst")} className="mb-3" fill>
-              <Tab eventKey="gst" title="GST">{renderTabContent().gst}</Tab>
-              <Tab eventKey="company" title="Company">{renderTabContent().company}</Tab>
-              <Tab eventKey="owner" title="Owner">{renderTabContent().owner}</Tab>
-              <Tab eventKey="bank" title="Bank">{renderTabContent().bank}</Tab>
-              <Tab eventKey="kyc" title="KYC">{renderTabContent().kyc}</Tab>
-              <Tab eventKey="review" title="Review">{renderTabContent().review}</Tab>
+            <Tabs
+              activeKey={tabKey}
+              onSelect={(k) => setTabKey(k || "gst")}
+              className="mb-3"
+              fill
+            >
+              <Tab eventKey="gst" title="GST">
+                {renderTabContent().gst}
+              </Tab>
+              <Tab eventKey="company" title="Company">
+                {renderTabContent().company}
+              </Tab>
+              <Tab eventKey="owner" title="Owner">
+                {renderTabContent().owner}
+              </Tab>
+              <Tab eventKey="bank" title="Bank">
+                {renderTabContent().bank}
+              </Tab>
+              <Tab eventKey="kyc" title="KYC">
+                {renderTabContent().kyc}
+              </Tab>
+              <Tab eventKey="review" title="Review">
+                {renderTabContent().review}
+              </Tab>
             </Tabs>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-            <Button variant="warning" onClick={() => transformAndSubmit("draft")}>Save Progress</Button>
+            <Button variant="secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="warning"
+              onClick={() => transformAndSubmit("draft")}
+            >
+              Save Progress
+            </Button>
             <Button variant="primary" type="submit">
               {editingPool ? "Update Pool" : "Create Pool"}
             </Button>

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-import DataTable from "react-data-table-component";
+import DataTable, { TableColumn } from "react-data-table-component";
 import {
   createProduct,
   getAllProducts,
@@ -38,8 +38,8 @@ export interface Product {
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true); // Added loading state
-  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showModal, setShowModal] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productAttributes, setProductAttributes] = useState<
     ProductAttribute[]
@@ -47,23 +47,41 @@ const Products: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
   const [imageName, setImageName] = useState<string>("");
+
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+
+  // Fetch warehouses once
   useEffect(() => {
-    fetchInitialData();
+    const fetchWarehouses = async () => {
+      try {
+        const warehouseData = await getAllWarehouses();
+        setWarehouses(warehouseData);
+      } catch (error) {
+        console.error("Error loading warehouses", error);
+      }
+    };
+    fetchWarehouses();
   }, []);
 
-  const fetchInitialData = async () => {
-    setLoading(true); // Set loading to true before fetching
+  // Fetch products whenever page/limit changes
+  useEffect(() => {
+    fetchProducts(page, limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit]);
+
+  const fetchProducts = async (pageParam = page, limitParam = limit) => {
+    setLoading(true);
     try {
-      const [productData, warehouseData] = await Promise.all([
-        getAllProducts(),
-        getAllWarehouses(),
-      ]);
-      setProducts(productData);
-      setWarehouses(warehouseData);
+      const productData = await getAllProducts(pageParam, limitParam);
+      // expected: { total: number, data: Product[] }
+      setTotalRecords(productData.total);
+      setProducts(productData.data);
     } catch (error) {
-      console.error("Error loading products or warehouses", error);
+      console.error("Error loading products", error);
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false);
     }
   };
 
@@ -73,10 +91,11 @@ const Products: React.FC = () => {
     setProductAttributes([]);
     setImagePreview("");
     setWarehouseStocks([]);
+    setImageName("");
   };
 
   const handleShow = () => {
-    const defaultStocks = warehouses.map((wh) => ({
+    const defaultStocks: WarehouseStock[] = warehouses.map((wh) => ({
       warehouse: wh,
       stock: 0,
     }));
@@ -89,7 +108,7 @@ const Products: React.FC = () => {
     setProductAttributes(product.product_attributes || []);
     setImagePreview(product.product_image || "");
 
-    const mappedStocks = warehouses.map((wh) => {
+    const mappedStocks: WarehouseStock[] = warehouses.map((wh) => {
       const existingStock = product.warehouse.find(
         (w) => w.warehouse._id === wh._id
       );
@@ -112,7 +131,7 @@ const Products: React.FC = () => {
     ) {
       try {
         await updateProduct(product._id!, { ...product, status: newStatus });
-        fetchInitialData();
+        await fetchProducts(); // refresh current page
       } catch (error) {
         console.error("Error updating status", error);
       }
@@ -129,7 +148,6 @@ const Products: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
-
   };
 
   const handleAttributeChange = (
@@ -166,12 +184,14 @@ const Products: React.FC = () => {
     const form = e.currentTarget;
 
     const newProduct: Product = {
-      product_name: (form.elements.namedItem("product_name") as any).value,
+      product_name: (
+        form.elements.namedItem("product_name") as HTMLInputElement
+      ).value,
       product_description: (
-        form.elements.namedItem("product_description") as any
+        form.elements.namedItem("product_description") as HTMLTextAreaElement
       ).value,
       product_weight: parseFloat(
-        (form.elements.namedItem("product_weight") as any).value
+        (form.elements.namedItem("product_weight") as HTMLInputElement).value
       ),
       product_attributes: productAttributes,
       product_image: imagePreview || "",
@@ -179,96 +199,108 @@ const Products: React.FC = () => {
     };
 
     try {
-      let imageData = null;
+      let imageData: { url: string } | null = null;
       if (imagePreview) {
-        imageData = await createAmazonS3(`product/${Date.now()}-${imageName.replace(/ /g, "_")}`, imagePreview);
-        newProduct.product_image = imageData.url;
-      }
-      if (editingProduct) {
-        await updateProduct(editingProduct._id!, newProduct);
-        setProducts((prev) =>
-          prev.map((p) =>
-            p._id === editingProduct._id
-              ? { ...newProduct, _id: editingProduct._id }
-              : p
-          )
+        imageData = await createAmazonS3(
+          `product/${Date.now()}-${imageName.replace(/ /g, "_")}`,
+          imagePreview
         );
-      } else {
-        const created = await createProduct(newProduct);
-        setProducts((prev) => [...prev, created]);
+        newProduct.product_image = (imageData as any).url;
       }
+
+      if (editingProduct && editingProduct._id) {
+        await updateProduct(editingProduct._id, newProduct);
+      } else {
+        await createProduct(newProduct);
+        // optional: go back to first page after create
+        setPage(1);
+      }
+
+      // Refresh list for current page
+      await fetchProducts();
       handleClose();
     } catch (err) {
       console.error("Error saving product", err);
     }
   };
 
-  const columns = [
-    {
-      name: "Name",
-      selector: (row: Product) => row.product_name,
-      sortable: true,
-    },
-    {
-      name: "Description",
-      selector: (row: Product) => row.product_description,
-    },
-    {
-      name: "Weight",
-      selector: (row: Product) => `${row.product_weight} kg`,
-    },
-    {
-      name: "Attributes",
-      cell: (row: Product) => (
-        <div>
-          {row.product_attributes.map((attr, idx) => (
-            <div key={idx}>
-              <strong>{attr.key}:</strong> {attr.value}
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      name: "Stock",
-      cell: (row: Product) => (
-        <div>
-          {row.warehouse.map((wh, i) => (
-            <div key={i}>
-              <strong>
-                {warehouses.find((w) => { return w._id === wh.warehouse._id })?.name || "N/A"}:
-              </strong>{" "}
-              {wh.stock}
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      name: "Actions",
-      cell: (row: Product) => (
-        <>
-          <Button
-            variant="outline-primary"
-            size="sm"
-            className="me-2"
-            onClick={() => handleEdit(row)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant={
-              row.status === "active" ? "outline-danger" : "outline-success"
-            }
-            size="sm"
-            onClick={() => handleToggleStatus(row)}
-          >
-            {row.status === "active" ? "Deactivate" : "Activate"}
-          </Button>
-        </>
-      ),
-    },
-  ];
+  // Map warehouses by id for O(1) lookups in table render
+  const warehouseMap = useMemo(() => {
+    return warehouses.reduce<Record<string, Warehouse>>((acc, wh) => {
+      acc[wh._id] = wh;
+      return acc;
+    }, {});
+  }, [warehouses]);
+
+  const columns: TableColumn<Product>[] = useMemo(
+    () => [
+      {
+        name: "Name",
+        selector: (row: Product) => row.product_name,
+        sortable: true,
+      },
+      {
+        name: "Description",
+        selector: (row: Product) => row.product_description,
+      },
+      {
+        name: "Weight",
+        selector: (row: Product) => `${row.product_weight} kg`,
+      },
+      {
+        name: "Attributes",
+        cell: (row: Product) => (
+          <div>
+            {row.product_attributes.map((attr, idx) => (
+              <div key={idx}>
+                <strong>{attr.key}:</strong> {attr.value}
+              </div>
+            ))}
+          </div>
+        ),
+      },
+      {
+        name: "Stock",
+        cell: (row: Product) => (
+          <div>
+            {row.warehouse.map((wh, i) => (
+              <div key={i}>
+                <strong>
+                  {warehouseMap[wh.warehouse._id]?.name || "N/A"}:
+                </strong>{" "}
+                {wh.stock}
+              </div>
+            ))}
+          </div>
+        ),
+      },
+      {
+        name: "Actions",
+        cell: (row: Product) => (
+          <>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              className="me-2"
+              onClick={() => handleEdit(row)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant={
+                row.status === "active" ? "outline-danger" : "outline-success"
+              }
+              size="sm"
+              onClick={() => handleToggleStatus(row)}
+            >
+              {row.status === "active" ? "Deactivate" : "Activate"}
+            </Button>
+          </>
+        ),
+      },
+    ],
+    [warehouseMap] // handlers are stable enough here; if lint complains, wrap them in useCallback
+  );
 
   return (
     <div className="container mt-4">
@@ -287,11 +319,21 @@ const Products: React.FC = () => {
           columns={columns}
           data={products}
           pagination
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
           highlightOnHover
           responsive
         />
       )}
-
 
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
@@ -348,7 +390,7 @@ const Products: React.FC = () => {
                           onChange={(e) =>
                             handleWarehouseStockChange(
                               wh._id,
-                              parseInt(e.target.value) || 0
+                              parseInt(e.target.value, 10) || 0
                             )
                           }
                         />

@@ -3,12 +3,21 @@ import { appAxios } from "../../axios/appAxios";
 import { productSKUs_url } from "../../URLs/user";
 import { ProductSKU } from "../../screens/user/ProductSKUs";
 
-export const getAllProductSKUs = async () => {
+export const getAllProductSKUs = async (
+  page: number = 1,
+  limit: number = 10
+) => {
   try {
-    const response = await appAxios.get(productSKUs_url);
-    return response.data as ProductSKU[];
+    const response = await appAxios.get(
+      `${productSKUs_url}?page=${page}&limit=${limit}`
+    );
+
+    return {
+      data: response.data.data, // array of SKUs
+      total: response.data.totalRecords, // pagination count
+    };
   } catch (error: any) {
-    toast.error("Failed to fetch productSKUs.");
+    toast.error("Failed to fetch product SKUs.");
     throw error;
   }
 };

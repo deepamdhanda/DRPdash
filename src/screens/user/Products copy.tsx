@@ -42,7 +42,7 @@ const Products: React.FC = () => {
     const fetchProducts = async () => {
       try {
         const data = await getAllProducts();
-        setProducts(data);
+        setProducts(data.data);
       } catch (error) {
         console.error("Error fetching products", error);
       }
