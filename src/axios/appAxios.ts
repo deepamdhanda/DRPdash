@@ -3,10 +3,9 @@ import Cookies from "js-cookie";
 import _ from "lodash";
 import { drpCrmBaseUrl } from "./urls";
 
-
-// Create Axios instance with base URL and content-type headers
 const Axios = axios.create({
   baseURL: drpCrmBaseUrl,
+  withCredentials: true, // 🔥 Added globally
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,68 +14,63 @@ const Axios = axios.create({
 // Request Interceptor
 Axios.interceptors.request.use(
   (config) => {
-    // Retrieve the token from cookies
+    // Always send credentials
+    config.withCredentials = true;
+
+    // If you still want to attach non-httpOnly cookie token
     const authToken = Cookies.get("authToken");
     if (authToken) {
-      // Set the Authorization header if the token exists
       config.headers["Authorization"] = `Bearer ${authToken}`;
     }
 
     return config;
   },
-  (error) => {
-    // Reject the promise if there's a request error
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response Interceptor
 Axios.interceptors.response.use(
-  (res) => {
-    return res;
-  },
-  (error) => {
-    console.log(error)
-    let errorMessage = error?.response?.data?.message || "Something went wrong, please try again later.";
+  (res) => res,
 
+  async (error) => {
+    const status = error?.response?.status;
 
-    if (error?.response?.status === 403) {
-      // Cookies.remove("authToken")
-      errorMessage = "Verification Failed.";
-      console.log(error)
-      // window.location.href = "/verify?email=" + error?.response?.data?.email;
-    }
-    if (error?.response?.status === 401) {
-      errorMessage = "Login Failed.";
-      Cookies.remove("authToken"); // Remove the token from cookies
-      const search = window.location.search;
-      const urlParams = new URLSearchParams(search);
-
-      let finalRedirect = "";
-
-      if (urlParams.has("redirect")) {
-        // If redirect param already exists, use the full search string
-        finalRedirect = search;
-      } else {
-        // Else create a redirect param with the current path
-        finalRedirect = `?redirect=${encodeURIComponent(window.location.pathname + search)}`;
+    if (status === 401) {
+      console.log("Unauthorized"); // 🔥 ONLY this
+      try {
+        await axios.post(
+          `${drpCrmBaseUrl}/api/auth/logout`,
+          {},
+          { withCredentials: true }
+        );
+      } catch (logoutErr) {
+        console.log("Logout API failed:", logoutErr);
       }
 
-      window.location.href = `/login${finalRedirect}`;
+      // Redirect user to login
+      window.location.href = "/login";
+      return Promise.reject(error);
     }
 
+    if (status === 403) {
+      console.log("Forbidden");
+    }
 
-    // Set custom error structure in the error response
+    // Standardize error
+    let errorMessage =
+      error?.response?.data?.message ||
+      "Something went wrong, please try again later.";
+
     _.set(error, "response.data", {
       result: null,
       error: error.response?.data?.error || null,
       success: false,
       errorMessage,
     });
-    _.set(error, "message", errorMessage)
-    return Promise.reject(error); // Reject the error
+    _.set(error, "message", errorMessage);
+
+    return Promise.reject(error);
   }
 );
 
-// Export Axios instance for use in other files
 export const appAxios = Axios;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginUser, RegisterUser } from "../../APIs/authAPIs";
 import BG from "../../assets/bg.jpg";
@@ -21,7 +21,7 @@ const registerSchema = z.object({
 
 export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   const [isLogin, setIsLogin] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -41,17 +41,16 @@ export const AuthPage: React.FC = () => {
   } = useForm({ resolver: zodResolver(registerSchema) });
 
   const onLogin = async (data: any) => {
-    const params = new URLSearchParams(location.search);
-    const redirect = params.get("redirect");
+    // const params = new URLSearchParams(location.search);
+    // const redirect = params.get("redirect");
 
-    await LoginUser(data, () => {
-      if (redirect) {
-        navigate(redirect);
-      } else {
+    await LoginUser(data, (verified, email) => {
+      if (verified) {
         navigate("/user");
+      } else {
+        navigate(`/verify?email=${email}`);
       }
     });
-
   };
 
   const onRegister = async (data: any) => {
@@ -73,7 +72,7 @@ export const AuthPage: React.FC = () => {
   const styles = {
     container: {
       display: "flex",
-      flexDirection: isMobile ? "column" as const : "row" as const,
+      flexDirection: isMobile ? ("column" as const) : ("row" as const),
       justifyContent: "center",
       alignItems: "center",
       height: "100vh",
@@ -152,15 +151,24 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div style={{
-      backgroundImage: `url(${BG})`,
-      backgroundRepeat: "repeat",
-      backgroundSize: "contain",
-      backgroundPosition: "center",
-    }}>
+    <div
+      style={{
+        backgroundImage: `url(${BG})`,
+        backgroundRepeat: "repeat",
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+      }}
+    >
       <div style={styles.container}>
         {/* Left Info Card */}
-        <div style={{ ...styles.card, ...styles.infoCard, top: isMobile ? "5%" : 0, position: isMobile ? "relative" : "static" }}>
+        <div
+          style={{
+            ...styles.card,
+            ...styles.infoCard,
+            top: isMobile ? "5%" : 0,
+            position: isMobile ? "relative" : "static",
+          }}
+        >
           <h2>{isLogin ? "New Here?" : "Already have an account?"}</h2>
           <p style={styles.infoText}>
             {isLogin
@@ -173,7 +181,13 @@ export const AuthPage: React.FC = () => {
         </div>
 
         {/* Right Form Card */}
-        <div style={{ ...styles.card, position: isMobile ? "relative" : "static", top: isMobile ? "-5%" : 0 }}>
+        <div
+          style={{
+            ...styles.card,
+            position: isMobile ? "relative" : "static",
+            top: isMobile ? "-5%" : 0,
+          }}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={isLogin ? "login" : "register"}
