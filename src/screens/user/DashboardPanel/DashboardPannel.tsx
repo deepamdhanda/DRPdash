@@ -3,10 +3,12 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "react-datepicker/dist/react-datepicker.css";
 import "./dashboardPannel.css";
 import { FaSignOutAlt } from "react-icons/fa";
-import Cookies from "js-cookie";
 import logoImg from "../../../assets/logo.png";
 import logoImg1 from "../../../assets/logo1.png";
 import SupportChatWidget from "./SupportChatWidget";
+import axios from "axios";
+import { drpCrmBaseUrl } from "../../../axios/urls";
+import { useUserStore } from "../../../store/useUserStore";
 
 type NavLink = {
   name: string;
@@ -48,11 +50,14 @@ const navLinks: NavLink[] = [
 ];
 
 const UserPanel: React.FC = () => {
+  const { username } = useUserStore();
   const [activeLink, setActiveLink] = useState<TNavLinkName>("");
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = window.innerWidth < 787;
+  const { reset } = useUserStore();
+
   // Automatically sync active link with current URL
   useEffect(() => {
     const currentPath = location.pathname;
@@ -65,12 +70,15 @@ const UserPanel: React.FC = () => {
     }
   }, [location.pathname]);
 
-  const handleLinkClick = (name: string, path?: string) => {
+  const handleLinkClick = async (name: string, path?: string) => {
     setSidebarOpen(false);
     if (name === "SignOut") {
-      // Handle sign out logic here
-      console.log("Signing out...");
-      Cookies.remove("authToken");
+      reset();
+      await axios.post(
+        `${drpCrmBaseUrl}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
       navigate("/login");
       return;
     }
@@ -174,7 +182,7 @@ const UserPanel: React.FC = () => {
                   fontWeight: "200",
                 }}
               >
-                Hello, {Cookies.get("username")}!
+                Hello, {username}!
               </div>
               <div className="nav-list-1">
                 <center>

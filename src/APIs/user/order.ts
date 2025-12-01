@@ -1,7 +1,12 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
 import { orders_url } from "../../URLs/user";
-export const getAllOrders = async (page = 1, limit = 10, filters = {}, subPath = "") => {
+export const getAllOrders = async (
+  page = 1,
+  limit = 100,
+  filters = {},
+  subPath = ""
+) => {
   try {
     // We don't need to manually build the URL with query parameters anymore
     // as we'll pass all parameters through the axios params object
@@ -31,7 +36,6 @@ export const getAllOrders = async (page = 1, limit = 10, filters = {}, subPath =
   }
 };
 
-
 export const createOrder = async (data: any) => {
   try {
     // console.log(data)
@@ -47,7 +51,7 @@ export const createOrder = async (data: any) => {
 
 export const updateOrder = async (id: string, data: any) => {
   try {
-    data.product_sku_id = undefined
+    data.product_sku_id = undefined;
     await appAxios.patch(`${orders_url}/${id}`, data);
     toast.success("Order updated successfully!");
     return true;
@@ -62,15 +66,15 @@ export const getAllFilters = async (flagged = false) => {
     const response = await appAxios.get(`${orders_url}/filters`, {
       withCredentials: true,
       params: {
-        flagged
-      }
+        flagged,
+      },
     });
     return response.data as any;
   } catch (error: any) {
     toast.error("Failed to fetch pools.");
     throw error;
   }
-}
+};
 
 export const deleteOrder = async (id: string) => {
   try {

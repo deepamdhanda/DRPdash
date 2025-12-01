@@ -5,7 +5,7 @@ import { ProductSKU } from "../../screens/user/ProductSKUs";
 
 export const getAllProductSKUs = async (
   page: number = 1,
-  limit: number = 10
+  limit: number = 100
 ) => {
   try {
     const response = await appAxios.get(

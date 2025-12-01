@@ -66,7 +66,7 @@
 //         navigate(redirectPath);
 //       }
 //     }
-//   }, [location.pathname, location.search, navigate]);
+//   }, [ , location.search, navigate]);
 
 //   return (
 //     <>
@@ -86,10 +86,33 @@
 
 // export default App;
 
+import axios from "axios";
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { drpCrmBaseUrl } from "./axios/urls";
+import { useUserStore } from "./store/useUserStore";
+import { useLocation } from "react-router-dom";
 
 const App = () => {
+  const { username, setUsername } = useUserStore();
+  const location = useLocation();
+  const setUserName = async () => {
+    try {
+      const { data } = await axios.get(`${drpCrmBaseUrl}/api/auth/verify/me`, {
+        withCredentials: true,
+      });
+      const userString = data.username;
+      setUsername(userString);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    if (!username) {
+      setUserName();
+    }
+  }, [location.pathname]);
   return (
     <>
       <ToastContainer

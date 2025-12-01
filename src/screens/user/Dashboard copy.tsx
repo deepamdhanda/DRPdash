@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Cookies from "js-cookie";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { getOrdersSummary } from "../../APIs/user/dashboard";
@@ -9,9 +8,10 @@ import { ChannelAccount } from "./ChannelAccounts";
 import DatePicker from "react-datepicker";
 import { ProductSKU } from "./ProductSKUs";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
+import { useUserStore } from "../../store/useUserStore";
 
 export const Dashboard: React.FC = () => {
-  const username = Cookies.get("username") || "User";
+  const { username } = useUserStore();
 
   // Filters and data states
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);

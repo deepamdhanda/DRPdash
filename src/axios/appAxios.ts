@@ -2,6 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import _ from "lodash";
 import { drpCrmBaseUrl } from "./urls";
+import { useUserStore } from "../store/useUserStore";
 
 const Axios = axios.create({
   baseURL: drpCrmBaseUrl,
@@ -34,10 +35,12 @@ Axios.interceptors.response.use(
 
   async (error) => {
     const status = error?.response?.status;
-
+    const reset = useUserStore.getState().reset;
     if (status === 401) {
-      console.log("Unauthorized"); // 🔥 ONLY this
+      console.log("Unauthorized");
+
       try {
+        reset();
         await axios.post(
           `${drpCrmBaseUrl}/api/auth/logout`,
           {},

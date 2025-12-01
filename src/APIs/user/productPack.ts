@@ -3,17 +3,27 @@ import { appAxios } from "../../axios/appAxios";
 import { productPacks_url } from "../../URLs/user";
 import { ProductPack } from "../../screens/user/ProductPacks";
 
-export const getAllProductPacks = async () => {
+export const getAllProductPacks = async (
+  page: number = 1,
+  limit: number = 100
+) => {
   try {
-    const response = await appAxios.get(productPacks_url);
-    return response.data as ProductPack[];
+    const response = await appAxios.get(
+      `${productPacks_url}?page=${page}&limit=${limit}`
+    );
+    return {
+      data: response.data.data as ProductPack[],
+      total: response.data.totalRecords,
+    };
   } catch (error: any) {
     toast.error("Failed to fetch productPacks.");
     throw error;
   }
 };
 
-export const createProductPack = async (data: Omit<ProductPack, "_id" | "created_by" | "status">) => {
+export const createProductPack = async (
+  data: Omit<ProductPack, "_id" | "created_by" | "status">
+) => {
   try {
     const response = await appAxios.post(productPacks_url, data);
     toast.success("ProductPack created successfully!");

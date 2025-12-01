@@ -116,7 +116,7 @@ const ProductSKUs: React.FC = () => {
       setTotalRecords(skuData.total);
       setWarehouses(warehousesData);
       setProducts(productsData.data);
-      setProductPacks(packsData);
+      setProductPacks(packsData.data);
     } catch (error) {
       console.error("Error loading initial data", error);
     } finally {
@@ -160,10 +160,10 @@ const ProductSKUs: React.FC = () => {
     setImagePreview(productSKU.product_sku_image);
     setProductSKUId(productSKU.product_sku_id || "");
 
-    const preSelected = productSKU.products.map((prod) => ({
-      product_id: prod.product_id._id,
-      product_name: prod.product_id.product_name,
-      quantity: prod.quantity,
+    const preSelected = (productSKU.products || []).map((prod) => ({
+      product_id: prod.product_id?._id ?? "",
+      product_name: prod.product_id?.product_name ?? "",
+      quantity: prod.quantity ?? 0,
     }));
 
     setSelectedProducts(preSelected);
@@ -288,10 +288,10 @@ const ProductSKUs: React.FC = () => {
     {
       name: "Dimensions & Weight",
       selector: (row: ProductSKU) => {
-        const totalWeight = row.products.reduce(
-          (sum, p) => sum + p.product_id.product_weight * p.quantity,
-          0
-        );
+        const totalWeight = row.products.reduce((sum, p) => {
+          const weight = p?.product_id?.product_weight ?? 0;
+          return sum + weight * (p.quantity ?? 0);
+        }, 0);
         return (
           <>
             {totalWeight} gm <br />
