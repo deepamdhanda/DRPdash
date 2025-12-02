@@ -3,17 +3,27 @@ import { appAxios } from "../../axios/appAxios";
 import { codRemittances_url } from "../../URLs/user";
 import { CODRemittance } from "../../screens/user/CODRemittances";
 
-export const getAllCODRemittances = async () => {
+export const getAllCODRemittances = async (
+  page: number = 1,
+  limit: number = 100
+) => {
   try {
-    const response = await appAxios.get(codRemittances_url);
-    return response.data as CODRemittance[];
+    const response = await appAxios.get(
+      `${codRemittances_url}?page=${page}&limit=${limit}`
+    );
+    return {
+      data: response.data.data as CODRemittance[],
+      total: response.data.totalRecords,
+    };
   } catch (error: any) {
     toast.error("Failed to fetch codRemittances.");
     throw error;
   }
 };
 
-export const createCODRemittance = async (data: Omit<CODRemittance, "_id" | "created_by" | "status">) => {
+export const createCODRemittance = async (
+  data: Omit<CODRemittance, "_id" | "created_by" | "status">
+) => {
   try {
     const response = await appAxios.post(codRemittances_url, data);
     toast.success("CODRemittance created successfully!");

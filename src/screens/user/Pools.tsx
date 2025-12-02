@@ -88,6 +88,9 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const Pools: React.FC = () => {
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
   /* --- Table state --- */
   const [pools, setPools] = useState<Pool[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,13 +151,14 @@ const Pools: React.FC = () => {
   /* --- Lifecycle: fetch pools --- */
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [page, limit]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const poolsData = await getAllPools();
-      setPools(poolsData);
+      const poolsData = await getAllPools(page, limit);
+      setPools(poolsData.data);
+      setTotalRecords(poolsData.total);
     } catch (error) {
       toast.error("Failed to load pools");
     } finally {
@@ -982,13 +986,30 @@ const Pools: React.FC = () => {
           <Button onClick={openNewPoolModal}>Add New Pool</Button>
         </Col>
       </Row>
-      <DataTable
-        columns={columns}
-        data={pools}
-        progressPending={loading}
-        pagination
-        highlightOnHover
-      />
+      {loading ? (
+        "Loading..."
+      ) : (
+        <DataTable
+          title="Your Pools"
+          columns={columns}
+          data={pools}
+          pagination
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
+          responsive
+        />
+      )}
+
       {/* Wizard Modal */}
       <Modal
         size="lg"

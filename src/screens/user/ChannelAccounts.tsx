@@ -77,7 +77,7 @@ const ChannelAccounts: React.FC = () => {
       ]);
       setChannelAccounts(channelAccountsData);
       setChannels(channelsData);
-      setPools(poolsData);
+      setPools(poolsData.data);
     } catch (error) {
       console.error("Error loading initial data", error);
     } finally {
