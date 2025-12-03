@@ -4,10 +4,8 @@ import DataTable from "react-data-table-component";
 import "quill/dist/quill.snow.css";
 
 import Quill from "quill/core";
-
 import Toolbar from "quill/modules/toolbar";
 import Snow from "quill/themes/snow";
-
 import Bold from "quill/formats/bold";
 import Italic from "quill/formats/italic";
 import Header from "quill/formats/header";
@@ -32,7 +30,6 @@ import { getAllProductPacks } from "../../APIs/user/productPack";
 import { ProductPack } from "./ProductPacks";
 import DescriptionEditor from "./description";
 import { createAmazonS3 } from "../../APIs/user/amazonS3";
-import { toast } from "react-toastify";
 
 interface ProductSKUAttribute {
   key: string;
@@ -73,50 +70,60 @@ export interface ProductSKU {
 }
 
 const ProductSKUs: React.FC = () => {
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
   const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [showModal, setShowModal] = useState(false);
   const [productPacks, setProductPacks] = useState<ProductPack[]>([]);
+
+  const [showModal, setShowModal] = useState(false);
   const [editingProductSKU, setEditingProductSKU] = useState<ProductSKU | null>(
     null
   );
   const [productSKUAttributes, setProductSKUAttributes] = useState<
     ProductSKUAttribute[]
   >([]);
-  const [imagePreview, setImagePreview] = useState<string>("");
   const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Partial<any>[]>([]);
-  const [productSKUId, setProductSKUId] = useState<string>(""); // New state for ProductSKU ID
-  const [calculatedWeight, setCalculatedWeight] = useState<number>(0); // New state for calculated weight
+  const [productSKUId, setProductSKUId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string>("");
   const [imageName, setImageName] = useState<string | null>(null);
+
+  const [calculatedWeight, setCalculatedWeight] = useState<number>(0);
+
+  // PAGINATION
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+
   useEffect(() => {
-    const fetchInitialData = async () => {
-      setLoading(true);
-      try {
-        const [productSKUData, warehouseData, productData, productPackData] = await Promise.all([
-          getAllProductSKUs(),
+    fetchInitialData();
+  }, [page, limit]); // fetch again when pagination changes
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      const [skuData, warehousesData, productsData, packsData] =
+        await Promise.all([
+          getAllProductSKUs(page, limit),
           getAllWarehouses(),
           getAllProducts(),
           getAllProductPacks(),
         ]);
-        setProductSKUs(productSKUData);
-        setWarehouses(warehouseData);
-        setProducts(productData);
-        setProductPacks(productPackData);
-      } catch (error) {
-        console.error("Error loading initial data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchInitialData();
-  }, []);
+      setProductSKUs(skuData.data);
+      setTotalRecords(skuData.total);
+      setWarehouses(warehousesData);
+      setProducts(productsData.data);
+      setProductPacks(packsData.data);
+    } catch (error) {
+      console.error("Error loading initial data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Recalculate weight whenever selectedProducts changes
   useEffect(() => {
     const totalWeight = selectedProducts.reduce((total, sel) => {
       const product = products.find((p) => p._id === sel.product_id);
@@ -132,8 +139,9 @@ const ProductSKUs: React.FC = () => {
     setImagePreview("");
     setWarehouseStocks([]);
     setSelectedProducts([]);
-    setProductSKUId(""); // Reset ProductSKU ID
-    setCalculatedWeight(0); // Reset calculated weight
+    setProductSKUId("");
+    setCalculatedWeight(0);
+    setDescription("");
   };
 
   const handleShow = () => {
@@ -150,28 +158,24 @@ const ProductSKUs: React.FC = () => {
     setDescription(productSKU.product_sku_description || "");
     setProductSKUAttributes(productSKU.product_sku_attributes || []);
     setImagePreview(productSKU.product_sku_image);
-    setProductSKUId(productSKU.product_sku_id || ""); // Set ProductSKU ID
+    setProductSKUId(productSKU.product_sku_id || "");
 
-    // Pre-select the products with their IDs and quantities
-    const preSelectedProducts = productSKU.products.map((product) => ({
-      product_id: product.product_id._id, // Ensure product_id is set
-      product_name: product.product_id.product_name,
-      quantity: product.quantity, // Ensure quantity is set
+    const preSelected = (productSKU.products || []).map((prod) => ({
+      product_id: prod.product_id?._id ?? "",
+      product_name: prod.product_id?.product_name ?? "",
+      quantity: prod.quantity ?? 0,
     }));
 
-    setSelectedProducts(preSelectedProducts);
+    setSelectedProducts(preSelected);
     setShowModal(true);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: any) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageName(file?.name);
-      console.log("Selected file:", file);
+      setImageName(file.name);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -196,46 +200,7 @@ const ProductSKUs: React.FC = () => {
     setProductSKUAttributes(updated);
   };
 
-  const getCommonWarehouses = (): string[] => {
-    if (selectedProducts.length === 0) {
-      // If no products are selected, return all warehouses
-      return warehouses.map((w) => w._id);
-    }
-
-    // Get the list of warehouses for each selected product
-    const selectedProductWarehouses = selectedProducts.map((sel) => {
-      const product = products.find((p) => p._id === sel.product_id);
-      return product
-        ? product.warehouse
-          .filter((w) => w.stock > 0)
-          .map((w) => w.warehouse._id)
-        : [];
-    });
-
-    // Find the intersection of all selected product warehouses
-    return selectedProductWarehouses.reduce((common, current) => {
-      return common.filter((wh) => current.includes(wh));
-    });
-  };
   const handleProductChange = (index: number, productId: string) => {
-    const product = products.find((p) => p._id === productId);
-    if (!product) return;
-
-    const commonWarehouses = getCommonWarehouses();
-    const productWarehouses = product.warehouse.map((w) => w.warehouse._id);
-
-    if (!productWarehouses.some((wh) => commonWarehouses.includes(wh))) {
-      alert("Selected product must have at least one common warehouse.");
-      return;
-    }
-
-    if (
-      selectedProducts.some((p, i) => i !== index && p.product_id === productId)
-    ) {
-      alert("Product already added to this SKU.");
-      return;
-    }
-
     const updated = [...selectedProducts];
     updated[index].product_id = productId;
     setSelectedProducts(updated);
@@ -248,29 +213,7 @@ const ProductSKUs: React.FC = () => {
   };
 
   const addProduct = () => {
-    const selectedIds = selectedProducts.map((p) => p.product_id);
-    const commonWarehouses = getCommonWarehouses();
-
-    // Filter products that are not already selected and have at least one common warehouse
-    const availableProducts = products.filter((p) => {
-      const productWarehouses = p.warehouse.map((w) => w.warehouse._id);
-      return (
-        p._id &&
-        !selectedIds.includes(p._id) &&
-        productWarehouses.some((wh) => commonWarehouses.includes(wh))
-      );
-    });
-
-    if (availableProducts.length === 0) {
-      alert("No eligible product left to add.");
-      return;
-    }
-
-    // Add the first available product to the selected products list
-    setSelectedProducts([
-      ...selectedProducts,
-      { product_id: availableProducts[0]._id, quantity: 1 },
-    ]);
+    setSelectedProducts([...selectedProducts, { product_id: "", quantity: 1 }]);
   };
 
   const removeProduct = (index: number) => {
@@ -279,30 +222,21 @@ const ProductSKUs: React.FC = () => {
     setSelectedProducts(updated);
   };
 
-  const handleToggleStatus = async (productSKU: ProductSKU) => {
+  const handleToggleStatus = async (row: ProductSKU) => {
+    const newStatus = row.status === "active" ? "inactive" : "active";
     try {
-      const updatedStatus =
-        productSKU.status === "active" ? "inactive" : "active";
-      await updateProductSKU(productSKU._id!, {
-        ...productSKU,
-        status: updatedStatus,
-      });
-      setProductSKUs((prev) =>
-        prev.map((sku) =>
-          sku._id === productSKU._id ? { ...sku, status: updatedStatus } : sku
-        )
-      );
-    } catch (error) {
-      console.error("Error toggling status:", error);
+      await updateProductSKU(row._id!, { ...row, status: newStatus });
+      fetchInitialData();
+    } catch (err) {
+      console.error("Error toggling status:", err);
     }
   };
 
   const handleSubmit = async (e: any) => {
-
     e.preventDefault();
     const form = e.currentTarget;
 
-    const newProductSKU: any = {
+    const newSKU: any = {
       product_sku_id: productSKUId,
       product_sku_name: (
         form.elements.namedItem("product_sku_name") as HTMLInputElement
@@ -310,40 +244,33 @@ const ProductSKUs: React.FC = () => {
       product_sku_description: description,
       product_sku_weight: calculatedWeight,
       product_sku_attributes: productSKUAttributes,
-      product_sku_image: imagePreview || "",
       warehouse: warehouseStocks,
+      product_sku_image: imagePreview,
+      pack_id: (form.elements.namedItem("pack_id") as HTMLSelectElement).value,
       products: selectedProducts,
-      pack_id: (form.elements.namedItem("pack_id") as HTMLSelectElement)
-        .value,
       status: editingProductSKU?.status || "active",
     };
 
     try {
-      let imageData = null;
       if (imageName) {
-        imageData = await createAmazonS3(`productSKU/${Date.now()}-${imageName.replace(/ /g, "_")}`, imagePreview);
-        newProductSKU.product_sku_image = imageData.url;
-      }
-      if (!newProductSKU.product_sku_image) {
-        toast.error("Please upload an image for the Product SKU.");
-        return;
-      }
-      if (editingProductSKU) {
-        await updateProductSKU(editingProductSKU._id!, newProductSKU);
-        setProductSKUs((prev) =>
-          prev.map((p) =>
-            p._id === editingProductSKU._id
-              ? { ...newProductSKU, _id: editingProductSKU._id }
-              : p
-          )
+        const img = await createAmazonS3(
+          `productSKU/${Date.now()}-${imageName.replace(/ /g, "_")}`,
+          imagePreview
         );
-      } else {
-        const created = await createProductSKU(newProductSKU);
-        setProductSKUs((prev) => [...prev, created]);
+        newSKU.product_sku_image = img.url;
       }
+
+      if (editingProductSKU) {
+        await updateProductSKU(editingProductSKU._id!, newSKU);
+      } else {
+        await createProductSKU(newSKU);
+        setPage(1); // reset to page 1 on create
+      }
+
+      fetchInitialData();
       handleClose();
     } catch (err) {
-      console.error("Error saving productSKU", err);
+      console.error("Error saving SKU", err);
     }
   };
 
@@ -359,46 +286,42 @@ const ProductSKUs: React.FC = () => {
       sortable: true,
     },
     {
-      name: "Dimensions and Weight",
+      name: "Dimensions & Weight",
       selector: (row: ProductSKU) => {
-        let totalWeight = 0;
-        row.products.forEach((product) => {
-          totalWeight += product.product_id.product_weight * product.quantity;
-
-        });
+        const totalWeight = row.products.reduce((sum, p) => {
+          const weight = p?.product_id?.product_weight ?? 0;
+          return sum + weight * (p.quantity ?? 0);
+        }, 0);
         return (
           <>
-            {totalWeight} kg<br />
+            {totalWeight} gm <br />
             {row.pack_id?.name}
           </>
         );
-
       },
-      sortable: true,
     },
     {
       name: "Status",
       selector: (row: ProductSKU) =>
         row.status === "active" ? "🟢 Active" : "🔴 Inactive",
-      sortable: true,
     },
     {
       name: "Actions",
       cell: (row: ProductSKU) => (
         <>
           <Button
-            variant="outline-primary"
             size="sm"
+            variant="outline-primary"
             className="me-2"
             onClick={() => handleEdit(row)}
           >
             Edit
           </Button>
           <Button
+            size="sm"
             variant={
               row.status === "active" ? "outline-danger" : "outline-success"
             }
-            size="sm"
             onClick={() => handleToggleStatus(row)}
           >
             {row.status === "active" ? "Deactivate" : "Activate"}
@@ -417,19 +340,27 @@ const ProductSKUs: React.FC = () => {
 
       {loading ? (
         <p>Loading...</p>
-      ) : productSKUs.length === 0 ? (
-        <p>No Product SKUs found.</p>
       ) : (
         <DataTable
           title="Your Product SKUs"
           columns={columns as any}
           data={productSKUs}
           pagination
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => setPage(p)}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
           highlightOnHover
           responsive
         />
       )}
 
+      {/* MODAL */}
       <Modal show={showModal} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>
@@ -439,83 +370,76 @@ const ProductSKUs: React.FC = () => {
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Row>
-              {/* Left Column */}
-              <Col md={12}>
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Product SKU ID</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="product_sku_id"
-                        value={productSKUId}
-                        onChange={(e) => setProductSKUId(e.target.value)}
-                        required
-                        disabled={!!editingProductSKU}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Product SKU Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="product_sku_name"
-                        defaultValue={editingProductSKU?.product_sku_name || ""}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <DescriptionEditor value={description} onChange={setDescription} />
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product SKU ID</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={productSKUId}
+                    disabled={!!editingProductSKU}
+                    required
+                    onChange={(e) => setProductSKUId(e.target.value)}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Product SKU Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="product_sku_name"
+                    defaultValue={editingProductSKU?.product_sku_name || ""}
+                    required
+                  />
+                </Form.Group>
+
+                <DescriptionEditor
+                  value={description}
+                  onChange={setDescription}
+                />
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Select Pack</Form.Label>
+                  <Form.Select
+                    name="pack_id"
+                    defaultValue={editingProductSKU?.pack_id?._id || ""}
+                    required
+                  >
+                    <option value="">Select Packaging</option>
+                    {productPacks.map((pack) => (
+                      <option key={pack._id} value={pack._id}>
+                        {pack.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
               </Col>
+
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Weight (gm)</Form.Label>
                   <Form.Control
                     type="number"
-                    name="product_sku_weight"
-                    value={calculatedWeight} // Display the calculated weight
+                    value={calculatedWeight}
                     readOnly
                   />
                 </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Select Pack</Form.Label>
-                  <Form.Select
-                    name="pack_id"
-                    required
-                    defaultValue={editingProductSKU?.pack_id?._id || ""}
-                  >
-                    <option value="">Select Packaging</option>
-                    {productPacks.map((productPack) => (
-                      <option key={productPack._id} value={productPack._id}>
-                        {productPack.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
 
-              </Col>
-
-              {/* Right Column */}
-              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Image</Form.Label>
                   <Form.Control
                     type="file"
                     accept="image/*"
-                    required={!editingProductSKU}
                     onChange={handleImageChange}
                   />
                   {imagePreview && (
                     <img
                       src={imagePreview}
-                      alt="Preview"
-                      className="mt-3 w-100 rounded shadow-sm"
+                      className="mt-2 w-100 rounded shadow-sm"
                       style={{ maxHeight: "200px", objectFit: "cover" }}
                     />
                   )}
                 </Form.Group>
+
                 <Form.Group className="mb-3">
                   <Form.Label>Attributes</Form.Label>
                   {productSKUAttributes.map((attr, index) => (
@@ -544,8 +468,8 @@ const ProductSKUs: React.FC = () => {
                       </Col>
                       <Col xs="auto">
                         <Button
-                          variant="danger"
                           size="sm"
+                          variant="danger"
                           onClick={() => removeAttribute(index)}
                         >
                           ✕
@@ -564,49 +488,45 @@ const ProductSKUs: React.FC = () => {
               </Col>
             </Row>
 
-            {/* Products Section */}
-            <h5>Products</h5>
-            {selectedProducts.map((selected, idx) => (
+            {/* PRODUCTS SECTION */}
+            <h5 className="mt-3">Products</h5>
+            {selectedProducts.map((sel, idx) => (
               <Row key={idx} className="mb-2">
                 <Col>
-                  <Form.Control
-                    as="select"
-                    value={selected.product_id} // Pre-select the product
+                  <Form.Select
+                    value={sel.product_id}
                     onChange={(e) => handleProductChange(idx, e.target.value)}
-                    disabled={!!editingProductSKU} // Disable dropdown in edit mode
                   >
                     <option value="">Select Product</option>
-                    {products.map((product) => (
-                      <option key={product._id} value={product._id} selected={selected.product_id === product._id}>
-                        {product.product_name}
+                    {products.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.product_name}
                       </option>
                     ))}
-                  </Form.Control>
+                  </Form.Select>
                 </Col>
                 <Col>
                   <Form.Control
                     type="number"
-                    value={selected.quantity} // Pre-fill the quantity
+                    value={sel.quantity}
                     onChange={(e) =>
-                      handleProductQuantityChange(idx, parseInt(e.target.value))
+                      handleProductQuantityChange(idx, Number(e.target.value))
                     }
                   />
                 </Col>
                 <Col xs="auto">
-                  <Button
-                    variant="danger"
-                    onClick={() => removeProduct(idx)}
-                    disabled={!!editingProductSKU} // Disable remove button in edit mode
-                  >
+                  <Button variant="danger" onClick={() => removeProduct(idx)}>
                     Remove
                   </Button>
                 </Col>
               </Row>
             ))}
-            {!editingProductSKU && ( // Hide "Add Product" button in edit mode
-              <Button onClick={addProduct}>Add Product</Button>
-            )}
+
+            <Button onClick={addProduct} className="mt-2">
+              Add Product
+            </Button>
           </Modal.Body>
+
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>
               Cancel
@@ -617,7 +537,7 @@ const ProductSKUs: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div >
+    </div>
   );
 };
 

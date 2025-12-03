@@ -54,13 +54,17 @@ export type TWalletRecharge = {
 };
 
 const WalletTransactionsComponent = () => {
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const fetchWalletTransactions = async () => {
     try {
       setLoading(true);
-      const data = await getAllWallets();
-      setWallets(data);
+      const data = await getAllWallets(page, limit);
+      setWallets(data.data);
+      setTotalRecords(data.total);
     } catch (error) {
       console.error("Error fetching wallets", error);
     } finally {
@@ -166,16 +170,16 @@ const WalletTransactionsComponent = () => {
       selector: (row: Wallet) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
     },
   ];
   useEffect(() => {
     fetchWalletTransactions();
-  }, []);
+  }, [page, limit]);
   return (
     <>
       {loading ? (
@@ -183,17 +187,36 @@ const WalletTransactionsComponent = () => {
       ) : wallets.length === 0 ? (
         <p>No wallets Transactions found.</p>
       ) : (
+        // <DataTable
+        //   title="Your Wallet Transactions"
+        //   data={wallets}
+        //   columns={columns as any}
+        //   highlightOnHover
+        //   pagination
+        //   paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
+        //   responsive
+        //   striped
+        //   persistTableHead
+        //   progressPending={wallets.length === 0}
+        // />
         <DataTable
           title="Your Wallet Transactions"
-          data={wallets}
           columns={columns as any}
-          highlightOnHover
+          data={wallets}
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
           responsive
-          striped
-          persistTableHead
-          progressPending={wallets.length === 0}
         />
       )}
     </>
@@ -396,7 +419,7 @@ const Wallets: React.FC = () => {
 
   const fetchPools = async () => {
     try {
-      setPools(await getAllPools());
+      setPools((await getAllPools()).data);
     } catch (error) {
       console.error("Error fetching pools", error);
     }
@@ -438,10 +461,11 @@ const Wallets: React.FC = () => {
                 role="button"
                 onClick={() => setActiveTab(tab_value)}
                 key={tab_key}
-                className={`me-3 fs-5 ${activeTab === tab_value
-                  ? "text-decoration-underline "
-                  : "text-secondary"
-                  }`}
+                className={`me-3 fs-5 ${
+                  activeTab === tab_value
+                    ? "text-decoration-underline "
+                    : "text-secondary"
+                }`}
               >
                 {tab_key.replace("_", " ")}
               </div>

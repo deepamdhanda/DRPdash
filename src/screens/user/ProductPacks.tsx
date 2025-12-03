@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllProductPacks, createProductPack, updateProductPack } from "../../APIs/user/productPack";
+import {
+  getAllProductPacks,
+  createProductPack,
+  updateProductPack,
+} from "../../APIs/user/productPack";
 
 export interface User {
   _id: string;
@@ -26,15 +30,22 @@ export interface ProductPack {
 
 const ProductPacks: React.FC = () => {
   const [product_packs, setProductPacks] = useState<ProductPack[]>([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingProductPack, setEditingProductPack] = useState<ProductPack | null>(null);
+  const [editingProductPack, setEditingProductPack] =
+    useState<ProductPack | null>(null);
   const [dimensions, setDimensions] = useState({
     length: 0,
     breadth: 0,
     height: 0,
   });
   const [volumetricWeight, setVolumetricWeight] = useState<number>(0);
+
+  // Pagination states
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+
   useEffect(() => {
     // Recalculate volumetric weight whenever dimensions change
     const { length, breadth, height } = dimensions;
@@ -42,20 +53,21 @@ const ProductPacks: React.FC = () => {
     setVolumetricWeight(calculatedVolumetricWeight * 1000);
   }, [dimensions]);
 
-
+  // Fetch product packs whenever page/limit changes
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    fetchProductPacks(page, limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit]);
 
-  const fetchInitialData = async () => {
+  const fetchProductPacks = async (pageParam = page, limitParam = limit) => {
     setLoading(true);
     try {
-      const [product_packsData] = await Promise.all([
-        getAllProductPacks(),
-      ]);
-      setProductPacks(product_packsData);
+      const productPackData = await getAllProductPacks(pageParam, limitParam);
+      // Expected: { totalRecords: number, data: ProductPack[] }
+      setTotalRecords(productPackData.total);
+      setProductPacks(productPackData.data);
     } catch (error) {
-      console.error("Error loading product_packs or users", error);
+      console.error("Error loading product_packs", error);
     } finally {
       setLoading(false);
     }
@@ -64,29 +76,42 @@ const ProductPacks: React.FC = () => {
   const handleClose = () => {
     setShowModal(false);
     setEditingProductPack(null);
+    setDimensions({ length: 0, breadth: 0, height: 0 });
+    setVolumetricWeight(0);
   };
 
   const handleShow = () => setShowModal(true);
 
-  const handleDimensionChange = (field: "length" | "breadth" | "height", value: number) => {
+  const handleDimensionChange = (
+    field: "length" | "breadth" | "height",
+    value: number
+  ) => {
     setDimensions((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
+
   const handleEdit = (product_pack: ProductPack) => {
     setEditingProductPack(product_pack);
+    setDimensions({
+      length: product_pack.length,
+      breadth: product_pack.breadth,
+      height: product_pack.height,
+    });
     setShowModal(true);
   };
 
   const handleToggleStatus = async (product_pack: ProductPack) => {
     const newStatus = product_pack.status === "active" ? "inactive" : "active";
     if (
-      window.confirm(`Are you sure you want to mark this product pack as ${newStatus}?`)
+      window.confirm(
+        `Are you sure you want to mark this product pack as ${newStatus}?`
+      )
     ) {
       try {
         await updateProductPack(product_pack._id, { status: newStatus });
-        fetchInitialData();
+        await fetchProductPacks(); // Refresh current page
       } catch (error) {
         console.error("Error updating status", error);
       }
@@ -122,8 +147,10 @@ const ProductPacks: React.FC = () => {
         await updateProductPack(editingProductPack._id, formData);
       } else {
         await createProductPack(formData);
+        // Optional: go back to first page after create
+        setPage(1);
       }
-      fetchInitialData();
+      await fetchProductPacks(); // Refresh list for current page
       handleClose();
     } catch (error) {
       console.error("Error saving product pack", error);
@@ -138,8 +165,8 @@ const ProductPacks: React.FC = () => {
           {row.status === "active"
             ? "🟢"
             : row.status === "inactive"
-              ? "🔴"
-              : "❌"}{" "}
+            ? "🔴"
+            : "❌"}{" "}
           <strong>{row.name}</strong>
         </>
       ),
@@ -159,10 +186,10 @@ const ProductPacks: React.FC = () => {
       selector: (row: ProductPack) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
     },
     {
@@ -208,9 +235,19 @@ const ProductPacks: React.FC = () => {
           title="Your Product Packs"
           data={product_packs}
           columns={columns as any}
-          highlightOnHover
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
           responsive
           striped
           persistTableHead
@@ -219,7 +256,9 @@ const ProductPacks: React.FC = () => {
 
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingProductPack ? "Edit ProductPack" : "Create ProductPack"}</Modal.Title>
+          <Modal.Title>
+            {editingProductPack ? "Edit ProductPack" : "Create ProductPack"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>

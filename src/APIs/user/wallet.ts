@@ -19,12 +19,15 @@ interface IWalletrechargeResponse {
   };
 }
 
-export const getAllWallets = async () => {
+export const getAllWallets = async (page: number = 1, limit: number = 100) => {
   try {
-    const response = await appAxios.get(wallets_url, {
-      withCredentials: true,
-    });
-    return response.data as Wallet[];
+    const response = await appAxios.get(
+      `${wallets_url}?page=${page}&limit=${limit}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return { data: response.data.data as Wallet[], total: response.data.total };
   } catch (error: any) {
     toast.error("Failed to fetch wallets.");
     throw error;
@@ -64,7 +67,7 @@ export const verifyPayment = async (wallet_recharge_id: any, response: any) => {
     );
     console.log("Payment response:", response1.data);
     toast.success(response1.data);
-    return true
+    return true;
   } catch (error: any) {
     console.error("Error updating payment:", error);
     toast.error("Failed to update payment: " + error.message);
@@ -83,7 +86,8 @@ export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
       pool_id: pool,
     });
 
-    const { _id: wallet_recharge_id, razorpay_order_id: order_id } = response.data;
+    const { _id: wallet_recharge_id, razorpay_order_id: order_id } =
+      response.data;
 
     return new Promise((resolve) => {
       const options = {
@@ -92,7 +96,8 @@ export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
         currency,
         name: "OrderzUp",
         description: `Add ₹${amount / 100} to ${pool}`,
-        image: "https://orderzup.com/wp-content/uploads/2025/05/logo-orderzup-real.png",
+        image:
+          "https://orderzup.com/wp-content/uploads/2025/05/logo-orderzup-real.png",
         order_id,
         handler: async (response: any) => {
           try {
@@ -128,21 +133,23 @@ export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
     return false; // ❌ Initial request or setup failed
   }
 };
-export const transferPayment = async (amount: any, remittanceId: any): Promise<any> => {
+export const transferPayment = async (
+  amount: any,
+  remittanceId: any
+): Promise<any> => {
   try {
     const response = await appAxios.post(walletRecharge_url + "/transfer", {
       amount,
       remittance_id: remittanceId,
     });
     toast.success("Transfered Successfully.");
-    return response
+    return response;
   } catch (error: any) {
     console.error(error);
     toast.error("Failed to make payment." + error);
     return false; // ❌ Initial request or setup failed
   }
 };
-
 
 export const createWallet = async (data: any) => {
   try {

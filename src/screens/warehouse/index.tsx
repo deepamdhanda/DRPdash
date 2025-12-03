@@ -7,7 +7,7 @@ import { ProductPacks } from "./ProductPacks.tsx";
 import { ScanOrders } from "./ScanOrders.tsx";
 import { NDRORders } from "./NDROders.tsx";
 import { FlaggedOrders } from "../warehouse/FlaggedOrders.tsx";
-import { Invoices } from "../Invoices/Invoices.tsx";
+// import { Invoices } from "../Invoices/Invoices.tsx";
 
 export const warehouseRoutes = [
   {

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Cookies from "js-cookie";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { getAccountSummary, getOrdersSummary } from "../../APIs/user/dashboard";
@@ -9,9 +8,10 @@ import { ChannelAccount } from "./ChannelAccounts";
 import DatePicker from "react-datepicker";
 import { ProductSKU } from "./ProductSKUs";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
+import { useUserStore } from "../../store/useUserStore";
 
 export const Dashboard: React.FC = () => {
-  const username = Cookies.get("username") || "User";
+  const { username } = useUserStore();
 
   // Filters and data states
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
@@ -36,26 +36,25 @@ export const Dashboard: React.FC = () => {
 
   // Colors for statuses
   const statusColors: Record<string, string> = {
-    Delivered: "#28a745",    // Green - Success, Growth, Positive outcome
-    RTO: "#dc3545",          // Red - Danger, Error, Urgency
-    Transit: "#007bff",      // Blue - Trust, Calm, Information in progress
-    Pickup: "#fd7e14",       // Orange - Energy, Attention, Active process
-    New: "#17a2b8",          // Gray - Neutral, Inactive, Unknown
-    Cancelled: "#a71d2a",    // Dark Red - Seriousness, Stop, Critical error
+    Delivered: "#28a745", // Green - Success, Growth, Positive outcome
+    RTO: "#dc3545", // Red - Danger, Error, Urgency
+    Transit: "#007bff", // Blue - Trust, Calm, Information in progress
+    Pickup: "#fd7e14", // Orange - Energy, Attention, Active process
+    New: "#17a2b8", // Gray - Neutral, Inactive, Unknown
+    Cancelled: "#a71d2a", // Dark Red - Seriousness, Stop, Critical error
 
     // Additional states with psychological colors:
-    Pending: "#ffc107",      // Amber/Yellow - Warning, Caution, Needs attention
-    Failed: "#b22222",       // Firebrick Red - Strong danger, failure
-    Processing: "#17a2b8",   // Cyan/Teal - Stability, reliability, in-progress
-    OnHold: "#ff8800",       // Dark Orange - Paused, waiting state
-    Returned: "#800080",     // Purple - Complexity, returned/refund
-    Partial: "#20c997",      // Mint/Teal - Partial success, ongoing
-    Scheduled: "#00796b",    // Teal/Dark Green - Planned, scheduled
-    Completed: "#2e7d32",    // Dark Green - Final success, completion
-    Error: "#e53935",        // Bright Red - Error, alert
-    Other: "#6c757d",        // Gray - Default fallback neutral
+    Pending: "#ffc107", // Amber/Yellow - Warning, Caution, Needs attention
+    Failed: "#b22222", // Firebrick Red - Strong danger, failure
+    Processing: "#17a2b8", // Cyan/Teal - Stability, reliability, in-progress
+    OnHold: "#ff8800", // Dark Orange - Paused, waiting state
+    Returned: "#800080", // Purple - Complexity, returned/refund
+    Partial: "#20c997", // Mint/Teal - Partial success, ongoing
+    Scheduled: "#00796b", // Teal/Dark Green - Planned, scheduled
+    Completed: "#2e7d32", // Dark Green - Final success, completion
+    Error: "#e53935", // Bright Red - Error, alert
+    Other: "#6c757d", // Gray - Default fallback neutral
   };
-
 
   useEffect(() => {
     innitialFetch();
@@ -64,7 +63,7 @@ export const Dashboard: React.FC = () => {
   const innitialFetch = async () => {
     const productSKUData = await getAllProductSKUs();
     const channelAccountsData = await getAllChannelAccounts();
-    setProductSKUs(productSKUData);
+    setProductSKUs(productSKUData.data);
     setChannelAccounts(channelAccountsData);
   };
 
@@ -98,7 +97,6 @@ export const Dashboard: React.FC = () => {
     if (res) {
       setAccountSummary(res);
     }
-
   };
   useEffect(() => {
     fetchAccountSummary();
@@ -112,7 +110,9 @@ export const Dashboard: React.FC = () => {
     }
 
     const allStatuses = Array.from(
-      new Set(dateWiseSummary.flatMap((d) => d.statuses.map((s: any) => s.status)))
+      new Set(
+        dateWiseSummary.flatMap((d) => d.statuses.map((s: any) => s.status))
+      )
     );
 
     const series = allStatuses.map((status) => ({
@@ -130,8 +130,8 @@ export const Dashboard: React.FC = () => {
         stacked: true,
         toolbar: { show: true },
         zoom: {
-          type: "y"
-        }
+          type: "y",
+        },
       },
       xaxis: {
         categories: dateWiseSummary.map((day: any) => day.date),
@@ -191,7 +191,9 @@ export const Dashboard: React.FC = () => {
         },
       },
       xaxis: {
-        categories: stateWiseSummary.map((state: any) => state.state || "Other"),
+        categories: stateWiseSummary.map(
+          (state: any) => state.state || "Other"
+        ),
         title: { text: "Orders Count" },
       },
       yaxis: {
@@ -261,25 +263,46 @@ export const Dashboard: React.FC = () => {
     setStatusChartOptions(options);
   }, [stateWiseSummary]);
 
-
   return (
-    <div style={{ padding: "2rem", margin: "0 auto", backgroundColor: "#FFFFFF" }}>
+    <div
+      style={{ padding: "2rem", margin: "0 auto", backgroundColor: "#FFFFFF" }}
+    >
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
         <h2 style={{ color: "#000434", marginBottom: "0.25rem" }}>
           Welcome back, {username} 👋
         </h2>
         <p style={{ fontSize: "16px", color: "#555" }}>
-          Your control panel for managing orders, inventory, finances, and fulfillment.
+          Your control panel for managing orders, inventory, finances, and
+          fulfillment.
         </p>
         <section style={{ marginTop: "2.5rem" }}>
-          <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>📊 Business Overview</h3>
+          <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
+            📊 Business Overview
+          </h3>
           <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-            {accountSummary.counts && accountSummary.counts.map((item: any) => (
-              <div key={item.label} style={cardStyle}>
-                <h4 style={{ fontSize: "16px", marginBottom: "0.5rem", color: "#000434" }}>{item.label}</h4>
-                <p style={{ fontSize: "20px", fontWeight: 600, color: "#F5891E" }}>{item.count}</p>
-              </div>
-            ))}
+            {accountSummary.counts &&
+              accountSummary.counts.map((item: any) => (
+                <div key={item.label} style={cardStyle}>
+                  <h4
+                    style={{
+                      fontSize: "16px",
+                      marginBottom: "0.5rem",
+                      color: "#000434",
+                    }}
+                  >
+                    {item.label}
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: "20px",
+                      fontWeight: 600,
+                      color: "#F5891E",
+                    }}
+                  >
+                    {item.count}
+                  </p>
+                </div>
+              ))}
           </div>
         </section>
       </div>
@@ -294,8 +317,19 @@ export const Dashboard: React.FC = () => {
         }}
       >
         <div style={{ maxWidth: "1400px", margin: "0" }}>
-          <h3 style={{ color: "#000434", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span role="img" aria-label="filter">🎛️</span> Filter & View Summary
+          <h3
+            style={{
+              color: "#000434",
+              marginBottom: "1.5rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <span role="img" aria-label="filter">
+              🎛️
+            </span>{" "}
+            Filter & View Summary
           </h3>
 
           <div
@@ -306,7 +340,6 @@ export const Dashboard: React.FC = () => {
               marginBottom: "2rem",
             }}
           >
-
             <Form.Group>
               <Form.Label>Channel Accounts</Form.Label>
               <Form.Select
@@ -315,7 +348,9 @@ export const Dashboard: React.FC = () => {
               >
                 <option value="">All Channel Accounts</option>
                 {channelAccounts.map((ch) => (
-                  <option key={ch._id} value={ch._id}>{ch.channel_account_name} ({ch.pool_id?.name})</option>
+                  <option key={ch._id} value={ch._id}>
+                    {ch.channel_account_name} ({ch.pool_id?.name})
+                  </option>
                 ))}
               </Form.Select>
             </Form.Group>
@@ -341,7 +376,6 @@ export const Dashboard: React.FC = () => {
                 endDate={endDate}
                 maxDate={new Date()}
                 monthsShown={2}
-
                 onChange={(dates: any) => {
                   const [start, end] = dates;
                   setStartDate(start);
@@ -361,50 +395,132 @@ export const Dashboard: React.FC = () => {
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
                   📈 Order Status Summary
                 </h3>
-                <Chart options={chartOptions} series={chartSeries} type="bar" height={400} />
+                <Chart
+                  options={chartOptions}
+                  series={chartSeries}
+                  type="bar"
+                  height={400}
+                />
               </div>
             </Col>
           )}
           {statusChartSeries.length > 0 && (
             <Col md={6}>
-              <div style={{ padding: "3rem", }}>
+              <div style={{ padding: "3rem" }}>
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
                   🗺️ Order Status Distribution
                 </h3>
-                <Chart options={statusChartOptions} series={statusChartSeries} type="donut" height={400} />
+                <Chart
+                  options={statusChartOptions}
+                  series={statusChartSeries}
+                  type="donut"
+                  height={400}
+                />
               </div>
             </Col>
           )}
           {stateWiseSummary.length > 0 && (
             <Col md={12}>
-              <div style={{ padding: "3rem", }}>
+              <div style={{ padding: "3rem" }}>
                 <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
                   🗺️ State-wise Order Status Summary
                 </h3>
-                <Chart options={stateChartOptions} series={stateChartSeries} type="bar" height={500} />
+                <Chart
+                  options={stateChartOptions}
+                  series={stateChartSeries}
+                  type="bar"
+                  height={500}
+                />
               </div>
             </Col>
           )}
         </Row>
-
       </Card>
 
-
       <Card style={{ marginTop: "3rem", padding: "30px" }}>
-        <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>🚀 Getting Started Guide</h3>
-        <ol style={{ paddingLeft: "1.25rem", fontSize: "16px", lineHeight: "1.9", color: "#000434" }}>
-          <li><Link to="/user/pools" style={linkStyle}><strong>Create a Pool</strong></Link> – Define dispatch hubs to manage order flow and allocation.</li>
-          <li><Link to="/user/channel_accounts" style={linkStyle}><strong>Add Channel Accounts</strong></Link> – Connect marketplaces like Amazon, Flipkart, etc.</li>
-          <li><Link to="/user/Warehouses" style={linkStyle}><strong>Set Up Warehouses</strong></Link> – Register storage locations for inventory tracking.</li>
-          <li><Link to="/user/ProductPacks" style={linkStyle}><strong>Configure Packages</strong></Link> – Setup packaging info for accurate courier selection.</li>
-          <li><Link to="/user/Products" style={linkStyle}><strong>Create Products</strong></Link> – Add your catalog with detailed product info.</li>
-          <li><Link to="/user/ProductSKU" style={linkStyle}><strong>Define Product SKUs</strong></Link> – Assign unique SKUs for each variant.</li>
-          <li><Link to="/user/ChannelSKU" style={linkStyle}><strong>Link SKUs to Channels</strong></Link> – Map internal SKUs to external listings.</li>
-          <li><Link to="/user/orders" style={linkStyle}><strong>Monitor Incoming Orders</strong></Link> – View real-time orders across platforms.</li>
-          <li><Link to="/user/Wallet" style={linkStyle}><strong>Recharge Your Wallet</strong></Link> – Maintain balance for seamless courier bookings.</li>
-          <li><Link to="/user/orders" style={linkStyle}><strong>Enhance Orders with AI</strong></Link> – Enrich order details using AI-driven content.</li>
-          <li><Link to="/user/orders" style={linkStyle}><strong>Track Deliveries</strong></Link> – Monitor fulfillment progress end-to-end.</li>
-          <li><Link to="/user/NDR" style={linkStyle}><strong>Manage NDR Effortlessly</strong></Link> – Handle non-delivery cases quickly and clearly.</li>
+        <h3 style={{ color: "#F5891E", marginBottom: "1rem" }}>
+          🚀 Getting Started Guide
+        </h3>
+        <ol
+          style={{
+            paddingLeft: "1.25rem",
+            fontSize: "16px",
+            lineHeight: "1.9",
+            color: "#000434",
+          }}
+        >
+          <li>
+            <Link to="/user/pools" style={linkStyle}>
+              <strong>Create a Pool</strong>
+            </Link>{" "}
+            – Define dispatch hubs to manage order flow and allocation.
+          </li>
+          <li>
+            <Link to="/user/channel_accounts" style={linkStyle}>
+              <strong>Add Channel Accounts</strong>
+            </Link>{" "}
+            – Connect marketplaces like Amazon, Flipkart, etc.
+          </li>
+          <li>
+            <Link to="/user/Warehouses" style={linkStyle}>
+              <strong>Set Up Warehouses</strong>
+            </Link>{" "}
+            – Register storage locations for inventory tracking.
+          </li>
+          <li>
+            <Link to="/user/ProductPacks" style={linkStyle}>
+              <strong>Configure Packages</strong>
+            </Link>{" "}
+            – Setup packaging info for accurate courier selection.
+          </li>
+          <li>
+            <Link to="/user/Products" style={linkStyle}>
+              <strong>Create Products</strong>
+            </Link>{" "}
+            – Add your catalog with detailed product info.
+          </li>
+          <li>
+            <Link to="/user/ProductSKU" style={linkStyle}>
+              <strong>Define Product SKUs</strong>
+            </Link>{" "}
+            – Assign unique SKUs for each variant.
+          </li>
+          <li>
+            <Link to="/user/ChannelSKU" style={linkStyle}>
+              <strong>Link SKUs to Channels</strong>
+            </Link>{" "}
+            – Map internal SKUs to external listings.
+          </li>
+          <li>
+            <Link to="/user/orders" style={linkStyle}>
+              <strong>Monitor Incoming Orders</strong>
+            </Link>{" "}
+            – View real-time orders across platforms.
+          </li>
+          <li>
+            <Link to="/user/Wallet" style={linkStyle}>
+              <strong>Recharge Your Wallet</strong>
+            </Link>{" "}
+            – Maintain balance for seamless courier bookings.
+          </li>
+          <li>
+            <Link to="/user/orders" style={linkStyle}>
+              <strong>Enhance Orders with AI</strong>
+            </Link>{" "}
+            – Enrich order details using AI-driven content.
+          </li>
+          <li>
+            <Link to="/user/orders" style={linkStyle}>
+              <strong>Track Deliveries</strong>
+            </Link>{" "}
+            – Monitor fulfillment progress end-to-end.
+          </li>
+          <li>
+            <Link to="/user/NDR" style={linkStyle}>
+              <strong>Manage NDR Effortlessly</strong>
+            </Link>{" "}
+            – Handle non-delivery cases quickly and clearly.
+          </li>
         </ol>
       </Card>
     </div>

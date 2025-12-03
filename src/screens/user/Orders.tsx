@@ -1,7 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Form, Row, Col, Badge, Tooltip, OverlayTrigger, Card, Table } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Form,
+  Row,
+  Col,
+  Badge,
+  Tooltip,
+  OverlayTrigger,
+  Card,
+  Table,
+} from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllOrders, updateOrder, getAllFilters, createOrder } from "../../APIs/user/order";
+import {
+  getAllOrders,
+  updateOrder,
+  getAllFilters,
+  createOrder,
+} from "../../APIs/user/order";
 // import { fetchNewOrders } from "../../APIs/user/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/user";
@@ -11,7 +27,12 @@ import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
 import { BiCalendar } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
-import { bookCourier, checkShipmentServiceavailablity, getCommonWarehouses, schedulePickup } from "../../APIs/user/courier";
+import {
+  bookCourier,
+  checkShipmentServiceavailablity,
+  getCommonWarehouses,
+  schedulePickup,
+} from "../../APIs/user/courier";
 import { toast } from "react-toastify";
 import Barcode from "react-barcode";
 import { Warehouse } from "./Warehouse";
@@ -20,7 +41,6 @@ import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import DatePicker from "react-datepicker";
 import { Tabs, Tab } from "react-bootstrap";
 import { pincodeDetails } from "../../APIs/pincodeAPIs";
-
 
 export interface User {
   _id: string;
@@ -89,50 +109,66 @@ interface PaymentMethod {
 }
 
 const ShippingLabel = ({ labelData }: any) => {
-  const data = labelData
+  const data = labelData;
   return (
     <div
       style={{
-        width: '100mm',
-        height: '150mm',
+        width: "100mm",
+        height: "150mm",
         // border: '1px solid #333',
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: "Arial, sans-serif",
         padding: "0 5px",
-        fontSize: '10px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        boxSizing: 'border-box',
-        backgroundColor: 'white',
+        fontSize: "10px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        boxSizing: "border-box",
+        backgroundColor: "white",
       }}
     >
-      <div className="header" style={{ textAlign: 'center' }}>
-        <h2 style={{ margin: '0 0 6px 0', fontWeight: "bold" }}>
+      <div className="header" style={{ textAlign: "center" }}>
+        <h2 style={{ margin: "0 0 6px 0", fontWeight: "bold" }}>
           {data.courier_name}
         </h2>
         <hr />
       </div>
 
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: "center" }}>
         <Barcode value={data.waybill} height={60} fontSize={16} />
-        <div className="row" style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+        <div
+          className="row"
+          style={{ display: "flex", justifyContent: "space-evenly" }}
+        >
           <div className="col">{data.date}</div>
           <div className="col">{data.sort_code}</div>
         </div>
       </div>
       <hr />
       <div style={{}}>
-        <div style={{ textAlign: 'center' }}><b><u>Shipping Address</u></b></div>
-        <div><b>{data.customer_name}</b></div>
-        <div>{data.customer_address}, {data.customer_address2} - {data.customer_pincode}</div>
-        <div>Contact: {data.customer_phone || '-'}</div>
+        <div style={{ textAlign: "center" }}>
+          <b>
+            <u>Shipping Address</u>
+          </b>
+        </div>
+        <div>
+          <b>{data.customer_name}</b>
+        </div>
+        <div>
+          {data.customer_address}, {data.customer_address2} -{" "}
+          {data.customer_pincode}
+        </div>
+        <div>Contact: {data.customer_phone || "-"}</div>
       </div>
       <hr />
       <div className="row">
         <div className="col">
           <div>eWaybill: {data.e_waybill}</div>
-          <div>Payment Mode: <b>{data.payment_method}</b></div>
-          <div>Amount: <b>{data.amount}</b></div>
+          <div>
+            Payment Mode: <b>{data.payment_method}</b>
+          </div>
+          <div>
+            Amount: <b>{data.amount}</b>
+          </div>
         </div>
         <div className="col">
           <div>Dimensions: {data.dimensions}</div>
@@ -141,8 +177,21 @@ const ShippingLabel = ({ labelData }: any) => {
       </div>
       <hr />
       <div>
-        <table style={{ width: "100%", verticalAlign: 'top', borderColor: '#dee2e6', fontSize: 12 }}>
-          <thead style={{ verticalAlign: "bottom", borderStyle: 'solid', borderBottomWidth: "0.4px" }}>
+        <table
+          style={{
+            width: "100%",
+            verticalAlign: "top",
+            borderColor: "#dee2e6",
+            fontSize: 12,
+          }}
+        >
+          <thead
+            style={{
+              verticalAlign: "bottom",
+              borderStyle: "solid",
+              borderBottomWidth: "0.4px",
+            }}
+          >
             <tr>
               <td style={{ padding: "3px!important" }}>Product Name</td>
               <td style={{ padding: "3px" }}>Qty</td>
@@ -153,11 +202,14 @@ const ShippingLabel = ({ labelData }: any) => {
             {data.product_details.map((product: any, idx: number) => (
               <tr key={product.sku || idx}>
                 <td style={{ padding: "3px" }}>
-                  <span style={{ fontSize: "10px" }}>{product.name}</span><br />
+                  <span style={{ fontSize: "10px" }}>{product.name}</span>
+                  <br />
                   <span style={{ fontSize: "8px" }}>SKU ID: {product.sku}</span>
                 </td>
                 <td style={{ padding: "3px" }}>{product.units}</td>
-                <td style={{ padding: "3px" }}>₹{product.selling_price.toFixed(2)}</td>
+                <td style={{ padding: "3px" }}>
+                  ₹{product.selling_price.toFixed(2)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -166,35 +218,44 @@ const ShippingLabel = ({ labelData }: any) => {
       <hr />
 
       <div>
-        <div style={{ textAlign: 'center' }}>
-          <div className="row justify-content-space-evenly" style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+        <div style={{ textAlign: "center" }}>
+          <div
+            className="row justify-content-space-evenly"
+            style={{ display: "flex", justifyContent: "space-evenly" }}
+          >
             <span className="col-md-6">{data.date}</span>
             <span className="col-md-6">{data.route}</span>
           </div>
           <Barcode value={data.seller_order_id} height={60} fontSize={16} />
         </div>
-        <div style={{ textAlign: 'center' }}><b><u>Return Address</u></b></div>
-        <div><b>{data.seller_name}</b>
+        <div style={{ textAlign: "center" }}>
+          <b>
+            <u>Return Address</u>
+          </b>
+        </div>
+        <div>
+          <b>{data.seller_name}</b>
           {/* (Contact: {data.seller_phone || '-'}) */}
         </div>
-        <div>{data.seller_address}, {data.seller_address2} - {data.seller_pincode}</div>
-
+        <div>
+          {data.seller_address}, {data.seller_address2} - {data.seller_pincode}
+        </div>
       </div>
 
-
-
-
-      <div className="footer" style={{ textAlign: 'center', fontSize: '10px', color: '#555' }}>
+      <div
+        className="footer"
+        style={{ textAlign: "center", fontSize: "10px", color: "#555" }}
+      >
         <hr />
-        <div>All orders are shipped exclusively via OrderzUp. We do not hold any responsibility for the products or services—any return or exchange is strictly subject to the store’s own policy.</div>
+        <div>
+          All orders are shipped exclusively via OrderzUp. We do not hold any
+          responsibility for the products or services—any return or exchange is
+          strictly subject to the store’s own policy.
+        </div>
       </div>
-    </div >
+    </div>
   );
 };
-
-
-
-
 
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -207,8 +268,8 @@ const Orders: React.FC = () => {
   const [shipmentOrder, setShipmentOrder] = useState<Order | null>(null);
   const [tableHeight, setTableHeight] = useState<string>("400px");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showNewOrderModal, setShowNewOrderModal] = useState(false)
-  const [newOrder, setNewOrder] = useState<Order | null>()
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [newOrder, setNewOrder] = useState<Order | null>();
   // Filter states
   const [filters, setFilters] = useState<FilterParams>({});
   const [productName, setProductName] = useState<string>("");
@@ -220,26 +281,26 @@ const Orders: React.FC = () => {
   const [shipmentOptions, setShipmentOptions] = useState<any>([]);
   const [bestAddress, setBestAddress] = useState<string>("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
-  const [commonWarehouses, setCommonWarehouses] = useState<any>(null)
+  const [commonWarehouses, setCommonWarehouses] = useState<any>(null);
   const [labelData, setLabelData] = useState<any>([]);
   const [shipNowLoading, setShipNowLoading] = useState<boolean>(false);
-  const [allStatus, setAllStatus] = useState<any[]>([])
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
-  const [warehouseId, setWarehouseId] = useState<string>()
-  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([])
-  const [productSKUId, setProductSKUId] = useState<string>()
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
-  const [paymentMethod, setPaymentMethod] = useState<string>()
+  const [allStatus, setAllStatus] = useState<any[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouseId, setWarehouseId] = useState<string>();
+  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
+  const [productSKUId, setProductSKUId] = useState<string>();
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<string>();
   const labelRef = useRef<HTMLDivElement>(null);
   const [courierPartners, setCourierPartners] = useState<any[]>([]);
   const [selectedCouriers, setSelectedCouriers] = useState<string[]>([]);
-  const [showPickupModal, setShowPickupModal] = useState<boolean>(false)
+  const [showPickupModal, setShowPickupModal] = useState<boolean>(false);
   const [pickupOrder, setPickupOrder] = useState<string | null>();
   const [pickupDate, setPickupDate] = useState<Date>();
   const [activeTab, setActiveTab] = useState<string>("new_orders");
-  const [statusList, setStatusList] = useState<any>([])
+  const [statusList, setStatusList] = useState<any>([]);
 
   useEffect(() => {
     setIsLoading(false);
@@ -253,18 +314,18 @@ const Orders: React.FC = () => {
     }
   }, [labelData]);
   useEffect(() => {
-    innitialFetch()
-  }, [])
+    innitialFetch();
+  }, []);
   const innitialFetch = async () => {
-    const allFiltersData = await getAllFilters()
+    const allFiltersData = await getAllFilters();
     const allWarehouseData = await getAllWarehouses();
     const allProductSKUData = await getAllProductSKUs();
-    setAllStatus(allFiltersData.statuses)
-    setPaymentMethods(allFiltersData.paymentMethods)
-    setCourierPartners(allFiltersData.courierPartners)
-    setWarehouses(allWarehouseData)
-    setProductSKUs(allProductSKUData)
-  }
+    setAllStatus(allFiltersData.statuses);
+    setPaymentMethods(allFiltersData.paymentMethods);
+    setCourierPartners(allFiltersData.courierPartners);
+    setWarehouses(allWarehouseData);
+    setProductSKUs(allProductSKUData.data);
+  };
   const fetchChannelAccounts = async () => {
     try {
       // Replace with your actual API endpoint for fetching channel accounts
@@ -275,7 +336,6 @@ const Orders: React.FC = () => {
       toast.error("Error fetching channel accounts" + error);
     }
   };
-
 
   const fetchOrders = async (
     page: number = 1,
@@ -311,12 +371,12 @@ const Orders: React.FC = () => {
     if (startDate) newFilters.startDate = startDate;
     if (endDate) newFilters.endDate = endDate;
     if (channelAccountId) newFilters.channelAccountId = channelAccountId;
-    if (selectedStatuses) newFilters.selectedStatuses = selectedStatuses
-    if (selectedCouriers) newFilters.selectedCouriers = selectedCouriers
-    if (searchQuery) newFilters.searchQuery = searchQuery
-    if (productSKUId) newFilters.productSKUId = productSKUId
-    if (warehouseId) newFilters.warehouseId = warehouseId
-    if (paymentMethod) newFilters.paymentMethod = paymentMethod
+    if (selectedStatuses) newFilters.selectedStatuses = selectedStatuses;
+    if (selectedCouriers) newFilters.selectedCouriers = selectedCouriers;
+    if (searchQuery) newFilters.searchQuery = searchQuery;
+    if (productSKUId) newFilters.productSKUId = productSKUId;
+    if (warehouseId) newFilters.warehouseId = warehouseId;
+    if (paymentMethod) newFilters.paymentMethod = paymentMethod;
 
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page when applying filters
@@ -324,7 +384,7 @@ const Orders: React.FC = () => {
   };
 
   const resetFilters = () => {
-    setSearchQuery("")
+    setSearchQuery("");
     setProductName("");
     setStartDate(undefined);
     setEndDate(undefined);
@@ -332,7 +392,7 @@ const Orders: React.FC = () => {
     setFilters({});
     setCurrentPage(1);
     setSelectedStatuses([]);
-    setShowFilters(false)
+    setShowFilters(false);
     fetchOrders(1, rowsPerPage, {});
   };
 
@@ -346,27 +406,30 @@ const Orders: React.FC = () => {
     calculateTableHeight();
   }, [showFilters]);
 
-
   const handleTabChange = (k: any) => {
-    setActiveTab(k)
-    setCurrentPage(1)
-    setFilters({})
-    fetchOrders(1, rowsPerPage, {}, k)
-  }
+    setActiveTab(k);
+    setCurrentPage(1);
+    setFilters({});
+    fetchOrders(1, rowsPerPage, {}, k);
+  };
 
   const handleBookShipment = async (courier_id: any) => {
     try {
-      const response = await bookCourier(shipmentOrder?._id, courier_id, selectedWarehouse.warehouseAddress.warehouse_id)
-      toast.success(response.message)
+      const response = await bookCourier(
+        shipmentOrder?._id,
+        courier_id,
+        selectedWarehouse.warehouseAddress.warehouse_id
+      );
+      toast.success(response.message);
       if (response) {
         fetchOrders();
-        setLabelData([response.data])
-        handleShipmentClose()
+        setLabelData([response.data]);
+        handleShipmentClose();
       }
     } catch (error) {
-      toast.error("Error: " + error)
+      toast.error("Error: " + error);
     }
-  }
+  };
 
   const handleBookBulkShipment = async (orders: Order[]) => {
     const len = orders.length;
@@ -377,7 +440,7 @@ const Orders: React.FC = () => {
 
     setShipNowLoading(true);
     const courierTotals = orders.reduce((acc: any, order: any) => {
-      const courierName = order.recommended_courier_name || 'Unknown';
+      const courierName = order.recommended_courier_name || "Unknown";
       const rate = order.recommended_courier_rate || 0;
 
       if (!acc[courierName]) {
@@ -389,23 +452,34 @@ const Orders: React.FC = () => {
     }, {});
     const breakdownText = Object.entries(courierTotals)
       .map(([name, amount]: any) => `${name}: ₹${amount.toFixed(2)}`)
-      .join('\n');
+      .join("\n");
 
-    const totalAmount: any = Object.values(courierTotals).reduce((sum: any, val: any) => sum + val, 0);
+    const totalAmount: any = Object.values(courierTotals).reduce(
+      (sum: any, val: any) => sum + val,
+      0
+    );
 
-    if (confirm(
-      `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(2)}\n\nDo you want to proceed?`
-    ) === false) {
+    if (
+      confirm(
+        `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(
+          2
+        )}\n\nDo you want to proceed?`
+      ) === false
+    ) {
       setShipNowLoading(false);
       return;
     }
-    len > 1 && toast.info(`Booking couriers for ${len} orders. Please do not refresh...`);
+    len > 1 &&
+      toast.info(
+        `Booking couriers for ${len} orders. Please do not refresh...`
+      );
 
     let doneCount = 0;
 
     await Promise.allSettled(
       orders.map(async (order) => {
-        const courier_id = order.recommended_courier_id || order.shipping_courier_id;
+        const courier_id =
+          order.recommended_courier_id || order.shipping_courier_id;
         const warehouse_id = order.recommended_warehouse_id;
 
         if (!courier_id) {
@@ -414,7 +488,11 @@ const Orders: React.FC = () => {
         }
 
         try {
-          const response = await bookCourier(order._id, courier_id, warehouse_id);
+          const response = await bookCourier(
+            order._id,
+            courier_id,
+            warehouse_id
+          );
           toast.success(`Order ${order.order_id}: ${response.message}`);
           doneCount++;
 
@@ -437,16 +515,16 @@ const Orders: React.FC = () => {
     setShipNowLoading(false);
   };
 
-
   const handleBulkPrint = (orders: Order[]) => {
-    toast.info("Printing labels for " + orders.length + " orders. Please wait...");
-    setLabelData(orders.map(order => order.label));
-  }
-
+    toast.info(
+      "Printing labels for " + orders.length + " orders. Please wait..."
+    );
+    setLabelData(orders.map((order) => order.label));
+  };
 
   const handlePrint = () => {
     if (labelRef.current) {
-      const printWindow = window.open('', 'PRINT', 'width=400,height=600');
+      const printWindow = window.open("", "PRINT", "width=400,height=600");
       if (printWindow) {
         printWindow.document.write(`
           <html>
@@ -513,29 +591,32 @@ const Orders: React.FC = () => {
     }
   };
 
-
-
-  const handleSelectShipment = async (order_id: Order["_id"], shipment: any) => {
+  const handleSelectShipment = async (
+    order_id: Order["_id"],
+    shipment: any
+  ) => {
     const res = await updateOrder(order_id, {
       recomended_courier_id: shipment._id,
-    })
+    });
     if (res) {
       fetchOrders(currentPage, rowsPerPage, filters);
       handleShipmentClose();
     }
-  }
+  };
 
   const handlePickupSubmit = async () => {
     if (!pickupOrder || !pickupDate) {
-      toast.error("Invalid Date or Order Id")
+      toast.error("Invalid Date or Order Id");
     }
-    const res = pickupDate && await schedulePickup(pickupOrder, pickupDate);
+    const res = pickupDate && (await schedulePickup(pickupOrder, pickupDate));
     if (res) {
-      toast.success("Pickup Scheduled for " + pickupDate.toISOString().split("T")[0])
+      toast.success(
+        "Pickup Scheduled for " + pickupDate.toISOString().split("T")[0]
+      );
       innitialFetch();
       handlePickupClose();
     }
-  }
+  };
 
   const handleClose = () => {
     setShowModal(false);
@@ -552,18 +633,18 @@ const Orders: React.FC = () => {
     setShipmentOrder(null);
     setBestAddress("");
     setShipmentOptions([]);
-    setCommonWarehouses(null)
-    setSelectedWarehouse(null)
+    setCommonWarehouses(null);
+    setSelectedWarehouse(null);
   };
-
 
   const handleChangeWarehouse = async (row: Order, selectedWarehouse: any) => {
     setShipmentOptions([]);
-    const response = await checkShipmentServiceavailablity(row, [selectedWarehouse]);
+    const response = await checkShipmentServiceavailablity(row, [
+      selectedWarehouse,
+    ]);
     setShipmentOptions(response.results);
-    setSelectedWarehouse(response.selectedWarehouse)
+    setSelectedWarehouse(response.selectedWarehouse);
   };
-
 
   const handleShipment = async (rows: Order[]) => {
     if (rows.length === 0) {
@@ -572,46 +653,63 @@ const Orders: React.FC = () => {
     }
     const len = rows.length;
     setShipNowLoading(true);
-    len > 1 && toast.info(`Processing ${len} orders for shipment. Please do not refresh the page...`)
+    len > 1 &&
+      toast.info(
+        `Processing ${len} orders for shipment. Please do not refresh the page...`
+      );
     let doneCount = 0;
-    Promise.all(rows.map(async (row) => {
-      if (row.issues && row.issues.length > 0 && len === 1) {
-        handleEdit(row);
-        setShipNowLoading(false);
-        toast.error("Please resolve the issues before proceeding with shipment.");
-      } else {
-        const commonWarehouse = getCommonWarehouses(row)
-        setCommonWarehouses(commonWarehouse)
-        if (len == 1) {
-          setShipmentOrder(row);
-        }
-        const response = await checkShipmentServiceavailablity(row, commonWarehouse);
-        if (response) {
-          if (response.inventoryUpdate.length > 0) {
-            response.inventoryUpdate.forEach((i: any) => {
-              i.success
-                ? toast.success(`${i.channel_account}: ${i.sku_id} – ${i.message}`)
-                : toast.error(`${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`)
-            })
-          }
-          doneCount++;
-          len > 1 && toast.success(`Shipment service available for order ${doneCount} of ${len}`);
-          if (doneCount === len) {
-            fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
-            toast.success("Processed successfully.");
-          }
-          if (len == 1) {
-            setShowShipmentModal(true);
-            setShipNowLoading(false);
-            setShipmentOptions(response.results);
-            setBestAddress(response.best_address);
-            setSelectedWarehouse(response.selectedWarehouse)
-          }
-        } else {
+    Promise.all(
+      rows.map(async (row) => {
+        if (row.issues && row.issues.length > 0 && len === 1) {
+          handleEdit(row);
           setShipNowLoading(false);
+          toast.error(
+            "Please resolve the issues before proceeding with shipment."
+          );
+        } else {
+          const commonWarehouse = getCommonWarehouses(row);
+          setCommonWarehouses(commonWarehouse);
+          if (len == 1) {
+            setShipmentOrder(row);
+          }
+          const response = await checkShipmentServiceavailablity(
+            row,
+            commonWarehouse
+          );
+          if (response) {
+            if (response.inventoryUpdate.length > 0) {
+              response.inventoryUpdate.forEach((i: any) => {
+                i.success
+                  ? toast.success(
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                    )
+                  : toast.error(
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                    );
+              });
+            }
+            doneCount++;
+            len > 1 &&
+              toast.success(
+                `Shipment service available for order ${doneCount} of ${len}`
+              );
+            if (doneCount === len) {
+              fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+              toast.success("Processed successfully.");
+            }
+            if (len == 1) {
+              setShowShipmentModal(true);
+              setShipNowLoading(false);
+              setShipmentOptions(response.results);
+              setBestAddress(response.best_address);
+              setSelectedWarehouse(response.selectedWarehouse);
+            }
+          } else {
+            setShipNowLoading(false);
+          }
         }
-      }
-    }))
+      })
+    );
   };
 
   const handleCancelOrder = async (order: Order, status: any) => {
@@ -619,14 +717,14 @@ const Orders: React.FC = () => {
       order.status.push({
         status: status.toLowerCase(),
         status_date: new Date().toISOString(),
-        description: "Order cancelled by brand admin"
-      })
+        description: "Order cancelled by brand admin",
+      });
       const response = await updateOrder(order._id, {
         customer_name: order.customer_name,
         customer_phone: order.customer_phone,
         shipping_address: order.shipping_address,
         shipping_pincode: order.shipping_pincode,
-        status: order.status
+        status: order.status,
       });
       if (response) {
         toast.success("Order cancelled successfully.");
@@ -638,7 +736,7 @@ const Orders: React.FC = () => {
       toast.error("Error cancelling order" + error);
       toast.error("Failed to cancel order.");
     }
-  }
+  };
 
   const handleEdit = (order: Order) => {
     setEditOrder(order);
@@ -655,7 +753,6 @@ const Orders: React.FC = () => {
       }
     }
   };
-
 
   const handlePickup = (order: Order) => {
     setPickupOrder(order._id);
@@ -675,7 +772,7 @@ const Orders: React.FC = () => {
   const handleNewOrderClose = () => {
     setShowNewOrderModal(false);
     setNewOrder(null);
-  }
+  };
   const handleNewOrderSubmit = async () => {
     if (newOrder) {
       try {
@@ -686,62 +783,62 @@ const Orders: React.FC = () => {
         toast.error("Error updating order" + error);
       }
     }
-  }
+  };
 
   const columns = [
     {
       name: "Order Details",
       cell: (row: Order) => (
-        <div>
+        <div style={{ fontSize: "11px" }}>
           #{row.order_id || "—"} <br />
-          <strong>Channel OID:</strong> {row.channel_order_id || "—"}{" "}
-          <br />
+          <strong>Channel OID:</strong> {row.channel_order_id || "—"} <br />
           <strong>
-            Store OID:
-            <span style={{ color: "blue" }}> {row.store_order_id || "—"} </span>
+            Store OID:{" "}
+            <span style={{ color: "blue" }}>{row.store_order_id || "—"}</span>
           </strong>
           <br />
-          <strong>Channel:</strong>{" "}
-          {row.channel_account_name || "—"}
+          <strong>Channel:</strong> {row.channel_account_name || "—"}
         </div>
       ),
-      wrap: true,
       width: "200px",
-      style: { margin: "10px 0", fontSize: "11px" },
+      wrap: true,
     },
+
     {
       name: "Product Details",
       cell: (row: Order) => (
-        <div>
-          <span style={{ textDecoration: "underline" }}>
-            {row.product_name || "—"}<br />
-          </span>
-          SKU: {row.product_sku_id || "—"}
+        <div style={{ fontSize: "11px" }}>
+          <u>{row.product_name || "—"}</u>
           <br />
+          SKU: {row.product_sku_id || "—"} <br />
           <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
-          <strong>Amt:</strong> ₹{row.total_amount || "—"} ({row.payment_method || "—"})<br />
-          {
-            row.remittance_status && row.remittance_status !== "NA" && <span
-              className={`badge ${row.remittance_status === "pending"
-                ? "bg-warning"
-                : row.remittance_status === "completed"
+          <strong>Amt:</strong> ₹{row.total_amount || "—"} (
+          {row.payment_method || "—"}) <br />
+          {row.remittance_status && row.remittance_status !== "NA" && (
+            <span
+              className={`badge ${
+                row.remittance_status === "pending"
+                  ? "bg-warning"
+                  : row.remittance_status === "completed"
                   ? "bg-success"
-                  : row.remittance_status === "processing" ? "bg-primary" : "bg-secondary"
-                }`}
+                  : row.remittance_status === "processing"
+                  ? "bg-primary"
+                  : "bg-secondary"
+              }`}
             >
               {row.remittance_status}
             </span>
-          }
+          )}
         </div>
       ),
-      wrap: true,
       width: "225px",
-      style: { margin: "10px 0", fontSize: "11px" },
+      wrap: true,
     },
+
     {
       name: "Customer Details",
       cell: (row: any) => (
-        <div>
+        <div style={{ fontSize: "11px" }}>
           <div
             style={{
               display: "inline-flex",
@@ -749,76 +846,72 @@ const Orders: React.FC = () => {
               padding: "1px 6px",
               borderRadius: "5px",
               background:
-                "linear-gradient(135deg, #000434 0%, #1a1f5a 60%,rgb(36, 43, 129) 100%)",
+                "linear-gradient(135deg, #000434 0%, #1a1f5a 60%, rgb(36,43,129) 100%)",
               color: "#fff",
-              fontWeight: "700",
-              fontFamily: "'Hiragino Maru Gothic ProN', sans-serif",
+              fontWeight: 700,
               fontSize: "12px",
-              boxShadow: "0 2px 8px rgba(245, 137, 30, 0.6)",
               userSelect: "none",
             }}
-            title="AI-generated customer rating"
           >
-            <span style={{ fontSize: "14px" }}>✨ </span>
-            <span>
-              {" " + (row.customer_rating - 1).toFixed(1)}
-              <small style={{ fontSize: "8px", marginLeft: "2px" }}>/10</small>
-            </span>
+            ✨ {(row.customer_rating - 1).toFixed(1)}
+            <small style={{ fontSize: "8px" }}>/10</small>
           </div>
           <br />
           {row.customer_name || "—"} <br />
-          <BsPhoneFill /> {row.customer_phone || "—"}<br />
-          {row.customer_email && <MdEmail />}{" "}
-          {(row.customer_email || "") && (<br />)}
+          <BsPhoneFill /> {row.customer_phone || "—"} <br />
+          {row.customer_email ? (
+            <>
+              <MdEmail /> {row.customer_email} <br />
+            </>
+          ) : (
+            "—"
+          )}
           <FaLocationPin /> {row.shipping_address}, {row.shipping_city},{" "}
           {row.shipping_state}, {row.shipping_country} - {row.shipping_pincode}
         </div>
       ),
-      wrap: true,
       width: "225px",
-      style: { margin: "10px 0", fontSize: "11px" },
+      wrap: true,
     },
+
     {
       name: "Courier Details",
       cell: (row: any) => {
         const sortedStatus = row.status
-          ? [...row.status].sort((a: any, b: any) => new Date(b.status_date).getTime() - new Date(a.status_date).getTime())
+          ? [...row.status].sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )
           : [];
 
-        const latestStatus = sortedStatus?.[0]?.status?.replaceAll("_", " ") || "—";
+        const latestStatus =
+          sortedStatus[0]?.status?.replaceAll("_", " ") || "—";
+
         return (
-          <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
-            {/* Recommended Courier */}
-            {row?.recommended_courier_id && !row?.shipping_courier_id && (
-              <Badge
-                bg="primary"
-                className="me-1"
-                key={row?.recommended_courier_id}
-                style={{
-                  fontSize: 12,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                👍 {row?.recommended_courier_name || "—"}
+          <div style={{ fontSize: "11px" }}>
+            {/* Recommended courier */}
+            {row.recommended_courier_id && !row.shipping_courier_id && (
+              <Badge bg="primary" style={{ fontSize: 12 }}>
+                👍 {row.recommended_courier_name || "—"}
               </Badge>
             )}
-
-            {/* Shipping Courier */}
-            {row?.shipping_courier_id && (
+            {/* Actual courier */}
+            {row.shipping_courier_id && (
               <>
-                {row?.shipping_courier_name || "—"} <br />
+                {row.shipping_courier_name || "—"} <br />
               </>
             )}
-            {/* AWB Number */}
+            {/* AWB */}
             {row.awb_number ? (
               <>
                 <FaTruck />{" "}
                 <a
-                  href={row?.tracking_url?.replace("{{awb_number}}", row.awb_number)}
+                  href={row.tracking_url?.replace(
+                    "{{awb_number}}",
+                    row.awb_number
+                  )}
                   target="_blank"
-                  rel="noopener noreferrer"
                   style={{ color: "#007bff", textDecoration: "underline" }}
                 >
                   {row.awb_number}
@@ -827,194 +920,147 @@ const Orders: React.FC = () => {
               </>
             ) : (
               <>
-                <br />
                 <strong>AWB:</strong> — <br />
               </>
             )}
-
-            {/* Latest Status with Tooltip */}
-            <div style={{ maxWidth: "250px" }} onClick={() => {
-              setStatusList(sortedStatus)
-            }}>
-              <BsClockFill />{" "}
-              <span
-                style={{
-                  textTransform: "capitalize",
-                  color: "#213bb4",
-                  backgroundColor: "#00daeb",
-                  padding: "2px 5px",
-                  borderRadius: "5px",
-                  textDecoration: "underline dotted",
-                  cursor: "help",
-                }}
-              >
-                {latestStatus}
-              </span>
-              <br />
-            </div >
+            <BsClockFill />{" "}
+            <span
+              style={{
+                textTransform: "capitalize",
+                color: "#213bb4",
+                backgroundColor: "#00daeb",
+                padding: "2px 5px",
+                borderRadius: "5px",
+                cursor: "help",
+              }}
+              onClick={() => setStatusList(sortedStatus)}
+            >
+              {latestStatus}
+            </span>
           </div>
         );
       },
-      wrap: true,
       width: "220px",
-      style: { margin: "10px 0", fontSize: "11px" },
+      wrap: true,
     },
+
     {
       name: "Issues",
       cell: (row: any) => (
         <div>
-          {row.issues && row.issues.length > 0 ? (
-            <ul style={{ paddingLeft: "15px", margin: 0 }}>
-              {row.issues.map((issue: any, index: any) => (
-                <li key={index} style={{ fontSize: "13px", color: "#d9534f" }}>
-                  {issue.message || issue} {/* Display the issue message */}
+          {row.issues?.length ? (
+            <ul style={{ paddingLeft: 15, margin: 0 }}>
+              {row.issues.map((issue: any, index: number) => (
+                <li key={index} style={{ color: "#d9534f", fontSize: 13 }}>
+                  {issue.message || issue}
                 </li>
               ))}
             </ul>
           ) : (
-            <span style={{ fontSize: "13px", color: "#5cb85c" }}>
-              No Issues
-            </span>
+            <span style={{ color: "#5cb85c", fontSize: 13 }}>No Issues</span>
           )}
         </div>
       ),
-      sortable: false,
       width: "150px",
-      style: { margin: "10px 0" },
-    }, {
+    },
+
+    {
       name: "Risk Flags",
       cell: (row: any) => (
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {row.risk_flag.customer_order_count_in_channel > 0 && (
-            <span style={{ backgroundColor: row.risk_flag.customer_order_count_in_channel < 3 ? "#2a9d8f" : "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Other Orders: {row.risk_flag.customer_order_count_in_channel}
-            </span>
-          )}
-          {row.risk_flag.is_duplicate && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Duplicate Order
-            </span>
-          )}
-          {row.risk_flag.is_improper_address && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Improper Address
-            </span>
-          )}
-          {row.risk_flag.is_reused_phone && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Reused Phone
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_address && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Suspicious Address
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_email && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Suspicious Email
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_ip && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Suspicious IP
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_phone && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Suspicious Phone
-            </span>
-          )}
-          {row.risk_flag.pincode_return_percent > 0 && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              Return %: {row.risk_flag.pincode_return_percent.toFixed(1)}%
-            </span>
-          )}
-          {row.risk_flag.pincode_rto_percent > 0 && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-              RTO %: {row.risk_flag.pincode_rto_percent.toFixed(1)}%
-            </span>
-          )}
-          {!row.risk_flag.is_duplicate && !row.risk_flag.is_improper_address && !row.risk_flag.is_reused_phone &&
-            !row.risk_flag.is_suspicious_address && !row.risk_flag.is_suspicious_email && !row.risk_flag.is_suspicious_ip &&
-            !row.risk_flag.is_suspicious_phone &&
-            row.risk_flag.pincode_return_percent === 0 && row.risk_flag.pincode_rto_percent === 0 && row.risk_flag.customer_order_count_in_channel === 0 && (
-              <span style={{ backgroundColor: "#2a9d8f", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
-                No Risk Flags
+        <div style={{ display: "flex", flexWrap: "wrap", fontSize: "11px" }}>
+          {Object.entries(row.risk_flag).map(([key, value]: any) => {
+            if (!value) return null;
+
+            return (
+              <span
+                key={key}
+                style={{
+                  backgroundColor:
+                    key.includes("suspicious") || key.includes("duplicate")
+                      ? "#e63946"
+                      : "#f4a261",
+                  color: "#fff",
+                  borderRadius: "12px",
+                  padding: "3px 10px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  margin: "2px 5px 2px 0",
+                }}
+              >
+                {key.replaceAll("_", " ")}: {value}
               </span>
-            )}
+            );
+          })}
         </div>
       ),
-      sortable: false,
       width: "250px",
     },
 
     {
       name: "Fetched On",
-      selector: (row: Order) => (
-        <div>
-          {row.createdAt
-            ? new Date(row.createdAt).toLocaleDateString("en-IN", {
+      selector: (row: Order) =>
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString("en-IN", {
               day: "2-digit",
               month: "short",
               year: "numeric",
             })
-            : "—"}
-          {/* <br />
-          Ordered on: {row.status[0]
-            ? new Date(row.status[0].status_date).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "numeric"
-            })
-            : "—"} */}
-        </div>
-      ),
+          : "—",
       sortable: true,
       width: "110px",
-      style: { margin: "10px 0", fontSize: "11px" },
     },
+
     {
       name: "Actions",
       cell: (row: Order) => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
-          ? row.status.sort((a: any, b: any) =>
-            new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-          )[0]
+          ? row.status.sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return (
-          < div style={{ textAlign: "center" }} >
-            < div style={{ display: "flex", flexDirection: "row", justifyContent: 'center', gap: "5px" }} >
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: "5px",
+              }}
+            >
               {/* Edit or Schedule Pickup */}
               {latestStatus &&
-                (
-                  latestStatus.status === "AWB & Label Generated" ||
+                (latestStatus.status === "AWB & Label Generated" ||
                   latestStatus.status.toLowerCase().includes("label") ||
                   latestStatus.status.toLowerCase().includes("data received") ||
                   latestStatus.status.toLowerCase().includes("manifested") ||
                   latestStatus.status.toLowerCase().includes("re_activate") ||
                   latestStatus.status.toLowerCase().includes("pickup") ||
                   latestStatus.status.toLowerCase().includes("fetch") ||
-                  latestStatus.status.toLowerCase().includes("not picked")) && (<Button
+                  latestStatus.status.toLowerCase().includes("not picked")) && (
+                  <Button
                     variant="outline-primary"
                     size="sm"
-                    onClick={() => hasAwb ? handlePickup(row) : handleEdit(row)}
+                    onClick={() =>
+                      hasAwb ? handlePickup(row) : handleEdit(row)
+                    }
                   >
-                    {hasAwb
-                      ? "🗓️ Schedule Pickup" : "✏️ Edit"}
-                  </Button>)}
+                    {hasAwb ? "🗓️ Schedule Pickup" : "✏️ Edit"}
+                  </Button>
+                )}
 
               {/* Print Label or Ship Now */}
-              {hasAwb && latestStatus && (latestStatus.status !== "cancelled") && (
+              {hasAwb &&
+                latestStatus &&
+                latestStatus.status !== "cancelled" &&
                 (latestStatus.status === "AWB & Label Generated" ||
                   latestStatus.status.toLowerCase().includes("label") ||
                   latestStatus.status.toLowerCase().includes("data received") ||
                   latestStatus.status.toLowerCase().includes("manifested") ||
-                  latestStatus.status.toLowerCase().includes("pickup"))
-              ) && (
+                  latestStatus.status.toLowerCase().includes("pickup")) && (
                   <Button
                     variant="success"
                     onClick={() => setLabelData([row.label])}
@@ -1022,8 +1068,9 @@ const Orders: React.FC = () => {
                     🖨️ Print Label
                   </Button>
                 )}
-              {!hasAwb && latestStatus && latestStatus.status !== "cancelled" &&
-                (
+              {!hasAwb &&
+                latestStatus &&
+                latestStatus.status !== "cancelled" && (
                   <Button
                     style={{
                       backgroundColor: "#F5891E",
@@ -1038,17 +1085,16 @@ const Orders: React.FC = () => {
                     🚚 Ship Now
                   </Button>
                 )}
-
             </div>
             {/* Change Courier */}
-            {hasAwb && latestStatus &&
+            {hasAwb &&
+              latestStatus &&
               (latestStatus.status === "AWB & Label Generated" ||
                 latestStatus.status.toLowerCase().includes("label") ||
                 latestStatus.status.toLowerCase().includes("data received") ||
                 latestStatus.status.toLowerCase().includes("manifested") ||
                 latestStatus.status.toLowerCase().includes("pickup") ||
-                latestStatus.status.toLowerCase().includes("not picked")) &&
-              (
+                latestStatus.status.toLowerCase().includes("not picked")) && (
                 <Button
                   variant="link"
                   size="sm"
@@ -1065,26 +1111,43 @@ const Orders: React.FC = () => {
                 </Button>
               )}
             {/*Cancel Order*/}
-            {!hasAwb && <Button
-              variant={latestStatus?.status === "cancelled" ? "outline-success" : "outline-danger"}
-              size="sm"
-              onClick={() => {
-                if (window.confirm("Are you sure you want to cancel this order?")) {
-                  // Call your cancel order function here
-                  handleCancelOrder(row, latestStatus?.status === "cancelled" ? "re_activate" : "cancelled");
+            {!hasAwb && (
+              <Button
+                variant={
+                  latestStatus?.status === "cancelled"
+                    ? "outline-success"
+                    : "outline-danger"
                 }
-              }}
-              className="mt-2"
-            >
-              {latestStatus?.status === "cancelled" ? "Re-Activate" : "❌ Cancel Order"}
-            </Button>}
+                size="sm"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to cancel this order?"
+                    )
+                  ) {
+                    // Call your cancel order function here
+                    handleCancelOrder(
+                      row,
+                      latestStatus?.status === "cancelled"
+                        ? "re_activate"
+                        : "cancelled"
+                    );
+                  }
+                }}
+                className="mt-2"
+              >
+                {latestStatus?.status === "cancelled"
+                  ? "Re-Activate"
+                  : "❌ Cancel Order"}
+              </Button>
+            )}
           </div>
         );
       },
       width: "200px",
-    }
-
+    },
   ];
+
   const conditionalRowStyles = [
     {
       when: (row: any) =>
@@ -1145,9 +1208,11 @@ const Orders: React.FC = () => {
     {
       when: (row: any) => {
         const latestStatus = row.status?.length
-          ? row.status.sort((a: any, b: any) =>
-            new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-          )[0]
+          ? row.status.sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1155,10 +1220,9 @@ const Orders: React.FC = () => {
         backgroundColor: "#f8d7da", // Light red for cancelled orders
         color: "#721c24", // Dark red text for cancelled orders
         textDecoration: "line-through!important", // Strikethrough text for cancelled orders
-      }
+      },
     },
   ];
-
 
   return (
     <div className="container mt-4 ms-2 me-2">
@@ -1175,7 +1239,7 @@ const Orders: React.FC = () => {
           <Button
             variant="outline-primary"
             onClick={async () => {
-              setShowNewOrderModal(true)
+              setShowNewOrderModal(true);
             }}
             className="me-2"
           >
@@ -1185,12 +1249,13 @@ const Orders: React.FC = () => {
             disabled={shipNowLoading}
             onClick={() => {
               handleShipment(
-
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
-                    ? o.status.sort((a: any, b: any) =>
-                      new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-                    )[0]
+                    ? o.status.sort(
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                     : null;
                   return (
                     !o.recommended_courier_id &&
@@ -1199,7 +1264,7 @@ const Orders: React.FC = () => {
                     o
                   );
                 })
-              )
+              );
             }}
             className="me-2"
             style={{
@@ -1216,7 +1281,7 @@ const Orders: React.FC = () => {
               letterSpacing: "0.03em",
               boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
               // marginBottom: 8,
-              animation: "pulseGlow 1.8s infinite ease-in-out"
+              animation: "pulseGlow 1.8s infinite ease-in-out",
             }}
           >
             💡 OU AI Recommend Couriers
@@ -1227,9 +1292,11 @@ const Orders: React.FC = () => {
               handleBookBulkShipment(
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
-                    ? o.status.sort((a: any, b: any) =>
-                      new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-                    )[0]
+                    ? o.status.sort(
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                     : null;
 
                   return (
@@ -1240,7 +1307,7 @@ const Orders: React.FC = () => {
                     (!latestStatus || latestStatus.status !== "cancelled")
                   );
                 })
-              )
+              );
             }}
             className="me-2"
           >
@@ -1251,27 +1318,41 @@ const Orders: React.FC = () => {
             onClick={() => {
               handleBulkPrint(
                 orders.filter((o: any) => {
-                  if (!o.label || !o.status || !Array.isArray(o.status) || o.status.length === 0) return false;
+                  if (
+                    !o.label ||
+                    !o.status ||
+                    !Array.isArray(o.status) ||
+                    o.status.length === 0
+                  )
+                    return false;
 
-                  const latestStatus = o.status
-                    .sort((a: any, b: any) => new Date(b.status_date).getTime() - new Date(a.status_date).getTime())[0];
+                  const latestStatus = o.status.sort(
+                    (a: any, b: any) =>
+                      new Date(b.status_date).getTime() -
+                      new Date(a.status_date).getTime()
+                  )[0];
 
-                  return latestStatus?.status?.toLowerCase().includes("label generated");
+                  return latestStatus?.status
+                    ?.toLowerCase()
+                    .includes("label generated");
                 })
               );
             }}
           >
             🖨️ Print Labels
           </Button>
-
         </div>
       </div>
 
-      <Modal show={showFilters} onHide={() => setShowFilters(false)} size="lg" centered>
+      <Modal
+        show={showFilters}
+        onHide={() => setShowFilters(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Filter Orders</Modal.Title>
         </Modal.Header>
-
 
         <Modal.Body>
           <Form>
@@ -1319,7 +1400,8 @@ const Orders: React.FC = () => {
                     <option value="">All Warehouses</option>
                     {warehouses.map((warehouse) => (
                       <option key={warehouse._id} value={warehouse._id}>
-                        {warehouse.name}, {warehouse.address1}, {warehouse.City} - {warehouse.State} ({warehouse.pincode})
+                        {warehouse.name}, {warehouse.address1}, {warehouse.City}{" "}
+                        - {warehouse.State} ({warehouse.pincode})
                       </option>
                     ))}
                   </Form.Select>
@@ -1371,7 +1453,9 @@ const Orders: React.FC = () => {
                     multiple
                     value={selectedStatuses}
                     onChange={(e) =>
-                      setSelectedStatuses(Array.from(e.target.selectedOptions, (opt) => opt.value))
+                      setSelectedStatuses(
+                        Array.from(e.target.selectedOptions, (opt) => opt.value)
+                      )
                     }
                   >
                     {allStatus.map((status) => (
@@ -1391,14 +1475,22 @@ const Orders: React.FC = () => {
                     multiple
                     value={selectedCouriers}
                     onChange={(e) =>
-                      setSelectedCouriers(Array.from(e.target.selectedOptions, (opt) => opt.value))
+                      setSelectedCouriers(
+                        Array.from(e.target.selectedOptions, (opt) => opt.value)
+                      )
                     }
                   >
-                    {courierPartners.map((courier) => courier.courier && (
-                      <option key={courier.shipping_courier_id} value={courier.shipping_courier_id}>
-                        {courier.courier} ({courier.count})
-                      </option>
-                    ))}
+                    {courierPartners.map(
+                      (courier) =>
+                        courier.courier && (
+                          <option
+                            key={courier.shipping_courier_id}
+                            value={courier.shipping_courier_id}
+                          >
+                            {courier.courier} ({courier.count})
+                          </option>
+                        )
+                    )}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -1415,7 +1507,6 @@ const Orders: React.FC = () => {
                     endDate={endDate}
                     maxDate={new Date()}
                     monthsShown={2}
-
                     onChange={(dates: any) => {
                       const [start, end] = dates;
                       setStartDate(start);
@@ -1435,15 +1526,26 @@ const Orders: React.FC = () => {
           <Button variant="secondary" onClick={resetFilters}>
             Reset
           </Button>
-          <Button variant="primary" onClick={() => {
-            applyFilters();
-            setShowFilters(false);
-          }}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              applyFilters();
+              setShowFilters(false);
+            }}
+          >
             Apply Filters
           </Button>
         </Modal.Footer>
       </Modal>
-      <Modal show={statusList.length > 0} onHide={() => { setStatusList([]) }} size="lg" centered scrollable>
+      <Modal
+        show={statusList.length > 0}
+        onHide={() => {
+          setStatusList([]);
+        }}
+        size="lg"
+        centered
+        scrollable
+      >
         <Modal.Header closeButton>
           <Modal.Title>Status History</Modal.Title>
         </Modal.Header>
@@ -1464,31 +1566,34 @@ const Orders: React.FC = () => {
                   <td>{index + 1}</td>
                   <td>{item.status}</td>
                   <td>{new Date(item.status_date).toLocaleString()}</td>
-                  <td> {item.status_details ? (
-                    typeof item.status_details === "object" ? (
-                      Object.entries(item.status_details).map(([key, value]) => (
-                        <div key={key}>
-                          <strong>{key}:</strong> {String(value)}
-                        </div>
-                      ))
-                    ) : (
-                      // If it's a JSON string, try parsing
-                      (() => {
-                        try {
-                          const parsed = JSON.parse(item.status_details);
-                          return Object.entries(parsed).map(([key, value]) => (
-                            <div key={key}>
-                              <strong>{key}:</strong> {String(value)}
-                            </div>
-                          ));
-                        } catch {
-                          return String(item.status_details);
-                        }
-                      })()
-                    )
-                  ) : (
-                    "-"
-                  )}</td>
+                  <td>
+                    {" "}
+                    {item.status_details
+                      ? typeof item.status_details === "object"
+                        ? Object.entries(item.status_details).map(
+                            ([key, value]) => (
+                              <div key={key}>
+                                <strong>{key}:</strong> {String(value)}
+                              </div>
+                            )
+                          )
+                        : // If it's a JSON string, try parsing
+                          (() => {
+                            try {
+                              const parsed = JSON.parse(item.status_details);
+                              return Object.entries(parsed).map(
+                                ([key, value]) => (
+                                  <div key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </div>
+                                )
+                              );
+                            } catch {
+                              return String(item.status_details);
+                            }
+                          })()
+                      : "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1496,13 +1601,27 @@ const Orders: React.FC = () => {
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => { setStatusList([]) }}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setStatusList([]);
+            }}
+          >
             Close
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <Card className="shadow" style={{ border: "none", borderTop: "solid", minWidth: "450px", width: "103%", padding: 5 }}>
+      <Card
+        className="shadow"
+        style={{
+          border: "none",
+          borderTop: "solid",
+          minWidth: "450px",
+          width: "103%",
+          padding: 5,
+        }}
+      >
         <Tabs
           id="orders-tabs"
           activeKey={activeTab}
@@ -1513,7 +1632,6 @@ const Orders: React.FC = () => {
           mountOnEnter
           unmountOnExit
         >
-
           <Tab eventKey="new_orders" title="New Orders" />
           <Tab eventKey="pickup_pending" title="Pickup Pending" />
           <Tab eventKey="in_transit" title="In Transit" />
@@ -1556,10 +1674,14 @@ const Orders: React.FC = () => {
             <div className="col-lg-6">
               <div>
                 #{editOrder?.order_id || "—"} <br />
-                <strong>Channel OID:</strong> {editOrder?.channel_order_id || "—"} <br />
+                <strong>Channel OID:</strong>{" "}
+                {editOrder?.channel_order_id || "—"} <br />
                 <strong>
                   Store OID:
-                  <span style={{ color: "blue" }}> {editOrder?.store_order_id || "—"} </span>
+                  <span style={{ color: "blue" }}>
+                    {" "}
+                    {editOrder?.store_order_id || "—"}{" "}
+                  </span>
                 </strong>
                 <br />
                 <strong>Channel:</strong>{" "}
@@ -1569,7 +1691,8 @@ const Orders: React.FC = () => {
             <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
               {editOrder?.["product_name"]} <br />
               <b>
-                <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} ({editOrder?.["payment_method"]})
+                <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} (
+                {editOrder?.["payment_method"]})
               </b>
               <br />
               QTY: {editOrder?.["quantity"]} pc <br />
@@ -1579,139 +1702,225 @@ const Orders: React.FC = () => {
               {editOrder?.["order_date"]?.split("T")[1]?.split(":")[1]}
             </div>
           </div>
-          <div className='row'>
-            <div className='col-lg-6' style={{ padding: 10, }}>
+          <div className="row">
+            <div className="col-lg-6" style={{ padding: 10 }}>
               {/* <BiPackage size={12} />  Weight: {editOrder?.['weight']} grams */}
             </div>
-            <div className='col-lg-6' style={{ padding: 10, fontSize: 12 }}>
+            <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
               {/* Dimensions: {editOrder?.['length']}cm X {editOrder?.['width']}cm X {editOrder?.['height']}cm */}
             </div>
           </div>
 
-          <Form className="theme-form row" action='#'>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Name"}</Form.Label>
-              <Form.Control className="form-control" type="text" onChange={(e) => {
-                let tempData = { ...editOrder }
-                tempData['customer_name'] = e.target.value
-                setEditOrder(tempData as Order);
-              }} defaultValue={editOrder?.['customer_name']} placeholder="Enter Customer Name" />
-            </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Phone Number"}</Form.Label>
-              <Form.Control className="form-control" type="number" onChange={(e) => {
-                if (e.target.value.length > 9) {
-                  let tempData = { ...editOrder }
-                  tempData['customer_phone'] = e.target.value
+          <Form className="theme-form row" action="#">
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Name"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                onChange={(e) => {
+                  let tempData = { ...editOrder };
+                  tempData["customer_name"] = e.target.value;
                   setEditOrder(tempData as Order);
-                }
-              }} defaultValue={editOrder?.['customer_phone']} placeholder="Enter Customer Phone Number" />
+                }}
+                defaultValue={editOrder?.["customer_name"]}
+                placeholder="Enter Customer Name"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-12'>
-              <Form.Label className="col-form-label pt-0" >{"Change Product Price"}</Form.Label>
-              <Form.Control className="form-control" type="number" onChange={(e) => {
-                let tempData = { ...editOrder }
-                tempData['total_amount'] = Number(e.target.value)
-                setEditOrder(tempData as Order);
-              }} defaultValue={editOrder?.['total_amount']} placeholder="Enter Product Amount" />
-            </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Address"}</Form.Label>
-              <Form.Control className="form-control" type="text" onChange={(e) => {
-                let tempData = { ...editOrder }
-                tempData['shipping_address'] = e.target.value
-                setEditOrder(tempData as Order);
-              }} defaultValue={editOrder?.['shipping_address']} placeholder="Enter Customer Address" />
-            </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Pin Code"}</Form.Label>
-              <Form.Control className="form-control" type="number" onChange={async (e) => {
-                const pincode = e.target.value;
-
-                // Validate pincode format (6-digit number)
-                if (!/^\d{6}$/.test(pincode)) {
-                  // toast.error("Invalid Pincode");
-                  return;
-                }
-
-                try {
-                  const data = await pincodeDetails({ pincode })
-
-                  if (Array.isArray(data) && data.length > 0) {
-                    const postOffice = data[0];
-
-                    setEditOrder((prev: any) => {
-                      return {
-                        ...prev,
-                        // shipping_address: postOffice?.Name || "",
-                        shipping_city: postOffice?.district || "",
-                        shipping_state: postOffice?.statename || "",
-                        shipping_country: "India",
-                        shipping_pincode: pincode,
-                      };
-                    });
-                  } else {
-                    setEditOrder((prev: any) => {
-                      return {
-                        ...prev,
-                        // shipping_address: postOffice?.Name || "",
-                        shipping_city: "",
-                        shipping_state: "",
-                      };
-                    });
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Phone Number"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                onChange={(e) => {
+                  if (e.target.value.length > 9) {
+                    let tempData = { ...editOrder };
+                    tempData["customer_phone"] = e.target.value;
+                    setEditOrder(tempData as Order);
                   }
-                } catch (error) {
-                  toast.error("Invalid Pincode or Pincode not found");
-                }
-              }} defaultValue={editOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
-              <div id="pin_error" style={{ color: 'red' }}></div>
+                }}
+                defaultValue={editOrder?.["customer_phone"]}
+                placeholder="Enter Customer Phone Number"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer City"}</Form.Label>
-              <Form.Control className="form-control" type="text" value={editOrder?.['shipping_city']} placeholder="Enter Customer City" disabled={true} />
+            <Form.Group className="col-lg-12">
+              <Form.Label className="col-form-label pt-0">
+                {"Change Product Price"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                onChange={(e) => {
+                  let tempData = { ...editOrder };
+                  tempData["total_amount"] = Number(e.target.value);
+                  setEditOrder(tempData as Order);
+                }}
+                defaultValue={editOrder?.["total_amount"]}
+                placeholder="Enter Product Amount"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer State"}</Form.Label>
-              <Form.Control className="form-control" type="text" value={editOrder?.['shipping_state']} placeholder="Enter Customer State" disabled={true} />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Address"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                onChange={(e) => {
+                  let tempData = { ...editOrder };
+                  tempData["shipping_address"] = e.target.value;
+                  setEditOrder(tempData as Order);
+                }}
+                defaultValue={editOrder?.["shipping_address"]}
+                placeholder="Enter Customer Address"
+              />
+            </Form.Group>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Pin Code"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                onChange={async (e) => {
+                  const pincode = e.target.value;
+
+                  // Validate pincode format (6-digit number)
+                  if (!/^\d{6}$/.test(pincode)) {
+                    // toast.error("Invalid Pincode");
+                    return;
+                  }
+
+                  try {
+                    const data = await pincodeDetails({ pincode });
+
+                    if (Array.isArray(data) && data.length > 0) {
+                      const postOffice = data[0];
+
+                      setEditOrder((prev: any) => {
+                        return {
+                          ...prev,
+                          // shipping_address: postOffice?.Name || "",
+                          shipping_city: postOffice?.district || "",
+                          shipping_state: postOffice?.statename || "",
+                          shipping_country: "India",
+                          shipping_pincode: pincode,
+                        };
+                      });
+                    } else {
+                      setEditOrder((prev: any) => {
+                        return {
+                          ...prev,
+                          // shipping_address: postOffice?.Name || "",
+                          shipping_city: "",
+                          shipping_state: "",
+                        };
+                      });
+                    }
+                  } catch (error) {
+                    toast.error("Invalid Pincode or Pincode not found");
+                  }
+                }}
+                defaultValue={editOrder?.["shipping_pincode"]}
+                placeholder="Enter Pin Code"
+              />
+              <div id="pin_error" style={{ color: "red" }}></div>
+            </Form.Group>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer City"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                value={editOrder?.["shipping_city"]}
+                placeholder="Enter Customer City"
+                disabled={true}
+              />
+            </Form.Group>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer State"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                value={editOrder?.["shipping_state"]}
+                placeholder="Enter Customer State"
+                disabled={true}
+              />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button style={{ color: "primary", }} className="m-r-15" onClick={handleEditSubmit} >{"Submit"}</Button>
-          <Button style={{ color: "warning", }} className="m-r-15" onClick={handleClose} >{"Close"}</Button>
-
-
+          <Button
+            style={{ color: "primary" }}
+            className="m-r-15"
+            onClick={handleEditSubmit}
+          >
+            {"Submit"}
+          </Button>
+          <Button
+            style={{ color: "warning" }}
+            className="m-r-15"
+            onClick={handleClose}
+          >
+            {"Close"}
+          </Button>
         </Modal.Footer>
       </Modal>
       <Modal show={showPickupModal} onHide={handlePickupClose} size="sm">
-        <Modal.Header closeButton>
-          Schedule Pickup
-        </Modal.Header>
+        <Modal.Header closeButton>Schedule Pickup</Modal.Header>
         <Modal.Body>
-
-          <Form className="theme-form " action='#'>
+          <Form className="theme-form " action="#">
             <Form.Group>
-              <Form.Label className="col-form-label pt-0" >{"Pickup Date"}</Form.Label>
-              <Form.Control className="form-control" type="date" onChange={(e) => {
-                setPickupDate(new Date(e.target.value))
-              }}
-                max={new Date(new Date().setDate(new Date().getDate() + 3)).toISOString().split("T")[0]}
-                min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]}
+              <Form.Label className="col-form-label pt-0">
+                {"Pickup Date"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="date"
+                onChange={(e) => {
+                  setPickupDate(new Date(e.target.value));
+                }}
+                max={
+                  new Date(new Date().setDate(new Date().getDate() + 3))
+                    .toISOString()
+                    .split("T")[0]
+                }
+                min={
+                  new Date(new Date().setDate(new Date().getDate() + 1))
+                    .toISOString()
+                    .split("T")[0]
+                }
                 // defaultValue={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]}
-                placeholder="Enter Pickup Date" />
+                placeholder="Enter Pickup Date"
+              />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button style={{ color: "primary", }} className="m-r-15" onClick={handlePickupSubmit} >{"Submit"}</Button>
-          <Button style={{ color: "warning", }} className="m-r-15" onClick={handlePickupClose} >{"Close"}</Button>
-
-
+          <Button
+            style={{ color: "primary" }}
+            className="m-r-15"
+            onClick={handlePickupSubmit}
+          >
+            {"Submit"}
+          </Button>
+          <Button
+            style={{ color: "warning" }}
+            className="m-r-15"
+            onClick={handlePickupClose}
+          >
+            {"Close"}
+          </Button>
         </Modal.Footer>
       </Modal>
 
-
-      <Modal show={showShipmentModal} onHide={handleShipmentClose} size='xl'>
+      <Modal show={showShipmentModal} onHide={handleShipmentClose} size="xl">
         <Modal.Header>
           Select Shipment for {shipmentOrder?.order_id}
         </Modal.Header>
@@ -1719,45 +1928,57 @@ const Orders: React.FC = () => {
           <div className="row g-3">
             {/* Order Info */}
             <div className="col-lg-3">
-              <div style={{
-                border: "1px solid #F5891E",
-                borderRadius: 10,
-                padding: "12px 16px",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
-                fontSize: 13,
-                color: "#000434",
-                fontFamily: "Hiragino Maru Gothic ProN W4",
-              }}>
+              <div
+                style={{
+                  border: "1px solid #F5891E",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
+                  fontSize: 13,
+                  color: "#000434",
+                  fontFamily: "Hiragino Maru Gothic ProN W4",
+                }}
+              >
                 <div style={{ fontWeight: "bold", marginBottom: 6 }}>
                   #{shipmentOrder?.order_id || "—"}
                 </div>
-                <div><strong>Channel OID:</strong> {shipmentOrder?.channel_order_id || "—"}</div>
+                <div>
+                  <strong>Channel OID:</strong>{" "}
+                  {shipmentOrder?.channel_order_id || "—"}
+                </div>
                 <div>
                   <strong>Store OID:</strong>
                   <span style={{ color: "#F5891E", fontWeight: "bold" }}>
-                    {" "}{shipmentOrder?.store_order_id || "—"}
+                    {" "}
+                    {shipmentOrder?.store_order_id || "—"}
                   </span>
                 </div>
-                <div><strong>Channel:</strong> {shipmentOrder?.channel_account_name || "—"}</div>
+                <div>
+                  <strong>Channel:</strong>{" "}
+                  {shipmentOrder?.channel_account_name || "—"}
+                </div>
               </div>
             </div>
 
             {/* Product Info */}
             <div className="col-lg-3">
-              <div style={{
-                border: "1px solid #F5891E",
-                borderRadius: 10,
-                padding: "12px 16px",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
-                fontSize: 13,
-                color: "#000434",
-                fontFamily: "Hiragino Maru Gothic ProN W4",
-              }}>
+              <div
+                style={{
+                  border: "1px solid #F5891E",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
+                  fontSize: 13,
+                  color: "#000434",
+                  fontFamily: "Hiragino Maru Gothic ProN W4",
+                }}
+              >
                 <div>{shipmentOrder?.product_name || "—"}</div>
                 <div style={{ fontWeight: "bold", margin: "6px 0" }}>
-                  <FaDollarSign size={12} /> ₹{shipmentOrder?.total_amount} ({shipmentOrder?.payment_method})
+                  <FaDollarSign size={12} /> ₹{shipmentOrder?.total_amount} (
+                  {shipmentOrder?.payment_method})
                 </div>
                 <div>QTY: {shipmentOrder?.quantity} pc</div>
                 <div>
@@ -1770,24 +1991,33 @@ const Orders: React.FC = () => {
 
             {/* Customer Info */}
             <div className="col-lg-3">
-              <div style={{
-                border: "1px solid #F5891E",
-                borderRadius: 10,
-                padding: "12px 16px",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
-                fontSize: 13,
-                color: "#000434",
-                fontFamily: "Hiragino Maru Gothic ProN W4",
-              }}>
+              <div
+                style={{
+                  border: "1px solid #F5891E",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
+                  fontSize: 13,
+                  color: "#000434",
+                  fontFamily: "Hiragino Maru Gothic ProN W4",
+                }}
+              >
                 <div>{shipmentOrder?.customer_name || "—"}</div>
-                <div><BsPhoneFill /> {shipmentOrder?.customer_phone || "—"}</div>
+                <div>
+                  <BsPhoneFill /> {shipmentOrder?.customer_phone || "—"}
+                </div>
                 {shipmentOrder?.customer_email && (
-                  <div><MdEmail /> {shipmentOrder?.customer_email}</div>
+                  <div>
+                    <MdEmail /> {shipmentOrder?.customer_email}
+                  </div>
                 )}
                 <div>
-                  <FaLocationPin /> {shipmentOrder?.shipping_address}, {shipmentOrder?.shipping_city},{" "}
-                  {shipmentOrder?.shipping_state}, {shipmentOrder?.shipping_country} - {shipmentOrder?.shipping_pincode}
+                  <FaLocationPin /> {shipmentOrder?.shipping_address},{" "}
+                  {shipmentOrder?.shipping_city},{" "}
+                  {shipmentOrder?.shipping_state},{" "}
+                  {shipmentOrder?.shipping_country} -{" "}
+                  {shipmentOrder?.shipping_pincode}
                 </div>
               </div>
             </div>
@@ -1795,55 +2025,65 @@ const Orders: React.FC = () => {
             {/* AI Recommended Address */}
             {bestAddress && (
               <div className="col-lg-3">
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#FFFFFF",
-                  border: "1.5px solid #F5891E",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  fontFamily: "Hiragino Maru Gothic ProN W4",
-                  color: "#000434",
-                  textAlign: "center",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                  animation: "brandGlow 2.5s infinite ease-in-out"
-                }}>
-                  <div style={{
-                    background: "linear-gradient(135deg, #F5891E, #000434)",
-                    color: "#FFFFFF",
-                    padding: "4px 12px",
-                    borderRadius: 24,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    display: "inline-flex",
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    gap: 6,
-                    letterSpacing: "0.03em",
-                    boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-                    marginBottom: 8,
-                    animation: "pulseGlow 1.8s infinite ease-in-out"
-                  }}>
+                    justifyContent: "center",
+                    backgroundColor: "#FFFFFF",
+                    border: "1.5px solid #F5891E",
+                    borderRadius: 10,
+                    padding: "12px 16px",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    fontFamily: "Hiragino Maru Gothic ProN W4",
+                    color: "#000434",
+                    textAlign: "center",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                    animation: "brandGlow 2.5s infinite ease-in-out",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #F5891E, #000434)",
+                      color: "#FFFFFF",
+                      padding: "4px 12px",
+                      borderRadius: 24,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      letterSpacing: "0.03em",
+                      boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+                      marginBottom: 8,
+                      animation: "pulseGlow 1.8s infinite ease-in-out",
+                    }}
+                  >
                     🤖 OU AI Recommended
                   </div>
                   <div style={{ fontSize: 13, marginBottom: 6 }}>
                     🏠 <b>{bestAddress}</b>
                   </div>
-                  <div style={{
-                    backgroundColor: "#000434",
-                    color: "#FFFFFF",
-                    fontSize: 12,
-                    borderRadius: 16,
-                    padding: "4px 10px",
-                    fontWeight: 500,
-                    boxShadow: "0 0 8px #F5891E",
-                    userSelect: "none",
-                    width: "fit-content",
-                  }}>
-                    🔄 RTO Risk: <span style={{ color: "#F5891E", fontWeight: 600 }}>~10%</span> (Low)
+                  <div
+                    style={{
+                      backgroundColor: "#000434",
+                      color: "#FFFFFF",
+                      fontSize: 12,
+                      borderRadius: 16,
+                      padding: "4px 10px",
+                      fontWeight: 500,
+                      boxShadow: "0 0 8px #F5891E",
+                      userSelect: "none",
+                      width: "fit-content",
+                    }}
+                  >
+                    🔄 RTO Risk:{" "}
+                    <span style={{ color: "#F5891E", fontWeight: 600 }}>
+                      ~10%
+                    </span>{" "}
+                    (Low)
                   </div>
                 </div>
               </div>
@@ -1852,16 +2092,25 @@ const Orders: React.FC = () => {
 
           {selectedWarehouse && (
             <div>
-              <h5 style={{ margin: "16px 0", textAlign: 'center' }}>Available Warehouses</h5>
+              <h5 style={{ margin: "16px 0", textAlign: "center" }}>
+                Available Warehouses
+              </h5>
               <div className="row justify-content-center">
                 {commonWarehouses.map((warehouse: any) => {
-                  const isSelected = warehouse.warehouse_id === selectedWarehouse?.warehouseAddress?.warehouse_id;
+                  const isSelected =
+                    warehouse.warehouse_id ===
+                    selectedWarehouse?.warehouseAddress?.warehouse_id;
                   return (
-                    <div key={warehouse.warehouse_id} className="col-md-4 col-sm-6 mb-4">
+                    <div
+                      key={warehouse.warehouse_id}
+                      className="col-md-4 col-sm-6 mb-4"
+                    >
                       <div
                         style={{
                           padding: "15px",
-                          border: isSelected ? "2px solid #F5891E" : "1px solid #ddd",
+                          border: isSelected
+                            ? "2px solid #F5891E"
+                            : "1px solid #ddd",
                           borderRadius: "12px",
                           backgroundColor: isSelected ? "#FFF7F0" : "#ffffff",
                           fontWeight: isSelected ? "bold" : "normal",
@@ -1876,7 +2125,8 @@ const Orders: React.FC = () => {
                           overflow: "hidden",
                         }}
                         onClick={() => {
-                          shipmentOrder && handleChangeWarehouse(shipmentOrder, warehouse);
+                          shipmentOrder &&
+                            handleChangeWarehouse(shipmentOrder, warehouse);
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = "translateY(-3px)";
@@ -1904,16 +2154,24 @@ const Orders: React.FC = () => {
                         )}
 
                         <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                          <strong style={{ fontSize: "16px" }}>{warehouse.warehouse_name}</strong>
+                          <strong style={{ fontSize: "16px" }}>
+                            {warehouse.warehouse_name}
+                          </strong>
                           <br />
-                          📍 {warehouse.warehouse_address1}, {warehouse.warehouse_address2}, {warehouse.warehouse_city}, {warehouse.warehouse_state} - {warehouse.warehouse_pincode}
+                          📍 {warehouse.warehouse_address1},{" "}
+                          {warehouse.warehouse_address2},{" "}
+                          {warehouse.warehouse_city},{" "}
+                          {warehouse.warehouse_state} -{" "}
+                          {warehouse.warehouse_pincode}
                           <br />
                           <small style={{ color: "#555" }}>
                             📦 <strong>Combo Stock:</strong> {warehouse.stock}
                             <br />
                             {isSelected && (
                               <>
-                                🚚 <strong>Travel:</strong> {selectedWarehouse.distance} KM, {selectedWarehouse.duration}
+                                🚚 <strong>Travel:</strong>{" "}
+                                {selectedWarehouse.distance} KM,{" "}
+                                {selectedWarehouse.duration}
                               </>
                             )}
                           </small>
@@ -1924,8 +2182,6 @@ const Orders: React.FC = () => {
                 })}
               </div>
             </div>
-
-
           )}
           <hr />
           {shipmentOptions.length > 0 && (
@@ -1938,161 +2194,268 @@ const Orders: React.FC = () => {
               // conditionalRowStyles={conditionalRowStyles}
               columns={[
                 {
-                  name: 'Company Name',
+                  name: "Company Name",
                   selector: (row: any) => row.courier_name,
                   cell: (row: any, index: any) => {
                     return (
                       <div style={{ padding: 10, fontSize: 12 }}>
-
-                        {index === 0 && <div style={{
-                          background: "linear-gradient(135deg, #F5891E, #000434)",
-                          color: "#FFFFFF",
-                          padding: "4px 12px",
-                          borderRadius: 24,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          letterSpacing: "0.03em",
-                          boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-                          marginBottom: 8,
-                          animation: "pulseGlow 1.8s infinite ease-in-out"
-                        }}>
-                          🤖 OU AI Recommended
-                        </div>}
-                        <span style={{ fontSize: 14 }}><b>{row.courier_name}</b></span><br />
-                        Calling: {row.call_before_delivery && "Available"}<br />
+                        {index === 0 && (
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #F5891E, #000434)",
+                              color: "#FFFFFF",
+                              padding: "4px 12px",
+                              borderRadius: 24,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              letterSpacing: "0.03em",
+                              boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+                              marginBottom: 8,
+                              animation: "pulseGlow 1.8s infinite ease-in-out",
+                            }}
+                          >
+                            🤖 OU AI Recommended
+                          </div>
+                        )}
+                        <span style={{ fontSize: 14 }}>
+                          <b>{row.courier_name}</b>
+                        </span>
+                        <br />
+                        Calling: {row.call_before_delivery && "Available"}
+                        <br />
                         {/* Delivery Boy Contact: {row.delivery_boy_contact}<br /> */}
                         Chargeable Weight: {row.charge_weight} KG
-                      </div>)
+                      </div>
+                    );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'Performance',
+                  name: "Performance",
                   selector: (row: any) => row.rating,
                   cell: (row: any) => {
                     return (
                       <div style={{ padding: 10, fontSize: 12 }}>
-                        Delivery: {row.delivery_performance}<br />
-                        Pickup: {row.pickup_performance}<br />
-                        RTO: {row.rto_performance}<br />
-                        Tracking: {row.tracking_performance}<br />
-                        <b>Overall: {row.rating}/10</b><br />
-                      </div>)
+                        Delivery: {row.delivery_performance}
+                        <br />
+                        Pickup: {row.pickup_performance}
+                        <br />
+                        RTO: {row.rto_performance}
+                        <br />
+                        Tracking: {row.tracking_performance}
+                        <br />
+                        <b>Overall: {row.rating}/10</b>
+                        <br />
+                      </div>
+                    );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'Charges',
+                  name: "Charges",
                   selector: (row: any) => row.total_amount,
                   cell: (row: any) => {
                     return (
-                      <div style={{ padding: 10, fontSize: 12, }}>
-                        <u> <b style={{ textTransform: 'uppercase' }}>ZONE {row.zone}</b></u><br />
-                        {row.cod_charges > 0 && row.cod_charges != 0 ? "COD: ₹" + row.cod_charges : ""}<br />
-                        Freight: ₹{row.freight_charge}<br />
-
+                      <div style={{ padding: 10, fontSize: 12 }}>
+                        <u>
+                          {" "}
+                          <b style={{ textTransform: "uppercase" }}>
+                            ZONE {row.zone}
+                          </b>
+                        </u>
+                        <br />
+                        {row.cod_charges > 0 && row.cod_charges != 0
+                          ? "COD: ₹" + row.cod_charges
+                          : ""}
+                        <br />
+                        Freight: ₹{row.freight_charge}
+                        <br />
                         {parseFloat(row.other_charges) !== 0 && (
                           <>
                             <OverlayTrigger
                               placement="top"
                               overlay={
                                 <Tooltip id="tooltip-top">
-                                  18% GST on ₹{row.freight_charge + row.cod_charges} = {((row.freight_charge + row.cod_charges) * 0.18).toFixed(2)}<br />
-                                  {(row.other_charges - ((row.freight_charge + row.cod_charges) * 0.18)) > 0 && `LM Surcharge ₹${(row.other_charges - ((row.freight_charge + row.cod_charges) * 0.18)).toFixed(2)}`}<br />
+                                  18% GST on ₹
+                                  {row.freight_charge + row.cod_charges} ={" "}
+                                  {(
+                                    (row.freight_charge + row.cod_charges) *
+                                    0.18
+                                  ).toFixed(2)}
+                                  <br />
+                                  {row.other_charges -
+                                    (row.freight_charge + row.cod_charges) *
+                                      0.18 >
+                                    0 &&
+                                    `LM Surcharge ₹${(
+                                      row.other_charges -
+                                      (row.freight_charge + row.cod_charges) *
+                                        0.18
+                                    ).toFixed(2)}`}
+                                  <br />
                                 </Tooltip>
                               }
                             >
-                              <span style={{ textDecoration: 'underline dotted', cursor: 'help' }}>
+                              <span
+                                style={{
+                                  textDecoration: "underline dotted",
+                                  cursor: "help",
+                                }}
+                              >
                                 Other
                               </span>
-                            </OverlayTrigger>: ₹{row.other_charges}
+                            </OverlayTrigger>
+                            : ₹{row.other_charges}
                             <br />
                           </>
                         )}
-                        <i style={{ fontWeight: 800, textDecoration: 'line-through', color: "green" }}>Platform Fee: ZERO</i><br /><br />
-                        <span style={{ fontWeight: 800, textDecoration: 'underline' }}>Total: ₹{row.total_amount}</span><br /><br />
-                        <i>RTO: ₹{row.rto_charges}</i><br />
-                      </div>)
+                        <i
+                          style={{
+                            fontWeight: 800,
+                            textDecoration: "line-through",
+                            color: "green",
+                          }}
+                        >
+                          Platform Fee: ZERO
+                        </i>
+                        <br />
+                        <br />
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            textDecoration: "underline",
+                          }}
+                        >
+                          Total: ₹{row.total_amount}
+                        </span>
+                        <br />
+                        <br />
+                        <i>RTO: ₹{row.rto_charges}</i>
+                        <br />
+                      </div>
+                    );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'Estimated Delivery',
+                  name: "Estimated Delivery",
                   selector: (row: any) => row.etd_hours,
                   cell: (row: any) => {
                     const deliveryDate = new Date(row.etd);
-                    const formattedDate = deliveryDate.toLocaleDateString(undefined, {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    });
+                    const formattedDate = deliveryDate.toLocaleDateString(
+                      undefined,
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    );
 
                     return (
-                      <div className="smart-estimate" style={{
-                        background: "linear-gradient(135deg, #f3f9ff, #e6f2ff)",
-                        padding: "10px",
-                        fontSize: "13px",
-                        borderRadius: "10px",
-                        color: "#000434",
-                        fontFamily: "Hiragino Maru Gothic ProN W4",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-                      }}>
-
-                        <div style={{
-                          background: "linear-gradient(135deg, #F5891E, #000434)",
-                          color: "#FFFFFF",
-                          padding: "4px 12px",
-                          borderRadius: 24,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          letterSpacing: "0.03em",
-                          boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-                          marginBottom: 8,
-                          animation: "pulseGlow 1.8s infinite ease-in-out"
-                        }}>
+                      <div
+                        className="smart-estimate"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #f3f9ff, #e6f2ff)",
+                          padding: "10px",
+                          fontSize: "13px",
+                          borderRadius: "10px",
+                          color: "#000434",
+                          fontFamily: "Hiragino Maru Gothic ProN W4",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #F5891E, #000434)",
+                            color: "#FFFFFF",
+                            padding: "4px 12px",
+                            borderRadius: 24,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            letterSpacing: "0.03em",
+                            boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+                            marginBottom: 8,
+                            animation: "pulseGlow 1.8s infinite ease-in-out",
+                          }}
+                        >
                           🤖 OU AI Estimated
                         </div>
                         <div style={{ marginBottom: "4px" }}>
-                          📅 <strong style={{ color: "#F5891E" }}>Arrives:</strong> {formattedDate}
+                          📅{" "}
+                          <strong style={{ color: "#F5891E" }}>Arrives:</strong>{" "}
+                          {formattedDate}
                         </div>
 
                         <div style={{ marginBottom: "4px" }}>
-                          ⏱️ <span className="pulse-eta">{row.estimated_delivery_days}d {row.etd_hours}h</span>
+                          ⏱️{" "}
+                          <span className="pulse-eta">
+                            {row.estimated_delivery_days}d {row.etd_hours}h
+                          </span>
                         </div>
 
-                        <div style={{
-                          fontSize: "11px",
-                          marginTop: "6px",
-                          color: "#666",
-                          fontStyle: "italic",
-                        }}>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            marginTop: "6px",
+                            color: "#666",
+                            fontStyle: "italic",
+                          }}
+                        >
                           Based on courier history & zone analysis
                         </div>
                       </div>
                     );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'More',
+                  name: "More",
                   cell: (row: any) => {
                     return (
-                      <div style={{ justifyContent: "center", alignItems: "center", display: "flex", flexDirection: 'column', padding: 10, fontSize: 12, }}>
-                        <Button variant="primary" onClick={() => handleBookShipment(row._id)} >{"Book Shipment"}</Button>
-                        < Button variant="danger" size="sm" style={{ margin: 5 }} onClick={() => shipmentOrder?._id && handleSelectShipment(shipmentOrder?._id, row)} > {"Select"}</Button >
+                      <div
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          padding: 10,
+                          fontSize: 12,
+                        }}
+                      >
+                        <Button
+                          variant="primary"
+                          onClick={() => handleBookShipment(row._id)}
+                        >
+                          {"Book Shipment"}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          style={{ margin: 5 }}
+                          onClick={() =>
+                            shipmentOrder?._id &&
+                            handleSelectShipment(shipmentOrder?._id, row)
+                          }
+                        >
+                          {" "}
+                          {"Select"}
+                        </Button>
                       </div>
-                    )
+                    );
                   },
                   compact: true,
                   center: true,
@@ -2103,31 +2466,34 @@ const Orders: React.FC = () => {
         </Modal.Body>
         <Modal.Footer>
           {/* <Btn attrBtn={{ color: "primary", className: "m-r-15", onClick: () => handleAddSubmit() }} >{"Submit"}</Btn> */}
-          <Button style={{ color: "warning" }} className="m-r-15" onClick={handleShipmentClose} >{"Close"}</Button>
-
-
+          <Button
+            style={{ color: "warning" }}
+            className="m-r-15"
+            onClick={handleShipmentClose}
+          >
+            {"Close"}
+          </Button>
         </Modal.Footer>
       </Modal>
-      <div style={{ display: 'none' }}>
+      <div style={{ display: "none" }}>
         <div ref={labelRef}>
-          {labelData && labelData.map((ld: any, index: number) => (
-            <div key={index} style={{ pageBreakAfter: 'always' }}>
-              <ShippingLabel labelData={ld} />
-            </div>
-          ))}
+          {labelData &&
+            labelData.map((ld: any, index: number) => (
+              <div key={index} style={{ pageBreakAfter: "always" }}>
+                <ShippingLabel labelData={ld} />
+              </div>
+            ))}
         </div>
       </div>
 
-
-
       <Modal show={showNewOrderModal} onHide={handleNewOrderClose} size="xl">
-        <Form action='#' onSubmit={handleNewOrderSubmit}>
-          <Modal.Header closeButton>
-            Add New Order
-          </Modal.Header>
+        <Form action="#" onSubmit={handleNewOrderSubmit}>
+          <Modal.Header closeButton>Add New Order</Modal.Header>
           <Modal.Body className="theme-form row">
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0">Select Product</Form.Label>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                Select Product
+              </Form.Label>
               <Form.Control
                 as="select"
                 required
@@ -2139,7 +2505,9 @@ const Orders: React.FC = () => {
                   } as Order);
                 }}
               >
-                <option value="" disabled>Select a Product</option>
+                <option value="" disabled>
+                  Select a Product
+                </option>
                 {productSKUs.map((sku) => (
                   <option key={sku._id} value={sku._id}>
                     {sku.product_sku_name}
@@ -2148,8 +2516,10 @@ const Orders: React.FC = () => {
               </Form.Control>
             </Form.Group>
 
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0">Select Channel Account</Form.Label>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                Select Channel Account
+              </Form.Label>
               <Form.Control
                 as="select"
                 value={newOrder?.channel_id || ""}
@@ -2161,7 +2531,9 @@ const Orders: React.FC = () => {
                   } as Order);
                 }}
               >
-                <option value="" disabled>Select a Channel Account</option>
+                <option value="" disabled>
+                  Select a Channel Account
+                </option>
                 {channelAccounts.map((account) => (
                   <option key={account._id} value={account._id}>
                     {account.channel_account_name}
@@ -2169,41 +2541,66 @@ const Orders: React.FC = () => {
                 ))}
               </Form.Control>
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Name"}</Form.Label>
-              <Form.Control className="form-control" type="text"
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Name"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
                 required
                 onChange={(e) => {
-                  let tempData = { ...newOrder }
-                  tempData['customer_name'] = e.target.value
+                  let tempData = { ...newOrder };
+                  tempData["customer_name"] = e.target.value;
                   setNewOrder(tempData as Order);
-                }} defaultValue={newOrder?.['customer_name']} placeholder="Enter Customer Name" />
+                }}
+                defaultValue={newOrder?.["customer_name"]}
+                placeholder="Enter Customer Name"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Phone Number"}</Form.Label>
-              <Form.Control className="form-control" type="number"
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Phone Number"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
                 required
                 onChange={(e) => {
                   if (e.target.value.length > 9) {
-                    let tempData = { ...newOrder }
-                    tempData['customer_phone'] = e.target.value
+                    let tempData = { ...newOrder };
+                    tempData["customer_phone"] = e.target.value;
                     setNewOrder(tempData as Order);
                   }
-                }} defaultValue={newOrder?.['customer_phone']} placeholder="Enter Customer Phone Number" />
+                }}
+                defaultValue={newOrder?.["customer_phone"]}
+                placeholder="Enter Customer Phone Number"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Address"}</Form.Label>
-              <Form.Control className="form-control" type="text"
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Address"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
                 required
                 onChange={(e) => {
-                  let tempData = { ...newOrder }
-                  tempData['shipping_address'] = e.target.value
+                  let tempData = { ...newOrder };
+                  tempData["shipping_address"] = e.target.value;
                   setNewOrder(tempData as Order);
-                }} defaultValue={newOrder?.['shipping_address']} placeholder="Enter Customer Address" />
+                }}
+                defaultValue={newOrder?.["shipping_address"]}
+                placeholder="Enter Customer Address"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Pin Code"}</Form.Label>
-              <Form.Control className="form-control" type="number"
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Pin Code"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
                 required
                 onChange={async (e) => {
                   const pincode = e.target.value;
@@ -2215,13 +2612,12 @@ const Orders: React.FC = () => {
                   }
 
                   try {
-                    const data = await pincodeDetails({ pincode })
+                    const data = await pincodeDetails({ pincode });
 
                     if (Array.isArray(data) && data.length > 0) {
                       const postOffice = data[0];
 
                       setNewOrder((prev: any) => {
-
                         return {
                           ...prev,
                           // shipping_address: postOffice?.Name || "",
@@ -2233,7 +2629,6 @@ const Orders: React.FC = () => {
                       });
                     } else {
                       setNewOrder((prev: any) => {
-
                         return {
                           ...prev,
                           // shipping_address: postOffice?.Name || "",
@@ -2245,27 +2640,59 @@ const Orders: React.FC = () => {
                   } catch (error) {
                     toast.error("Invalid Pincode or Pincode not found");
                   }
-                }} defaultValue={newOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
-              <div id="pin_error" style={{ color: 'red' }}></div>
+                }}
+                defaultValue={newOrder?.["shipping_pincode"]}
+                placeholder="Enter Pin Code"
+              />
+              <div id="pin_error" style={{ color: "red" }}></div>
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer City"}</Form.Label>
-              <Form.Control className="form-control" type="text" required value={newOrder?.['shipping_city']} placeholder="Enter Customer City" disabled={true} />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer City"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                required
+                value={newOrder?.["shipping_city"]}
+                placeholder="Enter Customer City"
+                disabled={true}
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer State"}</Form.Label>
-              <Form.Control className="form-control" type="text" required value={newOrder?.['shipping_state']} placeholder="Enter Customer State" disabled={true} />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer State"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                required
+                value={newOrder?.["shipping_state"]}
+                placeholder="Enter Customer State"
+                disabled={true}
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Product Price"}</Form.Label>
-              <Form.Control className="form-control" type="number" required onChange={(e) => {
-                let tempData = { ...newOrder }
-                tempData['total_amount'] = Number(e.target.value)
-                setNewOrder(tempData as Order);
-              }} defaultValue={newOrder?.['total_amount']} placeholder="Enter Product Amount" />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Product Price"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                required
+                onChange={(e) => {
+                  let tempData = { ...newOrder };
+                  tempData["total_amount"] = Number(e.target.value);
+                  setNewOrder(tempData as Order);
+                }}
+                defaultValue={newOrder?.["total_amount"]}
+                placeholder="Enter Product Amount"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0">Select Payment Method</Form.Label>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                Select Payment Method
+              </Form.Label>
               <Form.Control
                 required
                 as="select"
@@ -2277,33 +2704,52 @@ const Orders: React.FC = () => {
                   } as Order);
                 }}
               >
-                <option value="" >Select a Payment Method</option>
-                <option key={"cod"} value={"COD"} >COD - Cash on Delivery</option>
-                <option key={"prepaid"} value={"PREPAID"}>Prepaid</option>
+                <option value="">Select a Payment Method</option>
+                <option key={"cod"} value={"COD"}>
+                  COD - Cash on Delivery
+                </option>
+                <option key={"prepaid"} value={"PREPAID"}>
+                  Prepaid
+                </option>
               </Form.Control>
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Qunatity"}</Form.Label>
-              <Form.Control className="form-control" type="number" required onChange={(e) => {
-                let tempData = { ...newOrder }
-                tempData['quantity'] = Number(e.target.value)
-                setNewOrder(tempData as Order);
-              }} defaultValue={newOrder?.['quantity']} placeholder="Enter Quantity" />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Qunatity"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                required
+                onChange={(e) => {
+                  let tempData = { ...newOrder };
+                  tempData["quantity"] = Number(e.target.value);
+                  setNewOrder(tempData as Order);
+                }}
+                defaultValue={newOrder?.["quantity"]}
+                placeholder="Enter Quantity"
+              />
             </Form.Group>
-
-
           </Modal.Body>
           <Modal.Footer>
-            <Button style={{ color: "primary", }} className="m-r-15" type="submit" >{"Submit"}</Button>
-            <Button style={{ color: "warning", }} className="m-r-15" onClick={handleNewOrderClose} >{"Close"}</Button>
-
-
+            <Button
+              style={{ color: "primary" }}
+              className="m-r-15"
+              type="submit"
+            >
+              {"Submit"}
+            </Button>
+            <Button
+              style={{ color: "warning" }}
+              className="m-r-15"
+              onClick={handleNewOrderClose}
+            >
+              {"Close"}
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
-
-
-    </div >
+    </div>
   );
 };
 

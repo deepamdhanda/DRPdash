@@ -3,14 +3,21 @@ import { appAxios } from "../../axios/appAxios";
 import { scanOrders_url } from "../../URLs/user";
 import { ScanOrder } from "../../screens/user/ScanOrders";
 
-
-
-export const getAllScanOrders = async () => {
+export const getAllScanOrders = async (
+  page: number = 1,
+  limit: number = 100
+) => {
   try {
-    const response = await appAxios.get(scanOrders_url, {
-      withCredentials: true,
-    });
-    return response.data as ScanOrder[];
+    const response = await appAxios.get(
+      `${scanOrders_url}?page=${page}&limit=${limit}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return {
+      data: response.data.data as ScanOrder[],
+      total: response.data.total,
+    };
   } catch (error: any) {
     toast.error("Failed to fetch pools.");
     throw error;

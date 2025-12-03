@@ -28,33 +28,42 @@ export interface CODRemittance {
     product_sku_id?: string;
     product_sku_name?: string;
   }[];
-  transfers: [any]
+  transfers: [any];
 }
-
 
 const CODRemittances: React.FC = () => {
   const [cod_remittances, setCODRemittances] = useState<CODRemittance[]>([]);
-  const [loading, setLoading] = useState(true); // Added loading state
-  const [amount, setAmount] = useState(0)
-  const [maxAmount, setMaxAmount] = useState(0)
+  const [loading, setLoading] = useState(true);
+  const [amount, setAmount] = useState(0);
+  const [maxAmount, setMaxAmount] = useState(0);
   const [showModal, setShowModal] = useState(false);
-  const [remittanceId, setRemittanceId] = useState("")
+  const [remittanceId, setRemittanceId] = useState("");
 
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
 
+  // Fetch COD remittances whenever page/limit changes
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    fetchInitialData(page, limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit]);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = async (pageParam = page, limitParam = limit) => {
     setLoading(true);
     try {
-      const [cod_remittancesData] = await Promise.all([
-        getAllCODRemittances(),
-      ]);
+      const cod_remittancesData = await getAllCODRemittances(
+        pageParam,
+        limitParam
+      );
+      // expected: { total: number, data: CODRemittance[] }
+      setTotalRecords(cod_remittancesData.total);
       setCODRemittances(
-        cod_remittancesData.map((remittance: any) => ({
+        cod_remittancesData.data.map((remittance: any) => ({
           ...remittance,
-          transfers: Array.isArray(remittance.transfers) ? remittance.transfers : [],
+          transfers: Array.isArray(remittance.transfers)
+            ? remittance.transfers
+            : [],
         }))
       );
     } catch (error) {
@@ -64,15 +73,12 @@ const CODRemittances: React.FC = () => {
     }
   };
 
-
-
-
   const handleModalClose = () => {
     setShowModal(false);
     setAmount(0);
     setMaxAmount(0);
-
   };
+
   const handlePayment = async () => {
     try {
       const res = await transferPayment(amount, remittanceId);
@@ -98,7 +104,7 @@ const CODRemittances: React.FC = () => {
     },
     {
       name: "Bank Details",
-      selector: (row: CODRemittance) => row.masked_account_number || 'NA',
+      selector: (row: CODRemittance) => row.masked_account_number || "NA",
       sortable: true,
     },
     {
@@ -106,10 +112,10 @@ const CODRemittances: React.FC = () => {
       selector: (row: CODRemittance) =>
         row.remittanceDate
           ? new Date(row.remittanceDate).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
     },
@@ -117,29 +123,40 @@ const CODRemittances: React.FC = () => {
       name: "Amount",
       selector: (row: CODRemittance) => row.totalAmount,
       cell: (row: CODRemittance) => {
-        const totalTrensfered = row?.transfers?.reduce((sum: number, i: any) => sum + i.amount, 0)
-        const totalAmount = row?.orders?.reduce((sum: number, i: any) => sum + i.amount, 0)
+        const totalTrensfered = row?.transfers?.reduce(
+          (sum: number, i: any) => sum + i.amount,
+          0
+        );
+        const totalAmount = row?.orders?.reduce(
+          (sum: number, i: any) => sum + i.amount,
+          0
+        );
         return (
           <div style={{ textAlign: "right" }}>
-            <strong>Total:</strong> ₹{totalAmount.toFixed(2) || "—"}{" "}
-            <br />
-            {
-              row.transfers?.length > 0 && <div>
+            <strong>Total:</strong> ₹{totalAmount.toFixed(2) || "—"} <br />
+            {row.transfers?.length > 0 && (
+              <div>
                 <strong>
                   Paid: {"\n"}
-                  <span style={{ color: "#f5891e", textDecoration: "underline" }}>₹{totalTrensfered.toFixed(2) || "—"} </span>
+                  <span
+                    style={{ color: "#f5891e", textDecoration: "underline" }}
+                  >
+                    ₹{totalTrensfered.toFixed(2) || "—"}{" "}
+                  </span>
                 </strong>
                 <br />
-                {(totalAmount - totalTrensfered) > 0 && <div>< strong > Pending:</strong>{" "}
-                  ₹{(totalAmount - totalTrensfered).toFixed(2) || "—"}
-                </div>}
+                {totalAmount - totalTrensfered > 0 && (
+                  <div>
+                    <strong> Pending:</strong> ₹
+                    {(totalAmount - totalTrensfered).toFixed(2) || "—"}
+                  </div>
+                )}
               </div>
-            }
-          </div >
-        )
+            )}
+          </div>
+        );
       },
       sortable: true,
-      // width: '200px'
     },
     {
       name: "Status",
@@ -147,12 +164,15 @@ const CODRemittances: React.FC = () => {
       sortable: true,
       cell: (row: CODRemittance) => (
         <span
-          className={`badge ${row.status === "pending"
-            ? "bg-warning"
-            : row.status === "completed"
+          className={`badge ${
+            row.status === "pending"
+              ? "bg-warning"
+              : row.status === "completed"
               ? "bg-success"
-              : row.status === "processing" ? "bg-primary" : "bg-secondary"
-            }`}
+              : row.status === "processing"
+              ? "bg-primary"
+              : "bg-secondary"
+          }`}
         >
           {row.status}
         </span>
@@ -161,103 +181,128 @@ const CODRemittances: React.FC = () => {
     {
       name: "Action",
       cell: (row: CODRemittance) => {
-        const totalTrensfered = row?.transfers?.reduce((sum: number, i: any) => sum + i.amount, 0)
-        const totalAmount = row?.orders?.reduce((sum: number, i: any) => sum + i.amount, 0)
-        return ((totalAmount - totalTrensfered) > 0 && < Button size="sm" onClick={() => {
-          setShowModal(true)
-          setMaxAmount(totalAmount - totalTrensfered)
-          setRemittanceId(row._id)
-        }}> Wallet Transfer</Button >)
+        const totalTrensfered = row?.transfers?.reduce(
+          (sum: number, i: any) => sum + i.amount,
+          0
+        );
+        const totalAmount = row?.orders?.reduce(
+          (sum: number, i: any) => sum + i.amount,
+          0
+        );
+        return (
+          totalAmount - totalTrensfered > 0 && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setShowModal(true);
+                setMaxAmount(totalAmount - totalTrensfered);
+                setRemittanceId(row._id);
+              }}
+            >
+              {" "}
+              Wallet Transfer
+            </Button>
+          )
+        );
       },
     },
   ];
 
   const ExpandedComponent = ({ data: row }: any) => {
-
     const orderColumns = [
       {
         name: "Order Id",
-        selector: (row: CODRemittance['orders'][number]) => row.order_id,
-        cell: (row: CODRemittance['orders'][number]) => (<>#{row.order_id || "—"}    </>),
+        selector: (row: CODRemittance["orders"][number]) => row.order_id,
+        cell: (row: CODRemittance["orders"][number]) => (
+          <>#{row.order_id || "—"} </>
+        ),
         sortable: true,
       },
       {
         name: "Channel Details",
-        selector: (row: CODRemittance['orders'][number]) => row.store_order_id,
-        cell: (row: CODRemittance['orders'][number]) => (
+        selector: (row: CODRemittance["orders"][number]) => row.store_order_id,
+        cell: (row: CODRemittance["orders"][number]) => (
           <div>
-            <strong>Channel OID:</strong> {row.channel_order_id || "—"}{" "}
-            <br />
+            <strong>Channel OID:</strong> {row.channel_order_id || "—"} <br />
             <strong>
               Store OID: {"\n"}
-              <span style={{ color: "#f5891e", textDecoration: "underline" }}>{row.store_order_id || "—"} </span>
+              <span style={{ color: "#f5891e", textDecoration: "underline" }}>
+                {row.store_order_id || "—"}{" "}
+              </span>
             </strong>
             <br />
-            <strong>Channel:</strong>{" "}
-            {row.channel_account_name || "—"}
+            <strong>Channel:</strong> {row.channel_account_name || "—"}
           </div>
         ),
         sortable: true,
       },
       {
         name: "AWB Number",
-        selector: (row: CODRemittance['orders'][number]) => row.courier_name,
-        cell: (row: CODRemittance['orders'][number]) => (
+        selector: (row: CODRemittance["orders"][number]) => row.courier_name,
+        cell: (row: CODRemittance["orders"][number]) => (
           <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
-
             {row?.courier_name || "—"} <br />
             🚚{"\n"}
-            <span style={{ color: "#f5891e", textDecoration: "underline" }}> {row.awb_number || "—"} </span>
-          </div >
+            <span style={{ color: "#f5891e", textDecoration: "underline" }}>
+              {" "}
+              {row.awb_number || "—"}{" "}
+            </span>
+          </div>
         ),
         sortable: true,
       },
       {
         name: "Product",
-        selector: (row: CODRemittance['orders'][number]) => row.product_sku_id,
-        cell: (row: CODRemittance['orders'][number]) =>
+        selector: (row: CODRemittance["orders"][number]) => row.product_sku_id,
+        cell: (row: CODRemittance["orders"][number]) => (
           <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
-
             {row?.product_sku_name || "—"} <br />
-            <span style={{ color: "#f5891e", textDecoration: "underline" }}> {row.product_sku_id || "—"} </span>
-          </div >,
+            <span style={{ color: "#f5891e", textDecoration: "underline" }}>
+              {" "}
+              {row.product_sku_id || "—"}{" "}
+            </span>
+          </div>
+        ),
         sortable: true,
       },
       {
         name: "Total Amount",
-        selector: (row: CODRemittance['orders'][number]) => `₹${row.amount || 0}`,
+        selector: (row: CODRemittance["orders"][number]) =>
+          `₹${row.amount || 0}`,
         sortable: true,
-      }
+      },
     ];
 
     const transfersColumns = [
       {
         name: "Transfer Mode",
-        selector: (row: CODRemittance['transfers'][number]) => row.transferMode,
+        selector: (row: CODRemittance["transfers"][number]) => row.transferMode,
         sortable: true,
       },
       {
         name: "Transfer ID",
-        selector: (row: CODRemittance['transfers'][number]) => row.transferId,
+        selector: (row: CODRemittance["transfers"][number]) => row.transferId,
         sortable: true,
       },
       {
         name: "Total Amount",
-        selector: (row: CODRemittance['transfers'][number]) => `₹${row.amount || 0}`,
+        selector: (row: CODRemittance["transfers"][number]) =>
+          `₹${row.amount || 0}`,
         sortable: true,
       },
       {
         name: "Total Date",
-        selector: (row: CODRemittance['transfers'][number]) => `${(row.transferDate).split("T")[0] || 0}`,
+        selector: (row: CODRemittance["transfers"][number]) =>
+          `${row.transferDate.split("T")[0] || 0}`,
         sortable: true,
-      }
+      },
     ];
     return (
       <div
         style={{
           padding: "15px",
           backgroundColor: "#f0f0f0",
-          borderLeft: "4px solid #F5891E", // your brand orange
+          borderLeft: "4px solid #F5891E",
           margin: "10px 0",
           fontSize: "0.9rem",
           color: "#333",
@@ -265,11 +310,13 @@ const CODRemittances: React.FC = () => {
       >
         <h6>Transfers:</h6>
         <div style={{ margin: 10 }}>
-          {row.transfers && <DataTable
-            data={row.transfers}
-            columns={transfersColumns as any}
-            responsive
-          />}
+          {row.transfers && (
+            <DataTable
+              data={row.transfers}
+              columns={transfersColumns as any}
+              responsive
+            />
+          )}
         </div>
         <h6>Orders:</h6>
         <div style={{ margin: 10 }}>
@@ -279,16 +326,10 @@ const CODRemittances: React.FC = () => {
             responsive
           />
         </div>
-        {/* <ul>
-          {row.orders.map((order: any) => (
-            <li key={order._id}>
-              Order ID: {order.orderId}, Amount: ₹{order.amount}, Courier: {order.courierPartner}
-            </li>
-          ))}
-        </ul> */}
       </div>
-    )
-  }
+    );
+  };
+
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -306,6 +347,17 @@ const CODRemittances: React.FC = () => {
           columns={columns as any}
           highlightOnHover
           pagination
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
           paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
           responsive
           striped
@@ -336,11 +388,7 @@ const CODRemittances: React.FC = () => {
           <Button variant="secondary" onClick={handleModalClose}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            onClick={handlePayment}
-            disabled={!amount}
-          >
+          <Button variant="primary" onClick={handlePayment} disabled={!amount}>
             Proceed to Pay
           </Button>
         </Modal.Footer>

@@ -2,12 +2,18 @@ import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
 import { pools_url } from "../../URLs/user";
 
-export const getAllPools = async () => {
+export const getAllPools = async (page: number = 1, limit: number = 100) => {
   try {
-    const response = await appAxios.get(pools_url, {
-      withCredentials: true,
-    });
-    return response.data as any[];
+    const response = await appAxios.get(
+      `${pools_url}?page=${page}&limit=${limit}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return {
+      data: response.data.data as any[],
+      total: response.data.totalRecords,
+    };
   } catch (error: any) {
     toast.error("Failed to fetch pools.");
     throw error;

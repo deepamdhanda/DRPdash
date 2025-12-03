@@ -17,17 +17,21 @@ export interface ScanOrder {
 }
 
 const ScanOrders: React.FC = () => {
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [scannedBarcodes, setScannedBarcodes] = useState<string[]>([]);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showDamageReportingModal, setShowDamageReportingModal] = useState(false);
+  const [showDamageReportingModal, setShowDamageReportingModal] =
+    useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [scanOrders, setScanOrders] = useState<ScanOrder[]>([]);
   const [pickupDate, setPickupDate] = useState<Date>();
-  const [issueType, setIssueType] = useState('');
-  const [damagedAWB, setDamagedAWB] = useState('');
-  const [issueDescription, setIssueDescription] = useState('');
+  const [issueType, setIssueType] = useState("");
+  const [damagedAWB, setDamagedAWB] = useState("");
+  const [issueDescription, setIssueDescription] = useState("");
   const [issueImages, setIssueImages] = useState<File[] | null>(null);
 
   // const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,14 +43,17 @@ const ScanOrders: React.FC = () => {
 
   useEffect(() => {
     fetchInitialData();
-    setIssueImages(null)
-  }, []);
+    setIssueImages(null);
+  }, [page, limit]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [scanOrdersData] = await Promise.all([getAllScanOrders()]);
-      setScanOrders(scanOrdersData);
+      const [scanOrdersData] = await Promise.all([
+        getAllScanOrders(page, limit),
+      ]);
+      setScanOrders(scanOrdersData.data);
+      setTotalRecords(scanOrdersData.total);
     } catch (error) {
       console.error("Error loading pools or users", error);
     } finally {
@@ -58,8 +65,8 @@ const ScanOrders: React.FC = () => {
     setShowScanner(true); // Open the scanner modal
   };
   const handleDamageReporting = () => {
-    setShowDamageReportingModal(true)
-  }
+    setShowDamageReportingModal(true);
+  };
   const handleCloseScanner = () => {
     setScannedBarcodes([]); // Clear the scanned barcodes
     setShowScanner(false); // Close the scanner modal
@@ -87,7 +94,14 @@ const ScanOrders: React.FC = () => {
       toast.success(
         "Updating orders:" + scannedBarcodes + " to status:" + selectedStatus
       );
-      if (await createScanOrder({ ids: scannedBarcodes, selectedStatus, pickup_date: selectedStatus === "ready_for_pickup" ? pickupDate : undefined })) {
+      if (
+        await createScanOrder({
+          ids: scannedBarcodes,
+          selectedStatus,
+          pickup_date:
+            selectedStatus === "ready_for_pickup" ? pickupDate : undefined,
+        })
+      ) {
         fetchInitialData();
       }
 
@@ -110,17 +124,17 @@ const ScanOrders: React.FC = () => {
         <>
           {row.createdAt
             ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
             : "—"}
           <br />
           {row.createdAt
             ? new Date(row.createdAt).toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+                hour: "2-digit",
+                minute: "2-digit",
+              })
             : "—"}
         </>
       ),
@@ -178,7 +192,11 @@ const ScanOrders: React.FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Orders</h4>
         <div>
-          <Button onClick={handleDamageReporting} variant="danger" className="me-2">
+          <Button
+            onClick={handleDamageReporting}
+            variant="danger"
+            className="me-2"
+          >
             Report Damage
           </Button>
           <Button onClick={handleStartScanning} className="me-2">
@@ -192,15 +210,23 @@ const ScanOrders: React.FC = () => {
         <p>No Scan Orders found.</p>
       ) : (
         <DataTable
-          title="Your Pools"
+          title="Your Scanned Orders"
+          columns={columns}
           data={scanOrders}
-          columns={columns as any}
-          highlightOnHover
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
           responsive
-          striped
-          persistTableHead
         />
       )}
 
@@ -296,20 +322,30 @@ const ScanOrders: React.FC = () => {
                 <option value="cancelled">Cancelled</option>
               </Form.Select>
             </Form.Group>
-            {
-              selectedStatus === "ready_for_pickup"
-              && (
-                <Form.Group>
-                  <Form.Label>Select Status</Form.Label>
-                  <Form.Control className="form-control" type="date" onChange={(e) => {
-                    setPickupDate(new Date(e.target.value))
+            {selectedStatus === "ready_for_pickup" && (
+              <Form.Group>
+                <Form.Label>Select Status</Form.Label>
+                <Form.Control
+                  className="form-control"
+                  type="date"
+                  onChange={(e) => {
+                    setPickupDate(new Date(e.target.value));
                   }}
-                    max={new Date(new Date().setDate(new Date().getDate() + 3)).toISOString().split("T")[0]}
-                    min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]}
-                    // defaultValue={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]}
-                    placeholder="Enter Pickup Date" />
-                </Form.Group>
-              )}
+                  max={
+                    new Date(new Date().setDate(new Date().getDate() + 3))
+                      .toISOString()
+                      .split("T")[0]
+                  }
+                  min={
+                    new Date(new Date().setDate(new Date().getDate() + 1))
+                      .toISOString()
+                      .split("T")[0]
+                  }
+                  // defaultValue={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0]}
+                  placeholder="Enter Pickup Date"
+                />
+              </Form.Group>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -336,7 +372,6 @@ const ScanOrders: React.FC = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-
             <Form.Group className="mb-3">
               <Form.Label>AWB No./Order Id</Form.Label>
               <Form.Control
@@ -400,13 +435,16 @@ const ScanOrders: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleUpdateOrders}
-            disabled={!selectedStatus || (selectedStatus === "wrong_damaged" && (!issueType || !issueDescription))}
+            disabled={
+              !selectedStatus ||
+              (selectedStatus === "wrong_damaged" &&
+                (!issueType || !issueDescription))
+            }
           >
             Update Orders
           </Button>
         </Modal.Footer>
       </Modal>
-
     </div>
   );
 };

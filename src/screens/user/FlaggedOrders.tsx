@@ -1,7 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Form, Row, Col, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Form,
+  Row,
+  Col,
+  Badge,
+  Tooltip,
+  OverlayTrigger,
+} from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { getAllOrders, updateOrder, getAllFilters } from "../../APIs/user/order";
+import {
+  getAllOrders,
+  updateOrder,
+  getAllFilters,
+} from "../../APIs/user/order";
 import { fetchNewOrders } from "../../APIs/user/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/user";
@@ -11,13 +24,16 @@ import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
 import { BiCalendar } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
-import { bookCourier, checkShipmentServiceavailablity, getCommonWarehouses } from "../../APIs/user/courier";
+import {
+  bookCourier,
+  checkShipmentServiceavailablity,
+  getCommonWarehouses,
+} from "../../APIs/user/courier";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { Warehouse } from "./Warehouse";
 import { getAllWarehouses } from "../../APIs/user/warehouse";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
-
 
 export interface User {
   _id: string;
@@ -92,7 +108,9 @@ const FlaggedOrders: React.FC = () => {
   // Filter states
   const [filters, setFilters] = useState<FilterParams>({});
   const [productName, setProductName] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [startDate, setStartDate] = useState<Date>(
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  );
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [channelAccountId, setChannelAccountId] = useState<string>("");
   const [channelAccounts, setChannelAccounts] = useState<Array<any>>([]);
@@ -100,15 +118,15 @@ const FlaggedOrders: React.FC = () => {
   const [shipmentOptions, setShipmentOptions] = useState<any>([]);
   const [bestAddress, setBestAddress] = useState<string>("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
-  const [commonWarehouses, setCommonWarehouses] = useState<any>(null)
+  const [commonWarehouses, setCommonWarehouses] = useState<any>(null);
   const [labelData, setLabelData] = useState<any>([]);
   const [shipNowLoading, setShipNowLoading] = useState<boolean>(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
-  const [warehouseId, setWarehouseId] = useState<string>()
-  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([])
-  const [productSKUId, setProductSKUId] = useState<string>()
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouseId, setWarehouseId] = useState<string>();
+  const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
+  const [productSKUId, setProductSKUId] = useState<string>();
   const labelRef = useRef<HTMLDivElement>(null);
   const [courierPartners, setCourierPartners] = useState<any[]>([]);
   const [selectedCouriers, setSelectedCouriers] = useState<string[]>([]);
@@ -124,16 +142,16 @@ const FlaggedOrders: React.FC = () => {
     }
   }, [labelData]);
   useEffect(() => {
-    innitialFetch()
-  }, [])
+    innitialFetch();
+  }, []);
   const innitialFetch = async () => {
-    const allFiltersData = await getAllFilters(true)
+    const allFiltersData = await getAllFilters(true);
     const allWarehouseData = await getAllWarehouses();
     const allProductSKUData = await getAllProductSKUs();
-    setCourierPartners(allFiltersData.courierPartners)
-    setWarehouses(allWarehouseData)
-    setProductSKUs(allProductSKUData)
-  }
+    setCourierPartners(allFiltersData.courierPartners);
+    setWarehouses(allWarehouseData);
+    setProductSKUs(allProductSKUData.data);
+  };
   const fetchChannelAccounts = async () => {
     try {
       // Replace with your actual API endpoint for fetching channel accounts
@@ -154,13 +172,18 @@ const FlaggedOrders: React.FC = () => {
     try {
       // Instead of building a query string, we'll pass the filters directly as an object
       // to the getAllOrders method
-      const response = await getAllOrders(page, limit, {
-        // Include pagination parameters
+      const response = await getAllOrders(
         page,
         limit,
-        // Spread the filter parameters
-        ...filterParams,
-      }, "/flagged");
+        {
+          // Include pagination parameters
+          page,
+          limit,
+          // Spread the filter parameters
+          ...filterParams,
+        },
+        "/flagged"
+      );
 
       setOrders(response.orders);
       setTotalOrders(response.total);
@@ -177,11 +200,11 @@ const FlaggedOrders: React.FC = () => {
     if (startDate) newFilters.startDate = startDate;
     if (endDate) newFilters.endDate = endDate;
     if (channelAccountId) newFilters.channelAccountId = channelAccountId;
-    if (selectedStatuses) newFilters.selectedStatuses = selectedStatuses
-    if (selectedCouriers) newFilters.selectedCouriers = selectedCouriers
-    if (searchQuery) newFilters.searchQuery = searchQuery
-    if (productSKUId) newFilters.productSKUId = productSKUId
-    if (warehouseId) newFilters.warehouseId = warehouseId
+    if (selectedStatuses) newFilters.selectedStatuses = selectedStatuses;
+    if (selectedCouriers) newFilters.selectedCouriers = selectedCouriers;
+    if (searchQuery) newFilters.searchQuery = searchQuery;
+    if (productSKUId) newFilters.productSKUId = productSKUId;
+    if (warehouseId) newFilters.warehouseId = warehouseId;
 
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page when applying filters
@@ -189,7 +212,7 @@ const FlaggedOrders: React.FC = () => {
   };
 
   const resetFilters = () => {
-    setSearchQuery("")
+    setSearchQuery("");
     setProductName("");
     setStartDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
     setEndDate(new Date());
@@ -197,7 +220,7 @@ const FlaggedOrders: React.FC = () => {
     setFilters({});
     setCurrentPage(1);
     setSelectedStatuses([]);
-    setShowFilters(false)
+    setShowFilters(false);
     fetchOrders(1, rowsPerPage, {});
   };
 
@@ -213,16 +236,20 @@ const FlaggedOrders: React.FC = () => {
 
   const handleBookShipment = async (courier_id: any) => {
     try {
-      const response = await bookCourier(shipmentOrder?._id, courier_id, selectedWarehouse.warehouseAddress.warehouse_id)
-      toast.success(response.message)
+      const response = await bookCourier(
+        shipmentOrder?._id,
+        courier_id,
+        selectedWarehouse.warehouseAddress.warehouse_id
+      );
+      toast.success(response.message);
       if (response) {
-        setLabelData([response.data])
-        handleShipmentClose()
+        setLabelData([response.data]);
+        handleShipmentClose();
       }
     } catch (error) {
-      toast.error("Error: " + error)
+      toast.error("Error: " + error);
     }
-  }
+  };
 
   const handleBookBulkShipment = async (orders: Order[]) => {
     const len = orders.length;
@@ -233,7 +260,7 @@ const FlaggedOrders: React.FC = () => {
 
     setShipNowLoading(true);
     const courierTotals = orders.reduce((acc: any, order: any) => {
-      const courierName = order.recommended_courier_name || 'Unknown';
+      const courierName = order.recommended_courier_name || "Unknown";
       const rate = order.recommended_courier_rate || 0;
 
       if (!acc[courierName]) {
@@ -245,23 +272,34 @@ const FlaggedOrders: React.FC = () => {
     }, {});
     const breakdownText = Object.entries(courierTotals)
       .map(([name, amount]: any) => `${name}: ₹${amount.toFixed(2)}`)
-      .join('\n');
+      .join("\n");
 
-    const totalAmount: any = Object.values(courierTotals).reduce((sum: any, val: any) => sum + val, 0);
+    const totalAmount: any = Object.values(courierTotals).reduce(
+      (sum: any, val: any) => sum + val,
+      0
+    );
 
-    if (confirm(
-      `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(2)}\n\nDo you want to proceed?`
-    ) === false) {
+    if (
+      confirm(
+        `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(
+          2
+        )}\n\nDo you want to proceed?`
+      ) === false
+    ) {
       setShipNowLoading(false);
       return;
     }
-    len > 1 && toast.info(`Booking couriers for ${len} orders. Please do not refresh...`);
+    len > 1 &&
+      toast.info(
+        `Booking couriers for ${len} orders. Please do not refresh...`
+      );
 
     let doneCount = 0;
 
     await Promise.allSettled(
       orders.map(async (order) => {
-        const courier_id = order.recommended_courier_id || order.shipping_courier_id;
+        const courier_id =
+          order.recommended_courier_id || order.shipping_courier_id;
         const warehouse_id = order.recommended_warehouse_id;
 
         if (!courier_id) {
@@ -270,7 +308,11 @@ const FlaggedOrders: React.FC = () => {
         }
 
         try {
-          const response = await bookCourier(order._id, courier_id, warehouse_id);
+          const response = await bookCourier(
+            order._id,
+            courier_id,
+            warehouse_id
+          );
           toast.success(`Order ${order.order_id}: ${response.message}`);
           doneCount++;
 
@@ -293,16 +335,16 @@ const FlaggedOrders: React.FC = () => {
     setShipNowLoading(false);
   };
 
-
   const handleBulkPrint = (orders: Order[]) => {
-    toast.info("Printing labels for " + orders.length + " orders. Please wait...");
-    setLabelData(orders.map(order => order.label));
-  }
-
+    toast.info(
+      "Printing labels for " + orders.length + " orders. Please wait..."
+    );
+    setLabelData(orders.map((order) => order.label));
+  };
 
   const handlePrint = () => {
     if (labelRef.current) {
-      const printWindow = window.open('', 'PRINT', 'width=400,height=600');
+      const printWindow = window.open("", "PRINT", "width=400,height=600");
       if (printWindow) {
         printWindow.document.write(`
           <html>
@@ -369,17 +411,18 @@ const FlaggedOrders: React.FC = () => {
     }
   };
 
-
-
-  const handleSelectShipment = async (order_id: Order["_id"], shipment: any) => {
+  const handleSelectShipment = async (
+    order_id: Order["_id"],
+    shipment: any
+  ) => {
     const res = await updateOrder(order_id, {
       recomended_courier_id: shipment._id,
-    })
+    });
     if (res) {
       fetchOrders(currentPage, rowsPerPage, filters);
       handleShipmentClose();
     }
-  }
+  };
 
   const handleClose = () => {
     setShowModal(false);
@@ -391,18 +434,18 @@ const FlaggedOrders: React.FC = () => {
     setShipmentOrder(null);
     setBestAddress("");
     setShipmentOptions([]);
-    setCommonWarehouses(null)
-    setSelectedWarehouse(null)
+    setCommonWarehouses(null);
+    setSelectedWarehouse(null);
   };
-
 
   const handleChangeWarehouse = async (row: Order, selectedWarehouse: any) => {
     setShipmentOptions([]);
-    const response = await checkShipmentServiceavailablity(row, [selectedWarehouse]);
+    const response = await checkShipmentServiceavailablity(row, [
+      selectedWarehouse,
+    ]);
     setShipmentOptions(response.results);
-    setSelectedWarehouse(response.selectedWarehouse)
+    setSelectedWarehouse(response.selectedWarehouse);
   };
-
 
   const handleShipment = async (rows: Order[]) => {
     if (rows.length === 0) {
@@ -411,37 +454,50 @@ const FlaggedOrders: React.FC = () => {
     }
     const len = rows.length;
     setShipNowLoading(true);
-    len > 1 && toast.info(`Processing ${len} orders for shipment. Please do not refresh the page...`)
+    len > 1 &&
+      toast.info(
+        `Processing ${len} orders for shipment. Please do not refresh the page...`
+      );
     let doneCount = 0;
-    Promise.all(rows.map(async (row) => {
-      if (row.issues && row.issues.length > 0 && len === 1) {
-        handleEdit(row);
-        setShipNowLoading(false);
-        toast.error("Please resolve the issues before proceeding with shipment.");
-      } else {
-        const commonWarehouse = getCommonWarehouses(row)
-        setCommonWarehouses(commonWarehouse)
-        if (len == 1) {
-          setShipmentOrder(row);
-        }
-        const response = await checkShipmentServiceavailablity(row, commonWarehouse);
-        if (response) {
-          doneCount++;
-          len > 1 && toast.success(`Shipment service available for order ${doneCount} of ${len}`);
-          if (doneCount === len) {
-            fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
-            toast.success("Processed successfully.");
-          }
+    Promise.all(
+      rows.map(async (row) => {
+        if (row.issues && row.issues.length > 0 && len === 1) {
+          handleEdit(row);
+          setShipNowLoading(false);
+          toast.error(
+            "Please resolve the issues before proceeding with shipment."
+          );
+        } else {
+          const commonWarehouse = getCommonWarehouses(row);
+          setCommonWarehouses(commonWarehouse);
           if (len == 1) {
-            setShowShipmentModal(true);
-            setShipNowLoading(false);
-            setShipmentOptions(response.results);
-            setBestAddress(response.best_address);
-            setSelectedWarehouse(response.selectedWarehouse)
+            setShipmentOrder(row);
+          }
+          const response = await checkShipmentServiceavailablity(
+            row,
+            commonWarehouse
+          );
+          if (response) {
+            doneCount++;
+            len > 1 &&
+              toast.success(
+                `Shipment service available for order ${doneCount} of ${len}`
+              );
+            if (doneCount === len) {
+              fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+              toast.success("Processed successfully.");
+            }
+            if (len == 1) {
+              setShowShipmentModal(true);
+              setShipNowLoading(false);
+              setShipmentOptions(response.results);
+              setBestAddress(response.best_address);
+              setSelectedWarehouse(response.selectedWarehouse);
+            }
           }
         }
-      }
-    }))
+      })
+    );
   };
 
   const handleCancelOrder = async (order: Order, status: any) => {
@@ -449,14 +505,14 @@ const FlaggedOrders: React.FC = () => {
       order.status.push({
         status: status.toLowerCase(),
         status_date: new Date().toISOString(),
-        description: "Order cancelled by brand admin"
-      })
+        description: "Order cancelled by brand admin",
+      });
       const response = await updateOrder(order._id, {
         customer_name: order.customer_name,
         customer_phone: order.customer_phone,
         shipping_address: order.shipping_address,
         shipping_pincode: order.shipping_pincode,
-        status: order.status
+        status: order.status,
       });
       if (response) {
         toast.success("Order cancelled successfully.");
@@ -468,7 +524,7 @@ const FlaggedOrders: React.FC = () => {
       toast.error("Error cancelling order" + error);
       toast.error("Failed to cancel order.");
     }
-  }
+  };
 
   const handleEdit = (order: Order) => {
     setEditOrder(order);
@@ -485,8 +541,6 @@ const FlaggedOrders: React.FC = () => {
       }
     }
   };
-
-
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -505,15 +559,13 @@ const FlaggedOrders: React.FC = () => {
       cell: (row: Order) => (
         <div>
           #{row.order_id || "—"} <br />
-          <strong>Channel OID:</strong> {row.channel_order_id || "—"}{" "}
-          <br />
+          <strong>Channel OID:</strong> {row.channel_order_id || "—"} <br />
           <strong>
             Store OID:
             <span style={{ color: "blue" }}> {row.store_order_id || "—"} </span>
           </strong>
           <br />
-          <strong>Channel:</strong>{" "}
-          {row.channel_account_name || "—"}
+          <strong>Channel:</strong> {row.channel_account_name || "—"}
         </div>
       ),
       wrap: true,
@@ -525,7 +577,8 @@ const FlaggedOrders: React.FC = () => {
       cell: (row: Order) => (
         <div>
           <span style={{ textDecoration: "underline" }}>
-            {row.product_name || "—"}<br />
+            {row.product_name || "—"}
+            <br />
           </span>
           SKU: {row.product_sku_id || "—"}
           <br />
@@ -540,9 +593,10 @@ const FlaggedOrders: React.FC = () => {
       cell: (row: any) => (
         <div>
           {row.customer_name || "—"} <br />
-          <BsPhoneFill /> {row.customer_phone || "—"}<br />
+          <BsPhoneFill /> {row.customer_phone || "—"}
+          <br />
           {row.customer_email && <MdEmail />}{" "}
-          {(row.customer_email || "") && (<br />)}
+          {(row.customer_email || "") && <br />}
           <FaLocationPin /> {row.shipping_address}, {row.shipping_city},{" "}
           {row.shipping_state}, {row.shipping_country} - {row.shipping_pincode}
         </div>
@@ -555,10 +609,15 @@ const FlaggedOrders: React.FC = () => {
       name: "Courier Details",
       cell: (row: any) => {
         const sortedStatus = row.status
-          ? [...row.status].sort((a: any, b: any) => new Date(b.status_date).getTime() - new Date(a.status_date).getTime())
+          ? [...row.status].sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )
           : [];
 
-        const latestStatus = sortedStatus?.[0]?.status?.replaceAll("_", " ") || "—";
+        const latestStatus =
+          sortedStatus?.[0]?.status?.replaceAll("_", " ") || "—";
         return (
           <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
             {/* Recommended Courier */}
@@ -577,7 +636,6 @@ const FlaggedOrders: React.FC = () => {
                 👍 {row?.recommended_courier_name || "—"}
               </Badge>
             )}
-
             {/* Shipping Courier */}
             {row?.shipping_courier_id && (
               <>
@@ -589,7 +647,10 @@ const FlaggedOrders: React.FC = () => {
               <>
                 <FaTruck />{" "}
                 <a
-                  href={row?.tracking_url?.replace("{{awb_number}}", row.awb_number)}
+                  href={row?.tracking_url?.replace(
+                    "{{awb_number}}",
+                    row.awb_number
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "#007bff", textDecoration: "underline" }}
@@ -604,7 +665,6 @@ const FlaggedOrders: React.FC = () => {
                 <strong>AWB:</strong> — <br />
               </>
             )}
-
             {/* Latest Status with Tooltip */}
             <BsClockFill />{" "}
             <OverlayTrigger
@@ -658,10 +718,10 @@ const FlaggedOrders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
       width: "110px",
@@ -672,30 +732,41 @@ const FlaggedOrders: React.FC = () => {
       cell: (row: Order) => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
-          ? row.status.sort((a: any, b: any) =>
-            new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-          )[0]
+          ? row.status.sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return (
-          < div style={{ textAlign: "center" }} >
-            < div style={{ display: "flex", flexDirection: "row", justifyContent: 'center', gap: "5px" }} >
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: "5px",
+              }}
+            >
               {/* Edit or Schedule Pickup */}
               {latestStatus &&
                 (latestStatus.status === "AWB & Label Generated" ||
-                  latestStatus.status.toLowerCase().includes("pickup")) && (<Button
+                  latestStatus.status.toLowerCase().includes("pickup")) && (
+                  <Button
                     variant="outline-primary"
                     size="sm"
                     onClick={() => handleEdit(row)}
                   >
-                    {hasAwb
-                      ? "🗓️ Schedule Pickup" : "✏️ Edit"}
-                  </Button>)}
+                    {hasAwb ? "🗓️ Schedule Pickup" : "✏️ Edit"}
+                  </Button>
+                )}
 
               {/* Print Label or Ship Now */}
-              {hasAwb && latestStatus && (latestStatus.status !== "cancelled") && (
+              {hasAwb &&
+                latestStatus &&
+                latestStatus.status !== "cancelled" &&
                 (latestStatus.status === "AWB & Label Generated" ||
-                  latestStatus.status.toLowerCase().includes("pickup"))
-              ) && (
+                  latestStatus.status.toLowerCase().includes("pickup")) && (
                   <Button
                     variant="success"
                     onClick={() => setLabelData([row.label])}
@@ -703,8 +774,9 @@ const FlaggedOrders: React.FC = () => {
                     🖨️ Print Label
                   </Button>
                 )}
-              {!hasAwb && latestStatus && latestStatus.status !== "cancelled" &&
-                (
+              {!hasAwb &&
+                latestStatus &&
+                latestStatus.status !== "cancelled" && (
                   <Button
                     style={{
                       backgroundColor: "#F5891E",
@@ -719,10 +791,10 @@ const FlaggedOrders: React.FC = () => {
                     🚚 Ship Now
                   </Button>
                 )}
-
             </div>
             {/* Change Courier */}
-            {hasAwb && latestStatus &&
+            {hasAwb &&
+              latestStatus &&
               (latestStatus.status === "AWB & Label Generated" ||
                 latestStatus.status.toLowerCase().includes("pickup")) && (
                 <Button
@@ -741,25 +813,41 @@ const FlaggedOrders: React.FC = () => {
                 </Button>
               )}
             {/*Cancel Order*/}
-            {!hasAwb && <Button
-              variant={latestStatus?.status === "cancelled" ? "outline-success" : "outline-danger"}
-              size="sm"
-              onClick={() => {
-                if (window.confirm("Are you sure you want to cancel this order?")) {
-                  // Call your cancel order function here
-                  handleCancelOrder(row, latestStatus?.status === "cancelled" ? "re_activate" : "cancelled");
+            {!hasAwb && (
+              <Button
+                variant={
+                  latestStatus?.status === "cancelled"
+                    ? "outline-success"
+                    : "outline-danger"
                 }
-              }}
-              className="mt-2"
-            >
-              {latestStatus?.status === "cancelled" ? "Re-Activate" : "❌ Cancel Order"}
-            </Button>}
+                size="sm"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to cancel this order?"
+                    )
+                  ) {
+                    // Call your cancel order function here
+                    handleCancelOrder(
+                      row,
+                      latestStatus?.status === "cancelled"
+                        ? "re_activate"
+                        : "cancelled"
+                    );
+                  }
+                }}
+                className="mt-2"
+              >
+                {latestStatus?.status === "cancelled"
+                  ? "Re-Activate"
+                  : "❌ Cancel Order"}
+              </Button>
+            )}
           </div>
         );
       },
       width: "200px",
-    }
-
+    },
   ];
   const conditionalRowStyles = [
     {
@@ -821,9 +909,11 @@ const FlaggedOrders: React.FC = () => {
     {
       when: (row: any) => {
         const latestStatus = row.status?.length
-          ? row.status.sort((a: any, b: any) =>
-            new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-          )[0]
+          ? row.status.sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -831,10 +921,9 @@ const FlaggedOrders: React.FC = () => {
         backgroundColor: "#f8d7da", // Light red for cancelled orders
         color: "#721c24", // Dark red text for cancelled orders
         textDecoration: "line-through!important", // Strikethrough text for cancelled orders
-      }
+      },
     },
   ];
-
 
   return (
     <div className="container mt-4 ms-2 me-2">
@@ -861,12 +950,13 @@ const FlaggedOrders: React.FC = () => {
             disabled={shipNowLoading}
             onClick={() => {
               handleShipment(
-
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
-                    ? o.status.sort((a: any, b: any) =>
-                      new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-                    )[0]
+                    ? o.status.sort(
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                     : null;
                   return (
                     !o.recommended_courier_id &&
@@ -875,7 +965,7 @@ const FlaggedOrders: React.FC = () => {
                     o
                   );
                 })
-              )
+              );
             }}
             className="me-2"
             style={{
@@ -892,7 +982,7 @@ const FlaggedOrders: React.FC = () => {
               letterSpacing: "0.03em",
               boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
               // marginBottom: 8,
-              animation: "pulseGlow 1.8s infinite ease-in-out"
+              animation: "pulseGlow 1.8s infinite ease-in-out",
             }}
           >
             💡 OI AI Recommend Couriers
@@ -903,9 +993,11 @@ const FlaggedOrders: React.FC = () => {
               handleBookBulkShipment(
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
-                    ? o.status.sort((a: any, b: any) =>
-                      new Date(b.status_date).getTime() - new Date(a.status_date).getTime()
-                    )[0]
+                    ? o.status.sort(
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                     : null;
 
                   return (
@@ -916,7 +1008,7 @@ const FlaggedOrders: React.FC = () => {
                     (!latestStatus || latestStatus.status !== "cancelled")
                   );
                 })
-              )
+              );
             }}
             className="me-2"
           >
@@ -927,31 +1019,44 @@ const FlaggedOrders: React.FC = () => {
             onClick={() => {
               handleBulkPrint(
                 orders.filter((o: any) => {
-                  if (!o.label || !o.status || !Array.isArray(o.status) || o.status.length === 0) return false;
+                  if (
+                    !o.label ||
+                    !o.status ||
+                    !Array.isArray(o.status) ||
+                    o.status.length === 0
+                  )
+                    return false;
 
-                  const latestStatus = o.status
-                    .sort((a: any, b: any) => new Date(b.status_date).getTime() - new Date(a.status_date).getTime())[0];
+                  const latestStatus = o.status.sort(
+                    (a: any, b: any) =>
+                      new Date(b.status_date).getTime() -
+                      new Date(a.status_date).getTime()
+                  )[0];
 
-                  return latestStatus?.status?.toLowerCase().includes("label generated");
+                  return latestStatus?.status
+                    ?.toLowerCase()
+                    .includes("label generated");
                 })
               );
             }}
           >
             🖨️ Print Labels
           </Button>
-
         </div>
       </div>
 
-      <Modal show={showFilters} onHide={() => setShowFilters(false)} size="lg" centered>
+      <Modal
+        show={showFilters}
+        onHide={() => setShowFilters(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Filter Orders</Modal.Title>
         </Modal.Header>
 
-
         <Modal.Body>
           <Form>
-
             {/* Filters */}
             <Row className="mb-4">
               <Col md={4}>
@@ -981,7 +1086,8 @@ const FlaggedOrders: React.FC = () => {
                     <option value="">All Warehouses</option>
                     {warehouses.map((warehouse) => (
                       <option key={warehouse._id} value={warehouse._id}>
-                        {warehouse.name}, {warehouse.address1}, {warehouse.City} - {warehouse.State} ({warehouse.pincode})
+                        {warehouse.name}, {warehouse.address1}, {warehouse.City}{" "}
+                        - {warehouse.State} ({warehouse.pincode})
                       </option>
                     ))}
                   </Form.Select>
@@ -1006,8 +1112,7 @@ const FlaggedOrders: React.FC = () => {
               </Col>
             </Row>
 
-            <Row className="mb-4">
-            </Row>
+            <Row className="mb-4"></Row>
 
             <Row className="mb-4">
               <Col md={12}>
@@ -1017,14 +1122,22 @@ const FlaggedOrders: React.FC = () => {
                     multiple
                     value={selectedCouriers}
                     onChange={(e) =>
-                      setSelectedCouriers(Array.from(e.target.selectedOptions, (opt) => opt.value))
+                      setSelectedCouriers(
+                        Array.from(e.target.selectedOptions, (opt) => opt.value)
+                      )
                     }
                   >
-                    {courierPartners.map((courier) => courier.courier && (
-                      <option key={courier.shipping_courier_id} value={courier.shipping_courier_id}>
-                        {courier.courier} ({courier.count})
-                      </option>
-                    ))}
+                    {courierPartners.map(
+                      (courier) =>
+                        courier.courier && (
+                          <option
+                            key={courier.shipping_courier_id}
+                            value={courier.shipping_courier_id}
+                          >
+                            {courier.courier} ({courier.count})
+                          </option>
+                        )
+                    )}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -1036,10 +1149,13 @@ const FlaggedOrders: React.FC = () => {
           <Button variant="secondary" onClick={resetFilters}>
             Reset
           </Button>
-          <Button variant="primary" onClick={() => {
-            applyFilters();
-            setShowFilters(false);
-          }}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              applyFilters();
+              setShowFilters(false);
+            }}
+          >
             Apply Filters
           </Button>
         </Modal.Footer>
@@ -1078,10 +1194,14 @@ const FlaggedOrders: React.FC = () => {
             <div className="col-lg-6">
               <div>
                 #{editOrder?.order_id || "—"} <br />
-                <strong>Channel OID:</strong> {editOrder?.channel_order_id || "—"} <br />
+                <strong>Channel OID:</strong>{" "}
+                {editOrder?.channel_order_id || "—"} <br />
                 <strong>
                   Store OID:
-                  <span style={{ color: "blue" }}> {editOrder?.store_order_id || "—"} </span>
+                  <span style={{ color: "blue" }}>
+                    {" "}
+                    {editOrder?.store_order_id || "—"}{" "}
+                  </span>
                 </strong>
                 <br />
                 <strong>Channel:</strong>{" "}
@@ -1091,7 +1211,8 @@ const FlaggedOrders: React.FC = () => {
             <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
               {editOrder?.["product_name"]} <br />
               <b>
-                <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} ({editOrder?.["payment_method"]})
+                <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} (
+                {editOrder?.["payment_method"]})
               </b>
               <br />
               QTY: {editOrder?.["quantity"]} pc <br />
@@ -1101,102 +1222,161 @@ const FlaggedOrders: React.FC = () => {
               {editOrder?.["order_date"]?.split("T")[1]?.split(":")[1]}
             </div>
           </div>
-          <div className='row'>
-            <div className='col-lg-6' style={{ padding: 10, }}>
+          <div className="row">
+            <div className="col-lg-6" style={{ padding: 10 }}>
               {/* <BiPackage size={12} />  Weight: {editOrder?.['weight']} grams */}
             </div>
-            <div className='col-lg-6' style={{ padding: 10, fontSize: 12 }}>
+            <div className="col-lg-6" style={{ padding: 10, fontSize: 12 }}>
               {/* Dimensions: {editOrder?.['length']}cm X {editOrder?.['width']}cm X {editOrder?.['height']}cm */}
             </div>
           </div>
 
-          <Form className="theme-form row" action='#'>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Name"}</Form.Label>
-              <Form.Control className="form-control" type="text" onChange={(e) => {
-                let tempData = { ...editOrder }
-                tempData['customer_name'] = e.target.value
-                setEditOrder(tempData as Order);
-              }} defaultValue={editOrder?.['customer_name']} placeholder="Enter Customer Name" />
-            </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Phone Number"}</Form.Label>
-              <Form.Control className="form-control" type="number" onChange={(e) => {
-                if (e.target.value.length > 9) {
-                  let tempData = { ...editOrder }
-                  tempData['customer_phone'] = e.target.value
+          <Form className="theme-form row" action="#">
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Name"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                onChange={(e) => {
+                  let tempData = { ...editOrder };
+                  tempData["customer_name"] = e.target.value;
                   setEditOrder(tempData as Order);
-                }
-              }} defaultValue={editOrder?.['customer_phone']} placeholder="Enter Customer Phone Number" />
+                }}
+                defaultValue={editOrder?.["customer_name"]}
+                placeholder="Enter Customer Name"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Address"}</Form.Label>
-              <Form.Control className="form-control" type="text" onChange={(e) => {
-                let tempData = { ...editOrder }
-                tempData['shipping_address'] = e.target.value
-                setEditOrder(tempData as Order);
-              }} defaultValue={editOrder?.['shipping_address']} placeholder="Enter Customer Address" />
-            </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer Pin Code"}</Form.Label>
-              <Form.Control className="form-control" type="number" onChange={async (e) => {
-                const pincode = e.target.value;
-
-                // Validate pincode format (6-digit number)
-                if (!/^\d{6}$/.test(pincode)) {
-                  // toast.error("Invalid Pincode");
-                  return;
-                }
-
-                try {
-                  const { data } = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-                  const postOffices = data?.[0]?.PostOffice;
-
-                  if (Array.isArray(postOffices) && postOffices.length > 0) {
-                    const postOffice = postOffices[0];
-
-                    setEditOrder((prev: any) => {
-                      if (!prev) return prev; // safeguard in case prev is null
-
-                      return {
-                        ...prev,
-                        // shipping_address: postOffice?.Name || "",
-                        shipping_city: postOffice?.District || "",
-                        shipping_state: postOffice?.State || "",
-                        shipping_country: "India",
-                        shipping_pincode: pincode,
-                      };
-                    });
-                  } else {
-                    toast.error("No address found for this pincode");
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Phone Number"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                onChange={(e) => {
+                  if (e.target.value.length > 9) {
+                    let tempData = { ...editOrder };
+                    tempData["customer_phone"] = e.target.value;
+                    setEditOrder(tempData as Order);
                   }
-                } catch (error) {
-                  toast.error("Failed to fetch pincode details");
-                  toast.error("Pincode API error:" + error);
-                }
-              }} defaultValue={editOrder?.['shipping_pincode']} placeholder="Enter Pin Code" />
-              <div id="pin_error" style={{ color: 'red' }}></div>
+                }}
+                defaultValue={editOrder?.["customer_phone"]}
+                placeholder="Enter Customer Phone Number"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer City"}</Form.Label>
-              <Form.Control className="form-control" type="text" value={editOrder?.['shipping_city']} placeholder="Enter Customer City" disabled={true} />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Address"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                onChange={(e) => {
+                  let tempData = { ...editOrder };
+                  tempData["shipping_address"] = e.target.value;
+                  setEditOrder(tempData as Order);
+                }}
+                defaultValue={editOrder?.["shipping_address"]}
+                placeholder="Enter Customer Address"
+              />
             </Form.Group>
-            <Form.Group className='col-lg-6'>
-              <Form.Label className="col-form-label pt-0" >{"Customer State"}</Form.Label>
-              <Form.Control className="form-control" type="text" value={editOrder?.['shipping_state']} placeholder="Enter Customer State" disabled={true} />
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer Pin Code"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                onChange={async (e) => {
+                  const pincode = e.target.value;
+
+                  // Validate pincode format (6-digit number)
+                  if (!/^\d{6}$/.test(pincode)) {
+                    // toast.error("Invalid Pincode");
+                    return;
+                  }
+
+                  try {
+                    const { data } = await axios.get(
+                      `https://api.postalpincode.in/pincode/${pincode}`
+                    );
+                    const postOffices = data?.[0]?.PostOffice;
+
+                    if (Array.isArray(postOffices) && postOffices.length > 0) {
+                      const postOffice = postOffices[0];
+
+                      setEditOrder((prev: any) => {
+                        if (!prev) return prev; // safeguard in case prev is null
+
+                        return {
+                          ...prev,
+                          // shipping_address: postOffice?.Name || "",
+                          shipping_city: postOffice?.District || "",
+                          shipping_state: postOffice?.State || "",
+                          shipping_country: "India",
+                          shipping_pincode: pincode,
+                        };
+                      });
+                    } else {
+                      toast.error("No address found for this pincode");
+                    }
+                  } catch (error) {
+                    toast.error("Failed to fetch pincode details");
+                    toast.error("Pincode API error:" + error);
+                  }
+                }}
+                defaultValue={editOrder?.["shipping_pincode"]}
+                placeholder="Enter Pin Code"
+              />
+              <div id="pin_error" style={{ color: "red" }}></div>
+            </Form.Group>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer City"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                value={editOrder?.["shipping_city"]}
+                placeholder="Enter Customer City"
+                disabled={true}
+              />
+            </Form.Group>
+            <Form.Group className="col-lg-6">
+              <Form.Label className="col-form-label pt-0">
+                {"Customer State"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                value={editOrder?.["shipping_state"]}
+                placeholder="Enter Customer State"
+                disabled={true}
+              />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button style={{ color: "primary", }} className="m-r-15" onClick={handleEditSubmit} >{"Submit"}</Button>
-          <Button style={{ color: "warning", }} className="m-r-15" onClick={handleClose} >{"Close"}</Button>
-
-
+          <Button
+            style={{ color: "primary" }}
+            className="m-r-15"
+            onClick={handleEditSubmit}
+          >
+            {"Submit"}
+          </Button>
+          <Button
+            style={{ color: "warning" }}
+            className="m-r-15"
+            onClick={handleClose}
+          >
+            {"Close"}
+          </Button>
         </Modal.Footer>
       </Modal>
 
-
-      <Modal show={showShipmentModal} onHide={handleShipmentClose} size='xl'>
+      <Modal show={showShipmentModal} onHide={handleShipmentClose} size="xl">
         <Modal.Header>
           Select Shipment for {shipmentOrder?.order_id}
         </Modal.Header>
@@ -1204,45 +1384,57 @@ const FlaggedOrders: React.FC = () => {
           <div className="row g-3">
             {/* Order Info */}
             <div className="col-lg-3">
-              <div style={{
-                border: "1px solid #F5891E",
-                borderRadius: 10,
-                padding: "12px 16px",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
-                fontSize: 13,
-                color: "#000434",
-                fontFamily: "Hiragino Maru Gothic ProN W4",
-              }}>
+              <div
+                style={{
+                  border: "1px solid #F5891E",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
+                  fontSize: 13,
+                  color: "#000434",
+                  fontFamily: "Hiragino Maru Gothic ProN W4",
+                }}
+              >
                 <div style={{ fontWeight: "bold", marginBottom: 6 }}>
                   #{shipmentOrder?.order_id || "—"}
                 </div>
-                <div><strong>Channel OID:</strong> {shipmentOrder?.channel_order_id || "—"}</div>
+                <div>
+                  <strong>Channel OID:</strong>{" "}
+                  {shipmentOrder?.channel_order_id || "—"}
+                </div>
                 <div>
                   <strong>Store OID:</strong>
                   <span style={{ color: "#F5891E", fontWeight: "bold" }}>
-                    {" "}{shipmentOrder?.store_order_id || "—"}
+                    {" "}
+                    {shipmentOrder?.store_order_id || "—"}
                   </span>
                 </div>
-                <div><strong>Channel:</strong> {shipmentOrder?.channel_account_name || "—"}</div>
+                <div>
+                  <strong>Channel:</strong>{" "}
+                  {shipmentOrder?.channel_account_name || "—"}
+                </div>
               </div>
             </div>
 
             {/* Product Info */}
             <div className="col-lg-3">
-              <div style={{
-                border: "1px solid #F5891E",
-                borderRadius: 10,
-                padding: "12px 16px",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
-                fontSize: 13,
-                color: "#000434",
-                fontFamily: "Hiragino Maru Gothic ProN W4",
-              }}>
+              <div
+                style={{
+                  border: "1px solid #F5891E",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
+                  fontSize: 13,
+                  color: "#000434",
+                  fontFamily: "Hiragino Maru Gothic ProN W4",
+                }}
+              >
                 <div>{shipmentOrder?.product_name || "—"}</div>
                 <div style={{ fontWeight: "bold", margin: "6px 0" }}>
-                  <FaDollarSign size={12} /> ₹{shipmentOrder?.total_amount} ({shipmentOrder?.payment_method})
+                  <FaDollarSign size={12} /> ₹{shipmentOrder?.total_amount} (
+                  {shipmentOrder?.payment_method})
                 </div>
                 <div>QTY: {shipmentOrder?.quantity} pc</div>
                 <div>
@@ -1255,24 +1447,33 @@ const FlaggedOrders: React.FC = () => {
 
             {/* Customer Info */}
             <div className="col-lg-3">
-              <div style={{
-                border: "1px solid #F5891E",
-                borderRadius: 10,
-                padding: "12px 16px",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
-                fontSize: 13,
-                color: "#000434",
-                fontFamily: "Hiragino Maru Gothic ProN W4",
-              }}>
+              <div
+                style={{
+                  border: "1px solid #F5891E",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 1px 6px rgba(0, 0, 0, 0.06)",
+                  fontSize: 13,
+                  color: "#000434",
+                  fontFamily: "Hiragino Maru Gothic ProN W4",
+                }}
+              >
                 <div>{shipmentOrder?.customer_name || "—"}</div>
-                <div><BsPhoneFill /> {shipmentOrder?.customer_phone || "—"}</div>
+                <div>
+                  <BsPhoneFill /> {shipmentOrder?.customer_phone || "—"}
+                </div>
                 {shipmentOrder?.customer_email && (
-                  <div><MdEmail /> {shipmentOrder?.customer_email}</div>
+                  <div>
+                    <MdEmail /> {shipmentOrder?.customer_email}
+                  </div>
                 )}
                 <div>
-                  <FaLocationPin /> {shipmentOrder?.shipping_address}, {shipmentOrder?.shipping_city},{" "}
-                  {shipmentOrder?.shipping_state}, {shipmentOrder?.shipping_country} - {shipmentOrder?.shipping_pincode}
+                  <FaLocationPin /> {shipmentOrder?.shipping_address},{" "}
+                  {shipmentOrder?.shipping_city},{" "}
+                  {shipmentOrder?.shipping_state},{" "}
+                  {shipmentOrder?.shipping_country} -{" "}
+                  {shipmentOrder?.shipping_pincode}
                 </div>
               </div>
             </div>
@@ -1280,55 +1481,65 @@ const FlaggedOrders: React.FC = () => {
             {/* AI Recommended Address */}
             {bestAddress && (
               <div className="col-lg-3">
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#FFFFFF",
-                  border: "1.5px solid #F5891E",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  fontFamily: "Hiragino Maru Gothic ProN W4",
-                  color: "#000434",
-                  textAlign: "center",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                  animation: "brandGlow 2.5s infinite ease-in-out"
-                }}>
-                  <div style={{
-                    background: "linear-gradient(135deg, #F5891E, #000434)",
-                    color: "#FFFFFF",
-                    padding: "4px 12px",
-                    borderRadius: 24,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    display: "inline-flex",
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    gap: 6,
-                    letterSpacing: "0.03em",
-                    boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-                    marginBottom: 8,
-                    animation: "pulseGlow 1.8s infinite ease-in-out"
-                  }}>
+                    justifyContent: "center",
+                    backgroundColor: "#FFFFFF",
+                    border: "1.5px solid #F5891E",
+                    borderRadius: 10,
+                    padding: "12px 16px",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    fontFamily: "Hiragino Maru Gothic ProN W4",
+                    color: "#000434",
+                    textAlign: "center",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                    animation: "brandGlow 2.5s infinite ease-in-out",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #F5891E, #000434)",
+                      color: "#FFFFFF",
+                      padding: "4px 12px",
+                      borderRadius: 24,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      letterSpacing: "0.03em",
+                      boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+                      marginBottom: 8,
+                      animation: "pulseGlow 1.8s infinite ease-in-out",
+                    }}
+                  >
                     🤖 OU AI Recommended
                   </div>
                   <div style={{ fontSize: 13, marginBottom: 6 }}>
                     🏠 <b>{bestAddress}</b>
                   </div>
-                  <div style={{
-                    backgroundColor: "#000434",
-                    color: "#FFFFFF",
-                    fontSize: 12,
-                    borderRadius: 16,
-                    padding: "4px 10px",
-                    fontWeight: 500,
-                    boxShadow: "0 0 8px #F5891E",
-                    userSelect: "none",
-                    width: "fit-content",
-                  }}>
-                    🔄 RTO Risk: <span style={{ color: "#F5891E", fontWeight: 600 }}>~10%</span> (Low)
+                  <div
+                    style={{
+                      backgroundColor: "#000434",
+                      color: "#FFFFFF",
+                      fontSize: 12,
+                      borderRadius: 16,
+                      padding: "4px 10px",
+                      fontWeight: 500,
+                      boxShadow: "0 0 8px #F5891E",
+                      userSelect: "none",
+                      width: "fit-content",
+                    }}
+                  >
+                    🔄 RTO Risk:{" "}
+                    <span style={{ color: "#F5891E", fontWeight: 600 }}>
+                      ~10%
+                    </span>{" "}
+                    (Low)
                   </div>
                 </div>
               </div>
@@ -1337,16 +1548,25 @@ const FlaggedOrders: React.FC = () => {
 
           {selectedWarehouse && (
             <div>
-              <h5 style={{ margin: "16px 0", textAlign: 'center' }}>Available Warehouses</h5>
+              <h5 style={{ margin: "16px 0", textAlign: "center" }}>
+                Available Warehouses
+              </h5>
               <div className="row justify-content-center">
                 {commonWarehouses.map((warehouse: any) => {
-                  const isSelected = warehouse.warehouse_id === selectedWarehouse?.warehouseAddress?.warehouse_id;
+                  const isSelected =
+                    warehouse.warehouse_id ===
+                    selectedWarehouse?.warehouseAddress?.warehouse_id;
                   return (
-                    <div key={warehouse.warehouse_id} className="col-md-4 col-sm-6 mb-4">
+                    <div
+                      key={warehouse.warehouse_id}
+                      className="col-md-4 col-sm-6 mb-4"
+                    >
                       <div
                         style={{
                           padding: "15px",
-                          border: isSelected ? "2px solid #F5891E" : "1px solid #ddd",
+                          border: isSelected
+                            ? "2px solid #F5891E"
+                            : "1px solid #ddd",
                           borderRadius: "12px",
                           backgroundColor: isSelected ? "#FFF7F0" : "#ffffff",
                           fontWeight: isSelected ? "bold" : "normal",
@@ -1361,7 +1581,8 @@ const FlaggedOrders: React.FC = () => {
                           overflow: "hidden",
                         }}
                         onClick={() => {
-                          shipmentOrder && handleChangeWarehouse(shipmentOrder, warehouse);
+                          shipmentOrder &&
+                            handleChangeWarehouse(shipmentOrder, warehouse);
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = "translateY(-3px)";
@@ -1389,16 +1610,24 @@ const FlaggedOrders: React.FC = () => {
                         )}
 
                         <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                          <strong style={{ fontSize: "16px" }}>{warehouse.warehouse_name}</strong>
+                          <strong style={{ fontSize: "16px" }}>
+                            {warehouse.warehouse_name}
+                          </strong>
                           <br />
-                          📍 {warehouse.warehouse_address1}, {warehouse.warehouse_address2}, {warehouse.warehouse_city}, {warehouse.warehouse_state} - {warehouse.warehouse_pincode}
+                          📍 {warehouse.warehouse_address1},{" "}
+                          {warehouse.warehouse_address2},{" "}
+                          {warehouse.warehouse_city},{" "}
+                          {warehouse.warehouse_state} -{" "}
+                          {warehouse.warehouse_pincode}
                           <br />
                           <small style={{ color: "#555" }}>
                             📦 <strong>Combo Stock:</strong> {warehouse.stock}
                             <br />
                             {isSelected && (
                               <>
-                                🚚 <strong>Travel:</strong> {selectedWarehouse.distance} KM, {selectedWarehouse.duration}
+                                🚚 <strong>Travel:</strong>{" "}
+                                {selectedWarehouse.distance} KM,{" "}
+                                {selectedWarehouse.duration}
                               </>
                             )}
                           </small>
@@ -1409,8 +1638,6 @@ const FlaggedOrders: React.FC = () => {
                 })}
               </div>
             </div>
-
-
           )}
           <hr />
           {shipmentOptions.length > 0 && (
@@ -1423,160 +1650,257 @@ const FlaggedOrders: React.FC = () => {
               // conditionalRowStyles={conditionalRowStyles}
               columns={[
                 {
-                  name: 'Company Name',
+                  name: "Company Name",
                   selector: (row: any) => row.courier_name,
                   cell: (row: any, index: any) => {
                     return (
                       <div style={{ padding: 10, fontSize: 12 }}>
-
-                        {index === 0 && <div style={{
-                          background: "linear-gradient(135deg, #F5891E, #000434)",
-                          color: "#FFFFFF",
-                          padding: "4px 12px",
-                          borderRadius: 24,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          letterSpacing: "0.03em",
-                          boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-                          marginBottom: 8,
-                          animation: "pulseGlow 1.8s infinite ease-in-out"
-                        }}>
-                          🤖 OU AI Recommended
-                        </div>}
-                        <span style={{ fontSize: 14 }}><b>{row.courier_name}</b></span><br />
-                        Calling: {row.call_before_delivery && "Available"}<br />
+                        {index === 0 && (
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #F5891E, #000434)",
+                              color: "#FFFFFF",
+                              padding: "4px 12px",
+                              borderRadius: 24,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              letterSpacing: "0.03em",
+                              boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+                              marginBottom: 8,
+                              animation: "pulseGlow 1.8s infinite ease-in-out",
+                            }}
+                          >
+                            🤖 OU AI Recommended
+                          </div>
+                        )}
+                        <span style={{ fontSize: 14 }}>
+                          <b>{row.courier_name}</b>
+                        </span>
+                        <br />
+                        Calling: {row.call_before_delivery && "Available"}
+                        <br />
                         {/* Delivery Boy Contact: {row.delivery_boy_contact}<br /> */}
                         Chargeable Weight: {row.charge_weight} KG
-                      </div>)
+                      </div>
+                    );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'Performance',
+                  name: "Performance",
                   selector: (row: any) => row.rating,
                   cell: (row: any) => {
                     return (
                       <div style={{ padding: 10, fontSize: 12 }}>
-                        Delivery: {row.delivery_performance}<br />
-                        Pickup: {row.pickup_performance}<br />
-                        RTO: {row.rto_performance}<br />
-                        Tracking: {row.tracking_performance}<br />
-                        <b>Overall: {row.rating}/10</b><br />
-                      </div>)
+                        Delivery: {row.delivery_performance}
+                        <br />
+                        Pickup: {row.pickup_performance}
+                        <br />
+                        RTO: {row.rto_performance}
+                        <br />
+                        Tracking: {row.tracking_performance}
+                        <br />
+                        <b>Overall: {row.rating}/10</b>
+                        <br />
+                      </div>
+                    );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'Charges',
+                  name: "Charges",
                   selector: (row: any) => row.total_amount,
                   cell: (row: any) => {
                     return (
-                      <div style={{ padding: 10, fontSize: 12, }}>
-                        <u> <b style={{ textTransform: 'uppercase' }}>ZONE {row.zone}</b></u><br />
-                        {row.cod_charges > 0 && row.cod_charges != 0 ? "COD: ₹" + row.cod_charges : ""}<br />
-                        Freight: ₹{row.freight_charge}<br />
-
+                      <div style={{ padding: 10, fontSize: 12 }}>
+                        <u>
+                          {" "}
+                          <b style={{ textTransform: "uppercase" }}>
+                            ZONE {row.zone}
+                          </b>
+                        </u>
+                        <br />
+                        {row.cod_charges > 0 && row.cod_charges != 0
+                          ? "COD: ₹" + row.cod_charges
+                          : ""}
+                        <br />
+                        Freight: ₹{row.freight_charge}
+                        <br />
                         {parseFloat(row.other_charges) !== 0 && (
                           <>
                             <OverlayTrigger
                               placement="top"
                               overlay={
                                 <Tooltip id="tooltip-top">
-                                  18% GST on ₹{row.freight_charge + row.cod_charges} = {((row.freight_charge + row.cod_charges) * 0.18).toFixed(2)}<br />
-                                  {(row.other_charges - ((row.freight_charge + row.cod_charges) * 0.18)) > 0 && `LM Surcharge ₹${(row.other_charges - ((row.freight_charge + row.cod_charges) * 0.18)).toFixed(2)}`}<br />
+                                  18% GST on ₹
+                                  {row.freight_charge + row.cod_charges} ={" "}
+                                  {(
+                                    (row.freight_charge + row.cod_charges) *
+                                    0.18
+                                  ).toFixed(2)}
+                                  <br />
+                                  {row.other_charges -
+                                    (row.freight_charge + row.cod_charges) *
+                                      0.18 >
+                                    0 &&
+                                    `LM Surcharge ₹${(
+                                      row.other_charges -
+                                      (row.freight_charge + row.cod_charges) *
+                                        0.18
+                                    ).toFixed(2)}`}
+                                  <br />
                                 </Tooltip>
                               }
                             >
-                              <span style={{ textDecoration: 'underline dotted', cursor: 'help' }}>
+                              <span
+                                style={{
+                                  textDecoration: "underline dotted",
+                                  cursor: "help",
+                                }}
+                              >
                                 Other
                               </span>
-                            </OverlayTrigger>: ₹{row.other_charges}
+                            </OverlayTrigger>
+                            : ₹{row.other_charges}
                             <br />
                           </>
                         )}
-                        <span style={{ fontWeight: 800, textDecoration: 'underline' }}>Total: ₹{row.total_amount}</span><br /><br />
-                        <i>RTO: ₹{row.rto_charges}</i><br />
-                      </div>)
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            textDecoration: "underline",
+                          }}
+                        >
+                          Total: ₹{row.total_amount}
+                        </span>
+                        <br />
+                        <br />
+                        <i>RTO: ₹{row.rto_charges}</i>
+                        <br />
+                      </div>
+                    );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'Estimated Delivery',
+                  name: "Estimated Delivery",
                   selector: (row: any) => row.etd_hours,
                   cell: (row: any) => {
                     const deliveryDate = new Date(row.etd);
-                    const formattedDate = deliveryDate.toLocaleDateString(undefined, {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    });
+                    const formattedDate = deliveryDate.toLocaleDateString(
+                      undefined,
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    );
 
                     return (
-                      <div className="smart-estimate" style={{
-                        background: "linear-gradient(135deg, #f3f9ff, #e6f2ff)",
-                        padding: "10px",
-                        fontSize: "13px",
-                        borderRadius: "10px",
-                        color: "#000434",
-                        fontFamily: "Hiragino Maru Gothic ProN W4",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-                      }}>
-
-                        <div style={{
-                          background: "linear-gradient(135deg, #F5891E, #000434)",
-                          color: "#FFFFFF",
-                          padding: "4px 12px",
-                          borderRadius: 24,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          letterSpacing: "0.03em",
-                          boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-                          marginBottom: 8,
-                          animation: "pulseGlow 1.8s infinite ease-in-out"
-                        }}>
+                      <div
+                        className="smart-estimate"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #f3f9ff, #e6f2ff)",
+                          padding: "10px",
+                          fontSize: "13px",
+                          borderRadius: "10px",
+                          color: "#000434",
+                          fontFamily: "Hiragino Maru Gothic ProN W4",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #F5891E, #000434)",
+                            color: "#FFFFFF",
+                            padding: "4px 12px",
+                            borderRadius: 24,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            letterSpacing: "0.03em",
+                            boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
+                            marginBottom: 8,
+                            animation: "pulseGlow 1.8s infinite ease-in-out",
+                          }}
+                        >
                           🤖 OU AI Estimated
                         </div>
                         <div style={{ marginBottom: "4px" }}>
-                          📅 <strong style={{ color: "#F5891E" }}>Arrives:</strong> {formattedDate}
+                          📅{" "}
+                          <strong style={{ color: "#F5891E" }}>Arrives:</strong>{" "}
+                          {formattedDate}
                         </div>
 
                         <div style={{ marginBottom: "4px" }}>
-                          ⏱️ <span className="pulse-eta">{row.estimated_delivery_days}d {row.etd_hours}h</span>
+                          ⏱️{" "}
+                          <span className="pulse-eta">
+                            {row.estimated_delivery_days}d {row.etd_hours}h
+                          </span>
                         </div>
 
-                        <div style={{
-                          fontSize: "11px",
-                          marginTop: "6px",
-                          color: "#666",
-                          fontStyle: "italic",
-                        }}>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            marginTop: "6px",
+                            color: "#666",
+                            fontStyle: "italic",
+                          }}
+                        >
                           Based on courier history & zone analysis
                         </div>
                       </div>
                     );
                   },
                   compact: true,
-                  sortable: true
+                  sortable: true,
                 },
                 {
-                  name: 'More',
+                  name: "More",
                   cell: (row: any) => {
                     return (
-                      <div style={{ justifyContent: "center", alignItems: "center", display: "flex", flexDirection: 'column', padding: 10, fontSize: 12, }}>
-                        <Button variant="primary" onClick={() => handleBookShipment(row._id)} >{"Book Shipment"}</Button>
-                        < Button variant="danger" size="sm" style={{ margin: 5 }} onClick={() => shipmentOrder?._id && handleSelectShipment(shipmentOrder?._id, row)} > {"Select"}</Button >
+                      <div
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          padding: 10,
+                          fontSize: 12,
+                        }}
+                      >
+                        <Button
+                          variant="primary"
+                          onClick={() => handleBookShipment(row._id)}
+                        >
+                          {"Book Shipment"}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          style={{ margin: 5 }}
+                          onClick={() =>
+                            shipmentOrder?._id &&
+                            handleSelectShipment(shipmentOrder?._id, row)
+                          }
+                        >
+                          {" "}
+                          {"Select"}
+                        </Button>
                       </div>
-                    )
+                    );
                   },
                   compact: true,
                   center: true,
@@ -1587,13 +1911,16 @@ const FlaggedOrders: React.FC = () => {
         </Modal.Body>
         <Modal.Footer>
           {/* <Btn attrBtn={{ color: "primary", className: "m-r-15", onClick: () => handleAddSubmit() }} >{"Submit"}</Btn> */}
-          <Button style={{ color: "warning" }} className="m-r-15" onClick={handleShipmentClose} >{"Close"}</Button>
-
-
+          <Button
+            style={{ color: "warning" }}
+            className="m-r-15"
+            onClick={handleShipmentClose}
+          >
+            {"Close"}
+          </Button>
         </Modal.Footer>
       </Modal>
-
-    </div >
+    </div>
   );
 };
 

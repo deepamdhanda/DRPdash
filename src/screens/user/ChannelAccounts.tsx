@@ -11,14 +11,13 @@ import { getAllPools } from "../../APIs/user/pool";
 import { useLocation } from "react-router-dom";
 import { initialChannelAccountFetch } from "../../APIs/user/initialChannelAccountFetch";
 import { toast } from "react-toastify";
-import AIIcon from "../../assets/ai_icon";
 
 type Automation = {
   auto_ship: boolean;
   auto_ai_recommendation: boolean;
   auto_whatsapp: boolean;
   auto_ai_rating: boolean;
-}
+};
 export interface ChannelAccount {
   _id?: string;
   channel_account_name: string;
@@ -35,9 +34,9 @@ export interface ChannelAccount {
 }
 
 const ChannelAccounts: React.FC = () => {
-  const [fetchingProducts, setFetchingProducts] = useState<boolean>(false)
-  const [fetchingOrders, setFetchingOrders] = useState<boolean>(false)
-  const [showFetchingModal, setShowFetchingModal] = useState<boolean>(false)
+  const [fetchingProducts, setFetchingProducts] = useState<boolean>(false);
+  const [fetchingOrders, setFetchingOrders] = useState<boolean>(false);
+  const [showFetchingModal, setShowFetchingModal] = useState<boolean>(false);
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [channels, setChannels] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
@@ -45,7 +44,9 @@ const ChannelAccounts: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingChannelAccount, setEditingChannelAccount] =
     useState<ChannelAccount | null>(null);
-  const [keys, setKeys] = useState<{ key: string; value: string, disabled?: boolean }[]>([]);
+  const [keys, setKeys] = useState<
+    { key: string; value: string; disabled?: boolean }[]
+  >([]);
   const [url_channel, setUrlChannel] = useState<any>();
   const [selectedPoolAdmins, setSelectedPoolAdmins] = useState<any[]>([]);
   const [adminAccess, setAdminAccess] = useState<string[]>([]);
@@ -76,7 +77,7 @@ const ChannelAccounts: React.FC = () => {
       ]);
       setChannelAccounts(channelAccountsData);
       setChannels(channelsData);
-      setPools(poolsData);
+      setPools(poolsData.data);
     } catch (error) {
       console.error("Error loading initial data", error);
     } finally {
@@ -86,55 +87,75 @@ const ChannelAccounts: React.FC = () => {
 
   const handleFetchingClose = () => {
     setFetchingProducts(false);
-    setShowFetchingModal(false)
+    setShowFetchingModal(false);
     setFetchingOrders(false);
-  }
+  };
   const startInitialChannelAccountFetch = async (channel: ChannelAccount) => {
     setFetchingProducts(true);
-    setShowFetchingModal(true)
+    setShowFetchingModal(true);
     setFetchingOrders(true);
     const productsPromise = initialChannelAccountFetch(channel._id, "products")
-      .then(result => {
-        handleFetchingClose()
+      .then((result) => {
+        handleFetchingClose();
         return result; // pass the result along
       })
-      .catch(err => {
-        handleFetchingClose()
+      .catch((err) => {
+        handleFetchingClose();
         throw err; // still fail if products fetch fails
       });
 
-    const ordersPromise = initialChannelAccountFetch(channel._id, "orders").then(result => {
-      handleFetchingClose()
-      return result; // pass the result along
-    })
-      .catch(err => {
-        handleFetchingClose()
+    const ordersPromise = initialChannelAccountFetch(channel._id, "orders")
+      .then((result) => {
+        handleFetchingClose();
+        return result; // pass the result along
+      })
+      .catch((err) => {
+        handleFetchingClose();
         throw err; // still fail if products fetch fails
-      });;
+      });
 
     await Promise.all([productsPromise, ordersPromise]);
-
-  }
+  };
 
   const checkNewToken = () => {
     const params = new URLSearchParams(location.search);
-    if (params.get("channel") === "shopify" && params.get("token") && params.get("store_url")) {
-      let existingAccount = channelAccounts.find(ca => ca.channel_id?.channel_name.toLowerCase() === "shopify" && ca.keys?.store_url === params.get("store_url"));
+    if (
+      params.get("channel") === "shopify" &&
+      params.get("token") &&
+      params.get("store_url")
+    ) {
+      let existingAccount = channelAccounts.find(
+        (ca) =>
+          ca.channel_id?.channel_name.toLowerCase() === "shopify" &&
+          ca.keys?.store_url === params.get("store_url")
+      );
       if (existingAccount) {
-        toast.info("A Shopify channel account with this store URL already exists. Just click on update if you want to update the keys.");
+        toast.info(
+          "A Shopify channel account with this store URL already exists. Just click on update if you want to update the keys."
+        );
         existingAccount.keys = {
           ...existingAccount.keys,
           api_access_token: params.get("token") || "",
-        }
+        };
         handleEdit(existingAccount);
         return;
       }
       setSelectedChannel((params.get("channel") || "").toLowerCase());
       setKeys([
-        { key: "api_access_token", value: params.get("token") || "", disabled: true },
-        { key: "store_url", value: params.get("store_url") || "", disabled: true }
+        {
+          key: "api_access_token",
+          value: params.get("token") || "",
+          disabled: true,
+        },
+        {
+          key: "store_url",
+          value: params.get("store_url") || "",
+          disabled: true,
+        },
       ]);
-      setUrlChannel(channels.find(c => c.channel_name.toLowerCase() === "shopify"));
+      setUrlChannel(
+        channels.find((c) => c.channel_name.toLowerCase() === "shopify")
+      );
       setShowModal(true);
     }
   };
@@ -159,9 +180,16 @@ const ChannelAccounts: React.FC = () => {
 
   const handleEdit = (channelAccount: ChannelAccount) => {
     setEditingChannelAccount(channelAccount);
-    setSelectedChannel(channelAccount.channel_id?.channel_name.toLowerCase() || "custom");
+    setSelectedChannel(
+      channelAccount.channel_id?.channel_name.toLowerCase() || "custom"
+    );
     if (channelAccount.keys) {
-      setKeys(Object.entries(channelAccount.keys).map(([key, value]) => ({ key, value: String(value) })));
+      setKeys(
+        Object.entries(channelAccount.keys).map(([key, value]) => ({
+          key,
+          value: String(value),
+        }))
+      );
     } else {
       setKeys([]);
     }
@@ -169,11 +197,12 @@ const ChannelAccounts: React.FC = () => {
       handlePoolChange(channelAccount.pool_id._id);
     }
     if (channelAccount.admins) {
-      setAdminAccess(channelAccount.admins.map(a => a._id));
+      setAdminAccess(channelAccount.admins.map((a) => a._id));
     }
     setAutomation({
       auto_ship: channelAccount.automation?.auto_ship || false,
-      auto_ai_recommendation: channelAccount.automation?.auto_ai_recommendation || false,
+      auto_ai_recommendation:
+        channelAccount.automation?.auto_ai_recommendation || false,
       auto_whatsapp: channelAccount.automation?.auto_whatsapp || false,
       auto_ai_rating: channelAccount.automation?.auto_ai_rating || false,
     });
@@ -201,9 +230,7 @@ const ChannelAccounts: React.FC = () => {
     const selectedId = e.target.value;
     const selectedChannel = channels.find((c) => c._id === selectedId);
     if (selectedChannel?.channel_name.toLowerCase() === "shopify") {
-      setKeys([
-
-      ]);
+      setKeys([]);
     } else {
       setKeys([]);
     }
@@ -226,8 +253,13 @@ const ChannelAccounts: React.FC = () => {
   // };
 
   const handleToggleStatus = async (channelAccount: ChannelAccount) => {
-    const newStatus = channelAccount.status === "active" ? "inactive" : "active";
-    if (window.confirm(`Are you sure you want to mark this channel account as ${newStatus}?`)) {
+    const newStatus =
+      channelAccount.status === "active" ? "inactive" : "active";
+    if (
+      window.confirm(
+        `Are you sure you want to mark this channel account as ${newStatus}?`
+      )
+    ) {
       try {
         await updateChannelAccount(channelAccount._id!, {
           ...channelAccount,
@@ -257,22 +289,29 @@ const ChannelAccounts: React.FC = () => {
 
     const formData: ChannelAccount = {
       channel_account_name: form.channel_account_name.value.trim(),
-      pool_id: pools.find(pool => pool._id === form.pool_id.value),
-      channel_id: channels.find(channel => channel._id === form.channel_id.value),
+      pool_id: pools.find((pool) => pool._id === form.pool_id.value),
+      channel_id: channels.find(
+        (channel) => channel._id === form.channel_id.value
+      ),
       fulfillment_type: "Self",
       keys: keysObject,
       status: editingChannelAccount?.status || "active",
-      admins: (selectedPoolAdmins.filter((admin) => adminAccess.includes(admin._id))).map((admin) => (admin._id)),
+      admins: selectedPoolAdmins
+        .filter((admin) => adminAccess.includes(admin._id))
+        .map((admin) => admin._id),
       automation: { ...automation },
     };
-    let result: any = false
+    let result: any = false;
     try {
       if (editingChannelAccount) {
-        result = await updateChannelAccount(editingChannelAccount._id!, formData) as ChannelAccount;
+        result = (await updateChannelAccount(
+          editingChannelAccount._id!,
+          formData
+        )) as ChannelAccount;
       } else {
-        result = await createChannelAccount(formData) as ChannelAccount;
+        result = (await createChannelAccount(formData)) as ChannelAccount;
       }
-      startInitialChannelAccountFetch(result)
+      startInitialChannelAccountFetch(result);
       fetchInitialData();
       handleClose();
     } catch (error) {
@@ -283,40 +322,55 @@ const ChannelAccounts: React.FC = () => {
   const columns = [
     {
       name: "Name",
-      selector: (row: ChannelAccount) => (
+      cell: (row: ChannelAccount) => (
         <div>
-          {row.status === "active" ? "🟢" : row.status === "inactive" ? "🔴" : "❌"}{" "}
+          {row.status === "active"
+            ? "🟢"
+            : row.status === "inactive"
+            ? "🔴"
+            : "❌"}{" "}
           <strong>{row.channel_account_name}</strong>
         </div>
       ),
       sortable: true,
     },
+
     {
       name: "Pool",
       selector: (row: ChannelAccount) => row.pool_id?.name || "—",
       sortable: true,
     },
+
     {
       name: "Channel",
       selector: (row: ChannelAccount) => row.channel_id?.channel_name || "—",
       sortable: true,
     },
+
     {
       name: "Admins",
-      selector: (row: ChannelAccount) => (
+      cell: (row: ChannelAccount) => (
         <div>
           {row.admins?.map((admin) => {
-            // Define a list of colors
-            const colors = ["info", "warning", "danger", "light", "primary", "secondary", "dark"];
+            const colors = [
+              "info",
+              "warning",
+              "danger",
+              "light",
+              "primary",
+              "secondary",
+              "dark",
+            ];
 
-            // Generate a unique index for the admin based on their _id
-            const uniqueIndex = admin._id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-
-            // Assign a color based on the unique index
-            const badgeColor = colors[uniqueIndex];
+            // Unique deterministic color selection per admin
+            const uniqueIndex =
+              admin._id
+                .split("")
+                .reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+              colors.length;
 
             return (
-              <Badge className="me-1" key={admin._id} bg={badgeColor}>
+              <Badge key={admin._id} className="me-1" bg={colors[uniqueIndex]}>
                 {admin.name}
               </Badge>
             );
@@ -325,58 +379,65 @@ const ChannelAccounts: React.FC = () => {
       ),
       wrap: true,
     },
+
     {
       name: "Ownership",
       selector: (row: ChannelAccount) => row.ownership?.name || "—",
       sortable: true,
     },
+
     {
       name: "Fulfillment",
       selector: (row: ChannelAccount) => row.fulfillment_type || "—",
       sortable: true,
     },
+
     {
       name: "Created On",
       selector: (row: ChannelAccount) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
     },
+
     {
       name: "Actions",
       cell: (row: ChannelAccount) => (
-        <>
+        <div style={{ display: "flex", gap: "6px" }}>
           <Button
             variant="outline-primary"
             size="sm"
-            className="me-2"
             onClick={() => handleEdit(row)}
           >
             Edit
           </Button>
+
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant={
+              row.status === "active" ? "outline-danger" : "outline-success"
+            }
             size="sm"
             onClick={() => handleToggleStatus(row)}
           >
             {row.status === "active" ? "Deactivate" : "Activate"}
           </Button>
+
           <Button
-            variant={row.status === "active" ? "outline-danger" : "outline-success"}
+            variant="outline-info"
             size="sm"
             onClick={() => startInitialChannelAccountFetch(row)}
           >
-            Fetch Data
+            Fetch
           </Button>
-        </>
+        </div>
       ),
       button: true,
-      width: "160px",
+      width: "210px",
     },
   ];
 
@@ -466,16 +527,23 @@ const ChannelAccounts: React.FC = () => {
                 name="channel_id"
                 onChange={handleChannelChange}
                 value={
-                  url_channel?._id || editingChannelAccount?.channel_id?._id || ""
+                  url_channel?._id ||
+                  editingChannelAccount?.channel_id?._id ||
+                  ""
                 }
               >
-                {channels.filter(i => {
-                  return i.channel_name.toLowerCase() == selectedChannel.toLowerCase()
-                }).map((channel) => (
-                  <option selected key={channel._id} value={channel._id}>
-                    {channel.channel_name}
-                  </option>
-                ))}
+                {channels
+                  .filter((i) => {
+                    return (
+                      i.channel_name.toLowerCase() ==
+                      selectedChannel.toLowerCase()
+                    );
+                  })
+                  .map((channel) => (
+                    <option selected key={channel._id} value={channel._id}>
+                      {channel.channel_name}
+                    </option>
+                  ))}
               </Form.Select>
             </Form.Group>
 
@@ -487,21 +555,36 @@ const ChannelAccounts: React.FC = () => {
                   id="auto_ship"
                   label="Auto Ship"
                   checked={automation.auto_ship}
-                  onChange={e => setAutomation(a => ({ ...a, auto_ship: e.target.checked }))}
+                  onChange={(e) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_ship: e.target.checked,
+                    }))
+                  }
                 />
                 <Form.Check
                   type="switch"
                   id="auto_ai_recommendation"
                   label="OUAI Courier Recommendation"
                   checked={automation.auto_ai_recommendation}
-                  onChange={e => setAutomation(a => ({ ...a, auto_ai_recommendation: e.target.checked }))}
+                  onChange={(e) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_ai_recommendation: e.target.checked,
+                    }))
+                  }
                 />
                 <Form.Check
                   type="switch"
                   id="auto_whatsapp"
                   label="Auto WhatsApp"
                   checked={automation.auto_whatsapp}
-                  onChange={e => setAutomation(a => ({ ...a, auto_whatsapp: e.target.checked }))}
+                  onChange={(e) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_whatsapp: e.target.checked,
+                    }))
+                  }
                 />
 
                 <Form.Check
@@ -509,7 +592,12 @@ const ChannelAccounts: React.FC = () => {
                   id="auto_ai_rating"
                   label="OUAI Customer Rating"
                   checked={automation.auto_ai_rating}
-                  onChange={e => setAutomation(a => ({ ...a, auto_ai_rating: e.target.checked }))}
+                  onChange={(e) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_ai_rating: e.target.checked,
+                    }))
+                  }
                 />
               </div>
             </Form.Group>
@@ -558,32 +646,47 @@ const ChannelAccounts: React.FC = () => {
       </Modal>
       <Modal show={showFetchingModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>
-            Fetching Data from Channel Store
-          </Modal.Title>
+          <Modal.Title>Fetching Data from Channel Store</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ fontSize: "1.1rem", lineHeight: "1.6" }}>
-          <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontWeight: 600, marginRight: "8px" }}>📦 Fetching Products:</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <span style={{ fontWeight: 600, marginRight: "8px" }}>
+              📦 Fetching Products:
+            </span>
             {fetchingProducts ? (
-              <span style={{ color: "#f5891e", fontWeight: 500 }}>⏳ Processing...</span>
+              <span style={{ color: "#f5891e", fontWeight: 500 }}>
+                ⏳ Processing...
+              </span>
             ) : (
-              <span style={{ color: "green", fontWeight: 500 }}>✅ Complete</span>
+              <span style={{ color: "green", fontWeight: 500 }}>
+                ✅ Complete
+              </span>
             )}
           </div>
 
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ fontWeight: 600, marginRight: "8px" }}>🚚 Fetching Orders:</span>
+            <span style={{ fontWeight: 600, marginRight: "8px" }}>
+              🚚 Fetching Orders:
+            </span>
             {fetchingOrders ? (
-              <span style={{ color: "#f5891e", fontWeight: 500 }}>⏳ Processing...</span>
+              <span style={{ color: "#f5891e", fontWeight: 500 }}>
+                ⏳ Processing...
+              </span>
             ) : (
-              <span style={{ color: "green", fontWeight: 500 }}>✅ Complete</span>
+              <span style={{ color: "green", fontWeight: 500 }}>
+                ✅ Complete
+              </span>
             )}
           </div>
         </Modal.Body>
-
       </Modal>
-    </div >
+    </div>
   );
 };
 

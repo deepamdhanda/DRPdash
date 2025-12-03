@@ -3,16 +3,21 @@ import { appAxios } from "../../axios/appAxios";
 import { products_url } from "../../URLs/user";
 import { Product } from "../../screens/user/Products";
 
-export const getAllProducts = async () => {
+export const getAllProducts = async (page: number = 1, limit: number = 100) => {
   try {
-    const response = await appAxios.get(products_url);
-    return response.data as Product[];
+    const response = await appAxios.get(
+      `${products_url}?page=${page}&limit=${limit}`
+    );
+
+    return {
+      data: response.data.data as Product[],
+      total: response.data.totalRecords, // backend must return this
+    };
   } catch (error: any) {
     toast.error("Failed to fetch products.");
     throw error;
   }
 };
-
 export const createProduct = async (data: any) => {
   try {
     const response = await appAxios.post(products_url, data);
