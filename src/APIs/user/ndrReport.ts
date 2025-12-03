@@ -3,17 +3,27 @@ import { appAxios } from "../../axios/appAxios";
 import { ndrReports_url } from "../../URLs/user";
 import { NDRReport } from "../../screens/user/NDRReport";
 
-export const getAllNDRReports = async () => {
+export const getAllNDRReports = async (
+  page: number = 1,
+  limit: number = 100
+) => {
   try {
-    const response = await appAxios.get(ndrReports_url);
-    return response.data as NDRReport[];
+    const response = await appAxios.get(
+      `${ndrReports_url}?page=${page}&limit=${limit}`
+    );
+    return {
+      data: response.data.data as NDRReport[],
+      total: response.data.total,
+    };
   } catch (error: any) {
     toast.error("Failed to fetch ndrReports.");
     throw error;
   }
 };
 
-export const createNDRReport = async (data: Omit<NDRReport, "_id" | "created_by" | "status">) => {
+export const createNDRReport = async (
+  data: Omit<NDRReport, "_id" | "created_by" | "status">
+) => {
   try {
     const response = await appAxios.post(ndrReports_url, data);
     toast.success("NDRReport created successfully!");

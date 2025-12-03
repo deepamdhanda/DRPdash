@@ -29,6 +29,9 @@ type newProductSKU = {
 };
 
 const ChannelSKU: React.FC = () => {
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
   const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [unlinkedProducts, setUnlinkedProducts] = useState<newProductSKU[]>([]);
@@ -47,7 +50,7 @@ const ChannelSKU: React.FC = () => {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [page, limit]);
 
   const fetchInitialData = async () => {
     try {
@@ -55,11 +58,12 @@ const ChannelSKU: React.FC = () => {
         await Promise.all([
           getAllProductSKUs(),
           getAllChannelAccounts(),
-          getUnlinkedProductSku(),
+          getUnlinkedProductSku(page, limit),
         ]);
+      setTotalRecords(unlinkedProductsData.total);
       setProductSKUs(productSKUsData.data);
       setChannelAccounts(channelAccountsData);
-      setUnlinkedProducts(unlinkedProductsData);
+      setUnlinkedProducts(unlinkedProductsData.data);
     } catch (error) {
       console.error("Error fetching initial data", error);
     }
@@ -196,18 +200,18 @@ const ChannelSKU: React.FC = () => {
         ) : (
           <></>
         ),
-        // <Button
-        //   variant="outline-danger"
-        //   className="me-2"
-        //   onClick={() => {
-        //     setSelectedProductSKUs([row._id]);
-        //     setSelectedChannelAccounts([row.channel_account_id]);
-        //     setSelectedVariant(row.variant_id);
-        //     setShowLinkModal(true);
-        //   }}
-        // >
-        //   Unlink Product
-        // </Button>
+      // <Button
+      //   variant="outline-danger"
+      //   className="me-2"
+      //   onClick={() => {
+      //     setSelectedProductSKUs([row._id]);
+      //     setSelectedChannelAccounts([row.channel_account_id]);
+      //     setSelectedVariant(row.variant_id);
+      //     setShowLinkModal(true);
+      //   }}
+      // >
+      //   Unlink Product
+      // </Button>
       width: "180px",
     },
   ];
@@ -218,7 +222,7 @@ const ChannelSKU: React.FC = () => {
         <h4>Channel SKU Management</h4>
         <Button onClick={() => setShowModal(true)}>+ Link New Products</Button>
       </div>
-      <DataTable
+      {/* <DataTable
         title="Channel SKUs"
         data={unlinkedProducts}
         columns={columns}
@@ -228,6 +232,26 @@ const ChannelSKU: React.FC = () => {
         responsive
         striped
         persistTableHead
+      /> */}
+
+      <DataTable
+        title="Channel SKUs"
+        columns={columns}
+        data={unlinkedProducts}
+        pagination
+        paginationServer
+        paginationTotalRows={totalRecords}
+        paginationDefaultPage={page}
+        paginationPerPage={limit}
+        onChangePage={(p) => {
+          setPage(p);
+        }}
+        onChangeRowsPerPage={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1); // ALWAYS reset to page 1 when limit changes
+        }}
+        highlightOnHover
+        responsive
       />
 
       <Modal

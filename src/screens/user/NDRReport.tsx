@@ -21,25 +21,30 @@ export interface NDRReport {
 }
 
 const NDRReports: React.FC = () => {
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
   const [ndr_reports, setNDRReports] = useState<NDRReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [rescheduleDate, setRescheduleDate] = useState<any>();
   const [sellerAction, setSellerAction] = useState<any>();
   const [showModal, setShowModal] = useState(false);
-  const [editingNDRReport, setEditingNDRReport] = useState<NDRReport | null>(null);
-
+  const [editingNDRReport, setEditingNDRReport] = useState<NDRReport | null>(
+    null
+  );
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [page, limit]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
       const [ndr_reportsData] = await Promise.all([
-        getAllNDRReports(),
+        getAllNDRReports(page, limit),
       ]);
-      setNDRReports(ndr_reportsData);
+      setTotalRecords(ndr_reportsData.total);
+      setNDRReports(ndr_reportsData.data);
     } catch (error) {
       console.error("Error loading ndr_reports or users", error);
     } finally {
@@ -52,15 +57,12 @@ const NDRReports: React.FC = () => {
     setEditingNDRReport(null);
   };
 
-
   const handleEdit = (ndr_report: NDRReport) => {
     setEditingNDRReport(ndr_report);
     setShowModal(true);
   };
 
-
   const handleSubmit = async () => {
-
     try {
       if (editingNDRReport) {
         await updateNDRReport(editingNDRReport._id, {
@@ -84,8 +86,10 @@ const NDRReports: React.FC = () => {
       selector: (row: any) => row.awb,
       cell: (row: any) => (
         <div>
-          <i>#{row.order.order_id}</i><br />
-          <strong>{row.awb}</strong><br />
+          <i>#{row.order.order_id}</i>
+          <br />
+          <strong>{row.awb}</strong>
+          <br />
           <small className="text-muted">{row.courier || "—"}</small>
         </div>
       ),
@@ -102,12 +106,17 @@ const NDRReports: React.FC = () => {
         const lastAttempt = row.attempts?.[row.currentAttempt - 1];
         const date = lastAttempt?.scanDateTime?.split("T")[0] || "-";
         const reason = lastAttempt?.ndrReason || "—";
-        const badgeClass = row.latestStatus === "pending" ? "warning" : "success";
+        const badgeClass =
+          row.latestStatus === "pending" ? "warning" : "success";
 
         return (
-          <div >
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-              <span style={{ fontWeight: 600, marginRight: 6 }}>#{row.currentAttempt}</span>
+          <div>
+            <div
+              style={{ display: "flex", alignItems: "center", marginBottom: 4 }}
+            >
+              <span style={{ fontWeight: 600, marginRight: 6 }}>
+                #{row.currentAttempt}
+              </span>
               <span
                 className={`badge bg-${badgeClass}`}
                 style={{ textTransform: "capitalize", fontSize: "0.85em" }}
@@ -115,28 +124,38 @@ const NDRReports: React.FC = () => {
                 {row.latestStatus}
               </span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-              <i className="bi bi-calendar-event" style={{ marginRight: 4 }}></i>
+            <div
+              style={{ display: "flex", alignItems: "center", marginBottom: 2 }}
+            >
+              <i
+                className="bi bi-calendar-event"
+                style={{ marginRight: 4 }}
+              ></i>
               <span style={{ fontSize: "0.9em" }}>{date}</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", color: "#555" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", color: "#555" }}
+            >
               <i className="bi bi-info-circle" style={{ marginRight: 4 }}></i>
-              <span style={{ fontSize: "0.85em", fontStyle: "italic" }}>{reason}</span>
+              <span style={{ fontSize: "0.85em", fontStyle: "italic" }}>
+                {reason}
+              </span>
             </div>
           </div>
-
         );
       },
       sortable: true,
     },
     {
       name: "Resolution Action",
-      selector: (row: any) => row.attempts?.[row.currentAttempt - 1]?.resolutionAction || "-",
+      selector: (row: any) =>
+        row.attempts?.[row.currentAttempt - 1]?.resolutionAction || "-",
       wrap: true,
     },
     {
       name: "Seller Action",
-      selector: (row: any) => row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.action || "-",
+      selector: (row: any) =>
+        row.attempts?.[row.currentAttempt - 1]?.sellerFeedback?.action || "-",
       wrap: true,
     },
     {
@@ -154,7 +173,6 @@ const NDRReports: React.FC = () => {
     },
   ];
 
-
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -168,26 +186,34 @@ const NDRReports: React.FC = () => {
       ) : (
         <DataTable
           title="Your NDR Reports"
+          columns={columns}
           data={ndr_reports}
-          columns={columns as any}
-          highlightOnHover
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
           responsive
-          striped
-          persistTableHead
         />
       )}
       <Modal show={showModal} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>
-            Update NDR Report — {editingNDRReport?.awb} (#{editingNDRReport?.order?.order_id})
+            Update NDR Report — {editingNDRReport?.awb} (#
+            {editingNDRReport?.order?.order_id})
           </Modal.Title>
         </Modal.Header>
 
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-
             {/* Seller Action */}
             <Form.Group className="mb-2">
               <Form.Label>Seller Action</Form.Label>
@@ -226,8 +252,6 @@ const NDRReports: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-
-
     </div>
   );
 };
