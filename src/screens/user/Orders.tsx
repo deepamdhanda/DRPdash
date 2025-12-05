@@ -323,14 +323,17 @@ const Orders: React.FC = () => {
     setAllStatus(allFiltersData.statuses);
     setPaymentMethods(allFiltersData.paymentMethods);
     setCourierPartners(allFiltersData.courierPartners);
-    setWarehouses(allWarehouseData);
+    setWarehouses(allWarehouseData.data);
     setProductSKUs(allProductSKUData.data);
   };
   const fetchChannelAccounts = async () => {
     try {
       // Replace with your actual API endpoint for fetching channel accounts
-      const response = await appAxios.get(channelAccounts_url, {});
-      const data = await response.data;
+      const response = await appAxios.get(
+        `${channelAccounts_url}?limit=100`,
+        {}
+      );
+      const data = await response.data.data;
       setChannelAccounts(data);
     } catch (error) {
       toast.error("Error fetching channel accounts" + error);

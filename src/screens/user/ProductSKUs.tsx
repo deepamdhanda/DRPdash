@@ -114,7 +114,7 @@ const ProductSKUs: React.FC = () => {
 
       setProductSKUs(skuData.data);
       setTotalRecords(skuData.total);
-      setWarehouses(warehousesData);
+      setWarehouses(warehousesData.data);
       setProducts(productsData.data);
       setProductPacks(packsData.data);
     } catch (error) {

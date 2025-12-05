@@ -5,6 +5,7 @@ import {
   getAllWarehouses,
   createWarehouse,
   updateWarehouse,
+  updateStatus,
 } from "../../APIs/user/warehouse";
 import { getUser } from "../../APIs/user/user";
 import { toast } from "react-toastify";
@@ -35,6 +36,9 @@ export interface User {
 }
 
 const Warehouses: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true); // Added loading state
   const [showModal, setShowModal] = useState(false);
@@ -43,16 +47,16 @@ const Warehouses: React.FC = () => {
   );
   const [adminList, setAdminList] = useState<User[]>([]);
 
-
   useEffect(() => {
     fetchWarehouses();
-  }, []);
+  }, [page, limit]);
 
   const fetchWarehouses = async () => {
     try {
       setLoading(true); // Set loading to true before fetching
-      const data = await getAllWarehouses();
-      setWarehouses(data);
+      const data = await getAllWarehouses(page, limit);
+      setTotalRecords(data.total);
+      setWarehouses(data.data);
     } catch (error) {
       console.error("Error fetching warehouses", error);
     } finally {
@@ -68,12 +72,11 @@ const Warehouses: React.FC = () => {
 
   const handleShow = () => setShowModal(true);
 
-  const handleEdit = (warehouse: Warehouse) => {
-    setEditingWarehouse(warehouse);
-    setShowModal(true);
-    setAdminList(warehouse.admins || []);
-
-  };
+  // const handleEdit = (warehouse: Warehouse) => {
+  //   setEditingWarehouse(warehouse);
+  //   setShowModal(true);
+  //   setAdminList(warehouse.admins || []);
+  // };
 
   const handleToggleStatus = async (warehouse: Warehouse) => {
     const newStatus = warehouse.status === "active" ? "inactive" : "active";
@@ -83,10 +86,7 @@ const Warehouses: React.FC = () => {
       )
     ) {
       try {
-        await updateWarehouse(warehouse._id, {
-          ...warehouse,
-          status: newStatus,
-        });
+        await updateStatus(warehouse._id);
         fetchWarehouses();
       } catch (err) {
         console.error("Error toggling status", err);
@@ -145,7 +145,6 @@ const Warehouses: React.FC = () => {
     }
   };
 
-
   const handleUserSearch = async (email: string) => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) return;
@@ -183,8 +182,8 @@ const Warehouses: React.FC = () => {
           {row.status === "active"
             ? `🟢`
             : row.status === "inactive"
-              ? `🔴`
-              : `❌`}{" "}
+            ? `🔴`
+            : `❌`}{" "}
           <strong style={{ fontSize: 16 }}> {row.name}</strong>
         </div>
       ),
@@ -194,7 +193,8 @@ const Warehouses: React.FC = () => {
     {
       name: "Address",
       selector: (row: Warehouse) =>
-        `${row.address1}${row.address2 ? `, ${row.address2}` : ""}, ${row.City
+        `${row.address1}${row.address2 ? `, ${row.address2}` : ""}, ${
+          row.City
         }, ${row.State}, ${row.Country} - ${row.pincode}`,
       wrap: true,
       compact: true,
@@ -228,10 +228,10 @@ const Warehouses: React.FC = () => {
       selector: (row: Warehouse) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
       style: { margin: 10 },
@@ -240,14 +240,14 @@ const Warehouses: React.FC = () => {
       name: "Actions",
       cell: (row: Warehouse) => (
         <>
-          <Button
+          {/* <Button
             variant="outline-primary"
             size="sm"
             className="me-2"
             onClick={() => handleEdit(row)}
           >
             Edit
-          </Button>
+          </Button> */}
           <Button
             variant={
               row.status === "active" ? "outline-danger" : "outline-success"
@@ -277,18 +277,37 @@ const Warehouses: React.FC = () => {
       ) : warehouses.length === 0 ? (
         <p>No warehouses found.</p>
       ) : (
+        // <DataTable
+        //   title="Your Warehouse"
+        //   data={warehouses}
+        //   columns={columns as any}
+        //   highlightOnHover
+        //   defaultSortFieldId={1}
+        //   pagination
+        //   paginationRowsPerPageOptions={[10, 20, 50, 100]}
+        //   responsive
+        //   fixedHeader
+        //   persistTableHead
+        //   striped
+        // />
         <DataTable
           title="Your Warehouse"
-          data={warehouses}
           columns={columns as any}
-          highlightOnHover
-          defaultSortFieldId={1}
+          data={warehouses}
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50, 100]}
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
           responsive
-          fixedHeader
-          persistTableHead
-          striped
         />
       )}
 
@@ -472,7 +491,11 @@ const Warehouses: React.FC = () => {
                       <span
                         role="button"
                         onClick={() => removeAdmin(admin._id)}
-                        style={{ marginLeft: 6, cursor: "pointer", color: "white" }}
+                        style={{
+                          marginLeft: 6,
+                          cursor: "pointer",
+                          color: "white",
+                        }}
                       >
                         ×
                       </span>

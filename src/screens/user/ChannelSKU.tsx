@@ -62,7 +62,7 @@ const ChannelSKU: React.FC = () => {
         ]);
       setTotalRecords(unlinkedProductsData.total);
       setProductSKUs(productSKUsData.data);
-      setChannelAccounts(channelAccountsData);
+      setChannelAccounts(channelAccountsData.data);
       setUnlinkedProducts(unlinkedProductsData.data);
     } catch (error) {
       console.error("Error fetching initial data", error);

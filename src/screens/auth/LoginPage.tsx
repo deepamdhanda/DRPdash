@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginUser, RegisterUser } from "../../APIs/authAPIs";
 import BG from "../../assets/bg.jpg";
@@ -259,7 +259,15 @@ export const AuthPage: React.FC = () => {
                     )}
                   </>
                 )}
-
+                {isLogin ? (
+                  <Link to="/forgotPassword">
+                    <div className="text-primary text-decoration-underline">
+                      Forgot Password ?
+                    </div>
+                  </Link>
+                ) : (
+                  ""
+                )}
                 <input
                   style={styles.input}
                   type="password"

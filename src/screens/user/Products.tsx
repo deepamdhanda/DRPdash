@@ -57,7 +57,7 @@ const Products: React.FC = () => {
     const fetchWarehouses = async () => {
       try {
         const warehouseData = await getAllWarehouses();
-        setWarehouses(warehouseData);
+        setWarehouses(warehouseData.data);
       } catch (error) {
         console.error("Error loading warehouses", error);
       }

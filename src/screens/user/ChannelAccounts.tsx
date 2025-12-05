@@ -5,6 +5,7 @@ import {
   getAllChannelAccounts,
   createChannelAccount,
   updateChannelAccount,
+  deactivateAccount,
 } from "../../APIs/user/channelAccount";
 import { getAllChannels } from "../../APIs/user/channel";
 import { getAllPools } from "../../APIs/user/pool";
@@ -34,6 +35,9 @@ export interface ChannelAccount {
 }
 
 const ChannelAccounts: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [fetchingProducts, setFetchingProducts] = useState<boolean>(false);
   const [fetchingOrders, setFetchingOrders] = useState<boolean>(false);
   const [showFetchingModal, setShowFetchingModal] = useState<boolean>(false);
@@ -61,7 +65,7 @@ const ChannelAccounts: React.FC = () => {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [page, limit]);
 
   useEffect(() => {
     checkNewToken();
@@ -71,11 +75,12 @@ const ChannelAccounts: React.FC = () => {
     setLoading(true);
     try {
       const [channelAccountsData, channelsData, poolsData] = await Promise.all([
-        getAllChannelAccounts(),
+        getAllChannelAccounts(page, limit),
         getAllChannels(),
         getAllPools(),
       ]);
-      setChannelAccounts(channelAccountsData);
+      setTotalRecords(channelAccountsData.total);
+      setChannelAccounts(channelAccountsData.data);
       setChannels(channelsData);
       setPools(poolsData.data);
     } catch (error) {
@@ -261,10 +266,7 @@ const ChannelAccounts: React.FC = () => {
       )
     ) {
       try {
-        await updateChannelAccount(channelAccount._id!, {
-          ...channelAccount,
-          status: newStatus,
-        });
+        await deactivateAccount(channelAccount._id!);
         fetchInitialData();
       } catch (error) {
         console.error("Error toggling status", error);
@@ -453,18 +455,37 @@ const ChannelAccounts: React.FC = () => {
       ) : channelAccounts.length === 0 ? (
         <p>No channel accounts found.</p>
       ) : (
+        // <DataTable
+        //   title="Your Channel Accounts"
+        //   data={channelAccounts}
+        //   columns={columns}
+        //   highlightOnHover
+        //   defaultSortFieldId={1}
+        //   pagination
+        //   paginationRowsPerPageOptions={[10, 20, 50, 100]}
+        //   responsive
+        //   fixedHeader
+        //   persistTableHead
+        //   striped
+        // />
         <DataTable
           title="Your Channel Accounts"
-          data={channelAccounts}
           columns={columns}
-          highlightOnHover
-          defaultSortFieldId={1}
+          data={channelAccounts}
           pagination
-          paginationRowsPerPageOptions={[10, 20, 50, 100]}
+          paginationServer
+          paginationTotalRows={totalRecords}
+          paginationDefaultPage={page}
+          paginationPerPage={limit}
+          onChangePage={(p) => {
+            setPage(p);
+          }}
+          onChangeRowsPerPage={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1); // ALWAYS reset to page 1 when limit changes
+          }}
+          highlightOnHover
           responsive
-          fixedHeader
-          persistTableHead
-          striped
         />
       )}
 

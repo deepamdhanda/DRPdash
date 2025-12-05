@@ -64,7 +64,7 @@ export const Dashboard: React.FC = () => {
     const productSKUData = await getAllProductSKUs();
     const channelAccountsData = await getAllChannelAccounts();
     setProductSKUs(productSKUData.data);
-    setChannelAccounts(channelAccountsData);
+    setChannelAccounts(channelAccountsData.data);
   };
 
   const fetchOrderSummary = async () => {
