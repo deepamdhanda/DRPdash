@@ -33,7 +33,7 @@ const JoinWaitingList: React.FC = () => {
   const exitIntentRef = useRef<HTMLDivElement | null>(null);
 
   // Launch date used in original file
-  const launchDate = new Date("2025-10-01T12:00:00Z").getTime();
+  const launchDate = new Date("2025-12-11T11:00:00Z").getTime();
 
 
   // Helper pad

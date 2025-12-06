@@ -19,14 +19,9 @@ export const LoginUser = async (
     const { data } = await appAxios.post(loginURL, userdata, {
       withCredentials: true,
     });
-    // if (apiRes.data) {
-    //   // console.log(apiRes.data.token)
-    //   Cookies.set("username", apiRes.data.name, { expires: 1000 });
-    //   Cookies.set("authToken", apiRes.data.token.split(' ')[1], { expires: 1000 });
-
-    //   next();
-    // }
-    next(data.verified, userdata.email);
+    if (data) {
+      next(data.verified, userdata.email);
+    }
   } catch (error: any) {
     toast.error(error.message || "something went wrong");
   }
@@ -41,11 +36,8 @@ export const RegisterUser = async (
       withCredentials: true,
     });
     if (apiRes.data) {
-      // console.log(apiRes.data.token)
-      // Cookies.set("username", apiRes.data.name, { expires: 1000 });
-      // Cookies.set("authToken", apiRes.data.token.split(' ')[1], { expires: 1000 });
+      next(userdata.email);
     }
-    next(userdata.email);
   } catch (error: any) {
     toast.error(error.message || "something went wrong");
   }

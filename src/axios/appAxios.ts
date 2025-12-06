@@ -51,7 +51,7 @@ Axios.interceptors.response.use(
       }
 
       // Redirect user to login
-      window.location.href = "/login";
+      // window.location.href = "/login";
       return Promise.reject(error);
     }
 
