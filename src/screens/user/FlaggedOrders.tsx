@@ -34,6 +34,7 @@ import axios from "axios";
 import { Warehouse } from "./Warehouse";
 import { getAllWarehouses } from "../../APIs/user/warehouse";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
+import { getAllChannelAccounts } from "../../APIs/user/channelAccount";
 
 export interface User {
   _id: string;
@@ -154,13 +155,9 @@ const FlaggedOrders: React.FC = () => {
   };
   const fetchChannelAccounts = async () => {
     try {
-      // Replace with your actual API endpoint for fetching channel accounts
-      const response = await appAxios.get(
-        `${channelAccounts_url}?limit=100`,
-        {}
-      );
-      const data = await response.data.data;
-      setChannelAccounts(data);
+
+      const data = await getAllChannelAccounts();
+      setChannelAccounts(data.data);
     } catch (error) {
       toast.error("Error fetching channel accounts" + error);
     }
@@ -613,10 +610,10 @@ const FlaggedOrders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )
           : [];
 
         const latestStatus =
@@ -721,10 +718,10 @@ const FlaggedOrders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       sortable: true,
       width: "110px",
@@ -736,10 +733,10 @@ const FlaggedOrders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return (
           <div style={{ textAlign: "center" }}>
@@ -913,10 +910,10 @@ const FlaggedOrders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -956,10 +953,10 @@ const FlaggedOrders: React.FC = () => {
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
                     ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                      (a: any, b: any) =>
+                        new Date(b.status_date).getTime() -
+                        new Date(a.status_date).getTime()
+                    )[0]
                     : null;
                   return (
                     !o.recommended_courier_id &&
@@ -997,10 +994,10 @@ const FlaggedOrders: React.FC = () => {
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
                     ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                      (a: any, b: any) =>
+                        new Date(b.status_date).getTime() -
+                        new Date(a.status_date).getTime()
+                    )[0]
                     : null;
 
                   return (
@@ -1750,12 +1747,12 @@ const FlaggedOrders: React.FC = () => {
                                   <br />
                                   {row.other_charges -
                                     (row.freight_charge + row.cod_charges) *
-                                      0.18 >
+                                    0.18 >
                                     0 &&
                                     `LM Surcharge ₹${(
                                       row.other_charges -
                                       (row.freight_charge + row.cod_charges) *
-                                        0.18
+                                      0.18
                                     ).toFixed(2)}`}
                                   <br />
                                 </Tooltip>

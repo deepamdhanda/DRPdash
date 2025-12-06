@@ -8,12 +8,11 @@ export const getAllChannelAccounts = async (
   limit: number = 100
 ) => {
   try {
-    const response = await appAxios.get(
-      `${channelAccounts_url}?page=${page}&limit=${limit}`
-    );
+    const response = await appAxios.get(channelAccounts_url);
     return {
       data: response.data.data as ChannelAccount[],
-      total: response.data.total,
+      total: response.data.total as number,
+
     };
   } catch (error: any) {
     toast.error(

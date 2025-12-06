@@ -261,7 +261,7 @@ const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(50);
   const [showModal, setShowModal] = useState(false);
   const [showShipmentModal, setShowShipmentModal] = useState(false);
   const [editOrder, setEditOrder] = useState<Order | null>(null);
@@ -329,12 +329,9 @@ const Orders: React.FC = () => {
   const fetchChannelAccounts = async () => {
     try {
       // Replace with your actual API endpoint for fetching channel accounts
-      const response = await appAxios.get(
-        `${channelAccounts_url}?limit=100`,
-        {}
-      );
-      const data = await response.data.data;
-      setChannelAccounts(data);
+      const response = await appAxios.get(channelAccounts_url, {});
+      const data = await response.data;
+      setChannelAccounts(data.data);
     } catch (error) {
       toast.error("Error fetching channel accounts" + error);
     }
@@ -770,7 +767,7 @@ const Orders: React.FC = () => {
   const handleRowsPerPageChange = (newRowsPerPage: number, page: number) => {
     setRowsPerPage(newRowsPerPage);
     setCurrentPage(page);
-    fetchOrders(page, newRowsPerPage, filters);
+    // fetchOrders(page, newRowsPerPage, filters);
   };
   const handleNewOrderClose = () => {
     setShowNewOrderModal(false);

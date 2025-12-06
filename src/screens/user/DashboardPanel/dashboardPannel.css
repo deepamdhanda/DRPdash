@@ -74,7 +74,12 @@ html {
 }
 
 .nav-list-1 {
-  display: flex;
+  /* display: flex; */
+  overflow-y: auto;
+  /* vertical scroll */
+  overflow-x: hidden;
+  /* prevent horizontal scroll */
+  height: calc(100vh - 200px);
   flex-direction: column;
 }
 

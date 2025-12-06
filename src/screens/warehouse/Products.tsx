@@ -56,7 +56,7 @@ const Products: React.FC = () => {
     try {
       const [productData, warehouseData] = await Promise.all([
         getAllProducts(),
-        getAllWarehouses(),
+        getAllWarehouses().data,
       ]);
       setProducts(productData);
       setWarehouses(warehouseData);
