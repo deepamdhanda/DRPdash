@@ -10,7 +10,17 @@ html {
   /* White */
   font-size: 14px !important;
 }
-
+.container{
+  max-width: none!important;
+  overflow-x: hidden;
+}
+.rdt_TableHeadRow{
+  background-color: #000434 !important;
+  /* Orange */
+  color: #FFFFFF !important;
+  /* White */
+  margin-bottom: 10px !important;
+}
 /* Layout container */
 #user-panel {
   display: flex;
