@@ -1024,7 +1024,7 @@ const Orders: React.FC = () => {
               <span style={{ backgroundColor: "#2a9d8f", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
                 No Risk Flags
               </span>
-            )};
+            )}
         </div>
       ),
       width: "250px",
