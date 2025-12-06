@@ -54,8 +54,8 @@ const Warehouses: React.FC = () => {
   const fetchWarehouses = async () => {
     try {
       setLoading(true); // Set loading to true before fetching
-
-      const data = await getAllWarehouses();
+      const data = await getAllWarehouses(page, limit);
+      setTotalRecords(data.total);
       setWarehouses(data.data);
     } catch (error) {
       console.error("Error fetching warehouses", error);

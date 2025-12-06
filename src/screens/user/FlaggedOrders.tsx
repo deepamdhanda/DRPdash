@@ -16,8 +16,6 @@ import {
   getAllFilters,
 } from "../../APIs/user/order";
 import { fetchNewOrders } from "../../APIs/user/fetchOrder";
-import { appAxios } from "../../axios/appAxios";
-import { channelAccounts_url } from "../../URLs/user";
 import { BsClockFill, BsPhoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";

@@ -1,14 +1,15 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
 import { warehouses_url } from "../../URLs/user";
-import { Warehouse } from "../../screens/user/Warehouse";
-export const getAllWarehouses = async () => {
+export const getAllWarehouses = async (
+  page: number = 1,
+  limit: number = 100
+) => {
   try {
-    const response = await appAxios.get(warehouses_url);
-    return {
-      data: response.data.data as Warehouse[],
-      total: response.data.total as number,
-    };
+    const response = await appAxios.get(
+      `${warehouses_url}?page=${page}&limit=${limit}`
+    );
+    return { data: response.data.data as any[], total: response.data.total };
   } catch (error: any) {
     toast.error("Failed to fetch warehouses.");
     throw error;
