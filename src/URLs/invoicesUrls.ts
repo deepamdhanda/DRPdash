@@ -1,4 +1,4 @@
 import { drpCrmBaseUrl } from "../axios/urls";
 
-export const getInvoicesUrl = `${drpCrmBaseUrl}/api/user/invoices`;
-export const getInvoicesPoolsUrl = `${drpCrmBaseUrl}/api/user/invoices/pools`;
+export const getInvoicesUrl = `${drpCrmBaseUrl}/user/invoices`;
+export const getInvoicesPoolsUrl = `${drpCrmBaseUrl}/user/invoices/pools`;

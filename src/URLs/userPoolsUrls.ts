@@ -1,3 +1,3 @@
 import { drpCrmBaseUrl } from "../axios/urls";
 
-export const userPoolsUrl = `${drpCrmBaseUrl}/api/pool`;
+export const userPoolsUrl = `${drpCrmBaseUrl}/pool`;
