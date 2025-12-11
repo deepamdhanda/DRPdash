@@ -6,7 +6,7 @@ import { tickets_url } from "../../URLs/user";
 export const getAllTickets = async () => {
   try {
     const response = await appAxios.get(tickets_url);
-    return response.data as any[];
+    return response.data.data as any[];
   } catch (error: any) {
     toast.error("Failed to fetch tickets.");
     throw error;

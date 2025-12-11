@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { getUser } from "../../APIs/user/user";
+import { Link } from "react-router-dom";
 
 type PermissionAction = "read" | "write";
 type ModuleName =
@@ -461,6 +462,25 @@ const Settings: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <div className="text-center mt-4 mb-2">
+        <small className="text-muted">
+          By using this platform you agree to our{" "}
+          <Link
+            to="https://orderzup.com/terms-conditions/"
+            className="text-primary"
+          >
+            Terms & Conditions
+          </Link>{" "}
+          and{" "}
+          <Link
+            to="https://orderzup.com/privacy-policy/"
+            className="text-primary"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </small>
+      </div>
     </div>
   );
 };
