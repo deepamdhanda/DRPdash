@@ -88,6 +88,7 @@ export interface Order {
   recommended_warehouse_id?: string;
   shipping_warehouse_id?: string;
   remittance_status?: string;
+  first_line_item_price: string;
 }
 
 interface FilterParams {
@@ -681,11 +682,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                  )
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                    )
                   : toast.error(
-                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                  );
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                    );
               });
             }
             doneCount++;
@@ -812,18 +813,22 @@ const Orders: React.FC = () => {
           <br />
           SKU: {row.product_sku_id || "—"} <br />
           <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
-          <strong>Amt:</strong> ₹{row.total_amount || "—"} (
-          {row.payment_method || "—"}) <br />
+          <strong>Amt:</strong> ₹
+          {Number(row.first_line_item_price) * row.quantity ||
+            row.total_amount ||
+            "—"}{" "}
+          ({row.payment_method || "—"}) <br />
           {row.remittance_status && row.remittance_status !== "NA" && (
             <span
-              className={`badge ${row.remittance_status === "pending"
+              className={`badge ${
+                row.remittance_status === "pending"
                   ? "bg-warning"
                   : row.remittance_status === "completed"
-                    ? "bg-success"
-                    : row.remittance_status === "processing"
-                      ? "bg-primary"
-                      : "bg-secondary"
-                }`}
+                  ? "bg-success"
+                  : row.remittance_status === "processing"
+                  ? "bg-primary"
+                  : "bg-secondary"
+              }`}
             >
               {row.remittance_status}
             </span>
@@ -878,10 +883,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )
           : [];
 
         const latestStatus =
@@ -968,60 +973,179 @@ const Orders: React.FC = () => {
       cell: (row: any) => (
         <div style={{ display: "flex", flexWrap: "wrap" }}>
           {row.risk_flag.customer_order_count_in_channel > 0 && (
-            <span style={{ backgroundColor: row.risk_flag.customer_order_count_in_channel < 3 ? "#2a9d8f" : "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor:
+                  row.risk_flag.customer_order_count_in_channel < 3
+                    ? "#2a9d8f"
+                    : "#f4a261",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Other Orders: {row.risk_flag.customer_order_count_in_channel}
             </span>
           )}
           {row.risk_flag.is_duplicate && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#e63946",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Duplicate Order
             </span>
           )}
           {row.risk_flag.is_improper_address && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#f4a261",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Improper Address
             </span>
           )}
           {row.risk_flag.is_reused_phone && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#f4a261",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Reused Phone
             </span>
           )}
           {row.risk_flag.is_suspicious_address && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#e63946",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Suspicious Address
             </span>
           )}
           {row.risk_flag.is_suspicious_email && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#e63946",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Suspicious Email
             </span>
           )}
           {row.risk_flag.is_suspicious_ip && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#e63946",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Suspicious IP
             </span>
           )}
           {row.risk_flag.is_suspicious_phone && (
-            <span style={{ backgroundColor: "#e63946", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#e63946",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Suspicious Phone
             </span>
           )}
           {row.risk_flag.pincode_return_percent > 0 && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#f4a261",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               Return %: {row.risk_flag.pincode_return_percent.toFixed(1)}%
             </span>
           )}
           {row.risk_flag.pincode_rto_percent > 0 && (
-            <span style={{ backgroundColor: "#f4a261", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            <span
+              style={{
+                backgroundColor: "#f4a261",
+                color: "#fff",
+                borderRadius: "12px",
+                padding: "3px 10px",
+                fontSize: "12px",
+                fontWeight: 600,
+                margin: "2px 5px 2px 0",
+              }}
+            >
               RTO %: {row.risk_flag.pincode_rto_percent.toFixed(1)}%
             </span>
           )}
-          {!row.risk_flag.is_duplicate && !row.risk_flag.is_improper_address && !row.risk_flag.is_reused_phone &&
-            !row.risk_flag.is_suspicious_address && !row.risk_flag.is_suspicious_email && !row.risk_flag.is_suspicious_ip &&
+          {!row.risk_flag.is_duplicate &&
+            !row.risk_flag.is_improper_address &&
+            !row.risk_flag.is_reused_phone &&
+            !row.risk_flag.is_suspicious_address &&
+            !row.risk_flag.is_suspicious_email &&
+            !row.risk_flag.is_suspicious_ip &&
             !row.risk_flag.is_suspicious_phone &&
-            row.risk_flag.pincode_return_percent === 0 && row.risk_flag.pincode_rto_percent === 0 && row.risk_flag.customer_order_count_in_channel === 0 && (
-              <span style={{ backgroundColor: "#2a9d8f", color: "#fff", borderRadius: "12px", padding: "3px 10px", fontSize: "12px", fontWeight: 600, margin: "2px 5px 2px 0" }}>
+            row.risk_flag.pincode_return_percent === 0 &&
+            row.risk_flag.pincode_rto_percent === 0 &&
+            row.risk_flag.customer_order_count_in_channel === 0 && (
+              <span
+                style={{
+                  backgroundColor: "#2a9d8f",
+                  color: "#fff",
+                  borderRadius: "12px",
+                  padding: "3px 10px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  margin: "2px 5px 2px 0",
+                }}
+              >
                 No Risk Flags
               </span>
             )}
@@ -1035,10 +1159,10 @@ const Orders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
       width: "110px",
@@ -1050,10 +1174,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return (
           <div style={{ textAlign: "center" }}>
@@ -1243,10 +1367,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1286,10 +1410,10 @@ const Orders: React.FC = () => {
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
                     ? o.status.sort(
-                      (a: any, b: any) =>
-                        new Date(b.status_date).getTime() -
-                        new Date(a.status_date).getTime()
-                    )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                     : null;
                   return (
                     !o.recommended_courier_id &&
@@ -1327,10 +1451,10 @@ const Orders: React.FC = () => {
                 orders.filter((o: any) => {
                   const latestStatus = o.status?.length
                     ? o.status.sort(
-                      (a: any, b: any) =>
-                        new Date(b.status_date).getTime() -
-                        new Date(a.status_date).getTime()
-                    )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                     : null;
 
                   return (
@@ -1605,27 +1729,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                          ([key, value]) => (
-                            <div key={key}>
-                              <strong>{key}:</strong> {String(value)}
-                            </div>
+                            ([key, value]) => (
+                              <div key={key}>
+                                <strong>{key}:</strong> {String(value)}
+                              </div>
+                            )
                           )
-                        )
                         : // If it's a JSON string, try parsing
-                        (() => {
-                          try {
-                            const parsed = JSON.parse(item.status_details);
-                            return Object.entries(parsed).map(
-                              ([key, value]) => (
-                                <div key={key}>
-                                  <strong>{key}:</strong> {String(value)}
-                                </div>
-                              )
-                            );
-                          } catch {
-                            return String(item.status_details);
-                          }
-                        })()
+                          (() => {
+                            try {
+                              const parsed = JSON.parse(item.status_details);
+                              return Object.entries(parsed).map(
+                                ([key, value]) => (
+                                  <div key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </div>
+                                )
+                              );
+                            } catch {
+                              return String(item.status_details);
+                            }
+                          })()
                       : "-"}
                   </td>
                 </tr>
@@ -2325,12 +2449,12 @@ const Orders: React.FC = () => {
                                   <br />
                                   {row.other_charges -
                                     (row.freight_charge + row.cod_charges) *
-                                    0.18 >
+                                      0.18 >
                                     0 &&
                                     `LM Surcharge ₹${(
                                       row.other_charges -
                                       (row.freight_charge + row.cod_charges) *
-                                      0.18
+                                        0.18
                                     ).toFixed(2)}`}
                                   <br />
                                 </Tooltip>
