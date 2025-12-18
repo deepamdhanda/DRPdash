@@ -42,7 +42,7 @@ const Finances: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/users"); // You can change this as per your user API
+      const res = await fetch("/users"); // You can change this as per your user API
       const data = await res.json();
       setUsers(data);
     } catch (error) {
