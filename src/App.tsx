@@ -99,7 +99,7 @@ const App = () => {
   const location = useLocation();
   const setUserName = async () => {
     try {
-      const { data } = await axios.get(`${drpCrmBaseUrl}/api/auth/verify/me`, {
+      const { data } = await axios.get(`${drpCrmBaseUrl}/auth/verify/me`, {
         withCredentials: true,
       });
       const userString = data.username;

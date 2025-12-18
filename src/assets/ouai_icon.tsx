@@ -1,4 +1,4 @@
-export default function AIIcon(props: React.SVGProps<SVGSVGElement>) {
+export default function OUAIIcon(props: React.SVGProps<SVGSVGElement>) {
   // Extract style and other props
   const { style, ...rest } = props;
 
