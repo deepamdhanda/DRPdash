@@ -164,6 +164,8 @@ html {
 
 /* Main content */
 .main-content {
+  margin:15px;
+  border-radius: 10px;
   flex-grow: 1;
   padding: 1.25rem 0.5rem;
   overflow-y: auto;

@@ -11,7 +11,7 @@ interface IFetchNDROrdersArgs {
 }
 export const fetchNDROrders = async (params: IFetchNDROrdersArgs) => {
   try {
-    const apiRes = await appAxios.get("/api/ndr", { params });
+    const apiRes = await appAxios.get("/ndr", { params });
     if (apiRes.status == 200) {
       console.log(apiRes);
       return apiRes.data;

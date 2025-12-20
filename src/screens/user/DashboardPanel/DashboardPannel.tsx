@@ -78,7 +78,7 @@ const UserPanel: React.FC = () => {
     if (name === "SignOut") {
       reset();
       await axios.post(
-        `${drpCrmBaseUrl}/api/auth/logout`,
+        `${drpCrmBaseUrl}/auth/logout`,
         {},
         { withCredentials: true }
       );

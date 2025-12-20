@@ -5,7 +5,6 @@ import {
   Form,
   Row,
   Col,
-  Badge,
   Tooltip,
   OverlayTrigger,
   Card,
@@ -25,7 +24,7 @@ import { BsClockFill, BsPhoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
-import { BiCalendar } from "react-icons/bi";
+import { BiCalendar, BiEdit, BiPencil, BiSolidPencil } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
 import {
   bookCourier,
@@ -41,6 +40,7 @@ import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import DatePicker from "react-datepicker";
 import { Tabs, Tab } from "react-bootstrap";
 import { pincodeDetails } from "../../APIs/pincodeAPIs";
+import OUAIIcon from "../../assets/ouai_icon";
 
 export interface User {
   _id: string;
@@ -165,7 +165,12 @@ const ShippingLabel = ({ labelData }: any) => {
         <div className="col">
           <div>eWaybill: {data.e_waybill}</div>
           <div>
-            Payment Mode: <b>{data.payment_method}</b>
+            Payment Mode:{" "}
+            <b>
+              {data.payment_method?.toLowerCase().includes("cod")
+                ? "COD"
+                : "Prepaid"}
+            </b>
           </div>
           <div>
             Amount: <b>{data.amount}</b>
@@ -813,11 +818,13 @@ const Orders: React.FC = () => {
           <br />
           SKU: {row.product_sku_id || "—"} <br />
           <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
-          <strong>Amt:</strong> ₹
-          {Number(row.first_line_item_price) * row.quantity ||
-            row.total_amount ||
-            "—"}{" "}
-          ({row.payment_method || "—"}) <br />
+          <strong>Amt:</strong> ₹{row.total_amount || "—"} (
+          {(row.payment_method &&
+            (row.payment_method.toLowerCase().includes("cod")
+              ? "COD"
+              : "Prepaid")) ||
+            "—"}
+          ) <br />
           {row.remittance_status && row.remittance_status !== "NA" && (
             <span
               className={`badge ${
@@ -838,44 +845,128 @@ const Orders: React.FC = () => {
       width: "225px",
       wrap: true,
     },
-
     {
       name: "Customer Details",
-      cell: (row: any) => (
-        <div style={{ fontSize: "11px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "1px 6px",
-              borderRadius: "5px",
-              background:
-                "linear-gradient(135deg, #000434 0%, #1a1f5a 60%, rgb(36,43,129) 100%)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "12px",
-              userSelect: "none",
-            }}
-          >
-            ✨ {(row.customer_rating - 1).toFixed(1)}
-            <small style={{ fontSize: "8px" }}>/10</small>
+      cell: (row: any) => {
+        const hasAwb = Boolean(row.awb_number);
+        const latestStatus = row.status?.length
+          ? row.status.sort(
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
+          : null;
+
+        return (
+          <div style={{ fontSize: 11, lineHeight: 1.45 }}>
+            {/* AI Rating */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "3px 8px",
+                borderRadius: 12,
+                background: "rgba(245, 137, 30, 0.1)",
+                border: "1px solid rgba(0, 4, 52, 0.15)",
+                marginBottom: 6,
+              }}
+            >
+              <OUAIIcon style={{ width: 14, height: 14 }} />
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#000434",
+                }}
+              >
+                {row.customer_rating * 100 - 192}
+                <small style={{ fontSize: 9 }}>/900</small>
+              </span>
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: "#f5891e",
+                  letterSpacing: 0.4,
+                }}
+              >
+                Ecom Credit Score
+              </span>
+            </div>
+
+            {/* Name + Edit */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontWeight: 600,
+                color: "#000434",
+              }}
+            >
+              <span>{row.customer_name || "—"}</span>
+
+              {(latestStatus.status === "AWB & Label Generated" ||
+                latestStatus.status.toLowerCase().includes("label") ||
+                latestStatus.status.toLowerCase().includes("data received") ||
+                latestStatus.status.toLowerCase().includes("manifested") ||
+                latestStatus.status.toLowerCase().includes("re_activate") ||
+                latestStatus.status.toLowerCase().includes("pickup") ||
+                latestStatus.status.toLowerCase().includes("fetch") ||
+                latestStatus.status.toLowerCase().includes("not picked")) && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(row);
+                  }}
+                  style={{
+                    cursor: "pointer",
+                    color: "#000434",
+                    fontSize: 12,
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                  title="Edit customer"
+                >
+                  <BiSolidPencil />
+                </span>
+              )}
+            </div>
+
+            {/* Contact */}
+            <div style={{ color: "#444", marginTop: 2 }}>
+              <BsPhoneFill style={{ fontSize: 10, marginRight: 4 }} />
+              {row.customer_phone || "—"}
+            </div>
+
+            {row.customer_email && (
+              <div style={{ color: "#444" }}>
+                <MdEmail style={{ fontSize: 11, marginRight: 4 }} />
+                {row.customer_email}
+              </div>
+            )}
+
+            {/* Address */}
+            <div
+              style={{
+                marginTop: 4,
+                color: "#666",
+                fontSize: 10,
+              }}
+            >
+              <FaLocationPin style={{ fontSize: 10, marginRight: 4 }} />
+              {row.shipping_address}, {row.shipping_city}, {row.shipping_state},{" "}
+              {row.shipping_country} – <strong>{row.shipping_pincode}</strong>
+            </div>
           </div>
-          <br />
-          {row.customer_name || "—"} <br />
-          <BsPhoneFill /> {row.customer_phone || "—"} <br />
-          {row.customer_email ? (
-            <>
-              <MdEmail /> {row.customer_email} <br />
-            </>
-          ) : (
-            "—"
-          )}
-          <FaLocationPin /> {row.shipping_address}, {row.shipping_city},{" "}
-          {row.shipping_state}, {row.shipping_country} - {row.shipping_pincode}
-        </div>
-      ),
+        );
+      },
       width: "225px",
       wrap: true,
+      style: {
+        margin: "10px 0px",
+      },
     },
 
     {
@@ -896,9 +987,38 @@ const Orders: React.FC = () => {
           <div style={{ fontSize: "11px" }}>
             {/* Recommended courier */}
             {row.recommended_courier_id && !row.shipping_courier_id && (
-              <Badge bg="primary" style={{ fontSize: 12 }}>
-                👍 {row.recommended_courier_name || "—"}
-              </Badge>
+              <>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 10px",
+                    borderRadius: 16,
+                    background: "rgba(245, 137, 30, 0.08)", // soft orange glow
+                    border: "1px solid rgba(0, 4, 52, 0.15)",
+                  }}
+                >
+                  <OUAIIcon
+                    style={{
+                      width: 14,
+                      height: 14,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: "#000434",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {row.recommended_courier_name || "Recommended"}
+                  </span>
+                </div>
+                <br />
+              </>
             )}
             {/* Actual courier */}
             {row.shipping_courier_id && (
@@ -932,7 +1052,7 @@ const Orders: React.FC = () => {
               style={{
                 textTransform: "capitalize",
                 color: "#213bb4",
-                backgroundColor: "#00daeb",
+                // backgroundColor: "#00daeb",
                 padding: "2px 5px",
                 borderRadius: "5px",
                 cursor: "help",
@@ -1198,15 +1318,14 @@ const Orders: React.FC = () => {
                   latestStatus.status.toLowerCase().includes("re_activate") ||
                   latestStatus.status.toLowerCase().includes("pickup") ||
                   latestStatus.status.toLowerCase().includes("fetch") ||
-                  latestStatus.status.toLowerCase().includes("not picked")) && (
+                  latestStatus.status.toLowerCase().includes("not picked")) &&
+                hasAwb && (
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    onClick={() =>
-                      hasAwb ? handlePickup(row) : handleEdit(row)
-                    }
+                    onClick={() => handlePickup(row)}
                   >
-                    {hasAwb ? "🗓️ Schedule Pickup" : "✏️ Edit"}
+                    {"🗓️ Schedule Pickup"}
                   </Button>
                 )}
 
@@ -1383,7 +1502,7 @@ const Orders: React.FC = () => {
   ];
 
   return (
-    <div className="container mt-4 ms-2 me-2">
+    <div className="container">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Orders</h4>
         <div className="d-flex align-items-center justify-content-center">
@@ -1403,102 +1522,109 @@ const Orders: React.FC = () => {
           >
             📥 Add New Orders
           </Button>
-          <Button
-            disabled={shipNowLoading}
-            onClick={() => {
-              handleShipment(
-                orders.filter((o: any) => {
-                  const latestStatus = o.status?.length
-                    ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
-                    : null;
-                  return (
-                    !o.recommended_courier_id &&
-                    !o.shipping_courier_id &&
-                    (!latestStatus || latestStatus.status !== "cancelled") &&
-                    o
-                  );
-                })
-              );
-            }}
-            className="me-2"
-            style={{
-              background: "linear-gradient(90deg, #000434, #F5891E)",
-              color: "#FFFFFF",
-              padding: "4px 12px",
-              borderRadius: 24,
-              fontSize: 12,
-              fontWeight: 600,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              border: "none",
-              letterSpacing: "0.03em",
-              boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-              // marginBottom: 8,
-              animation: "pulseGlow 1.8s infinite ease-in-out",
-            }}
-          >
-            💡 OU AI Recommend Couriers
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              handleBookBulkShipment(
-                orders.filter((o: any) => {
-                  const latestStatus = o.status?.length
-                    ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
-                    : null;
+          {activeTab === "new_orders" && (
+            <Button
+              disabled={shipNowLoading}
+              onClick={() => {
+                handleShipment(
+                  orders.filter((o: any) => {
+                    const latestStatus = o.status?.length
+                      ? o.status.sort(
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
+                      : null;
+                    return (
+                      !o.recommended_courier_id &&
+                      !o.shipping_courier_id &&
+                      (!latestStatus || latestStatus.status !== "cancelled") &&
+                      o
+                    );
+                  })
+                );
+              }}
+              className="me-2"
+              style={{
+                background: "#ffefc1",
+                color: "#000",
+                padding: "4px 12px",
+                borderRadius: 24,
+                fontSize: 12,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                border: "none",
+                letterSpacing: "0.03em",
+                boxShadow: "0 0 16px rgba(0, 0, 0, 0.5)",
+                // marginBottom: 8,
+                animation: "pulseGlow 1.8s infinite ease-in-out",
+              }}
+            >
+              <OUAIIcon style={{ width: 16, height: 16 }} />
+              Recommend Best Couriers
+            </Button>
+          )}
+          {activeTab === "new_orders" && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                handleBookBulkShipment(
+                  orders.filter((o: any) => {
+                    const latestStatus = o.status?.length
+                      ? o.status.sort(
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
+                      : null;
 
-                  return (
-                    o.recommended_courier_id &&
-                    o.issues.length === 0 &&
-                    !o.shipping_courier_id &&
-                    o &&
-                    (!latestStatus || latestStatus.status !== "cancelled")
-                  );
-                })
-              );
-            }}
-            className="me-2"
-          >
-            🚚 Book Couriers
-          </Button>
-          <Button
-            variant="success"
-            onClick={() => {
-              handleBulkPrint(
-                orders.filter((o: any) => {
-                  if (
-                    !o.label ||
-                    !o.status ||
-                    !Array.isArray(o.status) ||
-                    o.status.length === 0
-                  )
-                    return false;
+                    return (
+                      o.recommended_courier_id &&
+                      o.issues.length === 0 &&
+                      !o.shipping_courier_id &&
+                      o &&
+                      (!latestStatus || latestStatus.status !== "cancelled")
+                    );
+                  })
+                );
+              }}
+              className="me-2"
+            >
+              🚚 Book Couriers
+            </Button>
+          )}
+          {activeTab === "pickup_pending" && (
+            <Button
+              variant="success"
+              onClick={() => {
+                handleBulkPrint(
+                  orders.filter((o: any) => {
+                    if (
+                      !o.label ||
+                      !o.status ||
+                      !Array.isArray(o.status) ||
+                      o.status.length === 0
+                    )
+                      return false;
 
-                  const latestStatus = o.status.sort(
-                    (a: any, b: any) =>
-                      new Date(b.status_date).getTime() -
-                      new Date(a.status_date).getTime()
-                  )[0];
+                    const latestStatus = o.status.sort(
+                      (a: any, b: any) =>
+                        new Date(b.status_date).getTime() -
+                        new Date(a.status_date).getTime()
+                    )[0];
 
-                  return latestStatus?.status
-                    ?.toLowerCase()
-                    .includes("label generated");
-                })
-              );
-            }}
-          >
-            🖨️ Print Labels
-          </Button>
+                    return latestStatus?.status
+                      ?.toLowerCase()
+                      .includes("label generated");
+                  })
+                );
+              }}
+            >
+              🖨️ Print Labels
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1785,7 +1911,7 @@ const Orders: React.FC = () => {
           activeKey={activeTab}
           onSelect={handleTabChange}
           className="mb-4"
-          fill
+          // fill
           variant="tabs"
           mountOnEnter
           unmountOnExit
@@ -1850,7 +1976,10 @@ const Orders: React.FC = () => {
               {editOrder?.["product_name"]} <br />
               <b>
                 <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} (
-                {editOrder?.["payment_method"]})
+                {editOrder?.["payment_method"].toLowerCase().includes("COD")
+                  ? "COD"
+                  : "Prepaid"}
+                )
               </b>
               <br />
               QTY: {editOrder?.["quantity"]} pc <br />
@@ -1902,22 +2031,6 @@ const Orders: React.FC = () => {
                 }}
                 defaultValue={editOrder?.["customer_phone"]}
                 placeholder="Enter Customer Phone Number"
-              />
-            </Form.Group>
-            <Form.Group className="col-lg-12">
-              <Form.Label className="col-form-label pt-0">
-                {"Change Product Price"}
-              </Form.Label>
-              <Form.Control
-                className="form-control"
-                type="number"
-                onChange={(e) => {
-                  let tempData = { ...editOrder };
-                  tempData["total_amount"] = Number(e.target.value);
-                  setEditOrder(tempData as Order);
-                }}
-                defaultValue={editOrder?.["total_amount"]}
-                placeholder="Enter Product Amount"
               />
             </Form.Group>
             <Form.Group className="col-lg-6">
@@ -2009,6 +2122,22 @@ const Orders: React.FC = () => {
                 value={editOrder?.["shipping_state"]}
                 placeholder="Enter Customer State"
                 disabled={true}
+              />
+            </Form.Group>
+            <Form.Group className="col-lg-12">
+              <Form.Label className="col-form-label pt-0">
+                {"Change Product Price"}
+              </Form.Label>
+              <Form.Control
+                className="form-control"
+                type="number"
+                onChange={(e) => {
+                  let tempData = { ...editOrder };
+                  tempData["total_amount"] = Number(e.target.value);
+                  setEditOrder(tempData as Order);
+                }}
+                defaultValue={editOrder?.["total_amount"]}
+                placeholder="Enter Product Amount"
               />
             </Form.Group>
           </Form>
@@ -2136,7 +2265,10 @@ const Orders: React.FC = () => {
                 <div>{shipmentOrder?.product_name || "—"}</div>
                 <div style={{ fontWeight: "bold", margin: "6px 0" }}>
                   <FaDollarSign size={12} /> ₹{shipmentOrder?.total_amount} (
-                  {shipmentOrder?.payment_method})
+                  {shipmentOrder?.payment_method?.toLowerCase().includes("cod")
+                    ? "COD"
+                    : "Prepaid"}
+                  )
                 </div>
                 <div>QTY: {shipmentOrder?.quantity} pc</div>
                 <div>
