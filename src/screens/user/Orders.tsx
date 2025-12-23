@@ -5,7 +5,6 @@ import {
   Form,
   Row,
   Col,
-  Badge,
   Tooltip,
   OverlayTrigger,
   Card,
@@ -925,7 +924,6 @@ const Orders: React.FC = () => {
 
         return (
           <div style={{ fontSize: 11, lineHeight: 1.45 }}>
-
             {/* AI Rating */}
             <div
               style={{
@@ -2208,7 +2206,6 @@ const Orders: React.FC = () => {
                 placeholder="Enter Product Amount"
               />
             </Form.Group>
-
           </Form>
         </Modal.Body>
         <Modal.Footer>
