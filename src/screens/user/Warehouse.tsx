@@ -481,7 +481,7 @@ const Warehouses: React.FC = () => {
                 onBlur={(e) => handleUserSearch(e.target.value)}
               />
             </Form.Group>
-            <Form.Group className="mb-2">
+            {/* <Form.Group className="mb-2">
               <Form.Label>Admins</Form.Label>
               <div>
                 {adminList.length > 0 ? (
@@ -505,7 +505,7 @@ const Warehouses: React.FC = () => {
                   <p>No admins added yet.</p>
                 )}
               </div>
-            </Form.Group>
+            </Form.Group> */}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>

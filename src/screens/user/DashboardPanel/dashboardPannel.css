@@ -18,8 +18,8 @@ html {
   background-color: #000434 !important;
   /* Orange */
   color: #FFFFFF !important;
-  /* White */
-  margin-bottom: 10px !important;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 /* Layout container */
 #user-panel {
@@ -90,6 +90,15 @@ html {
   overflow-x: hidden;
   /* prevent horizontal scroll */
   height: calc(100vh - 200px);
+  flex-direction: column;
+}
+.nav-list-2{
+  /* display: flex; */
+  overflow-y: auto;
+  /* vertical scroll */
+  overflow-x: hidden;
+  /* prevent horizontal scroll */
+  /* height: calc(100vh - 200px); */
   flex-direction: column;
 }
 
@@ -169,7 +178,7 @@ html {
   flex-grow: 1;
   padding: 1.25rem 0.5rem;
   overflow-y: auto;
-  background-color: #FFFFFF;
+  background-color: #f8f9fa;
   /* White */
   color: #000434;
   /* Navy */

@@ -520,7 +520,7 @@ const Pools: React.FC = () => {
       }
 
       fetchInitialData();
-      if (status === "active") handleClose();
+      handleClose();
     } catch (error) {
       toast.error("Failed to save pool");
       console.error("Submit error:", error);
@@ -547,8 +547,8 @@ const Pools: React.FC = () => {
           row.status === "active"
             ? "success"
             : row.status === "inactive"
-            ? "secondary"
-            : "warning";
+              ? "secondary"
+              : "warning";
         return <Badge bg={color}>{row.status}</Badge>;
       },
       sortable: true,

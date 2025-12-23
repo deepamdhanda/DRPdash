@@ -21,11 +21,11 @@ import {
 // import { fetchNewOrders } from "../../APIs/user/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/user";
-import { BsClockFill, BsPhoneFill } from "react-icons/bs";
+import { BsClockFill, BsFillFilterCircleFill, BsPhoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
-import { BiCalendar, BiEdit, BiPencil, BiSolidPencil } from "react-icons/bi";
+import { BiCalendar, BiEdit, BiFilter, BiFilterAlt, BiPencil, BiSolidPencil } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
 import {
   bookCourier,
@@ -109,7 +109,15 @@ interface PaymentMethod {
   method?: string;
   count?: Number;
 }
-
+const orderTabs = [
+  { key: "new_orders", label: "New Orders" },
+  { key: "pickup_pending", label: "Pending Pickups" },
+  { key: "in_transit", label: "In Transit" },
+  { key: "delivered", label: "Delivered" },
+  { key: "rto", label: "RTO" },
+  // { key: "others", label: "Others" },
+  { key: "all", label: "All Orders" },
+]
 const ShippingLabel = ({ labelData }: any) => {
   const data = labelData;
   return (
@@ -687,11 +695,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                    )
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                  )
                   : toast.error(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                    );
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                  );
               });
             }
             doneCount++;
@@ -795,53 +803,113 @@ const Orders: React.FC = () => {
     {
       name: "Order Details",
       cell: (row: Order) => (
-        <div style={{ fontSize: "11px" }}>
-          #{row.order_id || "—"} <br />
-          <strong>Channel OID:</strong> {row.channel_order_id || "—"} <br />
-          <strong>
-            Store OID:{" "}
-            <span style={{ color: "blue" }}>{row.store_order_id || "—"}</span>
-          </strong>
-          <br />
-          <strong>Channel:</strong> {row.channel_account_name || "—"}
+        <div
+          style={{
+            fontSize: "12px",
+            lineHeight: 1.5,
+            display: "flex",
+            flexDirection: "column",
+            gap: "4px",
+            padding: "6px 4px",
+          }}
+        >
+          <div style={{ fontWeight: 600, color: "#000434" }}>
+            <span style={{ color: "#F5891E" }}>#{row.order_id || "—"}</span>
+          </div>
+
+
+          <div>
+            <strong style={{ color: "#555" }}>Channel:</strong>{" "}
+            <span style={{ color: "#000" }}>{row.channel_account_name || "—"}</span>
+          </div>
+
+          <div>
+            <strong style={{ color: "#555" }}>Store OID:</strong>{" "}
+            <span
+              style={{
+                color: "#007bff",
+                fontWeight: 500,
+                cursor: row.store_order_id ? "pointer" : "default",
+              }}
+              title={row.store_order_id || ""}
+            >
+              {row.store_order_id || "—"}
+            </span>
+          </div>
+
+          <div style={{ fontSize: 10 }}>
+            <strong style={{ color: "#555" }}>CHOID:</strong>{" "}
+            <span style={{ color: "#000", fontStyle: "italic" }}>{row.channel_order_id || "—"}</span>
+          </div>
         </div>
       ),
-      width: "200px",
-      wrap: true,
+      minWidth: "150px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
 
     {
       name: "Product Details",
-      cell: (row: Order) => (
-        <div style={{ fontSize: "11px" }}>
-          <u>{row.product_name || "—"}</u>
-          <br />
-          SKU: {row.product_sku_id || "—"} <br />
-          <strong>Qty:</strong> {row.quantity || "—"} pcs <br />
-          <strong>Amt:</strong> ₹
-          {Number(row.first_line_item_price) * row.quantity ||
-            row.total_amount ||
-            "—"}{" "}
-          ({row.payment_method || "—"}) <br />
-          {row.remittance_status && row.remittance_status !== "NA" && (
-            <span
-              className={`badge ${
-                row.remittance_status === "pending"
-                  ? "bg-warning"
-                  : row.remittance_status === "completed"
-                  ? "bg-success"
-                  : row.remittance_status === "processing"
-                  ? "bg-primary"
-                  : "bg-secondary"
-              }`}
+      cell: (row: Order) => {
+        const amount =
+          row.first_line_item_price && row.quantity
+            ? Number(row.first_line_item_price) * row.quantity
+            : row.total_amount || "—";
+
+        const remittanceColor =
+          row.remittance_status === "pending"
+            ? "#ffc107"
+            : row.remittance_status === "completed"
+              ? "#28a745"
+              : row.remittance_status === "processing"
+                ? "#007bff"
+                : "#6c757d";
+
+        return (
+          <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: "12px",
+                color: "#000434",
+                textDecoration: "underline",
+                marginBottom: "2px",
+              }}
             >
-              {row.remittance_status}
-            </span>
-          )}
-        </div>
-      ),
-      width: "225px",
-      wrap: true,
+              {row.product_name || "—"}
+            </div>
+            <div style={{ fontStyle: "italic", color: "#555" }}>
+              SKU: {row.product_sku_id || "—"}
+            </div>
+            <div style={{ fontWeight: 500 }}>
+              Qty: <span style={{ color: "#F5891E" }}>{row.quantity || "—"} pcs</span>
+            </div>
+            <div style={{ fontWeight: 500 }}>
+              Amt:{" "}
+              <span style={{ color: "#28a745" }}>
+                ₹{amount} ({row.payment_method?.toLowerCase().includes("cod") ? "COD" : "Prepaid"})
+              </span>
+            </div>
+            {row.remittance_status && row.remittance_status !== "NA" && (
+              <span
+                style={{
+                  display: "inline-block",
+                  marginTop: "4px",
+                  padding: "2px 6px",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  borderRadius: "4px",
+                  backgroundColor: remittanceColor,
+                  color: "#fff",
+                }}
+              >
+                {row.remittance_status.toUpperCase()}
+              </span>
+            )}
+          </div>
+        );
+      },
+      minWidth: "150px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
     {
       name: "Customer Details",
@@ -963,11 +1031,9 @@ const Orders: React.FC = () => {
           </div>
         )
       },
-      width: "225px",
-      wrap: true,
-      style: {
-        margin: "10px 0px"
-      }
+      minWidth: "220px",
+      style: { margin: "4px!important", padding: "0px!important" },
+
     },
 
     {
@@ -975,10 +1041,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )
           : [];
 
         const latestStatus =
@@ -1065,8 +1131,8 @@ const Orders: React.FC = () => {
           </div>
         );
       },
-      width: "220px",
-      wrap: true,
+      minWidth: "150px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
 
     {
@@ -1086,7 +1152,8 @@ const Orders: React.FC = () => {
           )}
         </div>
       ),
-      width: "150px",
+      minWidth: "150px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
 
     {
@@ -1272,7 +1339,8 @@ const Orders: React.FC = () => {
             )}
         </div>
       ),
-      width: "250px",
+      minWidth: "150px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
 
     {
@@ -1280,13 +1348,13 @@ const Orders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
-      sortable: true,
-      width: "110px",
+      minWidth: "70px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
 
     {
@@ -1295,10 +1363,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return (
           <div style={{ textAlign: "center" }}>
@@ -1422,7 +1490,8 @@ const Orders: React.FC = () => {
           </div>
         );
       },
-      width: "200px",
+      minWidth: "120px",
+      style: { margin: "4px!important", padding: "0px!important" },
     },
   ];
 
@@ -1487,10 +1556,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1504,78 +1573,116 @@ const Orders: React.FC = () => {
 
   return (
     <div className="container">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Orders</h4>
-        <div className="d-flex align-items-center justify-content-center">
-          <Button
-            variant="outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-            className="me-2"
-          >
-            {showFilters ? "Hide Filters" : "Show Filters"}
-          </Button>
+      <div className="row d-flex justify-content-between align-items-center mb-3">
+        <Col className="md-6 d-flex align-items-center">
+          <h4>Orders</h4>
+          <div style={{ minWidth: "30px", margin: "0 4px" }}>
+            <BsFillFilterCircleFill
+              onClick={() => setShowFilters(!showFilters)}
+              size={"30px"}
+              color="#F5891E"
+            // style={{minWidth:"70px!important"}}
+            />
+          </div>
+        </Col>
+        <Col className="md-6 d-flex align-items-center justify-content-end">
+
+
           <Button
             variant="outline-primary"
             onClick={async () => {
               setShowNewOrderModal(true);
             }}
-            className="me-2"
+            className="me-3"
           >
             📥 Add New Orders
           </Button>
-          <Button
-            disabled={shipNowLoading}
-            onClick={() => {
-              handleShipment(
-                orders.filter((o: any) => {
-                  const latestStatus = o.status?.length
-                    ? o.status.sort(
+          {
+            activeTab === "new_orders" && <Button
+              disabled={shipNowLoading}
+              onClick={() => {
+                handleShipment(
+                  orders.filter((o: any) => {
+                    const latestStatus = o.status?.length
+                      ? o.status.sort(
                         (a: any, b: any) =>
                           new Date(b.status_date).getTime() -
                           new Date(a.status_date).getTime()
                       )[0]
-                    : null;
-                  return (
-                    !o.recommended_courier_id &&
-                    !o.shipping_courier_id &&
-                    (!latestStatus || latestStatus.status !== "cancelled") &&
-                    o
-                  );
-                })
-              );
-            }}
-            className="me-2"
-            style={{
-              background: "linear-gradient(90deg, #000434, #F5891E)",
-              color: "#FFFFFF",
-              padding: "4px 12px",
-              borderRadius: 24,
-              fontSize: 12,
-              fontWeight: 600,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              border: "none",
-              letterSpacing: "0.03em",
-              boxShadow: "0 0 6px rgba(0, 0, 0, 0.15)",
-              // marginBottom: 8,
-              animation: "pulseGlow 1.8s infinite ease-in-out",
-            }}
-          >
-            💡 OU AI Recommend Couriers
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              handleBookBulkShipment(
-                orders.filter((o: any) => {
-                  const latestStatus = o.status?.length
-                    ? o.status.sort(
+                      : null;
+                    return (
+                      !o.recommended_courier_id &&
+                      !o.shipping_courier_id &&
+                      (!latestStatus || latestStatus.status !== "cancelled") &&
+                      o
+                    );
+                  })
+                );
+              }}
+              className="me-3"
+              style={{
+                background: "#ffefc1",
+                color: "#000",
+                padding: "4px 12px",
+                borderRadius: 3,
+                fontSize: 12,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                border: "none",
+                letterSpacing: "0.03em",
+                boxShadow: "0 0 16px rgba(0, 0, 0, 0.5)",
+                // marginBottom: 8,
+                animation: "pulseGlow 1.8s infinite ease-in-out",
+              }}
+            >
+              <OUAIIcon style={{ width: 16, height: 16 }} />
+              Recommend Best Couriers
+            </Button>
+          }
+          {
+            activeTab === "new_orders" && <Button
+              variant="primary"
+              onClick={() => {
+                handleBookBulkShipment(
+                  orders.filter((o: any) => {
+                    const latestStatus = o.status?.length
+                      ? o.status.sort(
                         (a: any, b: any) =>
                           new Date(b.status_date).getTime() -
                           new Date(a.status_date).getTime()
                       )[0]
-                    : null;
+                      : null;
+
+                    return (
+                      o.recommended_courier_id &&
+                      o.issues.length === 0 &&
+                      !o.shipping_courier_id &&
+                      o &&
+                      (!latestStatus || latestStatus.status !== "cancelled")
+                    );
+                  })
+                );
+              }}
+              className="me-2"
+            >
+              🚚 Book Couriers
+            </Button>
+          }
+          {
+            activeTab === "pickup_pending" && <Button
+              variant="primary"
+              onClick={() => {
+                handleBookBulkShipment(
+                  orders.filter((o: any) => {
+                    const latestStatus = o.status?.length
+                      ? o.status.sort(
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
+                      : null;
 
                     return latestStatus?.status
                       ?.toLowerCase()
@@ -1585,9 +1692,9 @@ const Orders: React.FC = () => {
               }}
             >
               🖨️ Print Labels
-            </Button>
-          
-        </div>
+            </Button>}
+
+        </Col>
       </div>
 
       <Modal
@@ -1817,27 +1924,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                            ([key, value]) => (
-                              <div key={key}>
-                                <strong>{key}:</strong> {String(value)}
-                              </div>
-                            )
+                          ([key, value]) => (
+                            <div key={key}>
+                              <strong>{key}:</strong> {String(value)}
+                            </div>
                           )
+                        )
                         : // If it's a JSON string, try parsing
-                          (() => {
-                            try {
-                              const parsed = JSON.parse(item.status_details);
-                              return Object.entries(parsed).map(
-                                ([key, value]) => (
-                                  <div key={key}>
-                                    <strong>{key}:</strong> {String(value)}
-                                  </div>
-                                )
-                              );
-                            } catch {
-                              return String(item.status_details);
-                            }
-                          })()
+                        (() => {
+                          try {
+                            const parsed = JSON.parse(item.status_details);
+                            return Object.entries(parsed).map(
+                              ([key, value]) => (
+                                <div key={key}>
+                                  <strong>{key}:</strong> {String(value)}
+                                </div>
+                              )
+                            );
+                          } catch {
+                            return String(item.status_details);
+                          }
+                        })()
                       : "-"}
                   </td>
                 </tr>
@@ -1858,34 +1965,36 @@ const Orders: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
-      <Card
+      <div
         className="shadow"
         style={{
           border: "none",
           borderTop: "solid",
-          minWidth: "450px",
-          width: "103%",
+          // minWidth: "450px",
+          // width: "100%",
           padding: 5,
         }}
       >
-        <Tabs
-          id="orders-tabs"
-          activeKey={activeTab}
-          onSelect={handleTabChange}
-          className="mb-4"
-          // fill
-          variant="tabs"
-          mountOnEnter
-          unmountOnExit
-        >
-          <Tab eventKey="new_orders" title="New Orders" />
-          <Tab eventKey="pickup_pending" title="Pickup Pending" />
-          <Tab eventKey="in_transit" title="In Transit" />
-          <Tab eventKey="rto" title="RTO" />
-          <Tab eventKey="delivered" title="Delivered" />
-          <Tab eventKey="others" title="Others" />
-          <Tab eventKey="all" title="All Orders" />
-        </Tabs>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <Row>
+            {
+              orderTabs.map(({ key, label }) => (
+                <Col className="md-2" key={key} style={{ padding: "2px 4px" }}>
+                  <Button
+                    variant={activeTab === key ? "success" : "outline-primary"}
+                    // size="sm"
+                    onClick={() => activeTab !== key && handleTabChange(key)}
+                    style={{
+                      textWrap: "nowrap"
+                    }}
+                  >
+                    {label}
+                  </Button>
+                </Col>
+              ))
+            }
+          </Row>
+        </div>
         <DataTable
           // title="Your Orders"
           data={orders}
@@ -1910,7 +2019,7 @@ const Orders: React.FC = () => {
           progressPending={isLoading}
           conditionalRowStyles={conditionalRowStyles}
         />
-      </Card>
+      </div>
       <Modal show={showModal} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
           Edit Order #{editOrder?.order_id || "—"}
@@ -2544,12 +2653,12 @@ const Orders: React.FC = () => {
                                   <br />
                                   {row.other_charges -
                                     (row.freight_charge + row.cod_charges) *
-                                      0.18 >
+                                    0.18 >
                                     0 &&
                                     `LM Surcharge ₹${(
                                       row.other_charges -
                                       (row.freight_charge + row.cod_charges) *
-                                        0.18
+                                      0.18
                                     ).toFixed(2)}`}
                                   <br />
                                 </Tooltip>

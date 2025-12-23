@@ -368,36 +368,114 @@ const ProductSKUs: React.FC = () => {
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            <Row>
+          <Modal.Body style={{ padding: "2rem" }}>
+            {/* PRODUCTS SECTION */}
+            <h5 className="mb-3" style={{ color: "#000434", fontWeight: 700 }}>
+              🛒 Products
+            </h5>
+
+            <Button
+              onClick={addProduct}
+              className="mb-3"
+              style={{
+                backgroundColor: "#F5891E",
+                border: "none",
+                fontWeight: 600,
+                boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+              }}
+            >
+              + Add Product
+            </Button>
+
+            {selectedProducts.map((sel, idx) => (
+              <Row
+                key={idx}
+                className="mb-2 align-items-center"
+                style={{
+                  background: "#f8f8f8",
+                  padding: "0.75rem",
+                  borderRadius: "0.5rem",
+                  gap: "0.5rem",
+                }}
+              >
+                <Col md>
+                  <Form.Select
+                    value={sel.product_id}
+                    onChange={(e) => handleProductChange(idx, e.target.value)}
+                  >
+                    <option value="">Select Product</option>
+                    {products.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.product_name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+
+                <Col md="auto" style={{ width: "100px" }}>
+                  <Form.Control
+                    type="number"
+                    value={sel.quantity}
+                    min={1}
+                    onChange={(e) =>
+                      handleProductQuantityChange(idx, Number(e.target.value))
+                    }
+                  />
+                </Col>
+
+                <Col xs="auto">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => removeProduct(idx)}
+                  >
+                    ✕ Remove
+                  </Button>
+                </Col>
+              </Row>
+            ))}
+
+            <hr style={{ margin: "1.5rem 0", borderColor: "#e0e0e0" }} />
+
+            {/* PRODUCT DETAILS */}
+            <h5 className="mb-3" style={{ color: "#000434", fontWeight: 700 }}>
+              📦 Product SKU Details
+            </h5>
+
+            <Row className="mb-3">
               <Col md={6}>
-                <Form.Group className="mb-3">
+                <Form.Group>
                   <Form.Label>Product SKU ID</Form.Label>
                   <Form.Control
                     type="text"
                     value={productSKUId}
                     disabled={!!editingProductSKU}
                     required
+                    placeholder="Enter SKU ID"
                     onChange={(e) => setProductSKUId(e.target.value)}
                   />
                 </Form.Group>
+              </Col>
 
-                <Form.Group className="mb-3">
+              <Col md={6}>
+                <Form.Group>
                   <Form.Label>Product SKU Name</Form.Label>
                   <Form.Control
                     type="text"
                     name="product_sku_name"
                     defaultValue={editingProductSKU?.product_sku_name || ""}
                     required
+                    placeholder="Enter SKU Name"
                   />
                 </Form.Group>
+              </Col>
+            </Row>
 
-                <DescriptionEditor
-                  value={description}
-                  onChange={setDescription}
-                />
+            <DescriptionEditor value={description} onChange={setDescription} />
 
-                <Form.Group className="mb-3">
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group>
                   <Form.Label>Select Pack</Form.Label>
                   <Form.Select
                     name="pack_id"
@@ -415,116 +493,84 @@ const ProductSKUs: React.FC = () => {
               </Col>
 
               <Col md={6}>
-                <Form.Group className="mb-3">
+                <Form.Group>
                   <Form.Label>Weight (gm)</Form.Label>
                   <Form.Control
                     type="number"
                     value={calculatedWeight}
                     readOnly
+                    style={{ backgroundColor: "#f0f0f0" }}
                   />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Image</Form.Label>
-                  <Form.Control
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                  {imagePreview && (
-                    <img
-                      src={imagePreview}
-                      className="mt-2 w-100 rounded shadow-sm"
-                      style={{ maxHeight: "200px", objectFit: "cover" }}
-                    />
-                  )}
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Attributes</Form.Label>
-                  {productSKUAttributes.map((attr, index) => (
-                    <Row key={index} className="mb-2">
-                      <Col>
-                        <Form.Control
-                          placeholder="Key"
-                          value={attr.key}
-                          onChange={(e) =>
-                            handleAttributeChange(index, "key", e.target.value)
-                          }
-                        />
-                      </Col>
-                      <Col>
-                        <Form.Control
-                          placeholder="Value"
-                          value={attr.value}
-                          onChange={(e) =>
-                            handleAttributeChange(
-                              index,
-                              "value",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </Col>
-                      <Col xs="auto">
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => removeAttribute(index)}
-                        >
-                          ✕
-                        </Button>
-                      </Col>
-                    </Row>
-                  ))}
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={addAttribute}
-                  >
-                    + Add Attribute
-                  </Button>
                 </Form.Group>
               </Col>
             </Row>
 
-            {/* PRODUCTS SECTION */}
-            <h5 className="mt-3">Products</h5>
-            {selectedProducts.map((sel, idx) => (
-              <Row key={idx} className="mb-2">
-                <Col>
-                  <Form.Select
-                    value={sel.product_id}
-                    onChange={(e) => handleProductChange(idx, e.target.value)}
-                  >
-                    <option value="">Select Product</option>
-                    {products.map((p) => (
-                      <option key={p._id} value={p._id}>
-                        {p.product_name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                <Col>
-                  <Form.Control
-                    type="number"
-                    value={sel.quantity}
-                    onChange={(e) =>
-                      handleProductQuantityChange(idx, Number(e.target.value))
-                    }
-                  />
-                </Col>
-                <Col xs="auto">
-                  <Button variant="danger" onClick={() => removeProduct(idx)}>
-                    Remove
-                  </Button>
-                </Col>
-              </Row>
-            ))}
+            {/* IMAGE UPLOAD */}
+            <Form.Group className="mb-3">
+              <Form.Label>Product Image</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="mt-2 rounded shadow-sm"
+                  style={{
+                    width: "100%",
+                    maxHeight: "200px",
+                    objectFit: "contain",
+                    border: "1px solid #ddd",
+                  }}
+                />
+              )}
+            </Form.Group>
 
-            <Button onClick={addProduct} className="mt-2">
-              Add Product
-            </Button>
+            {/* ATTRIBUTES */}
+            <Form.Group className="mb-3">
+              <Form.Label>Attributes</Form.Label>
+              {productSKUAttributes.map((attr, index) => (
+                <Row key={index} className="mb-2 align-items-center">
+                  <Col>
+                    <Form.Control
+                      placeholder="Key"
+                      value={attr.key}
+                      onChange={(e) =>
+                        handleAttributeChange(index, "key", e.target.value)
+                      }
+                    />
+                  </Col>
+                  <Col>
+                    <Form.Control
+                      placeholder="Value"
+                      value={attr.value}
+                      onChange={(e) =>
+                        handleAttributeChange(index, "value", e.target.value)
+                      }
+                    />
+                  </Col>
+                  <Col xs="auto">
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={() => removeAttribute(index)}
+                    >
+                      ✕
+                    </Button>
+                  </Col>
+                </Row>
+              ))}
+              <Button
+                size="sm"
+                variant="outline-primary"
+                onClick={addAttribute}
+                style={{ marginTop: "0.5rem" }}
+              >
+                + Add Attribute
+              </Button>
+            </Form.Group>
           </Modal.Body>
 
           <Modal.Footer>
@@ -537,7 +583,7 @@ const ProductSKUs: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div>
+    </div >
   );
 };
 

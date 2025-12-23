@@ -9,7 +9,7 @@ import {
 } from "../../APIs/user/channelAccount";
 import { getAllChannels } from "../../APIs/user/channel";
 import { getAllPools } from "../../APIs/user/pool";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { initialChannelAccountFetch } from "../../APIs/user/initialChannelAccountFetch";
 import { toast } from "react-toastify";
 
@@ -35,6 +35,8 @@ export interface ChannelAccount {
 }
 
 const ChannelAccounts: React.FC = () => {
+
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -179,6 +181,8 @@ const ChannelAccounts: React.FC = () => {
       auto_whatsapp: false,
       auto_ai_rating: false,
     });
+    navigate(location.pathname, { replace: true }); // updates URL without reloading
+
   };
 
   const handleShow = () => setShowModal(true);
@@ -329,8 +333,8 @@ const ChannelAccounts: React.FC = () => {
           {row.status === "active"
             ? "🟢"
             : row.status === "inactive"
-            ? "🔴"
-            : "❌"}{" "}
+              ? "🔴"
+              : "❌"}{" "}
           <strong>{row.channel_account_name}</strong>
         </div>
       ),
@@ -399,10 +403,10 @@ const ChannelAccounts: React.FC = () => {
       selector: (row: ChannelAccount) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       sortable: true,
     },
