@@ -7,7 +7,6 @@ import {
   Col,
   Tooltip,
   OverlayTrigger,
-  Card,
   Table,
 } from "react-bootstrap";
 import DataTable from "react-data-table-component";
@@ -20,11 +19,15 @@ import {
 // import { fetchNewOrders } from "../../APIs/user/fetchOrder";
 import { appAxios } from "../../axios/appAxios";
 import { channelAccounts_url } from "../../URLs/user";
-import { BsClockFill, BsFillFilterCircleFill, BsPhoneFill } from "react-icons/bs";
+import {
+  BsClockFill,
+  BsFillFilterCircleFill,
+  BsPhoneFill,
+} from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";
 import { FaDollarSign, FaTruck } from "react-icons/fa";
-import { BiCalendar, BiEdit, BiFilter, BiFilterAlt, BiPencil, BiSolidPencil } from "react-icons/bi";
+import { BiCalendar, BiSolidPencil } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
 import {
   bookCourier,
@@ -38,7 +41,6 @@ import { Warehouse } from "./Warehouse";
 import { getAllWarehouses } from "../../APIs/user/warehouse";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import DatePicker from "react-datepicker";
-import { Tabs, Tab } from "react-bootstrap";
 import { pincodeDetails } from "../../APIs/pincodeAPIs";
 import OUAIIcon from "../../assets/ouai_icon";
 
@@ -116,7 +118,7 @@ const orderTabs = [
   { key: "rto", label: "RTO" },
   // { key: "others", label: "Others" },
   { key: "all", label: "All Orders" },
-]
+];
 const ShippingLabel = ({ labelData }: any) => {
   const data = labelData;
   return (
@@ -173,11 +175,12 @@ const ShippingLabel = ({ labelData }: any) => {
         <div className="col">
           <div>eWaybill: {data.e_waybill}</div>
           <div>
-            Payment Mode: <b>{data.payment_method?.toLowerCase()
-              .includes("cod")
-              ? "COD"
-              : "Prepaid"
-            }</b>
+            Payment Mode:{" "}
+            <b>
+              {data.payment_method?.toLowerCase().includes("cod")
+                ? "COD"
+                : "Prepaid"}
+            </b>
           </div>
           <div>
             Amount: <b>{data.amount}</b>
@@ -528,12 +531,12 @@ const Orders: React.FC = () => {
     setShipNowLoading(false);
   };
 
-  const handleBulkPrint = (orders: Order[]) => {
-    toast.info(
-      "Printing labels for " + orders.length + " orders. Please wait..."
-    );
-    setLabelData(orders.map((order) => order.label));
-  };
+  // const handleBulkPrint = (orders: Order[]) => {
+  //   toast.info(
+  //     "Printing labels for " + orders.length + " orders. Please wait..."
+  //   );
+  //   setLabelData(orders.map((order) => order.label));
+  // };
 
   const handlePrint = () => {
     if (labelRef.current) {
@@ -694,11 +697,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                  )
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                    )
                   : toast.error(
-                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                  );
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                    );
               });
             }
             doneCount++;
@@ -816,10 +819,11 @@ const Orders: React.FC = () => {
             <span style={{ color: "#F5891E" }}>#{row.order_id || "—"}</span>
           </div>
 
-
           <div>
             <strong style={{ color: "#555" }}>Channel:</strong>{" "}
-            <span style={{ color: "#000" }}>{row.channel_account_name || "—"}</span>
+            <span style={{ color: "#000" }}>
+              {row.channel_account_name || "—"}
+            </span>
           </div>
 
           <div>
@@ -838,7 +842,9 @@ const Orders: React.FC = () => {
 
           <div style={{ fontSize: 10 }}>
             <strong style={{ color: "#555" }}>CHOID:</strong>{" "}
-            <span style={{ color: "#000", fontStyle: "italic" }}>{row.channel_order_id || "—"}</span>
+            <span style={{ color: "#000", fontStyle: "italic" }}>
+              {row.channel_order_id || "—"}
+            </span>
           </div>
         </div>
       ),
@@ -858,10 +864,10 @@ const Orders: React.FC = () => {
           row.remittance_status === "pending"
             ? "#ffc107"
             : row.remittance_status === "completed"
-              ? "#28a745"
-              : row.remittance_status === "processing"
-                ? "#007bff"
-                : "#6c757d";
+            ? "#28a745"
+            : row.remittance_status === "processing"
+            ? "#007bff"
+            : "#6c757d";
 
         return (
           <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
@@ -880,12 +886,19 @@ const Orders: React.FC = () => {
               SKU: {row.product_sku_id || "—"}
             </div>
             <div style={{ fontWeight: 500 }}>
-              Qty: <span style={{ color: "#F5891E" }}>{row.quantity || "—"} pcs</span>
+              Qty:{" "}
+              <span style={{ color: "#F5891E" }}>
+                {row.quantity || "—"} pcs
+              </span>
             </div>
             <div style={{ fontWeight: 500 }}>
               Amt:{" "}
               <span style={{ color: "#28a745" }}>
-                ₹{amount} ({row.payment_method?.toLowerCase().includes("cod") ? "COD" : "Prepaid"})
+                ₹{amount} (
+                {row.payment_method?.toLowerCase().includes("cod")
+                  ? "COD"
+                  : "Prepaid"}
+                )
               </span>
             </div>
             {row.remittance_status && row.remittance_status !== "NA" && (
@@ -913,13 +926,13 @@ const Orders: React.FC = () => {
     {
       name: "Customer Details",
       cell: (row: any) => {
-        const hasAwb = Boolean(row.awb_number);
+        // const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
 
         return (
@@ -945,7 +958,7 @@ const Orders: React.FC = () => {
                   color: "#000434",
                 }}
               >
-                {(row.customer_rating * 100) - 192}
+                {row.customer_rating * 100 - 192}
                 <small style={{ fontSize: 9 }}>/900</small>
               </span>
               <span
@@ -972,17 +985,15 @@ const Orders: React.FC = () => {
             >
               <span>{row.customer_name || "—"}</span>
 
-              {
-                (latestStatus.status === "AWB & Label Generated" ||
-                  latestStatus.status.toLowerCase().includes("label") ||
-                  latestStatus.status.toLowerCase().includes("data received") ||
-                  latestStatus.status.toLowerCase().includes("manifested") ||
-                  latestStatus.status.toLowerCase().includes("re_activate") ||
-                  latestStatus.status.toLowerCase().includes("pickup") ||
-                  latestStatus.status.toLowerCase().includes("fetch") ||
-                  latestStatus.status.toLowerCase().includes("not picked"))
-                &&
-                (<span
+              {(latestStatus.status === "AWB & Label Generated" ||
+                latestStatus.status.toLowerCase().includes("label") ||
+                latestStatus.status.toLowerCase().includes("data received") ||
+                latestStatus.status.toLowerCase().includes("manifested") ||
+                latestStatus.status.toLowerCase().includes("re_activate") ||
+                latestStatus.status.toLowerCase().includes("pickup") ||
+                latestStatus.status.toLowerCase().includes("fetch") ||
+                latestStatus.status.toLowerCase().includes("not picked")) && (
+                <span
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(row);
@@ -997,7 +1008,8 @@ const Orders: React.FC = () => {
                   title="Edit customer"
                 >
                   <BiSolidPencil />
-                </span>)}
+                </span>
+              )}
             </div>
 
             {/* Contact */}
@@ -1022,16 +1034,14 @@ const Orders: React.FC = () => {
               }}
             >
               <FaLocationPin style={{ fontSize: 10, marginRight: 4 }} />
-              {row.shipping_address}, {row.shipping_city},{" "}
-              {row.shipping_state}, {row.shipping_country} –{" "}
-              <strong>{row.shipping_pincode}</strong>
+              {row.shipping_address}, {row.shipping_city}, {row.shipping_state},{" "}
+              {row.shipping_country} – <strong>{row.shipping_pincode}</strong>
             </div>
           </div>
-        )
+        );
       },
       minWidth: "220px",
       style: { margin: "4px!important", padding: "0px!important" },
-
     },
 
     {
@@ -1039,10 +1049,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )
           : [];
 
         const latestStatus =
@@ -1346,10 +1356,10 @@ const Orders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       minWidth: "70px",
       style: { margin: "4px!important", padding: "0px!important" },
@@ -1361,10 +1371,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return (
           <div style={{ textAlign: "center" }}>
@@ -1385,12 +1395,12 @@ const Orders: React.FC = () => {
                   latestStatus.status.toLowerCase().includes("re_activate") ||
                   latestStatus.status.toLowerCase().includes("pickup") ||
                   latestStatus.status.toLowerCase().includes("fetch") ||
-                  latestStatus.status.toLowerCase().includes("not picked")) && hasAwb && (
+                  latestStatus.status.toLowerCase().includes("not picked")) &&
+                hasAwb && (
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    onClick={() => handlePickup(row)
-                    }
+                    onClick={() => handlePickup(row)}
                   >
                     {"🗓️ Schedule Pickup"}
                   </Button>
@@ -1554,10 +1564,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1579,13 +1589,11 @@ const Orders: React.FC = () => {
               onClick={() => setShowFilters(!showFilters)}
               size={"30px"}
               color="#F5891E"
-            // style={{minWidth:"70px!important"}}
+              // style={{minWidth:"70px!important"}}
             />
           </div>
         </Col>
         <Col className="md-6 d-flex align-items-center justify-content-end">
-
-
           <Button
             variant="outline-primary"
             onClick={async () => {
@@ -1595,18 +1603,18 @@ const Orders: React.FC = () => {
           >
             📥 Add New Orders
           </Button>
-          {
-            activeTab === "new_orders" && <Button
+          {activeTab === "new_orders" && (
+            <Button
               disabled={shipNowLoading}
               onClick={() => {
                 handleShipment(
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
                       : null;
                     return (
                       !o.recommended_courier_id &&
@@ -1638,19 +1646,19 @@ const Orders: React.FC = () => {
               <OUAIIcon style={{ width: 16, height: 16 }} />
               Recommend Best Couriers
             </Button>
-          }
-          {
-            activeTab === "new_orders" && <Button
+          )}
+          {activeTab === "new_orders" && (
+            <Button
               variant="primary"
               onClick={() => {
                 handleBookBulkShipment(
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
                       : null;
 
                     return (
@@ -1667,19 +1675,19 @@ const Orders: React.FC = () => {
             >
               🚚 Book Couriers
             </Button>
-          }
-          {
-            activeTab === "pickup_pending" && <Button
+          )}
+          {activeTab === "pickup_pending" && (
+            <Button
               variant="primary"
               onClick={() => {
                 handleBookBulkShipment(
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
                       : null;
 
                     return latestStatus?.status
@@ -1690,8 +1698,8 @@ const Orders: React.FC = () => {
               }}
             >
               🖨️ Print Labels
-            </Button>}
-
+            </Button>
+          )}
         </Col>
       </div>
 
@@ -1922,27 +1930,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                          ([key, value]) => (
-                            <div key={key}>
-                              <strong>{key}:</strong> {String(value)}
-                            </div>
+                            ([key, value]) => (
+                              <div key={key}>
+                                <strong>{key}:</strong> {String(value)}
+                              </div>
+                            )
                           )
-                        )
                         : // If it's a JSON string, try parsing
-                        (() => {
-                          try {
-                            const parsed = JSON.parse(item.status_details);
-                            return Object.entries(parsed).map(
-                              ([key, value]) => (
-                                <div key={key}>
-                                  <strong>{key}:</strong> {String(value)}
-                                </div>
-                              )
-                            );
-                          } catch {
-                            return String(item.status_details);
-                          }
-                        })()
+                          (() => {
+                            try {
+                              const parsed = JSON.parse(item.status_details);
+                              return Object.entries(parsed).map(
+                                ([key, value]) => (
+                                  <div key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </div>
+                                )
+                              );
+                            } catch {
+                              return String(item.status_details);
+                            }
+                          })()
                       : "-"}
                   </td>
                 </tr>
@@ -1975,22 +1983,20 @@ const Orders: React.FC = () => {
       >
         <div className="d-flex justify-content-between align-items-center mb-2">
           <Row>
-            {
-              orderTabs.map(({ key, label }) => (
-                <Col className="md-2" key={key} style={{ padding: "2px 4px" }}>
-                  <Button
-                    variant={activeTab === key ? "success" : "outline-primary"}
-                    // size="sm"
-                    onClick={() => activeTab !== key && handleTabChange(key)}
-                    style={{
-                      textWrap: "nowrap"
-                    }}
-                  >
-                    {label}
-                  </Button>
-                </Col>
-              ))
-            }
+            {orderTabs.map(({ key, label }) => (
+              <Col className="md-2" key={key} style={{ padding: "2px 4px" }}>
+                <Button
+                  variant={activeTab === key ? "success" : "outline-primary"}
+                  // size="sm"
+                  onClick={() => activeTab !== key && handleTabChange(key)}
+                  style={{
+                    textWrap: "nowrap",
+                  }}
+                >
+                  {label}
+                </Button>
+              </Col>
+            ))}
           </Row>
         </div>
         <DataTable
@@ -2045,7 +2051,10 @@ const Orders: React.FC = () => {
               {editOrder?.["product_name"]} <br />
               <b>
                 <FaDollarSign size={12} /> ₹{editOrder?.["total_amount"]} (
-                {editOrder?.["payment_method"].toLowerCase().includes("COD") ? "COD" : "Prepaid"})
+                {editOrder?.["payment_method"].toLowerCase().includes("COD")
+                  ? "COD"
+                  : "Prepaid"}
+                )
               </b>
               <br />
               QTY: {editOrder?.["quantity"]} pc <br />
@@ -2331,12 +2340,9 @@ const Orders: React.FC = () => {
                 <div>{shipmentOrder?.product_name || "—"}</div>
                 <div style={{ fontWeight: "bold", margin: "6px 0" }}>
                   <FaDollarSign size={12} /> ₹{shipmentOrder?.total_amount} (
-                  {shipmentOrder?.payment_method
-                    ?.toLowerCase()
-                    .includes("cod")
+                  {shipmentOrder?.payment_method?.toLowerCase().includes("cod")
                     ? "COD"
-                    : "Prepaid"
-                  }
+                    : "Prepaid"}
                   )
                 </div>
                 <div>QTY: {shipmentOrder?.quantity} pc</div>
@@ -2650,12 +2656,12 @@ const Orders: React.FC = () => {
                                   <br />
                                   {row.other_charges -
                                     (row.freight_charge + row.cod_charges) *
-                                    0.18 >
+                                      0.18 >
                                     0 &&
                                     `LM Surcharge ₹${(
                                       row.other_charges -
                                       (row.freight_charge + row.cod_charges) *
-                                      0.18
+                                        0.18
                                     ).toFixed(2)}`}
                                   <br />
                                 </Tooltip>

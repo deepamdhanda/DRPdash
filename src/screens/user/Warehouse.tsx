@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Badge } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import {
   getAllWarehouses,
@@ -170,9 +170,9 @@ const Warehouses: React.FC = () => {
     }
   };
 
-  const removeAdmin = (userId: string) => {
-    setAdminList((prev) => prev.filter((admin) => admin._id !== userId));
-  };
+  // const removeAdmin = (userId: string) => {
+  //   setAdminList((prev) => prev.filter((admin) => admin._id !== userId));
+  // };
 
   const columns = [
     {
