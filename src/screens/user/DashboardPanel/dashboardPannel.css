@@ -8,19 +8,22 @@ html {
   /* Navy */
   color: #FFFFFF;
   /* White */
-  font-size: 14px !important;
+  font-size: 10px !important;
 }
-.container{
-  max-width: none!important;
+
+.container {
+  max-width: none !important;
   overflow-x: hidden;
 }
-.rdt_TableHeadRow{
+
+.rdt_TableHeadRow {
   background-color: #000434 !important;
   /* Orange */
   color: #FFFFFF !important;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
+
 /* Layout container */
 #user-panel {
   display: flex;
@@ -92,7 +95,8 @@ html {
   height: calc(100vh - 200px);
   flex-direction: column;
 }
-.nav-list-2{
+
+.nav-list-2 {
   /* display: flex; */
   overflow-y: auto;
   /* vertical scroll */
@@ -173,7 +177,7 @@ html {
 
 /* Main content */
 .main-content {
-  margin:15px;
+  margin: 15px;
   border-radius: 10px;
   flex-grow: 1;
   padding: 1.25rem 0.5rem;
@@ -308,6 +312,7 @@ html {
 /* Class to show sidebar by resetting transform */
 .side-mobile.open {
   transform: translateX(0);
+  height: 100vh;
 }
 
 

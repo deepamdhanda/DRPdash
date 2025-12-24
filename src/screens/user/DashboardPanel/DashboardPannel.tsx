@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import "react-datepicker/dist/react-datepicker.css";
+import "./dashboardPannel.css";
+import { FaSignOutAlt } from "react-icons/fa";
+import logoImg from "../../../assets/logo.png";
+import logoImg1 from "../../../assets/logo1.png";
+import SupportChatWidget from "./SupportChatWidget";
+import axios from "axios";
+import { drpCrmBaseUrl } from "../../../axios/urls";
+import { useUserStore } from "../../../store/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -19,20 +28,10 @@ import {
   Layers,
   Radio,
   Warehouse,
-  LogOut,
-  Menu,
-  X,
   ChevronRight,
 } from "lucide-react";
-import axios from "axios";
-import { drpCrmBaseUrl } from "../../../axios/urls";
-import { useUserStore } from "../../../store/useUserStore";
-import logoImg from "../../../assets/logo.png";
-import logoImg1 from "../../../assets/logo1.png";
-import SupportChatWidget from "./SupportChatWidget";
-import "bootstrap/dist/css/bootstrap.min.css";
 
-// Types
+
 type NavLink = {
   name: string;
   icon: React.ReactNode;
@@ -40,9 +39,21 @@ type NavLink = {
   children?: NavLink[];
 };
 
-type TNavLinkName = string;
+type TNavLinkName =
+  | ""
+  | "Dashboard"
+  | "Orders"
+  | "Pools"
+  | "Channels"
+  | "Products"
+  | "Product SKUs"
+  | "Channels linked SKU"
+  | "NDR"
+  | "Finance"
+  | "invoices"
+  | "SignOut";
 
-// Navigation structure
+
 const navLinks: NavLink[] = [
   {
     name: "Dashboard",
@@ -140,52 +151,27 @@ const navLinks: NavLink[] = [
 ];
 
 const UserPanel: React.FC = () => {
-  const { username, reset } = useUserStore();
+  const { username } = useUserStore();
   const [activeLink, setActiveLink] = useState<TNavLinkName>("");
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 787);
+  const isMobile = window.innerWidth < 787;
+  const { reset } = useUserStore();
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 787);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Sync active link with current URL
+  // Automatically sync active link with current URL
   useEffect(() => {
     const currentPath = location.pathname;
-    const findActiveLink = (links: NavLink[]): string | null => {
-      for (const link of links) {
-        if (link.path === currentPath) return link.name;
-        if (link.children) {
-          const childMatch = findActiveLink(link.children);
-          if (childMatch) return childMatch;
-        }
-      }
-      return null;
-    };
-
-    const matchedLink = findActiveLink(navLinks);
+    const matchedLink = navLinks.find((link) => link.path === currentPath);
     if (matchedLink) {
-      setActiveLink(matchedLink);
-      document.title = `${matchedLink} - Orderz Up`;
+      setActiveLink(matchedLink.name as TNavLinkName);
+      document.title = `${matchedLink.name} - Orderz Up`; // Dynamically update the title
+    } else {
+      document.title = "Dashboard - Orderz Up"; // Default title
     }
   }, [location.pathname]);
-
-  const handleLinkClick = (name: string, path?: string) => {
-    if (path) {
-      setActiveLink(name);
-      navigate(path);
-      if (isMobile) setSidebarOpen(false);
-    }
-  };
 
   const toggleExpanded = (name: string) => {
     const newExpanded = new Set(expandedItems);
@@ -196,17 +182,6 @@ const UserPanel: React.FC = () => {
     }
     setExpandedItems(newExpanded);
   };
-
-  const handleSignOut = async () => {
-    reset();
-    await axios.post(
-      `${drpCrmBaseUrl}/auth/logout`,
-      {},
-      { withCredentials: true }
-    );
-    navigate("/login");
-  };
-
   const NavItem = ({ link, level = 0 }: { link: NavLink; level?: number }) => {
     const isExpanded = expandedItems.has(link.name);
     const isHovered = hoveredItem === link.name;
@@ -243,9 +218,7 @@ const UserPanel: React.FC = () => {
         style={{ marginBottom: "4px" }}
       >
         <motion.div
-          className={`d-flex align-items-center justify-content-between px-3 py-2 rounded mx-2 ${
-            isActive ? "text-white" : "text-dark"
-          }`}
+          className={`d-flex align-items-center justify-content-between px-3 py-2 rounded mx-2 `}
           style={{
             cursor: "pointer",
             transition: "all 0.2s",
@@ -258,6 +231,7 @@ const UserPanel: React.FC = () => {
           whileHover={{
             x: level === 0 ? 4 : 2,
             backgroundColor: isActive ? undefined : "#FFF5E6",
+            color: isActive ? undefined : "#F5891E!important",
           }}
           whileTap={{ scale: 0.98 }}
         >
@@ -265,7 +239,7 @@ const UserPanel: React.FC = () => {
             <span style={{ color: isActive ? "white" : "#F5891E" }}>
               {link.icon}
             </span>
-            <span className="fw-medium" style={{ fontSize: "14px" }}>
+            <span className="fw-medium nav-name" style={{ fontSize: "14px", color: isActive ? "white" : "#F5891E" }}>
               {link.name}
             </span>
           </div>
@@ -273,7 +247,8 @@ const UserPanel: React.FC = () => {
             <motion.span
               animate={{ rotate: isExpanded || isHovered ? 90 : 0 }}
               transition={{ duration: 0.2 }}
-              style={{ color: isActive ? "white" : "#6c757d" }}
+              style={{ color: isActive ? "white" : "white" }}
+              className="nav-name"
             >
               <ChevronRight size={16} />
             </motion.span>
@@ -298,7 +273,7 @@ const UserPanel: React.FC = () => {
                     transition: "all 0.2s",
                     backgroundColor:
                       activeLink === child.name ? "#FFF5E6" : "transparent",
-                    color: activeLink === child.name ? "#F5891E" : "#212529",
+                    color: activeLink === child.name ? "#F5891E" : "#fff",
                     borderLeft:
                       activeLink === child.name
                         ? "4px solid #F5891E"
@@ -309,12 +284,14 @@ const UserPanel: React.FC = () => {
                   }
                   onMouseEnter={(e) => {
                     if (activeLink !== child.name) {
-                      e.currentTarget.style.backgroundColor = "#f8f9fa";
+                      e.currentTarget.style.backgroundColor = "#FFF5E6";
+                      e.currentTarget.style.color = "#F5891E";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (activeLink !== child.name) {
                       e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.color = "#fff";
                     }
                   }}
                 >
@@ -351,7 +328,7 @@ const UserPanel: React.FC = () => {
                       transition: "all 0.2s",
                       backgroundColor:
                         activeLink === child.name ? "#FFE8CC" : "transparent",
-                      color: activeLink === child.name ? "#F5891E" : "#6c757d",
+                      color: activeLink === child.name ? "#F5891E" : "#fff",
                     }}
                     onClick={() =>
                       child.path && handleLinkClick(child.name, child.path)
@@ -370,135 +347,126 @@ const UserPanel: React.FC = () => {
       </div>
     );
   };
-
-  const Sidebar = () => (
-    <div className="d-flex flex-column h-100 bg-white">
-      <div
-        className="d-flex align-items-center justify-content-center gap-3 py-3 m-1"
-        style={{ background: "#000434", borderRadius: "5px" }}
-      >
-        <img src={logoImg} alt="Logo" style={{ height: "35px" }} />
-        <img src={logoImg1} alt="Brand" style={{ height: "35px" }} />
-      </div>
-      {/* Logo Section */}
-      <div className="p-4 border-bottom">
-        <div
-          className="px-3 py-2 rounded"
-          style={{
-            background: "linear-gradient(90deg, #FFF5E6 0%, #FFE8CC 100%)",
-            borderLeft: "4px solid #F5891E",
-          }}
-        >
-          <p className="mb-0 small text-muted">Hello,</p>
-          <p className="mb-0 fw-semibold">{username}!</p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-fill overflow-auto py-3">
-        {navLinks.map((link) => (
-          <NavItem key={link.name} link={link} />
-        ))}
-      </nav>
-
-      {/* Sign Out */}
-      <div className="p-3 border-top">
-        <motion.div
-          className="d-flex align-items-center gap-3 px-3 py-2 rounded"
-          style={{
-            cursor: "pointer",
-            transition: "all 0.2s",
-            color: "#6c757d",
-          }}
-          onClick={handleSignOut}
-          whileHover={{
-            x: 4,
-            backgroundColor: "#FFEBEE",
-            color: "#DC3545",
-          }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <LogOut size={20} />
-          <span className="fw-medium" style={{ fontSize: "14px" }}>
-            Sign Out
-          </span>
-        </motion.div>
-      </div>
-    </div>
-  );
+  const handleLinkClick = async (name: string, path?: string) => {
+    setSidebarOpen(false);
+    if (name === "SignOut") {
+      reset();
+      await axios.post(
+        `${drpCrmBaseUrl}/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+      navigate("/login");
+      return;
+    }
+    setActiveLink(name as TNavLinkName);
+    if (path) navigate(path);
+  };
 
   return (
-    <div
-      className="d-flex"
-      style={{ height: "100vh", backgroundColor: "#f8f9fa", color: "#262626" }}
-    >
-      {/* Mobile Header */}
+    <div id="user-panel" className="nav-visible">
       {isMobile && (
-        <div
-          className="position-fixed top-0 start-0 end-0  border-bottom d-flex align-items-center justify-content-between px-3"
-          style={{ height: "64px", zIndex: 1040, background: "#000434" }}
+        <button
+          className="hamburger-menu"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          <div
-            className="d-flex align-items-center justify-content-center gap-3 py-3"
-            style={{ borderRadius: "5px" }}
-          >
-            <img src={logoImg} alt="Logo" style={{ height: "35px" }} />
-            <img src={logoImg1} alt="Brand" style={{ height: "35px" }} />
-          </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="btn btn-light rounded"
-            style={{ padding: "8px 12px" }}
-          >
-            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
+          {sidebarOpen ? "X" : "☰"}
+        </button>
       )}
-
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <div
-          className="border-end bg-white shadow-sm"
-          style={{ width: "280px" }}
-        >
-          <Sidebar />
-        </div>
-      )}
-
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {isMobile && sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="position-fixed top-0 start-0 end-0 bottom-0"
+      <div
+        className={`sidebar sidebar-visible`}
+        style={{
+          display:
+            isMobile && !sidebarOpen ? "none!imporant" : "flex!important",
+        }}
+      >
+        <nav className="nav-1">
+          <div>
+            <div className="nav-logo">
+              <span className="nav-logo-icon">
+                <img src={logoImg} style={{ width: "30px " }} />
+              </span>
+              <span className="nav-logo-name">
+                <img src={logoImg1} style={{ width: "100px " }} />
+              </span>
+            </div>
+            <div
               style={{
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                zIndex: 1050,
+                margin: "5px 0 15px 0",
+                padding: "10px 10px",
+                borderWidth: "1px 0",
+                borderColor: "#F5891E",
+                borderStyle: "solid",
+                fontSize: "14px",
+                fontWeight: "200",
               }}
-              onClick={() => setSidebarOpen(false)}
-            />
-            <motion.div
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: "spring", damping: 25 }}
-              className="position-fixed top-0 start-0 bottom-0 bg-white shadow"
-              style={{ width: "280px", zIndex: 1051 }}
             >
-              <Sidebar />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content */}
-      <div className="flex-fill overflow-auto">
-        <div>
-          <Outlet />
+              Hello, {username}!
+            </div>
+            <nav className="flex-fill overflow-auto py-3">
+              {navLinks.map((link) => (
+                <NavItem key={link.name} link={link} />
+              ))}
+            </nav>
+          </div>
+          <div
+            className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""}`}
+            onClick={() => handleLinkClick("SignOut")}
+          >
+            <span className="nav-icon">
+              <FaSignOutAlt />
+            </span>
+            <span className="nav-name"> Sign Out</span>
+          </div>
+        </nav>
+      </div>
+      {isMobile && sidebarOpen && (
+        <div className={`side-mobile ${sidebarOpen ? " open" : ""}`}>
+          <nav className="nav-1">
+            <div>
+              <div className="nav-logo">
+                <span className="nav-logo-icon">
+                  <img src={logoImg} style={{ width: "30px " }} />
+                </span>
+                <span className="nav-logo-name">
+                  <img src={logoImg1} style={{ width: "100px " }} />
+                </span>
+              </div>
+              <div
+                style={{
+                  margin: "5px 0 15px 0",
+                  padding: "10px 10px",
+                  borderWidth: "1px 0",
+                  borderColor: "#F5891E",
+                  borderStyle: "solid",
+                  fontSize: "14px",
+                  fontWeight: "200",
+                }}
+              >
+                Hello, {username}!
+              </div>
+              <nav className="flex-fill overflow-auto py-3">
+                {navLinks.map((link) => (
+                  <NavItem key={link.name} link={link} />
+                ))}
+              </nav>
+            </div>
+            <div
+              className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""
+                }`}
+              onClick={() => handleLinkClick("SignOut")}
+            >
+              <span className="nav-icon">
+                <FaSignOutAlt />
+              </span>
+              <span className="nav-name"> Sign Out</span>
+            </div>
+          </nav>
         </div>
+      )}
+      <div className="main-content">
+        {/* hello */}
+        <Outlet />
         <SupportChatWidget />
       </div>
     </div>
