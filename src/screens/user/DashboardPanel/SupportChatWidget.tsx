@@ -12,6 +12,7 @@ import {
   getTicketById,
 } from "../../../APIs/user/ticket";
 import { useUserStore } from "../../../store/useUserStore";
+import { useStatsStore } from "../../../store/useStatsStore";
 
 type Topic = {
   _id: string;
@@ -41,6 +42,7 @@ type Ticket = {
 };
 
 const SupportChatWidget = () => {
+  const { setStatsStore } = useStatsStore();
   const [open, setOpen] = useState(false);
   const { username } = useUserStore();
   const [tab, setTab] = useState<"tickets" | "help">("tickets");
@@ -88,7 +90,10 @@ const SupportChatWidget = () => {
 
   const fetchAccountSummary = async () => {
     const res = await getAccountSummary();
-    if (res) setStats(res);
+    if (res) {
+      setStatsStore((res as any).counts);
+      setStats(res);
+    }
   };
 
   const onTicketClose = () => {

@@ -5,7 +5,7 @@ import { drpCrmBaseUrl } from "./urls";
 import { useUserStore } from "../store/useUserStore";
 
 const Axios = axios.create({
-  withCredentials: true, // 🔥 Added globally
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
