@@ -1,5 +1,5 @@
 // Pools.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Form,
@@ -56,7 +56,7 @@ const validateIFSC = (ifsc: string): boolean => {
   return ifscRegex.test(ifsc);
 };
 
-const MakePool: React.FC = () => {
+const MakePool = ({ handleNext }: { handleNext: () => void }) => {
   const [tabKey, setTabKey] = useState("gst");
 
   /* --- Form State --- */
@@ -347,6 +347,7 @@ const MakePool: React.FC = () => {
       toast.success(
         status === "active" ? "Pool created successfully" : "Progress saved"
       );
+      handleNext();
     } catch (error) {
       toast.error("Failed to save pool");
       console.error("Submit error:", error);

@@ -30,7 +30,7 @@ export interface User {
   name: string;
 }
 
-const MakeWarehouse: React.FC = () => {
+const MakeWarehouse = ({ handleNext }: { handleNext: () => void }) => {
   const [adminList, setAdminList] = useState<User[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +73,7 @@ const MakeWarehouse: React.FC = () => {
 
     try {
       await createWarehouse(formData);
+      handleNext();
     } catch (error) {
       console.error("Error saving warehouse", error);
     }

@@ -17,13 +17,13 @@ const GetStarted: React.FC = () => {
   const [activeStep, setActiveStep] = useState<string>("pools");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
-  //   const handleNext = (key: string) => {
-  //     if (!completedSteps.includes(key))
-  //       setCompletedSteps([...completedSteps, key]);
-  //     const currentIndex = stepOrder.findIndex((s) => s.key === key);
-  //     if (currentIndex < stepOrder.length - 1)
-  //       setActiveStep(stepOrder[currentIndex + 1].key);
-  //   }; Send as props
+  const handleNext = (key: string) => {
+    if (!completedSteps.includes(key))
+      setCompletedSteps([...completedSteps, key]);
+    const currentIndex = stepOrder.findIndex((s) => s.key === key);
+    if (currentIndex < stepOrder.length - 1)
+      setActiveStep(stepOrder[currentIndex + 1].key);
+  };
   const { stats } = useStatsStore();
 
   useEffect(() => {
@@ -58,19 +58,19 @@ const GetStarted: React.FC = () => {
       key: "pools",
       label: "Pool Setup",
       helper: "Basic Business details",
-      content: <MakePool />,
+      content: <MakePool handleNext={() => handleNext("pools")} />,
     },
     {
       key: "warehouses",
       label: "Warehouse",
       helper: "Warehouse information.",
-      content: <MakeWarehouse />,
+      content: <MakeWarehouse handleNext={() => handleNext("warehouses")} />,
     },
     {
       key: "channel",
       label: "Create Channel Account",
       helper: "Your ecommerce sales channel.",
-      content: <MakeChannelAccount />,
+      content: <MakeChannelAccount handleNext={() => handleNext("channel")} />,
     },
     {
       key: "final",
@@ -85,12 +85,12 @@ const GetStarted: React.FC = () => {
     },
   ];
 
-  //   const handleClick = (key: string) => {
-  //     const exits = completedSteps.find((key) => key);
-  //     if (!exits) {
-  //       setActiveStep(key);
-  //     }
-  //   }; Uncomment on prod
+  const handleClick = (key: string) => {
+    const exits = completedSteps.find((key) => key);
+    if (!exits) {
+      setActiveStep(key);
+    }
+  };
 
   return (
     <div style={{ padding: "2rem", backgroundColor: "#f8f9fa" }}>
@@ -103,8 +103,8 @@ const GetStarted: React.FC = () => {
             {stepOrder.map((step, index) => (
               <div
                 key={step.key}
-                // onClick={() => handleClick(step.key)} uncomment on prod
-                onClick={() => setActiveStep(step.key)} //comment on prod
+                onClick={() => handleClick(step.key)}
+                // onClick={() => setActiveStep(step.key)} //comment on prod
                 style={{
                   ...tabItemStyle,
                   ...(activeStep === step.key ? activeTabStyle : {}),
