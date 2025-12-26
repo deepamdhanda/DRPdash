@@ -14,6 +14,7 @@ import UserPanel from "./screens/user/DashboardPanel/DashboardPannel.tsx";
 import { userRoutes } from "./screens/user/index.tsx";
 import WarehouseDashboardPanel from "./screens/warehouse/DashboardPanel/DashboardPannel.tsx";
 import { warehouseRoutes } from "./screens/warehouse/index.tsx";
+import EcomCreditScoreLandingPage from "./screens/auth/LandingPages/EcomCreditScore/index.tsx";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
     children: [
       {
         index: true, // This will be the default route
+        element: <EcomCreditScoreLandingPage />, // or a default landing page
+      },
+      {
+        path: "waiting",
         element: <JoinWaitList />, // or a default landing page
       },
       {

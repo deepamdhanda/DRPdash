@@ -1,0 +1,391 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 70% 8%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 24 95% 53%;
+
+    --radius: 0.75rem;
+
+    /* Custom OrderzUp colors */
+    --orange: 24 95% 53%;
+    --orange-light: 24 100% 95%;
+    --orange-dark: 24 95% 45%;
+    --dark-blue: 220 70% 8%;
+    --dark-blue-lighter: 220 60% 12%;
+    --navy: 220 50% 15%;
+    --green: 142 76% 36%;
+    --green-light: 142 76% 95%;
+    --yellow: 45 93% 47%;
+    --yellow-light: 45 100% 95%;
+    --red: 0 84% 60%;
+    --red-light: 0 100% 95%;
+    --gray-50: 220 14% 96%;
+    --gray-100: 220 13% 91%;
+    --gray-200: 220 13% 85%;
+    --gray-300: 220 12% 70%;
+    --gray-400: 220 11% 55%;
+    --gray-500: 220 9% 46%;
+    --gray-600: 220 13% 35%;
+    --gray-700: 220 20% 25%;
+    --gray-800: 220 30% 15%;
+    --gray-900: 220 47% 11%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-hero {
+    background: linear-gradient(135deg, hsl(220 70% 8%) 0%, hsl(220 60% 12%) 50%, hsl(220 50% 15%) 100%);
+  }
+
+  .gradient-orange {
+    background: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(24 95% 45%) 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+  }
+
+  .text-gradient-orange {
+    background: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(24 95% 45%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background: hsla(0, 0%, 100%, 0.08);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsla(0, 0%, 100%, 0.1);
+  }
+
+  .glass-card-dark {
+    background: hsla(220, 70%, 8%, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsla(0, 0%, 100%, 0.1);
+  }
+
+  .card-shadow {
+    box-shadow: 0 4px 6px -1px hsla(0, 0%, 0%, 0.1), 0 2px 4px -2px hsla(0, 0%, 0%, 0.1);
+  }
+
+  .card-shadow-lg {
+    box-shadow: 0 10px 15px -3px hsla(0, 0%, 0%, 0.1), 0 4px 6px -4px hsla(0, 0%, 0%, 0.1);
+  }
+
+  .card-shadow-xl {
+    box-shadow: 0 20px 25px -5px hsla(0, 0%, 0%, 0.1), 0 8px 10px -6px hsla(0, 0%, 0%, 0.1);
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 40px hsla(24, 95%, 53%, 0.3);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300;
+    background: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(24 95% 45%) 100%);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px hsla(24, 95%, 53%, 0.3);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300;
+    background: hsla(0, 0%, 100%, 0.1);
+    color: white;
+    border: 1px solid hsla(0, 0%, 100%, 0.2);
+  }
+
+  .btn-secondary:hover {
+    background: hsla(0, 0%, 100%, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300;
+    background: transparent;
+    color: hsl(24 95% 53%);
+    border: 2px solid hsl(24 95% 53%);
+  }
+
+  .btn-outline:hover {
+    background: hsl(24 95% 53%);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .score-card {
+    background: linear-gradient(145deg, hsl(220 70% 10%) 0%, hsl(220 60% 8%) 100%);
+    border: 1px solid hsla(0, 0%, 100%, 0.1);
+  }
+
+  .score-ring {
+    stroke-dasharray: 440;
+    stroke-dashoffset: 88;
+    transition: stroke-dashoffset 1.5s ease-out;
+  }
+
+  .stat-card {
+    @apply p-6 rounded-2xl text-center;
+    background: hsla(0, 0%, 100%, 0.05);
+    border: 1px solid hsla(0, 0%, 100%, 0.1);
+  }
+
+  .problem-card {
+    @apply p-8 rounded-2xl transition-all duration-300;
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    border: 1px solid hsl(220 13% 91%);
+  }
+
+  .problem-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px hsla(0, 0%, 0%, 0.08);
+  }
+
+  .feature-card {
+    @apply p-6 rounded-2xl transition-all duration-300;
+    background: hsla(0, 0%, 100%, 0.05);
+    border: 1px solid hsla(0, 0%, 100%, 0.1);
+  }
+
+  .feature-card:hover {
+    background: hsla(0, 0%, 100%, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .benefit-card {
+    @apply p-8 rounded-2xl transition-all duration-300;
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    border: 1px solid hsl(220 13% 91%);
+  }
+
+  .benefit-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px hsla(0, 0%, 0%, 0.08);
+  }
+
+  .step-card {
+    @apply p-8 rounded-2xl relative;
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    border: 1px solid hsl(220 13% 91%);
+  }
+
+  .testimonial-card {
+    @apply p-8 rounded-2xl;
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    border: 1px solid hsl(220 13% 91%);
+  }
+
+  .faq-item {
+    @apply rounded-xl overflow-hidden transition-all duration-300;
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(220 13% 91%);
+  }
+
+  .faq-item:hover {
+    border-color: hsl(24 95% 53%);
+  }
+
+  .faq-item.active {
+    border-color: hsl(24 95% 53%);
+    box-shadow: 0 4px 20px hsla(24, 95%, 53%, 0.1);
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl transition-all duration-300;
+    background: hsl(220 14% 96%);
+    border: 2px solid transparent;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: hsl(24 95% 53%);
+    background: hsl(0 0% 100%);
+  }
+
+  .input-field::placeholder {
+    color: hsl(220 9% 46%);
+  }
+
+  .marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  .marquee:hover {
+    animation-play-state: paused;
+  }
+
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 2s ease-out infinite;
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .counter-animate {
+    animation: countUp 2s ease-out forwards;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-grid {
+    background-image: 
+      linear-gradient(hsla(0, 0%, 100%, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(0, 0%, 100%, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(hsla(0, 0%, 100%, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes countUp {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Score circle animation */
+@keyframes score-fill {
+  0% {
+    stroke-dashoffset: 440;
+  }
+  100% {
+    stroke-dashoffset: 88;
+  }
+}
+
+.score-animate {
+  animation: score-fill 2s ease-out forwards;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(220 14% 96%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(220 13% 70%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 13% 55%);
+}

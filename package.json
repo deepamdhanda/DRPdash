@@ -13,6 +13,7 @@
     "@cashfreepayments/cashfree-js": "^1.0.5",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@hookform/resolvers": "^5.0.1",
+    "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
     "framer-motion": "^12.23.12",
@@ -35,6 +36,7 @@
     "react-qr-barcode-scanner": "^2.1.5",
     "react-router-dom": "^7.5.0",
     "react-toastify": "^11.0.5",
+    "tailwindcss": "^4.1.18",
     "zod": "^3.24.2",
     "zustand": "^5.0.9"
   },

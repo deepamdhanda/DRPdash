@@ -317,7 +317,7 @@ const ChannelAccounts: React.FC = () => {
       } else {
         result = (await createChannelAccount(formData)) as ChannelAccount;
       }
-      startInitialChannelAccountFetch(result);
+      channels.find((c) => c._id === form.channel_id.value)?.channel_name !== "Custom" && startInitialChannelAccountFetch(result);
       fetchInitialData();
       handleClose();
     } catch (error) {
