@@ -31,7 +31,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-
 type NavLink = {
   name: string;
   icon: React.ReactNode;
@@ -52,7 +51,6 @@ type TNavLinkName =
   | "Finance"
   | "invoices"
   | "SignOut";
-
 
 const navLinks: NavLink[] = [
   {
@@ -212,7 +210,7 @@ const UserPanel: React.FC = () => {
 
     return (
       <div
-        className="position-relative"
+        className="position-relative overflow-hidden"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         style={{ marginBottom: "4px" }}
@@ -239,7 +237,13 @@ const UserPanel: React.FC = () => {
             <span style={{ color: isActive ? "white" : "#F5891E" }}>
               {link.icon}
             </span>
-            <span className="fw-medium nav-name" style={{ fontSize: "14px", color: isActive ? "white" : "#F5891E" }}>
+            <span
+              className="fw-medium nav-name"
+              style={{
+                fontSize: "14px",
+                color: isActive ? "white" : "#F5891E",
+              }}
+            >
               {link.name}
             </span>
           </div>
@@ -452,8 +456,9 @@ const UserPanel: React.FC = () => {
               </nav>
             </div>
             <div
-              className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""
-                }`}
+              className={`nav-link-1 ${
+                activeLink === "SignOut" ? "active" : ""
+              }`}
               onClick={() => handleLinkClick("SignOut")}
             >
               <span className="nav-icon">

@@ -32,13 +32,13 @@ export interface User {
   email?: string;
 }
 
-const COMPANY_TYPE_OPTIONS = [
-  { value: "individual", label: "Individual" },
-  { value: "private_limited_company", label: "Private Ltd" },
-  { value: "public_limited_company", label: "Public Ltd" },
-  { value: "llp", label: "LLP" },
-  { value: "partnership", label: "Partnership" },
-];
+// const COMPANY_TYPE_OPTIONS = [
+//   { value: "individual", label: "Individual" },
+//   { value: "private_limited_company", label: "Private Ltd" },
+//   { value: "public_limited_company", label: "Public Ltd" },
+//   { value: "llp", label: "LLP" },
+//   { value: "partnership", label: "Partnership" },
+// ];
 
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -57,7 +57,8 @@ const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
 const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
   // Minimal required onboarding fields
   const [businessName, setBusinessName] = useState("");
-  const [companyType, setCompanyType] = useState("individual");
+  // const [companyType, setCompanyType] = useState("individual");
+  const companyType = "individual";
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [bankAccount, setBankAccount] = useState("");
@@ -66,7 +67,6 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
 
   // Optional / UI state
   const [admins, setAdmins] = useState<User[]>([]);
-  const [adminSearchLoading, setAdminSearchLoading] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [gstLoading, setGstLoading] = useState(false);
@@ -83,10 +83,10 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       toast.warn("Enter an email to add an admin");
       return;
     }
-    setAdminSearchLoading(true);
+
     try {
       const res = await getUser(e);
-      setAdminSearchLoading(false);
+
       if (!res || res.length === 0) {
         toast.warn("User not found");
         return;
@@ -99,7 +99,6 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       setAdmins((p) => [...p, u]);
       toast.success("Admin added");
     } catch (err) {
-      setAdminSearchLoading(false);
       console.error("User search error", err);
       toast.error("Failed to search user");
     }
@@ -288,7 +287,9 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                     <Form.Control
                       placeholder="IFSC code"
                       value={bankIFSC}
-                      onChange={(e) => setBankIFSC(e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        setBankIFSC(e.target.value.toUpperCase())
+                      }
                     />
                     <Form.Text className="text-muted">
                       Used for payouts (required)
@@ -349,18 +350,10 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                 >
                   Reset
                 </Button>
-                <Button
-                  variant="primary"
-                  type="submit"
-                  disabled={submitting}
-                >
+                <Button variant="primary" type="submit" disabled={submitting}>
                   {submitting ? (
                     <>
-                      <Spinner
-                        size="sm"
-                        animation="border"
-                        className="me-2"
-                      />{" "}
+                      <Spinner size="sm" animation="border" className="me-2" />{" "}
                       Creating...
                     </>
                   ) : (
@@ -429,7 +422,9 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                   <Collapse in={advancedOpen}>
                     <div>
                       <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">Business Logo</Form.Label>
+                        <Form.Label className="fw-medium">
+                          Business Logo
+                        </Form.Label>
                         <Form.Control
                           type="file"
                           accept="image/*"
@@ -441,7 +436,9 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                       </Form.Group>
 
                       <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">PAN (optional)</Form.Label>
+                        <Form.Label className="fw-medium">
+                          PAN (optional)
+                        </Form.Label>
                         <Form.Control
                           type="file"
                           accept="image/*,.pdf"
@@ -453,7 +450,9 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                       </Form.Group>
 
                       <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">Address (optional)</Form.Label>
+                        <Form.Label className="fw-medium">
+                          Address (optional)
+                        </Form.Label>
                         <Form.Control
                           as="textarea"
                           rows={2}
@@ -463,7 +462,9 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                       </Form.Group>
 
                       <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">State (optional)</Form.Label>
+                        <Form.Label className="fw-medium">
+                          State (optional)
+                        </Form.Label>
                         <Form.Control
                           value={stateName}
                           onChange={(e) => setStateName(e.target.value)}
@@ -480,8 +481,12 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                       className="small text-muted"
                       style={{ paddingLeft: 18 }}
                     >
-                      <li>Bank details are required to enable merchant payouts.</li>
-                      <li>Admins can manage orders and shipping after onboarding.</li>
+                      <li>
+                        Bank details are required to enable merchant payouts.
+                      </li>
+                      <li>
+                        Admins can manage orders and shipping after onboarding.
+                      </li>
                       <li>
                         GST verification helps autofill company information
                         (optional).

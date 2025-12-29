@@ -9,7 +9,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
-import { FaCheck, FaChevronRight, FaCircle } from "react-icons/fa";
+import { FaCheck, FaChevronRight } from "react-icons/fa";
 import { Stat, useStatsStore } from "../../store/useStatsStore";
 import MakePool from "../../components/get-started/MakePool";
 import MakeWarehouse from "../../components/get-started/MakeWarehouse";
@@ -79,9 +79,7 @@ const GetStarted: React.FC = () => {
       key: "channel",
       label: "Channel Account",
       helper: "Connect Shopify or add a manual channel",
-      content: (
-        <MakeChannelAccount handleNext={() => handleNext("channel")} />
-      ),
+      content: <MakeChannelAccount handleNext={() => handleNext("channel")} />,
     },
     {
       key: "final",
@@ -91,7 +89,8 @@ const GetStarted: React.FC = () => {
         <div style={{ textAlign: "center", padding: 18 }}>
           <h3 style={{ marginBottom: 8 }}>Nice work 👏</h3>
           <p className="text-muted" style={{ maxWidth: 640, margin: "0 auto" }}>
-            You completed onboarding. Explore dashboards, add products, or configure integrations.
+            You completed onboarding. Explore dashboards, add products, or
+            configure integrations.
           </p>
           <div style={{ marginTop: 18 }}>
             <Button
@@ -142,11 +141,26 @@ const GetStarted: React.FC = () => {
   );
 
   return (
-    <div style={{ padding: "2rem 1rem", backgroundColor: "#f5f7fb", minHeight: "80vh" }}>
+    <div
+      style={{
+        padding: "2rem 1rem",
+        backgroundColor: "#f5f7fb",
+        minHeight: "80vh",
+      }}
+    >
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
           <div>
-            <h2 style={{ color: "#000434", margin: 0 }}>Welcome — Let's get you set up</h2>
+            <h2 style={{ color: "#000434", margin: 0 }}>
+              Welcome — Let's get you set up
+            </h2>
             <div style={{ color: "#6b7280", marginTop: 6, fontSize: 14 }}>
               Onboarding in a few quick steps. We'll guide you.
             </div>
@@ -155,8 +169,19 @@ const GetStarted: React.FC = () => {
           <div style={{ width: 320 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <div style={{ flex: 1 }}>
-                <ProgressBar now={progress} variant="warning" style={{ height: 8, borderRadius: 8 }} />
-                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 6, textAlign: "right" }}>
+                <ProgressBar
+                  now={progress}
+                  variant="warning"
+                  style={{ height: 8, borderRadius: 8 }}
+                />
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#6b7280",
+                    marginTop: 6,
+                    textAlign: "right",
+                  }}
+                >
                   {completedCount}/{totalSteps - 1} completed
                 </div>
               </div>
@@ -189,7 +214,8 @@ const GetStarted: React.FC = () => {
                     tabIndex={0}
                     onClick={() => handleClickStep(step.key)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") handleClickStep(step.key);
+                      if (e.key === "Enter" || e.key === " ")
+                        handleClickStep(step.key);
                     }}
                     style={{
                       display: "flex",
@@ -198,59 +224,107 @@ const GetStarted: React.FC = () => {
                       padding: "10px 8px",
                       borderRadius: 10,
                       marginBottom: 8,
-                      cursor: isComplete || step.key === activeStep ? "pointer" : "pointer",
-                      background: isActive ? "rgba(245,137,30,0.06)" : "transparent",
-                      borderLeft: isActive ? "4px solid #F5891E" : "4px solid transparent",
+                      cursor:
+                        isComplete || step.key === activeStep
+                          ? "pointer"
+                          : "pointer",
+                      background: isActive
+                        ? "rgba(245,137,30,0.06)"
+                        : "transparent",
+                      borderLeft: isActive
+                        ? "4px solid #F5891E"
+                        : "4px solid transparent",
                       transition: "all 0.12s ease",
                     }}
                     title={step.helper}
                   >
                     <div style={{ width: 36, textAlign: "center" }}>
                       {isComplete ? (
-                        <div style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 18,
-                          background: "#F5891E",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#fff",
-                        }}>
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 18,
+                            background: "#F5891E",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                          }}
+                        >
                           <FaCheck />
                         </div>
                       ) : (
-                        <div style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 18,
-                          border: "1px solid #e6e9ee",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: isActive ? "#F5891E" : "#9aa0ad",
-                          background: isActive ? "rgba(245,137,30,0.06)" : "transparent",
-                        }}>
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 18,
+                            border: "1px solid #e6e9ee",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: isActive ? "#F5891E" : "#9aa0ad",
+                            background: isActive
+                              ? "rgba(245,137,30,0.06)"
+                              : "transparent",
+                          }}
+                        >
                           <span style={{ fontWeight: 600 }}>{index + 1}</span>
                         </div>
                       )}
                     </div>
 
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                        <div style={{ fontWeight: isActive ? 700 : 600, color: isActive ? "#000434" : "#111827" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: isActive ? 700 : 600,
+                            color: isActive ? "#000434" : "#111827",
+                          }}
+                        >
                           {step.label}
                         </div>
                         <div style={{ color: "#9aa0ad", fontSize: 12 }}>
-                          {isComplete ? <small>Done</small> : <small>{index === stepOrder.length - 1 ? "Optional" : ""}</small>}
+                          {isComplete ? (
+                            <small>Done</small>
+                          ) : (
+                            <small>
+                              {index === stepOrder.length - 1 ? "Optional" : ""}
+                            </small>
+                          )}
                         </div>
                       </div>
-                      {step.helper && <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{step.helper}</div>}
+                      {step.helper && (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: "#6b7280",
+                            marginTop: 4,
+                          }}
+                        >
+                          {step.helper}
+                        </div>
+                      )}
                     </div>
 
                     <div>
-                      <OverlayTrigger overlay={<Tooltip id={`tooltip-${step.key}`}>{isComplete ? "Completed" : "Open step"}</Tooltip>}>
-                        <span style={{ color: "#9aa0ad" }}><FaChevronRight /></span>
+                      <OverlayTrigger
+                        overlay={
+                          <Tooltip id={`tooltip-${step.key}`}>
+                            {isComplete ? "Completed" : "Open step"}
+                          </Tooltip>
+                        }
+                      >
+                        <span style={{ color: "#9aa0ad" }}>
+                          <FaChevronRight />
+                        </span>
                       </OverlayTrigger>
                     </div>
                   </div>
@@ -260,16 +334,30 @@ const GetStarted: React.FC = () => {
           </Col>
 
           <Col lg={9} md={8} sm={12} xs={12}>
-            <Card style={{
-              borderRadius: 16,
-              boxShadow: "0 8px 30px rgba(2,6,23,0.06)",
-              minHeight: 420,
-              padding: 18,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <Card
+              style={{
+                borderRadius: 16,
+                boxShadow: "0 8px 30px rgba(2,6,23,0.06)",
+                minHeight: 420,
+                padding: 18,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
                 <div>
                   <div style={{ fontSize: 14, color: "#6b7280" }}>
-                    Step {Math.min(stepOrder.findIndex(s => s.key === activeStep) + 1, stepOrder.length)} of {stepOrder.length}
+                    Step{" "}
+                    {Math.min(
+                      stepOrder.findIndex((s) => s.key === activeStep) + 1,
+                      stepOrder.length
+                    )}{" "}
+                    of {stepOrder.length}
                   </div>
                   <h4 style={{ margin: 0, color: "#000434" }}>
                     {stepOrder.find((s) => s.key === activeStep)?.label}
@@ -285,7 +373,13 @@ const GetStarted: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ borderTop: "1px dashed #eef2f6", marginTop: 10, paddingTop: 14 }}>
+              <div
+                style={{
+                  borderTop: "1px dashed #eef2f6",
+                  marginTop: 10,
+                  paddingTop: 14,
+                }}
+              >
                 {renderedContent}
               </div>
             </Card>

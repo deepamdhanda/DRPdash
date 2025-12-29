@@ -17,6 +17,8 @@ import SettingsPage from "./Settings.tsx";
 import { CODRemittances } from "./CODRemittances.tsx";
 import { Invoices } from "../Invoices/Invoices.tsx";
 import GetStarted from "./GetStarted.tsx";
+import DamageReport from "./DamageReport.tsx";
+// import VideoRecorder from "./video-test.jsx";
 
 export const userRoutes = [
   {
@@ -94,5 +96,9 @@ export const userRoutes = [
   {
     path: "settings", // /Dashboard/pools
     element: <SettingsPage />,
+  },
+  {
+    path: "damage-report",
+    element: <DamageReport />,
   },
 ];
