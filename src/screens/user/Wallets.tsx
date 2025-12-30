@@ -263,6 +263,7 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
       name: "Order ID",
       selector: (row: TWalletRecharge) => row._id,
       sortable: true,
+      wrap: true,
     },
     {
       name: "Payment ID",
@@ -273,11 +274,11 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
       selector: (row: TWalletRecharge) =>
         new Date(row.createdAt).toLocaleString(),
     },
-    {
-      name: "Updated At",
-      selector: (row: TWalletRecharge) =>
-        new Date(row.updatedAt).toLocaleString(),
-    },
+    // {
+    //   name: "Updated At",
+    //   selector: (row: TWalletRecharge) =>
+    //     new Date(row.updatedAt).toLocaleString(),
+    // },
   ];
   const fetchWalletsRecharges = async (page: number, limit: number) => {
     try {

@@ -39,15 +39,17 @@ export interface ChannelAccount {
   createdAt?: string;
 }
 
-const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
+const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
+  handleNext,
+}) => {
   const [channels, setChannels] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
   const [selectedPoolId, setSelectedPoolId] = useState<string>("");
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
   const [channelAccountName, setChannelAccountName] = useState<string>("");
-  const [keys, setKeys] = useState<{ key: string; value: string; disabled?: boolean }[]>([
-    { key: "", value: "" },
-  ]);
+  const [keys, setKeys] = useState<
+    { key: string; value: string; disabled?: boolean }[]
+  >([{ key: "", value: "" }]);
   const [selectedPoolAdmins, setSelectedPoolAdmins] = useState<any[]>([]);
   const [adminAccess, setAdminAccess] = useState<string[]>([]);
   const [automation, setAutomation] = useState<Automation>({
@@ -65,13 +67,16 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
   useEffect(() => {
     (async () => {
       try {
-        const [channelsData, poolsData] = await Promise.all([getAllChannels(), getAllPools()]);
+        const [channelsData, poolsData] = await Promise.all([
+          getAllChannels(),
+          getAllPools(),
+        ]);
         setChannels(channelsData || []);
         channelsData.find((c) => {
           if (c.channel_name === "Custom") {
             setSelectedChannelId(c._id);
           }
-        })
+        });
         setPools(poolsData?.data || []);
       } catch (err) {
         console.error("Failed to load channels/pools", err);
@@ -85,7 +90,6 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
     setSelectedPoolAdmins(selectedPool?.admins || []);
     setAdminAccess([]); // reset admins selection on pool change
   };
-
 
   const canSubmit = useMemo(() => {
     if (!channelAccountName.trim()) return false;
@@ -118,7 +122,9 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
   };
 
   const handleAdminToggle = (adminId: string, checked: boolean) => {
-    setAdminAccess((prev) => (checked ? [...prev, adminId] : prev.filter((id) => id !== adminId)));
+    setAdminAccess((prev) =>
+      checked ? [...prev, adminId] : prev.filter((id) => id !== adminId)
+    );
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -147,7 +153,9 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
     try {
       const result: any = await createChannelAccount(formData);
       // attempt initial fetch (products & orders)
-      channels.find((c) => c._id === selectedChannelId)?.channel_name !== "Custom" && await startInitialChannelAccountFetch(result?._id || result);
+      channels.find((c) => c._id === selectedChannelId)?.channel_name !==
+        "Custom" &&
+        (await startInitialChannelAccountFetch(result?._id || result));
       handleNext();
     } catch (err) {
       console.error("Error creating channel account", err);
@@ -163,17 +171,23 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
         <Row className="align-items-center mb-3">
           <Col>
             <h4 className="mb-1">Create your first Channel Account</h4>
-            <div className="text-muted">Connect a sales channel so we can fetch products and orders.</div>
+            <div className="text-muted">
+              Connect a sales channel so we can fetch products and orders.
+            </div>
           </Col>
         </Row>
         <hr />
 
         <div className="text-center">
-          <Button variant="success" size="lg"
+          <Button
+            variant="success"
+            size="lg"
             href="https://apps.shopify.com/app7"
             target="_blank"
           >
-            <span style={{ color: "white" }}>Connect with Shopify <FaExternalLinkAlt className="ms-2" /></span>
+            <span style={{ color: "white" }}>
+              Connect with Shopify <FaExternalLinkAlt className="ms-2" />
+            </span>
           </Button>
         </div>
         <hr />
@@ -182,14 +196,18 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
           <Row>
             <Col md={7}>
               <Form.Group className="mb-3" controlId="accountName">
-                <Form.Label className="fw-medium">Channel Account Name</Form.Label>
+                <Form.Label className="fw-medium">
+                  Channel Account Name
+                </Form.Label>
                 <Form.Control
                   placeholder="e.g. My Shopify Store"
                   value={channelAccountName}
                   onChange={(e) => setChannelAccountName(e.target.value)}
                   required
                 />
-                <Form.Text className="text-muted">This helps you identify the connected store.</Form.Text>
+                <Form.Text className="text-muted">
+                  This helps you identify the connected store.
+                </Form.Text>
               </Form.Group>
 
               <Form.Group className="mb-3" controlId="poolSelect">
@@ -210,7 +228,9 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
 
               {selectedPoolAdmins.length > 0 && (
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-medium">Give admins access</Form.Label>
+                  <Form.Label className="fw-medium">
+                    Give admins access
+                  </Form.Label>
                   <div className="d-flex flex-wrap gap-2">
                     {selectedPoolAdmins.map((admin) => (
                       <Form.Check
@@ -227,7 +247,9 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
                           </span>
                         }
                         checked={adminAccess.includes(admin._id)}
-                        onChange={(e) => handleAdminToggle(admin._id, e.target.checked)}
+                        onChange={(e) =>
+                          handleAdminToggle(admin._id, e.target.checked)
+                        }
                       />
                     ))}
                   </div>
@@ -240,28 +262,45 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
                   onChange={(e) => setSelectedChannelId(e.target.value)}
                   required
                 >
-                  {channels.filter((c) => c.channel_name === "Custom").map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.channel_name}
-                    </option>
-                  ))}
+                  {channels
+                    .filter((c) => c.channel_name === "Custom")
+                    .map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.channel_name}
+                      </option>
+                    ))}
                 </Form.Select>
               </Form.Group>
-
             </Col>
 
             <Col md={5}>
               <Card className="h-100 border-0 bg-light">
                 <Card.Body>
                   <h6 className="mb-3">Automation</h6>
-
                   <Form.Check
                     type="switch"
-                    id="auto_ship"
-                    label="Auto Ship"
+                    id="auto_ai_rating"
+                    label="OUAI Customer Rating"
+                    checked={automation.auto_ai_rating}
+                    onChange={(e) =>
+                      setAutomation((a) => ({
+                        ...a,
+                        auto_ai_rating: e.target.checked,
+                      }))
+                    }
+                  />
+                  <Form.Check
+                    type="switch"
+                    id="auto_whatsapp"
+                    label="Auto Order Confirmation"
                     className="mb-2"
-                    checked={automation.auto_ship}
-                    onChange={(e) => setAutomation((a) => ({ ...a, auto_ship: e.target.checked }))}
+                    checked={automation.auto_whatsapp}
+                    onChange={(e) =>
+                      setAutomation((a) => ({
+                        ...a,
+                        auto_whatsapp: e.target.checked,
+                      }))
+                    }
                   />
                   <Form.Check
                     type="switch"
@@ -269,32 +308,44 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
                     label="OUAI Courier Recommendation"
                     className="mb-2"
                     checked={automation.auto_ai_recommendation}
-                    onChange={(e) => setAutomation((a) => ({ ...a, auto_ai_recommendation: e.target.checked }))}
+                    onChange={(e) =>
+                      setAutomation((a) => ({
+                        ...a,
+                        auto_ai_recommendation: e.target.checked,
+                      }))
+                    }
                   />
                   <Form.Check
                     type="switch"
-                    id="auto_whatsapp"
-                    label="Auto WhatsApp"
+                    id="auto_ship"
+                    label="Auto Shipment Book"
                     className="mb-2"
-                    checked={automation.auto_whatsapp}
-                    onChange={(e) => setAutomation((a) => ({ ...a, auto_whatsapp: e.target.checked }))}
-                  />
-                  <Form.Check
-                    type="switch"
-                    id="auto_ai_rating"
-                    label="OUAI Customer Rating"
-                    checked={automation.auto_ai_rating}
-                    onChange={(e) => setAutomation((a) => ({ ...a, auto_ai_rating: e.target.checked }))}
+                    checked={automation.auto_ship}
+                    onChange={(e) =>
+                      setAutomation((a) => ({
+                        ...a,
+                        auto_ship: e.target.checked,
+                      }))
+                    }
                   />
 
                   <hr />
 
                   <div>
                     <h6 className="mb-2">Quick Tips</h6>
-                    <ul className="small text-muted" style={{ paddingLeft: 18 }}>
+                    <ul
+                      className="small text-muted"
+                      style={{ paddingLeft: 18 }}
+                    >
                       <li>Connect via Shopify for OAuth-based keys.</li>
-                      <li>Manual keys are useful for custom channels or API-based integrations.</li>
-                      <li>You can update keys later from the channel accounts screen.</li>
+                      <li>
+                        Manual keys are useful for custom channels or API-based
+                        integrations.
+                      </li>
+                      <li>
+                        You can update keys later from the channel accounts
+                        screen.
+                      </li>
                     </ul>
                   </div>
                 </Card.Body>
@@ -303,14 +354,25 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
           </Row>
 
           <div className="d-flex justify-content-end gap-2 mt-3">
-            <Button variant="secondary" onClick={() => { setChannelAccountName(""); setKeys([{ key: "", value: "" }]); }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setChannelAccountName("");
+                setKeys([{ key: "", value: "" }]);
+              }}
+            >
               Reset
             </Button>
 
-            <Button variant="primary" type="submit" disabled={!canSubmit || submitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={!canSubmit || submitting}
+            >
               {submitting ? (
                 <>
-                  <Spinner animation="border" size="sm" className="me-2" /> Creating...
+                  <Spinner animation="border" size="sm" className="me-2" />{" "}
+                  Creating...
                 </>
               ) : (
                 "Create Channel Account"
@@ -320,18 +382,31 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({ handleNext }
         </Form>
       </Card.Body>
 
-      <Modal show={showFetchingModal} onHide={() => setShowFetchingModal(false)} size="lg" centered>
+      <Modal
+        show={showFetchingModal}
+        onHide={() => setShowFetchingModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Initial sync in progress</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ fontSize: "1rem" }}>
           <div className="mb-3 d-flex align-items-center">
             <strong className="me-2">📦 Products:</strong>
-            {fetchingProducts ? <span className="text-warning">Fetching…</span> : <span className="text-success">Complete</span>}
+            {fetchingProducts ? (
+              <span className="text-warning">Fetching…</span>
+            ) : (
+              <span className="text-success">Complete</span>
+            )}
           </div>
           <div className="d-flex align-items-center">
             <strong className="me-2">🚚 Orders:</strong>
-            {fetchingOrders ? <span className="text-warning">Fetching…</span> : <span className="text-success">Complete</span>}
+            {fetchingOrders ? (
+              <span className="text-warning">Fetching…</span>
+            ) : (
+              <span className="text-success">Complete</span>
+            )}
           </div>
         </Modal.Body>
       </Modal>

@@ -13,6 +13,7 @@ import {
 } from "../../../APIs/user/ticket";
 import { useUserStore } from "../../../store/useUserStore";
 import { useStatsStore } from "../../../store/useStatsStore";
+import { useNavigate } from "react-router-dom";
 
 type Topic = {
   _id: string;
@@ -42,6 +43,7 @@ type Ticket = {
 };
 
 const SupportChatWidget = () => {
+  const navigate = useNavigate();
   const { setStatsStore } = useStatsStore();
   const [open, setOpen] = useState(false);
   const { username } = useUserStore();
@@ -93,6 +95,18 @@ const SupportChatWidget = () => {
     if (res) {
       setStatsStore((res as any).counts);
       setStats(res);
+
+      (res as any).counts.forEach((stat: any) => {
+        const token = stat.label.split(" ")[1]?.toLowerCase();
+        if (
+          (token === "pools" ||
+            token === "warehouses" ||
+            token === "channel") &&
+          Number(stat.count) === 0
+        ) {
+          navigate("/get-started");
+        }
+      });
     }
   };
 

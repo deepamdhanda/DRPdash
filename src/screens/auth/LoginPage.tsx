@@ -20,6 +20,8 @@ const registerSchema = z.object({
 });
 
 export const AuthPage: React.FC = () => {
+  const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
   // const location = useLocation();
 
@@ -41,9 +43,6 @@ export const AuthPage: React.FC = () => {
   } = useForm({ resolver: zodResolver(registerSchema) });
 
   const onLogin = async (data: any) => {
-    // const params = new URLSearchParams(location.search);
-    // const redirect = params.get("redirect");
-
     await LoginUser(data, (verified, email) => {
       if (verified) {
         navigate("/user");
@@ -132,6 +131,7 @@ export const AuthPage: React.FC = () => {
       border: "1px solid #ddd",
       borderRadius: "8px",
       fontSize: "1rem",
+      width: "100%",
     },
     submitBtn: {
       padding: "0.75rem",
@@ -250,13 +250,16 @@ export const AuthPage: React.FC = () => {
                       style={styles.input}
                       type="text"
                       placeholder="Phone Number"
-                      {...registerRegister("phone")}
+                      inputMode="numeric"
+                      maxLength={10}
+                      {...registerRegister("phone", {
+                        onChange: (e) => {
+                          e.target.value = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 10);
+                        },
+                      })}
                     />
-                    {registerErrors.phone && (
-                      <span style={styles.error}>
-                        {registerErrors.phone.message}
-                      </span>
-                    )}
                   </>
                 )}
                 {isLogin ? (
@@ -268,14 +271,42 @@ export const AuthPage: React.FC = () => {
                 ) : (
                   ""
                 )}
-                <input
-                  style={styles.input}
-                  type="password"
-                  placeholder="Password"
-                  {...(isLogin
-                    ? loginRegister("password")
-                    : registerRegister("password"))}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    style={{
+                      ...styles.input,
+                      paddingRight: "42px",
+                    }}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    {...(isLogin
+                      ? loginRegister("password")
+                      : registerRegister("password"))}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => !p)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#666",
+                    }}
+                  >
+                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
                 {(loginErrors.password || registerErrors.password) && (
                   <span style={styles.error}>
                     {loginErrors.password?.message ||
@@ -296,3 +327,25 @@ export const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
+
+const EyeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M17.94 17.94C16.14 19.24 14.12 20 12 20 5 20 1 12 1 12a21.8 21.8 0 0 1 5.06-6.94"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+    <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" />
+  </svg>
+);

@@ -15,6 +15,7 @@ import { userRoutes } from "./screens/user/index.tsx";
 import WarehouseDashboardPanel from "./screens/warehouse/DashboardPanel/DashboardPannel.tsx";
 import { warehouseRoutes } from "./screens/warehouse/index.tsx";
 import EcomCreditScoreLandingPage from "./screens/auth/LandingPages/EcomCreditScore/index.tsx";
+import GetStarted from "./screens/user/GetStarted.tsx";
 
 const router = createBrowserRouter([
   {
@@ -52,6 +53,10 @@ const router = createBrowserRouter([
       {
         path: "resetPassword",
         element: <ResetPasswordPage />,
+      },
+      {
+        path: "get-started", // /get-started
+        element: <GetStarted />, // or a default dashboard
       },
       {
         path: "user",

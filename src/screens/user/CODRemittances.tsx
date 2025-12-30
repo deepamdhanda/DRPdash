@@ -258,8 +258,7 @@ const CODRemittances: React.FC = () => {
           <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
             {row?.product_sku_name || "—"} <br />
             <span style={{ color: "#f5891e", textDecoration: "underline" }}>
-              {" "}
-              {row.product_sku_id || "—"}{" "}
+              {row.product_sku_id || ""}
             </span>
           </div>
         ),

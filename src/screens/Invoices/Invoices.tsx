@@ -104,23 +104,26 @@ const InvoiceModal = ({
                     From:
                   </h5>
                   <div>
-                    <p className="fw-bold mb-1">Your Company Name</p>
+                    <p className="fw-bold mb-1">
+                      BABITA BEAUTY AND COSMETIC PRODUCTS
+                    </p>
                     <p className="mb-1">
                       <i className="fas fa-map-marker-alt me-1 text-muted"></i>
-                      123 Business Street
+                      KHEWAT NO 582, KHASRA NO 208/3
                     </p>
-                    <p className="mb-1">City, State 12345</p>
+                    <p className="mb-1">
+                      DARA KALAN, LAKSHMAN COLONY, THANESAR, Kurukshetra,
+                      Haryana
+                    </p>
                     <p className="mb-1">
                       <i className="fas fa-envelope me-1 text-muted"></i>
-                      contact@yourcompany.com
+                      hello@orderzup.com
                     </p>
-                    <p className="mb-1">
-                      <i className="fas fa-phone me-1 text-muted"></i>
-                      +1 (555) 123-4567
-                    </p>
+
                     <p className="mb-0">
                       <i className="fas fa-file-invoice me-1 text-muted"></i>
-                      <span className="fw-semibold">GSTIN:</span> XXXXXXXXXXXX
+                      <span className="fw-semibold">GSTIN:</span>{" "}
+                      06EFZPB1531K1Z8
                     </p>
                   </div>
                 </Card.Body>

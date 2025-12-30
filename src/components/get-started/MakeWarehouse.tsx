@@ -1,14 +1,9 @@
 import React, { useState } from "react";
-import { Card, Row, Col, Form, Button, Badge, Spinner } from "react-bootstrap";
+import { Card, Row, Col, Form, Button, Badge } from "react-bootstrap";
 import { toast } from "react-toastify";
-
+import axios from "axios";
 import { createWarehouse } from "../../APIs/user/warehouse";
-
-export interface User {
-  _id: string;
-  name: string;
-  email?: string;
-}
+import { drpCrmBaseUrl } from "../../axios/urls";
 
 export interface Warehouse {
   _id?: string;
@@ -21,13 +16,9 @@ export interface Warehouse {
   pincode: string;
   latitude?: number;
   longitude?: number;
-  status?: "active" | "inactive" | "suspended";
-  created_by?: string;
   contact_person: string;
   contact_phone: string;
   contact_email: string;
-  createdAt?: string;
-  admins?: string[]; // list of user ids
 }
 
 const INDIAN_STATES = [
@@ -73,76 +64,81 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
   handleNext,
 }) => {
   const [submitting, setSubmitting] = useState(false);
+  const [fetchingPincode, setFetchingPincode] = useState(false);
 
-  const resetForm = (formEl?: HTMLFormElement | null) => {
-    if (formEl) formEl.reset();
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [email, setEmail] = useState("");
+
+  const resetForm = (form?: HTMLFormElement | null) => {
+    if (form) form.reset();
+    setCity("");
+    setState("");
+    setEmail("");
+  };
+
+  const handlePincodeChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    e.target.value = value;
+
+    if (value.length === 6) {
+      try {
+        setFetchingPincode(true);
+
+        const { data } = await axios.get(
+          `${drpCrmBaseUrl}/pincode?pincode=${value}`
+        );
+
+        if (Array.isArray(data) && data.length > 0) {
+          const info = data[0];
+          const state =
+            info.statename.charAt(0).toUpperCase() +
+            info.statename.slice(1).toLowerCase();
+          setCity(info.district || "");
+          setState(state || "");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.warn("Failed to fetch city/state from pincode");
+      } finally {
+        setFetchingPincode(false);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.target as typeof e.target & {
+    const form = e.target as HTMLFormElement & {
       name: { value: string };
       address1: { value: string };
       address2: { value: string };
-      City: { value: string };
-      State: { value: string };
       pincode: { value: string };
       contact_person: { value: string };
       contact_phone: { value: string };
-      contact_email: { value: string };
       latitude: { value: string };
       longitude: { value: string };
-      status: { value: string };
     };
 
-    // basic client-side validation
-    if (!form.name.value.trim()) {
-      toast.warn("Please enter a warehouse name");
+    if (!city || !state) {
+      toast.warn("City and State must be resolved from pincode");
       return;
     }
-    if (!form.address1.value.trim()) {
-      toast.warn("Please enter address line 1");
-      return;
-    }
-    if (!form.City.value.trim()) {
-      toast.warn("Please enter a city");
-      return;
-    }
-    if (
-      !form.pincode.value.trim() ||
-      !/^[1-9][0-9]{5}$/.test(form.pincode.value.trim())
-    ) {
-      toast.warn("Enter a valid 6-digit pincode");
-      return;
-    }
-    if (!form.contact_person.value.trim()) {
-      toast.warn("Please enter contact person");
-      return;
-    }
-    if (
-      !form.contact_phone.value.trim() ||
-      !/^[6-9]\d{9}$/.test(form.contact_phone.value.trim())
-    ) {
-      toast.warn("Enter a valid 10-digit mobile number");
-      return;
-    }
-    if (!form.contact_email.value.trim()) {
-      toast.warn("Enter contact email");
-      return;
-    }
+
     setSubmitting(true);
 
     const payload: Warehouse = {
       name: form.name.value.trim(),
       address1: form.address1.value.trim(),
       address2: form.address2.value.trim() || undefined,
-      City: form.City.value.trim(),
-      State: form.State.value,
+      City: city,
+      State: state,
       Country: "IN",
-      pincode: form.pincode.value.trim(),
+      pincode: form.pincode.value,
       contact_person: form.contact_person.value.trim(),
       contact_phone: form.contact_phone.value.trim(),
-      contact_email: form.contact_email.value.trim(),
+      contact_email: email.trim(),
       latitude: form.latitude.value
         ? parseFloat(form.latitude.value)
         : undefined,
@@ -153,11 +149,11 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
 
     try {
       await createWarehouse(payload);
-      toast.success("Warehouse created");
+      toast.success("Warehouse created successfully");
       handleNext();
-      resetForm(e.currentTarget as HTMLFormElement);
+      resetForm(form);
     } catch (err) {
-      console.error("Error creating warehouse", err);
+      console.error(err);
       toast.error("Failed to create warehouse");
     } finally {
       setSubmitting(false);
@@ -167,17 +163,15 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
   return (
     <Card className="shadow-sm" style={{ maxWidth: 980, margin: "24px auto" }}>
       <Card.Body>
-        <Row className="align-items-center mb-3">
+        <Row className="mb-3">
           <Col>
-            <h4 className="mb-1">Create Your First Warehouse</h4>
+            <h4>Create Your First Warehouse</h4>
             <div className="text-muted">
               Set up a fulfillment location to start receiving orders.
             </div>
           </Col>
           <Col xs="auto">
-            <div className="text-end">
-              <Badge bg="info">Onboarding</Badge>
-            </div>
+            <Badge bg="info">Onboarding</Badge>
           </Col>
         </Row>
 
@@ -186,57 +180,59 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
         <Form onSubmit={handleSubmit}>
           <Row>
             <Col md={7}>
-              <Form.Group className="mb-3" controlId="warehouseName">
-                <Form.Label className="fw-medium">Warehouse Name</Form.Label>
-                <Form.Control
-                  name="name"
-                  placeholder="e.g. Mumbai Fulfillment"
-                  required
-                />
-                <Form.Text className="text-muted">
-                  Visible to team when choosing fulfillment locations.
-                </Form.Text>
+              <Form.Group className="mb-3">
+                <Form.Label>Warehouse Name</Form.Label>
+                <Form.Control name="name" required />
               </Form.Group>
 
-              <Form.Group className="mb-3" controlId="address1">
-                <Form.Label className="fw-medium">Address line 1</Form.Label>
-                <Form.Control
-                  name="address1"
-                  placeholder="Plot No/Khasra No/House No/Shop No"
-                  required
-                />
+              <Form.Group className="mb-3">
+                <Form.Label>Address Line 1</Form.Label>
+                <Form.Control name="address1" required />
               </Form.Group>
 
-              <Form.Group className="mb-3" controlId="address2">
-                <Form.Label className="fw-medium">Address line 2</Form.Label>
-                <Form.Control
-                  name="address2"
-                  placeholder="Gali No/Road Name/Landmark"
-                />
+              <Form.Group className="mb-3">
+                <Form.Label>Address Line 2</Form.Label>
+                <Form.Control name="address2" />
               </Form.Group>
 
-              <Form.Group className="mb-3" controlId="pincode">
-                <Form.Label className="fw-medium">Pincode</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label>Pincode</Form.Label>
                 <Form.Control
                   name="pincode"
-                  placeholder="6-digit PIN"
-                  pattern="[1-9][0-9]{5}"
+                  maxLength={6}
+                  inputMode="numeric"
+                  onChange={handlePincodeChange}
                   required
                 />
+                {fetchingPincode && (
+                  <Form.Text className="text-muted">
+                    Fetching location…
+                  </Form.Text>
+                )}
               </Form.Group>
 
               <Row>
                 <Col md={6}>
-                  <Form.Group className="mb-3" controlId="city">
-                    <Form.Label className="fw-medium">City</Form.Label>
-                    <Form.Control name="City" required />
+                  <Form.Group className="mb-3">
+                    <Form.Label>City</Form.Label>
+                    <Form.Control
+                      name="City"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      required
+                    />
                   </Form.Group>
                 </Col>
 
                 <Col md={6}>
-                  <Form.Group className="mb-3" controlId="state">
-                    <Form.Label className="fw-medium">State</Form.Label>
-                    <Form.Select name="State" required defaultValue="">
+                  <Form.Group className="mb-3">
+                    <Form.Label>State</Form.Label>
+                    <Form.Select
+                      name="State"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      required
+                    >
                       <option value="">Select state</option>
                       {INDIAN_STATES.map((s) => (
                         <option key={s} value={s}>
@@ -248,120 +244,68 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
                 </Col>
               </Row>
 
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="contact_person">
-                    <Form.Label className="fw-medium">
-                      Contact Person Name
-                    </Form.Label>
-                    <Form.Control name="contact_person" required />
-                  </Form.Group>
-                </Col>
+              <Form.Group className="mb-3">
+                <Form.Label>Contact Person</Form.Label>
+                <Form.Control name="contact_person" required />
+              </Form.Group>
 
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="contact_phone">
-                    <Form.Label className="fw-medium">Contact Phone</Form.Label>
-                    <Form.Control
-                      name="contact_phone"
-                      placeholder="10-digit mobile"
-                      pattern="[6-9]\d{9}"
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+              <Form.Group className="mb-3">
+                <Form.Label>Contact Phone</Form.Label>
+                <Form.Control
+                  name="contact_phone"
+                  pattern="[6-9]\d{9}"
+                  required
+                  maxLength={10}
+                />
+              </Form.Group>
 
-              <Form.Group className="mb-3" controlId="contact_email">
-                <Form.Label className="fw-medium">Contact Email</Form.Label>
-                <Form.Control name="contact_email" type="email" required />
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  Contact Email <br /> (Required for all day-to-day pickups and
+                  RTOs stats.)
+                </Form.Label>
+                <Form.Control
+                  type="email"
+                  name="contact_email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </Form.Group>
 
               <Row>
                 <Col md={6}>
-                  <Form.Group className="mb-3" controlId="latitude">
-                    <Form.Label className="fw-medium">
-                      Latitude (optional)
-                    </Form.Label>
-                    <Form.Control name="latitude" type="number" step="any" />
-                  </Form.Group>
+                  <Form.Label>Latitude</Form.Label>
+
+                  <Form.Control name="latitude" type="number" step="any" />
                 </Col>
                 <Col md={6}>
-                  <Form.Group className="mb-3" controlId="longitude">
-                    <Form.Label className="fw-medium">
-                      Longitude (optional)
-                    </Form.Label>
-                    <Form.Control name="longitude" type="number" step="any" />
-                  </Form.Group>
+                  <Form.Label>Longitude</Form.Label>
+
+                  <Form.Control name="longitude" type="number" step="any" />
                 </Col>
               </Row>
-              <div className="d-flex justify-content-end gap-2">
+
+              <div className="d-flex justify-content-end gap-2 mt-4">
                 <Button
-                  variant="outline-secondary"
+                  variant="secondary"
                   type="button"
                   onClick={() => resetForm()}
                 >
                   Reset
                 </Button>
-                <Button variant="primary" type="submit" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Creating...
-                    </>
-                  ) : (
-                    "Create Warehouse"
-                  )}
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={submitting || fetchingPincode}
+                >
+                  {submitting ? "Creating..." : "Create Warehouse"}
                 </Button>
               </div>
             </Col>
-
             <Col md={5}>
               <Card className="h-100 border-0 bg-light">
                 <Card.Body>
-                  {/* 
-                  <h6 className="mb-3">Add Admins</h6>
-
-                  <InputGroup className="mb-2">
-                    <Form.Control
-                      placeholder="Search user by email"
-                      value={searchEmail}
-                      onChange={(e) => setSearchEmail(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleUserSearch();
-                        }
-                      }}
-                    />
-                    <Button variant="outline-primary" onClick={() => handleUserSearch()} disabled={searching}>
-                      {searching ? <Spinner animation="border" size="sm" /> : "Add"}
-                    </Button>
-                  </InputGroup>
-
-                  <div className="mb-3">
-                    {adminList.length === 0 ? (
-                      <div className="small text-muted">No admins added. You can add team members by email.</div>
-                    ) : (
-                      <div className="d-flex flex-wrap gap-2">
-                        {adminList.map((u) => (
-                          <Badge bg="secondary" key={u._id} style={{ fontSize: 13, padding: "8px 10px" }}>
-                            <span style={{ marginRight: 8 }}>{u.name}</span>
-                            <Button
-                              variant="link"
-                              onClick={() => removeAdmin(u._id)}
-                              style={{ color: "white", padding: 0, marginLeft: 6 }}
-                              aria-label={`Remove ${u.name}`}
-                            >
-                              ✕
-                            </Button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    </div> 
-                    <hr />
-                    */}
-
                   <h6 className="mb-2">Tips</h6>
                   <ul className="small text-muted" style={{ paddingLeft: 18 }}>
                     <li>

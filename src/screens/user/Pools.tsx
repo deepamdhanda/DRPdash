@@ -56,6 +56,7 @@ type Pool = {
   gstin?: string;
   address?: string;
   state?: string;
+  kyc_status: string;
 };
 
 /* --- Constants --- */
@@ -547,8 +548,8 @@ const Pools: React.FC = () => {
           row.status === "active"
             ? "success"
             : row.status === "inactive"
-              ? "secondary"
-              : "warning";
+            ? "secondary"
+            : "warning";
         return <Badge bg={color}>{row.status}</Badge>;
       },
       sortable: true,
@@ -581,15 +582,21 @@ const Pools: React.FC = () => {
     },
     {
       name: "Actions",
-      cell: (row: Pool) => (
-        <Button
-          size="sm"
-          variant={row.status === "active" ? "danger" : "success"}
-          onClick={() => handleToggleStatus(row)}
-        >
-          {row.status === "active" ? "Deactivate" : "Activate"}
-        </Button>
-      ),
+      cell: (row: Pool) => {
+        if (row.kyc_status === "approved") {
+          return (
+            <Button
+              size="sm"
+              variant={row.status === "active" ? "danger" : "success"}
+              onClick={() => handleToggleStatus(row)}
+            >
+              {row.status === "active" ? "Deactivate" : "Activate"}
+            </Button>
+          );
+        } else {
+          return "Kyc Pending";
+        }
+      },
     },
   ];
 

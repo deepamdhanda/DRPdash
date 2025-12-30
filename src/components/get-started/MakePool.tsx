@@ -57,8 +57,8 @@ const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
 const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
   // Minimal required onboarding fields
   const [businessName, setBusinessName] = useState("");
-  // const [companyType, setCompanyType] = useState("individual");
-  const companyType = "individual";
+  const [companyType, setCompanyType] = useState("individual");
+  // const companyType = "individual";
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [bankAccount, setBankAccount] = useState("");
@@ -123,6 +123,7 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       setGstVerified(true);
       setBusinessName((prev) => prev || data.business_name || "");
       setStateName(data.state || "");
+      setCompanyType(data.company_type);
       toast.success("GST verified; business details autofilled");
     } catch (err) {
       setGstLoading(false);
@@ -297,40 +298,17 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                   </Form.Group>
                 </Col>
               </Row>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">
-                  Admins (add by email)
-                </Form.Label>
+              <Form.Group className="mb-2">
+                <Form.Label className="fw-medium">PAN</Form.Label>
                 <Form.Control
-                  placeholder="Type email and press Enter"
-                  onKeyDown={async (e: any) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const email = e.target.value?.trim();
-                      if (email) {
-                        await handleUserSearch(email);
-                        e.target.value = "";
-                      }
-                    }
+                  type="file"
+                  accept="image/*,.pdf"
+                  required
+                  onChange={(e: any) => {
+                    const f = e.target.files?.[0];
+                    if (f) setPanFile(f);
                   }}
                 />
-                <div className="mt-2">
-                  {admins.map((a) => (
-                    <Badge
-                      key={a._id}
-                      pill
-                      bg="primary"
-                      className="me-2 mb-2"
-                      style={{ cursor: "pointer" }}
-                      onClick={() =>
-                        setAdmins((p) => p.filter((x) => x._id !== a._id))
-                      }
-                    >
-                      {a.name} &times;
-                    </Badge>
-                  ))}
-                </div>
               </Form.Group>
 
               <div className="d-flex justify-content-end gap-2 mt-2">
@@ -434,21 +412,6 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                           }}
                         />
                       </Form.Group>
-
-                      <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">
-                          PAN (optional)
-                        </Form.Label>
-                        <Form.Control
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={(e: any) => {
-                            const f = e.target.files?.[0];
-                            if (f) setPanFile(f);
-                          }}
-                        />
-                      </Form.Group>
-
                       <Form.Group className="mb-2">
                         <Form.Label className="fw-medium">
                           Address (optional)
@@ -469,6 +432,42 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
                           value={stateName}
                           onChange={(e) => setStateName(e.target.value)}
                         />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="fw-medium">
+                          Admins (add by email)
+                        </Form.Label>
+                        <Form.Control
+                          placeholder="Type email and press Enter"
+                          onKeyDown={async (e: any) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const email = e.target.value?.trim();
+                              if (email) {
+                                await handleUserSearch(email);
+                                e.target.value = "";
+                              }
+                            }
+                          }}
+                        />
+                        <div className="mt-2">
+                          {admins.map((a) => (
+                            <Badge
+                              key={a._id}
+                              pill
+                              bg="primary"
+                              className="me-2 mb-2"
+                              style={{ cursor: "pointer" }}
+                              onClick={() =>
+                                setAdmins((p) =>
+                                  p.filter((x) => x._id !== a._id)
+                                )
+                              }
+                            >
+                              {a.name} &times;
+                            </Badge>
+                          ))}
+                        </div>
                       </Form.Group>
                     </div>
                   </Collapse>

@@ -16,18 +16,12 @@ import { FlaggedOrders } from "./FlaggedOrders.tsx";
 import SettingsPage from "./Settings.tsx";
 import { CODRemittances } from "./CODRemittances.tsx";
 import { Invoices } from "../Invoices/Invoices.tsx";
-import GetStarted from "./GetStarted.tsx";
 import DamageReport from "./DamageReport.tsx";
-// import VideoRecorder from "./video-test.jsx";
 
 export const userRoutes = [
   {
     index: true, // /Dashboard
     element: <Dashboard />, // or a default dashboard
-  },
-  {
-    path: "get-started", // /get-started
-    element: <GetStarted />, // or a default dashboard
   },
   {
     path: "pools", // /Dashboard/pools

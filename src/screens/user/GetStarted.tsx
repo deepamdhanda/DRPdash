@@ -15,6 +15,9 @@ import MakePool from "../../components/get-started/MakePool";
 import MakeWarehouse from "../../components/get-started/MakeWarehouse";
 import MakeChannelAccount from "../../components/get-started/MakeChannelAccount";
 
+import { drpCrmBaseUrl } from "../../axios/urls";
+import { appAxios } from "../../axios/appAxios";
+
 /**
  * Modernized GetStarted stepper — focused on clarity, speed, and progressive disclosure.
  * - Left: vertical stepper (collapses to top on small screens)
@@ -34,6 +37,16 @@ const GetStarted: React.FC = () => {
   const [activeStep, setActiveStep] = useState<string>("pools");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const { stats } = useStatsStore();
+  const verifyMe = async () => {
+    try {
+      await appAxios(`${drpCrmBaseUrl}/auth/verify/me`);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  useEffect(() => {
+    verifyMe();
+  }, []);
 
   useEffect(() => {
     if (!stats || stats.length === 0) return;
@@ -145,7 +158,7 @@ const GetStarted: React.FC = () => {
       style={{
         padding: "2rem 1rem",
         backgroundColor: "#f5f7fb",
-        minHeight: "80vh",
+        minHeight: "100vh",
       }}
     >
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>

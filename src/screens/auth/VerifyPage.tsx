@@ -5,9 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import styles from "./style.module.css";
 import { ResendOTP, VerifyUser } from "../../APIs/authAPIs";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from 'react-router-dom';
-
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Define the form schema with Zod
 const verifySchema = z.object({
@@ -22,7 +20,7 @@ const VerifyPage: React.FC = () => {
   // Step 1: Extract email from query params
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const emailFromUrl = queryParams.get('email') || '';
+  const emailFromUrl = queryParams.get("email") || "";
   const navigate = useNavigate();
   useEffect(() => {
     if (!emailFromUrl) {
@@ -32,7 +30,6 @@ const VerifyPage: React.FC = () => {
   }, [emailFromUrl, navigate]);
 
   if (!emailFromUrl) return null; // Optional fallback
-
 
   const {
     register,
@@ -50,12 +47,12 @@ const VerifyPage: React.FC = () => {
   const handleResendOtp = async () => {
     try {
       await ResendOTP({ email: emailFromUrl }, () => {
-        console.log("OTP Resent")
-      })
+        console.log("OTP Resent");
+      });
     } catch (error) {
-      console.error("Error while resending OTP", error)
+      console.error("Error while resending OTP", error);
     }
-  }
+  };
 
   const onSubmit = async (data: VerifyFormData) => {
     // Simulate API call
@@ -75,7 +72,9 @@ const VerifyPage: React.FC = () => {
       <div className={styles.loginCard}>
         <div className={styles.loginHeader}>
           <h2>Orderz Up</h2>
-<h5  style={{color:"black", textDecoration:"underline"}}>Where Every Order Takes Off.</h5>
+          <h5 style={{ color: "black", textDecoration: "underline" }}>
+            Where Every Order Takes Off.
+          </h5>
           <p>Please verify your email</p>
         </div>
 
@@ -102,7 +101,11 @@ const VerifyPage: React.FC = () => {
               <label htmlFor="password" className="form-label">
                 One Time Password
               </label>
-              <a href="#" className={styles.forgotPassword} onClick={handleResendOtp}>
+              <a
+                href="#"
+                className={styles.forgotPassword}
+                onClick={handleResendOtp}
+              >
                 Resend OTP
               </a>
             </div>
@@ -114,9 +117,7 @@ const VerifyPage: React.FC = () => {
               {...register("otp")}
             />
             {errors.otp && (
-              <div className={styles.errorMessage}>
-                {errors.otp.message}
-              </div>
+              <div className={styles.errorMessage}>{errors.otp.message}</div>
             )}
           </div>
 
@@ -131,7 +132,15 @@ const VerifyPage: React.FC = () => {
 
         <div className={styles.loginFooter}>
           <p>
-            Want to use different account? <a href="#" onClick={() => { navigate('/login') }}>Sign in</a>
+            Want to use different account?{" "}
+            <a
+              href="#"
+              onClick={() => {
+                navigate("/login");
+              }}
+            >
+              Sign in
+            </a>
           </p>
         </div>
       </div>

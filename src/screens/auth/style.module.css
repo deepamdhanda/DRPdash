@@ -4,12 +4,16 @@
   align-items: center;
   min-height: 100vh;
   min-width: 100vw;
-  background: linear-gradient(135deg, #000434 0%, #F5891E 100%); /* Navy to Orange gradient */
+  /* background: linear-gradient(135deg, #000434 0%, #F5891E 100%); Navy to Orange gradient */
+  background: url("/src/assets/bg.jpg");
+  background-repeat: repeat;
+  background-size: contain;
+  background-position: center;
   padding: 20px;
 }
 
 .loginCard {
-  background-color: #FFFFFF; /* White */
+  background-color: #ffffff; /* White */
   border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); /* Slightly darker shadow */
   width: 100%;
@@ -31,14 +35,14 @@
 .loginHeader h2 {
   font-size: 28px;
   color: #000434; /* Navy */
-  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif; /* Brand typography */
+  font-family: "Hiragino Maru Gothic ProN W4", sans-serif; /* Brand typography */
   margin-bottom: 10px;
 }
 
 .loginHeader p {
   color: #777;
   font-size: 16px;
-  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif; /* Brand typography */
+  font-family: "Hiragino Maru Gothic ProN W4", sans-serif; /* Brand typography */
 }
 
 .loginForm {
@@ -53,7 +57,7 @@
 
 .forgotPassword {
   font-size: 14px;
-  color: #F5891E; /* Orange */
+  color: #f5891e; /* Orange */
   text-decoration: none;
 }
 
@@ -67,12 +71,12 @@
   padding: 12px;
   font-size: 16px;
   font-weight: 600;
-  background-color: #F5891E; /* Orange */
-  color: #FFFFFF; /* White */
+  background-color: #f5891e; /* Orange */
+  color: #ffffff; /* White */
   border: none;
   border-radius: 5px;
   transition: all 0.3s;
-  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif; /* Brand typography */
+  font-family: "Hiragino Maru Gothic ProN W4", sans-serif; /* Brand typography */
 }
 
 .loginButton:hover:not(:disabled) {
@@ -93,11 +97,11 @@
 .loginFooter p {
   margin-bottom: 20px;
   color: #6c757d; /* Gray */
-  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif; /* Brand typography */
+  font-family: "Hiragino Maru Gothic ProN W4", sans-serif; /* Brand typography */
 }
 
 .loginFooter a {
-  color: #F5891E; /* Orange */
+  color: #f5891e; /* Orange */
   text-decoration: none;
   font-weight: 500;
 }
@@ -118,16 +122,16 @@
   padding: 10px 0;
   border-radius: 5px;
   border: 1px solid #ddd;
-  background-color: #FFFFFF; /* White */
+  background-color: #ffffff; /* White */
   color: #000434; /* Navy */
   font-size: 14px;
-  font-family: 'Hiragino Maru Gothic ProN W4', sans-serif; /* Brand typography */
+  font-family: "Hiragino Maru Gothic ProN W4", sans-serif; /* Brand typography */
   transition: all 0.2s;
 }
 
 .socialButton:hover {
   background-color: #f8f9fa; /* Light gray */
-  border-color: #F5891E; /* Orange */
+  border-color: #f5891e; /* Orange */
 }
 
 @media (max-width: 576px) {
