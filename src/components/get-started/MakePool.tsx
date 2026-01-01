@@ -1,5 +1,5 @@
 // Pools.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Row,
@@ -76,6 +76,9 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
   const [address, setAddress] = useState("");
   const [stateName, setStateName] = useState("");
 
+  useEffect(() => {
+    setCompanyType("individual");
+  }, []);
   // --- Admin search by email ---
   const handleUserSearch = async (email: string) => {
     const e = email.trim();
@@ -83,7 +86,6 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       toast.warn("Enter an email to add an admin");
       return;
     }
-
     try {
       const res = await getUser(e);
 
