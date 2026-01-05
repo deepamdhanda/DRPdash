@@ -4,6 +4,11 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { createWarehouse } from "../../APIs/user/warehouse";
 import { drpCrmBaseUrl } from "../../axios/urls";
+export interface User {
+  _id: string;
+  name: string;
+  email?: string;
+}
 
 export interface Warehouse {
   _id?: string;

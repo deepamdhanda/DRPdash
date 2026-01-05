@@ -23,7 +23,8 @@ const router = createBrowserRouter([
     element: <App />, // General app layout
     children: [
       {
-        index: true, // This will be the default route
+        path: "score",
+        // index: true, // This will be the default route
         element: <EcomCreditScoreLandingPage />, // or a default landing page
       },
       {
