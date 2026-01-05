@@ -801,6 +801,41 @@ const Orders: React.FC = () => {
     }
   };
 
+  // ================== CREDIT SCORE SPEEDOMETER HELPER ==================
+  const CreditScoreMeter = ({ score }: { score: number }) => {
+    const normalized = Math.max(0, Math.min(score, 900));
+
+    return (
+      <div
+        style={{
+          width: 120,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <DecorativeSvg score={normalized} />
+        <div style={{ fontSize: 13, fontWeight: 700, marginTop: -10 }}>
+          {normalized}
+          <span style={{ fontSize: 9 }}>/900</span>
+        </div>
+        <div
+          style={{
+            fontSize: 9,
+            color: "#666",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}
+        >
+          Ecom Credit Score
+        </div>
+      </div>
+    );
+  };
+
+  // ================== MAIN COLUMNS ==================
   const columns = [
     {
       name: "Order Details",
@@ -818,14 +853,12 @@ const Orders: React.FC = () => {
           <div style={{ fontWeight: 600, color: "#000434" }}>
             <span style={{ color: "#F5891E" }}>#{row.order_id || "—"}</span>
           </div>
-
           <div>
             <strong style={{ color: "#555" }}>Channel:</strong>{" "}
             <span style={{ color: "#000" }}>
               {row.channel_account_name || "—"}
             </span>
           </div>
-
           <div>
             <strong style={{ color: "#555" }}>Store OID:</strong>{" "}
             <span
@@ -839,7 +872,6 @@ const Orders: React.FC = () => {
               {row.store_order_id || "—"}
             </span>
           </div>
-
           <div style={{ fontSize: 10 }}>
             <strong style={{ color: "#555" }}>CHOID:</strong>{" "}
             <span style={{ color: "#000", fontStyle: "italic" }}>
@@ -849,7 +881,6 @@ const Orders: React.FC = () => {
         </div>
       ),
       minWidth: "150px",
-      style: { margin: "4px!important", padding: "0px!important" },
     },
 
     {
@@ -921,14 +952,13 @@ const Orders: React.FC = () => {
         );
       },
       minWidth: "150px",
-      style: { margin: "4px!important", padding: "0px!important" },
     },
+
     {
       name: "Customer Details",
       cell: (row: any) => {
-        // const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
-          ? row.status.sort(
+          ? [...row.status].sort(
               (a: any, b: any) =>
                 new Date(b.status_date).getTime() -
                 new Date(a.status_date).getTime()
@@ -937,43 +967,6 @@ const Orders: React.FC = () => {
 
         return (
           <div style={{ fontSize: 11, lineHeight: 1.45 }}>
-            {/* AI Rating */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "3px 8px",
-                borderRadius: 12,
-                background: "rgba(245, 137, 30, 0.1)",
-                border: "1px solid rgba(0, 4, 52, 0.15)",
-                marginBottom: 6,
-              }}
-            >
-              <OUAIIcon style={{ width: 14, height: 14 }} />
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#000434",
-                }}
-              >
-                {row.customer_rating * 100 - 192}
-                <small style={{ fontSize: 9 }}>/900</small>
-              </span>
-              <span
-                style={{
-                  fontSize: 9,
-                  fontWeight: 600,
-                  color: "#f5891e",
-                  letterSpacing: 0.4,
-                }}
-              >
-                Ecom Credit Score
-              </span>
-            </div>
-
-            {/* Name + Edit */}
             <div
               style={{
                 display: "flex",
@@ -984,64 +977,57 @@ const Orders: React.FC = () => {
               }}
             >
               <span>{row.customer_name || "—"}</span>
-
-              {(latestStatus.status === "AWB & Label Generated" ||
-                latestStatus.status.toLowerCase().includes("label") ||
-                latestStatus.status.toLowerCase().includes("data received") ||
-                latestStatus.status.toLowerCase().includes("manifested") ||
-                latestStatus.status.toLowerCase().includes("re_activate") ||
-                latestStatus.status.toLowerCase().includes("pickup") ||
-                latestStatus.status.toLowerCase().includes("fetch") ||
-                latestStatus.status.toLowerCase().includes("not picked")) && (
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(row);
-                  }}
-                  style={{
-                    cursor: "pointer",
-                    color: "#000434",
-                    fontSize: 12,
-                    display: "inline-flex",
-                    alignItems: "center",
-                  }}
-                  title="Edit customer"
-                >
-                  <BiSolidPencil />
-                </span>
-              )}
+              {latestStatus &&
+                (latestStatus.status === "AWB & Label Generated" ||
+                  latestStatus.status.toLowerCase().includes("label") ||
+                  latestStatus.status.toLowerCase().includes("pickup")) && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(row);
+                    }}
+                    style={{
+                      cursor: "pointer",
+                      color: "#000434",
+                      fontSize: 12,
+                      display: "inline-flex",
+                      alignItems: "center",
+                    }}
+                    title="Edit customer"
+                  >
+                    <BiSolidPencil />
+                  </span>
+                )}
             </div>
-
-            {/* Contact */}
             <div style={{ color: "#444", marginTop: 2 }}>
               <BsPhoneFill style={{ fontSize: 10, marginRight: 4 }} />
               {row.customer_phone || "—"}
             </div>
-
             {row.customer_email && (
               <div style={{ color: "#444" }}>
                 <MdEmail style={{ fontSize: 11, marginRight: 4 }} />
                 {row.customer_email}
               </div>
             )}
-
-            {/* Address */}
-            <div
-              style={{
-                marginTop: 4,
-                color: "#666",
-                fontSize: 10,
-              }}
-            >
+            <div style={{ marginTop: 4, color: "#666", fontSize: 10 }}>
               <FaLocationPin style={{ fontSize: 10, marginRight: 4 }} />
-              {row.shipping_address}, {row.shipping_city}, {row.shipping_state},{" "}
-              {row.shipping_country} – <strong>{row.shipping_pincode}</strong>
+              {row.shipping_address}, {row.shipping_city}, {row.shipping_state}{" "}
+              – <strong>{row.shipping_pincode}</strong>
             </div>
           </div>
         );
       },
       minWidth: "220px",
-      style: { margin: "4px!important", padding: "0px!important" },
+    },
+
+    {
+      name: "Ecom Credit Score",
+      cell: (row: any) => {
+        const score = row.customer_rating * 100 - 192;
+        return <CreditScoreMeter score={score} />;
+      },
+      minWidth: "150px",
+      center: true,
     },
 
     {
@@ -1054,301 +1040,170 @@ const Orders: React.FC = () => {
                 new Date(a.status_date).getTime()
             )
           : [];
-
-        const latestStatus =
+        const latestStatusName =
           sortedStatus[0]?.status?.replaceAll("_", " ") || "—";
 
         return (
           <div style={{ fontSize: "11px" }}>
-            {/* Recommended courier */}
             {row.recommended_courier_id && !row.shipping_courier_id && (
-              <>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "4px 10px",
-                    borderRadius: 16,
-                    background: "rgba(245, 137, 30, 0.08)", // soft orange glow
-                    border: "1px solid rgba(0, 4, 52, 0.15)",
-                  }}
-                >
-                  <OUAIIcon
-                    style={{
-                      width: 14,
-                      height: 14,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 500,
-                      color: "#000434",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {row.recommended_courier_name || "Recommended"}
-                  </span>
-                </div>
-                <br />
-              </>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 10px",
+                  borderRadius: 16,
+                  background: "rgba(245, 137, 30, 0.08)",
+                  border: "1px solid rgba(0, 4, 52, 0.15)",
+                  marginBottom: 4,
+                }}
+              >
+                <OUAIIcon style={{ width: 14, height: 14 }} />
+                <span style={{ fontSize: 11, fontWeight: 500 }}>
+                  {row.recommended_courier_name || "Recommended"}
+                </span>
+              </div>
             )}
-            {/* Actual courier */}
-            {row.shipping_courier_id && (
-              <>
-                {row.shipping_courier_name || "—"} <br />
-              </>
-            )}
-            {/* AWB */}
+            <div>
+              {row.shipping_courier_name ||
+                (row.recommended_courier_id ? "" : "—")}
+            </div>
             {row.awb_number ? (
-              <>
-                <FaTruck />{" "}
+              <div style={{ marginTop: 2 }}>
+                <FaTruck style={{ marginRight: 4 }} />
                 <a
                   href={row.tracking_url?.replace(
                     "{{awb_number}}",
                     row.awb_number
                   )}
                   target="_blank"
+                  rel="noreferrer"
                   style={{ color: "#007bff", textDecoration: "underline" }}
                 >
                   {row.awb_number}
                 </a>
-                <br />
-              </>
+              </div>
             ) : (
-              <>
-                <strong>AWB:</strong> — <br />
-              </>
+              <div>
+                <strong>AWB:</strong> —
+              </div>
             )}
-            <BsClockFill />{" "}
-            <span
-              style={{
-                textTransform: "capitalize",
-                color: "#213bb4",
-                // backgroundColor: "#00daeb",
-                padding: "2px 5px",
-                borderRadius: "5px",
-                cursor: "help",
-              }}
-              onClick={() => setStatusList(sortedStatus)}
-            >
-              {latestStatus}
-            </span>
+            <div style={{ marginTop: 4 }}>
+              <BsClockFill style={{ marginRight: 4 }} />
+              <span
+                style={{
+                  textTransform: "capitalize",
+                  color: "#213bb4",
+                  cursor: "help",
+                }}
+                onClick={() => setStatusList(sortedStatus)}
+              >
+                {latestStatusName}
+              </span>
+            </div>
           </div>
         );
       },
-      minWidth: "150px",
-      style: { margin: "4px!important", padding: "0px!important" },
+      minWidth: "160px",
     },
 
     {
-      name: "Issues",
-      cell: (row: any) => (
-        <div>
-          {row.issues?.length ? (
-            <ul style={{ paddingLeft: 15, margin: 0 }}>
-              {row.issues.map((issue: any, index: number) => (
-                <li key={index} style={{ color: "#d9534f", fontSize: 13 }}>
-                  {issue.message || issue}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <span style={{ color: "#5cb85c", fontSize: 13 }}>No Issues</span>
-          )}
-        </div>
-      ),
-      minWidth: "150px",
-      style: { margin: "4px!important", padding: "0px!important" },
-    },
+      name: "Issues & Risk Flags",
+      cell: (row: any) => {
+        const risk = row.risk_flag || {};
+        const issues = row.issues || [];
 
-    {
-      name: "Risk Flags",
-      cell: (row: any) => (
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {row.risk_flag.customer_order_count_in_channel > 0 && (
-            <span
-              style={{
-                backgroundColor:
-                  row.risk_flag.customer_order_count_in_channel < 3
-                    ? "#2a9d8f"
-                    : "#f4a261",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Other Orders: {row.risk_flag.customer_order_count_in_channel}
-            </span>
-          )}
-          {row.risk_flag.is_duplicate && (
-            <span
-              style={{
-                backgroundColor: "#e63946",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Duplicate Order
-            </span>
-          )}
-          {row.risk_flag.is_improper_address && (
-            <span
-              style={{
-                backgroundColor: "#f4a261",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Improper Address
-            </span>
-          )}
-          {row.risk_flag.is_reused_phone && (
-            <span
-              style={{
-                backgroundColor: "#f4a261",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Reused Phone
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_address && (
-            <span
-              style={{
-                backgroundColor: "#e63946",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Suspicious Address
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_email && (
-            <span
-              style={{
-                backgroundColor: "#e63946",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Suspicious Email
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_ip && (
-            <span
-              style={{
-                backgroundColor: "#e63946",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Suspicious IP
-            </span>
-          )}
-          {row.risk_flag.is_suspicious_phone && (
-            <span
-              style={{
-                backgroundColor: "#e63946",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Suspicious Phone
-            </span>
-          )}
-          {row.risk_flag.pincode_return_percent > 0 && (
-            <span
-              style={{
-                backgroundColor: "#f4a261",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              Return %: {row.risk_flag.pincode_return_percent.toFixed(1)}%
-            </span>
-          )}
-          {row.risk_flag.pincode_rto_percent > 0 && (
-            <span
-              style={{
-                backgroundColor: "#f4a261",
-                color: "#fff",
-                borderRadius: "12px",
-                padding: "3px 10px",
-                fontSize: "12px",
-                fontWeight: 600,
-                margin: "2px 5px 2px 0",
-              }}
-            >
-              RTO %: {row.risk_flag.pincode_rto_percent.toFixed(1)}%
-            </span>
-          )}
-          {!row.risk_flag.is_duplicate &&
-            !row.risk_flag.is_improper_address &&
-            !row.risk_flag.is_reused_phone &&
-            !row.risk_flag.is_suspicious_address &&
-            !row.risk_flag.is_suspicious_email &&
-            !row.risk_flag.is_suspicious_ip &&
-            !row.risk_flag.is_suspicious_phone &&
-            row.risk_flag.pincode_return_percent === 0 &&
-            row.risk_flag.pincode_rto_percent === 0 &&
-            row.risk_flag.customer_order_count_in_channel === 0 && (
+        return (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "4px",
+              fontSize: "11px",
+            }}
+          >
+            {issues.map((issue: any, idx: number) => (
+              <div
+                key={idx}
+                style={{ color: "#d9534f", fontWeight: 600, width: "100%" }}
+              >
+                ⚠ {issue.message || issue}
+              </div>
+            ))}
+            {risk.customer_order_count_in_channel > 0 && (
               <span
                 style={{
-                  backgroundColor: "#2a9d8f",
+                  backgroundColor:
+                    risk.customer_order_count_in_channel < 3
+                      ? "#2a9d8f"
+                      : "#f4a261",
                   color: "#fff",
                   borderRadius: "12px",
-                  padding: "3px 10px",
-                  fontSize: "12px",
+                  padding: "2px 8px",
                   fontWeight: 600,
-                  margin: "2px 5px 2px 0",
                 }}
               >
-                No Risk Flags
+                Other Orders: {risk.customer_order_count_in_channel}
               </span>
             )}
-        </div>
-      ),
-      minWidth: "150px",
-      style: { margin: "4px!important", padding: "0px!important" },
+            {risk.is_duplicate && (
+              <span
+                style={{
+                  backgroundColor: "#e63946",
+                  color: "#fff",
+                  borderRadius: "12px",
+                  padding: "2px 8px",
+                  fontWeight: 600,
+                }}
+              >
+                Duplicate
+              </span>
+            )}
+            {risk.is_suspicious_address && (
+              <span
+                style={{
+                  backgroundColor: "#e63946",
+                  color: "#fff",
+                  borderRadius: "12px",
+                  padding: "2px 8px",
+                  fontWeight: 600,
+                }}
+              >
+                Suspicious Addr
+              </span>
+            )}
+            {risk.pincode_rto_percent > 0 && (
+              <span
+                style={{
+                  backgroundColor: "#f4a261",
+                  color: "#fff",
+                  borderRadius: "12px",
+                  padding: "2px 8px",
+                  fontWeight: 600,
+                }}
+              >
+                RTO: {risk.pincode_rto_percent.toFixed(1)}%
+              </span>
+            )}
+
+            {!issues.length &&
+              Object.values(risk).every((v) => !v || v === 0) && (
+                <span
+                  style={{
+                    backgroundColor: "#2a9d8f",
+                    color: "#fff",
+                    borderRadius: "12px",
+                    padding: "2px 8px",
+                    fontWeight: 600,
+                  }}
+                >
+                  No Risk Flags
+                </span>
+              )}
+          </div>
+        );
+      },
+      minWidth: "200px",
     },
 
     {
@@ -1361,8 +1216,7 @@ const Orders: React.FC = () => {
               year: "numeric",
             })
           : "—",
-      minWidth: "70px",
-      style: { margin: "4px!important", padding: "0px!important" },
+      minWidth: "90px",
     },
 
     {
@@ -1370,139 +1224,100 @@ const Orders: React.FC = () => {
       cell: (row: Order) => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
-          ? row.status.sort(
+          ? [...row.status].sort(
               (a: any, b: any) =>
                 new Date(b.status_date).getTime() -
                 new Date(a.status_date).getTime()
             )[0]
           : null;
+        const statusStr = latestStatus?.status?.toLowerCase() || "";
+
+        const canAction =
+          statusStr.includes("label") ||
+          statusStr.includes("data received") ||
+          statusStr.includes("manifested") ||
+          statusStr.includes("pickup") ||
+          statusStr.includes("not picked");
+
         return (
-          <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              gap: "5px",
+            }}
+          >
             <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                gap: "5px",
-              }}
+              style={{ display: "flex", gap: "5px", justifyContent: "center" }}
             >
-              {/* Edit or Schedule Pickup */}
-              {latestStatus &&
-                (latestStatus.status === "AWB & Label Generated" ||
-                  latestStatus.status.toLowerCase().includes("label") ||
-                  latestStatus.status.toLowerCase().includes("data received") ||
-                  latestStatus.status.toLowerCase().includes("manifested") ||
-                  latestStatus.status.toLowerCase().includes("re_activate") ||
-                  latestStatus.status.toLowerCase().includes("pickup") ||
-                  latestStatus.status.toLowerCase().includes("fetch") ||
-                  latestStatus.status.toLowerCase().includes("not picked")) &&
-                hasAwb && (
+              {hasAwb && canAction && (
+                <>
                   <Button
                     variant="outline-primary"
                     size="sm"
                     onClick={() => handlePickup(row)}
                   >
-                    {"🗓️ Schedule Pickup"}
+                    🗓️ Pickup
                   </Button>
-                )}
-
-              {/* Print Label or Ship Now */}
-              {hasAwb &&
-                latestStatus &&
-                latestStatus.status !== "cancelled" &&
-                (latestStatus.status === "AWB & Label Generated" ||
-                  latestStatus.status.toLowerCase().includes("label") ||
-                  latestStatus.status.toLowerCase().includes("data received") ||
-                  latestStatus.status.toLowerCase().includes("manifested") ||
-                  latestStatus.status.toLowerCase().includes("pickup")) && (
                   <Button
                     variant="success"
+                    size="sm"
                     onClick={() => setLabelData([row.label])}
                   >
-                    🖨️ Print Label
+                    🖨️ Label
                   </Button>
-                )}
-              {!hasAwb &&
-                latestStatus &&
-                latestStatus.status !== "cancelled" && (
-                  <Button
-                    style={{
-                      backgroundColor: "#F5891E",
-                      border: 0,
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      color: "white",
-                    }}
-                    disabled={shipNowLoading}
-                    onClick={() => handleShipment([row])}
-                  >
-                    🚚 Ship Now
-                  </Button>
-                )}
-            </div>
-            {/* Change Courier */}
-            {hasAwb &&
-              latestStatus &&
-              (latestStatus.status === "AWB & Label Generated" ||
-                latestStatus.status.toLowerCase().includes("label") ||
-                latestStatus.status.toLowerCase().includes("data received") ||
-                latestStatus.status.toLowerCase().includes("manifested") ||
-                latestStatus.status.toLowerCase().includes("pickup") ||
-                latestStatus.status.toLowerCase().includes("not picked")) && (
+                </>
+              )}
+              {!hasAwb && statusStr !== "cancelled" && (
                 <Button
-                  variant="link"
-                  size="sm"
                   style={{
-                    padding: 0,
-                    color: "#007bff",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    textAlign: "left",
+                    backgroundColor: "#F5891E",
+                    border: 0,
+                    fontWeight: "bold",
+                    color: "white",
+                    fontSize: "10px",
                   }}
                   onClick={() => handleShipment([row])}
                 >
-                  Change Courier
+                  🚚 Ship Now
                 </Button>
               )}
-            {/*Cancel Order*/}
+            </div>
+            {hasAwb && canAction && (
+              <Button
+                variant="link"
+                size="sm"
+                style={{ padding: 0, fontSize: "11px" }}
+                onClick={() => handleShipment([row])}
+              >
+                Change Courier
+              </Button>
+            )}
             {!hasAwb && (
               <Button
                 variant={
-                  latestStatus?.status === "cancelled"
+                  statusStr === "cancelled"
                     ? "outline-success"
                     : "outline-danger"
                 }
                 size="sm"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Are you sure you want to cancel this order?"
-                    )
-                  ) {
-                    // Call your cancel order function here
-                    handleCancelOrder(
-                      row,
-                      latestStatus?.status === "cancelled"
-                        ? "re_activate"
-                        : "cancelled"
-                    );
-                  }
-                }}
-                className="mt-2"
+                onClick={() =>
+                  handleCancelOrder(
+                    row,
+                    statusStr === "cancelled" ? "re_activate" : "cancelled"
+                  )
+                }
               >
-                {latestStatus?.status === "cancelled"
-                  ? "Re-Activate"
-                  : "❌ Cancel Order"}
+                {statusStr === "cancelled" ? "Re-Activate" : "❌ Cancel"}
               </Button>
             )}
           </div>
         );
       },
-      minWidth: "120px",
-      style: { margin: "4px!important", padding: "0px!important" },
+      minWidth: "140px",
     },
   ];
-
   const conditionalRowStyles = [
     {
       when: (row: any) =>
@@ -3119,3 +2934,86 @@ const Orders: React.FC = () => {
 };
 
 export { Orders };
+
+const DecorativeSvg = ({ score = 0 }) => {
+  const percentage = (score / 900) * 100;
+  const minAngle = -90;
+  const maxAngle = 90;
+  const rotation =
+    minAngle +
+    (Math.min(Math.max(percentage, 0), 100) / 100) * (maxAngle - minAngle);
+
+  const redFill = percentage > 0 ? "#f87171" : "#B4B4B5";
+  const yellowFill = percentage > 33 ? "#facc15" : "#B4B4B5";
+  const greenFill = percentage > 66 ? "#22c55e" : "#B4B4B5";
+
+  return (
+    <svg
+      width={120}
+      viewBox="0 0 1360 680"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <g transform="translate(128.5 42)">
+        {/* Left shape (Red Threshold) */}
+        <g transform="translate(177.84 324)">
+          <path
+            fill={redFill}
+            style={{ transition: "fill 0.3s ease" }}
+            d="M177.59-25.79
+               C102.12 32.68 53.54 124.19 53.54 227.04
+               H-177.59
+               C-177.59 38.59 -82.95 -127.75 61.39 -227.04
+               Z"
+          />
+        </g>
+
+        {/* Center shape (Yellow Threshold) */}
+        <g transform="translate(542.01 137.065)">
+          <path
+            fill={yellowFill}
+            style={{ transition: "fill 0.3s ease" }}
+            d="M265.91-73.365
+               L150.18 127.095
+               C107.61 106.105 59.7 94.315 9.03 94.315
+               C-49 94.315 -103.42 109.775 -150.33 136.815
+               L-265.91 -63.385
+               C-185 -110.095 -91.11 -136.815 9.03 -136.815
+               C101.8 -136.815 189.22 -113.875 265.91 -73.365
+               Z"
+          />
+        </g>
+
+        {/* Right shape (Green Threshold) */}
+        <g transform="translate(915.84 318.3)">
+          <path
+            fill={greenFill}
+            style={{ transition: "fill 0.3s ease" }}
+            d="M185.99 232.74
+               H-45.14
+               C-45.14 122.44 -101.01 25.19 -185.99 -32.27
+               L-70.24 -232.74
+               C83.76 -135.09 185.99 36.89 185.99 232.74
+               Z"
+          />
+        </g>
+
+        {/* Speedometer Needle */}
+        <g
+          style={{
+            transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+            transformOrigin: "542px 450px",
+          }}
+          transform={`rotate(${rotation}, 0, 0)`}
+        >
+          <g transform="translate(542, 450)">
+            <path fill="#585858" d="M-12 0 Q-12 -20 0 -360 Q12 -20 12 0 Z" />
+            <circle cx="0" cy="0" r="22" fill="#585858" />
+          </g>
+        </g>
+      </g>
+    </svg>
+  );
+};
+
+export default DecorativeSvg;
