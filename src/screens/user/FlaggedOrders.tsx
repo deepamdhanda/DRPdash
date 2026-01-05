@@ -15,7 +15,7 @@ import {
   updateOrder,
   getAllFilters,
 } from "../../APIs/user/order";
-import { fetchNewOrders } from "../../APIs/user/fetchOrder";
+// import { fetchNewOrders } from "../../APIs/user/fetchOrder";
 import { BsClockFill, BsPhoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaLocationPin } from "react-icons/fa6";
@@ -153,7 +153,6 @@ const FlaggedOrders: React.FC = () => {
   };
   const fetchChannelAccounts = async () => {
     try {
-
       const data = await getAllChannelAccounts();
       setChannelAccounts(data.data);
     } catch (error) {
@@ -249,96 +248,96 @@ const FlaggedOrders: React.FC = () => {
     }
   };
 
-  const handleBookBulkShipment = async (orders: Order[]) => {
-    const len = orders.length;
-    if (len === 0) {
-      toast.error("No orders selected for shipment.");
-      return;
-    }
+  // const handleBookBulkShipment = async (orders: Order[]) => {
+  //   const len = orders.length;
+  //   if (len === 0) {
+  //     toast.error("No orders selected for shipment.");
+  //     return;
+  //   }
 
-    setShipNowLoading(true);
-    const courierTotals = orders.reduce((acc: any, order: any) => {
-      const courierName = order.recommended_courier_name || "Unknown";
-      const rate = order.recommended_courier_rate || 0;
+  //   setShipNowLoading(true);
+  //   const courierTotals = orders.reduce((acc: any, order: any) => {
+  //     const courierName = order.recommended_courier_name || "Unknown";
+  //     const rate = order.recommended_courier_rate || 0;
 
-      if (!acc[courierName]) {
-        acc[courierName] = 0;
-      }
+  //     if (!acc[courierName]) {
+  //       acc[courierName] = 0;
+  //     }
 
-      acc[courierName] += rate;
-      return acc;
-    }, {});
-    const breakdownText = Object.entries(courierTotals)
-      .map(([name, amount]: any) => `${name}: ₹${amount.toFixed(2)}`)
-      .join("\n");
+  //     acc[courierName] += rate;
+  //     return acc;
+  //   }, {});
+  //   const breakdownText = Object.entries(courierTotals)
+  //     .map(([name, amount]: any) => `${name}: ₹${amount.toFixed(2)}`)
+  //     .join("\n");
 
-    const totalAmount: any = Object.values(courierTotals).reduce(
-      (sum: any, val: any) => sum + val,
-      0
-    );
+  //   const totalAmount: any = Object.values(courierTotals).reduce(
+  //     (sum: any, val: any) => sum + val,
+  //     0
+  //   );
 
-    if (
-      confirm(
-        `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(
-          2
-        )}\n\nDo you want to proceed?`
-      ) === false
-    ) {
-      setShipNowLoading(false);
-      return;
-    }
-    len > 1 &&
-      toast.info(
-        `Booking couriers for ${len} orders. Please do not refresh...`
-      );
+  //   if (
+  //     confirm(
+  //       `📦 Courier Booking Summary:\n\n${breakdownText}\n\nTotal: ₹${totalAmount.toFixed(
+  //         2
+  //       )}\n\nDo you want to proceed?`
+  //     ) === false
+  //   ) {
+  //     setShipNowLoading(false);
+  //     return;
+  //   }
+  //   len > 1 &&
+  //     toast.info(
+  //       `Booking couriers for ${len} orders. Please do not refresh...`
+  //     );
 
-    let doneCount = 0;
+  //   let doneCount = 0;
 
-    await Promise.allSettled(
-      orders.map(async (order) => {
-        const courier_id =
-          order.recommended_courier_id || order.shipping_courier_id;
-        const warehouse_id = order.recommended_warehouse_id;
+  //   await Promise.allSettled(
+  //     orders.map(async (order) => {
+  //       const courier_id =
+  //         order.recommended_courier_id || order.shipping_courier_id;
+  //       const warehouse_id = order.recommended_warehouse_id;
 
-        if (!courier_id) {
-          toast.error(`No courier selected for order ${order.order_id}`);
-          return;
-        }
+  //       if (!courier_id) {
+  //         toast.error(`No courier selected for order ${order.order_id}`);
+  //         return;
+  //       }
 
-        try {
-          const response = await bookCourier(
-            order._id,
-            courier_id,
-            warehouse_id
-          );
-          toast.success(`Order ${order.order_id}: ${response.message}`);
-          doneCount++;
+  //       try {
+  //         const response = await bookCourier(
+  //           order._id,
+  //           courier_id,
+  //           warehouse_id
+  //         );
+  //         toast.success(`Order ${order.order_id}: ${response.message}`);
+  //         doneCount++;
 
-          if (len === 1 && response) {
-            // setLabelData(response.data);
-            handleShipmentClose();
-          }
+  //         if (len === 1 && response) {
+  //           // setLabelData(response.data);
+  //           handleShipmentClose();
+  //         }
 
-          if (doneCount === len) {
-            toast.success("All shipments booked successfully.");
-            fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
-          }
-        } catch (err) {
-          toast.error(`Failed booking for order ${order.order_id}:` + err);
-          toast.error(`Order ${order.order_id}: Failed to book shipment.`);
-        }
-      })
-    );
+  //         if (doneCount === len) {
+  //           toast.success("All shipments booked successfully.");
+  //           fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+  //         }
+  //       } catch (err) {
+  //         toast.error(`Failed booking for order ${order.order_id}:` + err);
+  //         toast.error(`Order ${order.order_id}: Failed to book shipment.`);
+  //       }
+  //     })
+  //   );
 
-    setShipNowLoading(false);
-  };
+  //   setShipNowLoading(false);
+  // };
 
-  const handleBulkPrint = (orders: Order[]) => {
-    toast.info(
-      "Printing labels for " + orders.length + " orders. Please wait..."
-    );
-    setLabelData(orders.map((order) => order.label));
-  };
+  // const handleBulkPrint = (orders: Order[]) => {
+  //   toast.info(
+  //     "Printing labels for " + orders.length + " orders. Please wait..."
+  //   );
+  //   setLabelData(orders.map((order) => order.label));
+  // };
 
   const handlePrint = () => {
     if (labelRef.current) {
@@ -608,10 +607,10 @@ const FlaggedOrders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )
           : [];
 
         const latestStatus =
@@ -716,10 +715,10 @@ const FlaggedOrders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
       width: "110px",
@@ -731,10 +730,10 @@ const FlaggedOrders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return (
           <div style={{ textAlign: "center" }}>
@@ -908,10 +907,10 @@ const FlaggedOrders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -935,7 +934,7 @@ const FlaggedOrders: React.FC = () => {
           >
             {showFilters ? "Hide Filters" : "Show Filters"}
           </Button>
-          <Button
+          {/* <Button
             variant="outline-primary"
             onClick={async () => {
               (await fetchNewOrders()) && fetchOrders(1, rowsPerPage, filters);
@@ -1039,7 +1038,7 @@ const FlaggedOrders: React.FC = () => {
             }}
           >
             🖨️ Print Labels
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -1745,12 +1744,12 @@ const FlaggedOrders: React.FC = () => {
                                   <br />
                                   {row.other_charges -
                                     (row.freight_charge + row.cod_charges) *
-                                    0.18 >
+                                      0.18 >
                                     0 &&
                                     `LM Surcharge ₹${(
                                       row.other_charges -
                                       (row.freight_charge + row.cod_charges) *
-                                      0.18
+                                        0.18
                                     ).toFixed(2)}`}
                                   <br />
                                 </Tooltip>
