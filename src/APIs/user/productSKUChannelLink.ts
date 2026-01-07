@@ -33,3 +33,17 @@ export const getUnlinkedProductSku = async (
     throw error;
   }
 };
+
+export const postNewProduct = async (formdata: any) => {
+  try {
+    formdata.productSKU.product_description = " ";
+    const response = await appAxios.post(
+      `${productSKUChannelLinks_url}/newproduct`,
+      formdata
+    );
+    return response.data;
+  } catch (err) {
+    toast.error("Failed to fetch Product SKU.");
+    throw err;
+  }
+};
