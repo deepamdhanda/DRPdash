@@ -43,6 +43,7 @@ import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import DatePicker from "react-datepicker";
 import { pincodeDetails } from "../../APIs/pincodeAPIs";
 import OUAIIcon from "../../assets/ouai_icon";
+import CreditScoreMeter from "../../components/CreditScoreMeter";
 
 export interface User {
   _id: string;
@@ -697,11 +698,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                    )
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                  )
                   : toast.error(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                    );
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                  );
               });
             }
             doneCount++;
@@ -802,38 +803,7 @@ const Orders: React.FC = () => {
   };
 
   // ================== CREDIT SCORE SPEEDOMETER HELPER ==================
-  const CreditScoreMeter = ({ score }: { score: number }) => {
-    const normalized = Math.max(0, Math.min(score, 900));
 
-    return (
-      <div
-        style={{
-          width: 120,
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <DecorativeSvg score={normalized} />
-        <div style={{ fontSize: 13, fontWeight: 700, marginTop: -10 }}>
-          {normalized}
-          <span style={{ fontSize: 9 }}>/900</span>
-        </div>
-        <div
-          style={{
-            fontSize: 9,
-            color: "#666",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-          }}
-        >
-          Ecom Credit Score
-        </div>
-      </div>
-    );
-  };
 
   // ================== MAIN COLUMNS ==================
   const columns = [
@@ -895,10 +865,10 @@ const Orders: React.FC = () => {
           row.remittance_status === "pending"
             ? "#ffc107"
             : row.remittance_status === "completed"
-            ? "#28a745"
-            : row.remittance_status === "processing"
-            ? "#007bff"
-            : "#6c757d";
+              ? "#28a745"
+              : row.remittance_status === "processing"
+                ? "#007bff"
+                : "#6c757d";
 
         return (
           <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
@@ -959,10 +929,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
 
         return (
@@ -1035,10 +1005,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )
           : [];
         const latestStatusName =
           sortedStatus[0]?.status?.replaceAll("_", " ") || "—";
@@ -1211,10 +1181,10 @@ const Orders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       minWidth: "90px",
     },
@@ -1225,10 +1195,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         const statusStr = latestStatus?.status?.toLowerCase() || "";
 
@@ -1379,10 +1349,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1404,7 +1374,7 @@ const Orders: React.FC = () => {
               onClick={() => setShowFilters(!showFilters)}
               size={"30px"}
               color="#F5891E"
-              // style={{minWidth:"70px!important"}}
+            // style={{minWidth:"70px!important"}}
             />
           </div>
         </Col>
@@ -1426,10 +1396,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
                     return (
                       !o.recommended_courier_id &&
@@ -1470,10 +1440,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
 
                     return (
@@ -1499,10 +1469,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
 
                     return latestStatus?.status
@@ -1745,27 +1715,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                            ([key, value]) => (
-                              <div key={key}>
-                                <strong>{key}:</strong> {String(value)}
-                              </div>
-                            )
+                          ([key, value]) => (
+                            <div key={key}>
+                              <strong>{key}:</strong> {String(value)}
+                            </div>
                           )
+                        )
                         : // If it's a JSON string, try parsing
-                          (() => {
-                            try {
-                              const parsed = JSON.parse(item.status_details);
-                              return Object.entries(parsed).map(
-                                ([key, value]) => (
-                                  <div key={key}>
-                                    <strong>{key}:</strong> {String(value)}
-                                  </div>
-                                )
-                              );
-                            } catch {
-                              return String(item.status_details);
-                            }
-                          })()
+                        (() => {
+                          try {
+                            const parsed = JSON.parse(item.status_details);
+                            return Object.entries(parsed).map(
+                              ([key, value]) => (
+                                <div key={key}>
+                                  <strong>{key}:</strong> {String(value)}
+                                </div>
+                              )
+                            );
+                          } catch {
+                            return String(item.status_details);
+                          }
+                        })()
                       : "-"}
                   </td>
                 </tr>
@@ -2471,12 +2441,12 @@ const Orders: React.FC = () => {
                                   <br />
                                   {row.other_charges -
                                     (row.freight_charge + row.cod_charges) *
-                                      0.18 >
+                                    0.18 >
                                     0 &&
                                     `LM Surcharge ₹${(
                                       row.other_charges -
                                       (row.freight_charge + row.cod_charges) *
-                                        0.18
+                                      0.18
                                     ).toFixed(2)}`}
                                   <br />
                                 </Tooltip>
@@ -2935,7 +2905,7 @@ const Orders: React.FC = () => {
 
 export { Orders };
 
-const DecorativeSvg = ({ score = 0 }) => {
+const DecorativeSvg = ({ score = 0, width = 120 }) => {
   const percentage = (score / 900) * 100;
   const minAngle = -90;
   const maxAngle = 90;
@@ -2949,7 +2919,7 @@ const DecorativeSvg = ({ score = 0 }) => {
 
   return (
     <svg
-      width={120}
+      width={width}
       viewBox="0 0 1360 680"
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMid meet"
