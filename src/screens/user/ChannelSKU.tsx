@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Card, Badge } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import { getAllChannelAccounts } from "../../APIs/user/channelAccount";
@@ -8,6 +8,7 @@ import { ChannelAccount } from "./ChannelAccounts";
 import {
   linkProductSkuToChannelAccount,
   getUnlinkedProductSku,
+  postNewProduct,
 } from "../../APIs/user/productSKUChannelLink";
 import { toast } from "react-toastify";
 
@@ -26,6 +27,7 @@ type newProductSKU = {
   price: number;
   channel_account_id: string;
   channel_account_name: string;
+  product_description: string;
 };
 
 const ChannelSKU: React.FC = () => {
@@ -35,6 +37,7 @@ const ChannelSKU: React.FC = () => {
   const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
   const [unlinkedProducts, setUnlinkedProducts] = useState<newProductSKU[]>([]);
+  const [refresh, setRefresh] = useState(false);
   const [selectedProductSKUs, setSelectedProductSKUs] = useState<
     ProductSKU["_id"][]
   >([]);
@@ -50,7 +53,7 @@ const ChannelSKU: React.FC = () => {
 
   useEffect(() => {
     fetchInitialData();
-  }, [page, limit]);
+  }, [page, limit, refresh]);
 
   const fetchInitialData = async () => {
     try {
@@ -184,18 +187,16 @@ const ChannelSKU: React.FC = () => {
             >
               Link Product
             </Button>
-            {/* <Button
+            <Button
               variant="outline-primary"
               className="me-2"
               onClick={() => {
-                setSelectedProductSKUs([row._id]);
-                setSelectedChannelAccounts([row.channel_account_id]);
-                setSelectedVariant(row.variant_id);
-                setShowLinkModal(true);
+                setProductSKU(row);
+                setShowEditModal(true);
               }}
             >
               Create New Product
-            </Button> */}
+            </Button>
           </>
         ) : (
           <></>
@@ -215,6 +216,95 @@ const ChannelSKU: React.FC = () => {
       width: "180px",
     },
   ];
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Section 1: Product SKU (Autofilled)
+  const [productSKU, setProductSKU] = useState<Partial<newProductSKU>>({
+    product_sku_id: "",
+  });
+
+  // Section 2: Products Array
+  const [products, setProducts] = useState([
+    { id: 1, name: "", weight: "", quantity: "", product_description: "" },
+  ]);
+
+  // Section 3: Product Pack
+  const [productPack, setProductPack] = useState({
+    name: "",
+    length: "",
+    breadth: "",
+    width: "",
+    weight: "",
+  });
+
+  const handleAddProduct = () => {
+    const newId =
+      products.length > 0 ? Math.max(...products.map((p) => p.id)) + 1 : 1;
+    setProducts([
+      ...products,
+      {
+        id: newId,
+        name: "",
+        weight: "",
+        quantity: "",
+        product_description: "",
+      },
+    ]);
+  };
+
+  const handleRemoveProduct = (id: number) => {
+    if (products.length > 1) {
+      setProducts(products.filter((p) => p.id !== id));
+    }
+  };
+
+  const handleProductChange = (id: number, field: string, value: string) => {
+    setProducts(
+      products.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const handleProductPackChange = (field: string, value: string) => {
+    setProductPack({ ...productPack, [field]: value });
+  };
+
+  const handleSubmit = async () => {
+    const formData = {
+      productSKU,
+      products,
+      productPack,
+    };
+
+    await postNewProduct(formData);
+    toast.success("Link created successfully");
+    setRefresh(!refresh);
+    setShowEditModal(false);
+  };
+
+  const handleReset = () => {
+    setProducts([
+      { id: 1, name: "", weight: "", quantity: "", product_description: "" },
+    ]);
+    setProductPack({
+      name: "",
+      length: "",
+      breadth: "",
+      width: "",
+      weight: "",
+    });
+  };
+
+  const calculateVolume = () => {
+    const { length, breadth, width } = productPack;
+    if (length && breadth && width) {
+      return (
+        parseFloat(length) *
+        parseFloat(breadth) *
+        parseFloat(width)
+      ).toFixed(2);
+    }
+    return "N/A";
+  };
 
   return (
     <div className="container mt-4">
@@ -222,17 +312,6 @@ const ChannelSKU: React.FC = () => {
         <h4>Channel SKU Management</h4>
         <Button onClick={() => setShowModal(true)}>+ Link New Products</Button>
       </div>
-      {/* <DataTable
-        title="Channel SKUs"
-        data={unlinkedProducts}
-        columns={columns}
-        highlightOnHover
-        pagination
-        paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
-        responsive
-        striped
-        persistTableHead
-      /> */}
 
       <DataTable
         title="Channel SKUs"
@@ -253,7 +332,6 @@ const ChannelSKU: React.FC = () => {
         highlightOnHover
         responsive
       />
-
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -411,7 +489,6 @@ const ChannelSKU: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-
       <Modal
         show={showLinkModal}
         onHide={handleHideLinkModal}
@@ -450,6 +527,323 @@ const ChannelSKU: React.FC = () => {
           <Button variant="primary" onClick={handleLinkProduct}>
             Link SKU
           </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        size="lg"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="text-primary">
+            📦 Create New Product
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          {/* Section 1: Product SKU (Autofilled) */}
+          <div className="mb-4">
+            <h5 className="mb-3 text-primary fw-semibold">
+              🧾 Section 1: Product SKU
+            </h5>
+            <Card className="border-primary border-2 shadow-sm">
+              <Card.Body>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Product SKU ID
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={productSKU.product_sku_id ?? ""}
+                        onChange={(e) =>
+                          setProductSKU((prev) => ({
+                            ...prev,
+                            product_sku_id: e.target.value,
+                          }))
+                        }
+                        className="bg-light"
+                      />
+                    </Form.Group>
+                  </div>
+
+                  <div className="col-md-6">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Product SKU Name
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={productSKU?.product_name}
+                        disabled
+                        className="bg-light"
+                      />
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-6">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Product SKU Price
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={productSKU?.price}
+                        disabled
+                        className="bg-light"
+                      />
+                    </Form.Group>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </div>
+
+          {/* Section 2: Products Array */}
+          <div className="mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="text-primary fw-semibold mb-0">
+                📋 Section 2: Products
+              </h5>
+              <Button variant="success" size="sm" onClick={handleAddProduct}>
+                <i className="bi bi-plus-lg me-1"></i>
+                Add Product
+              </Button>
+            </div>
+
+            <div className="d-flex flex-column gap-3">
+              {products.map((product, index) => (
+                <Card key={product.id} className="border-2 shadow-sm">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <Badge bg="primary" className="px-3 py-2">
+                        Product #{index + 1}
+                      </Badge>
+                      {products.length > 1 && (
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleRemoveProduct(product.id)}
+                        >
+                          <i className="bi bi-trash"></i> Remove
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="row g-3">
+                      <div className="col-md-3">
+                        <Form.Group>
+                          <Form.Label className="small fw-semibold">
+                            Product Name <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="e.g. Cotton T-Shirt"
+                            value={product.name}
+                            onChange={(e) =>
+                              handleProductChange(
+                                product.id,
+                                "name",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </Form.Group>
+                      </div>
+
+                      <div className="col-md-3">
+                        <Form.Group>
+                          <Form.Label className="small fw-semibold">
+                            Weight (gm) <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            placeholder="e.g. 250"
+                            value={product.weight}
+                            onChange={(e) =>
+                              handleProductChange(
+                                product.id,
+                                "weight",
+                                e.target.value
+                              )
+                            }
+                            min="0"
+                            step="0.01"
+                          />
+                        </Form.Group>
+                      </div>
+
+                      <div className="col-md-3">
+                        <Form.Group>
+                          <Form.Label className="small fw-semibold">
+                            Quantity <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            placeholder="e.g. 10"
+                            value={product.quantity}
+                            onChange={(e) =>
+                              handleProductChange(
+                                product.id,
+                                "quantity",
+                                e.target.value
+                              )
+                            }
+                            min="1"
+                          />
+                        </Form.Group>
+                      </div>
+                      <div className="col-md-3">
+                        <Form.Group>
+                          <Form.Label className="small fw-semibold">
+                            Description <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter description..."
+                            value={product.product_description}
+                            onChange={(e) =>
+                              handleProductChange(
+                                product.id,
+                                "product_description",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </Form.Group>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 3: Product Pack */}
+          <div className="mb-3">
+            <h5 className="mb-3 text-primary fw-semibold">
+              📐 Section 3: Product Pack Dimensions
+            </h5>
+            <Card className="border-success border-2 shadow-sm">
+              <Card.Body>
+                <div className="row g-3">
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Product Pack Name
+                        <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="e.g. Shoes package"
+                        value={productPack.name}
+                        onChange={(e) =>
+                          handleProductPackChange("name", e.target.value)
+                        }
+                      />
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Length (cm) <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        placeholder="e.g. 30"
+                        value={productPack.length}
+                        onChange={(e) =>
+                          handleProductPackChange("length", e.target.value)
+                        }
+                        min="0"
+                        step="0.01"
+                      />
+                    </Form.Group>
+                  </div>
+
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Breadth (cm) <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        placeholder="e.g. 20"
+                        value={productPack.breadth}
+                        onChange={(e) =>
+                          handleProductPackChange("breadth", e.target.value)
+                        }
+                        min="0"
+                        step="0.01"
+                      />
+                    </Form.Group>
+                  </div>
+
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Width (cm) <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        placeholder="e.g. 5"
+                        value={productPack.width}
+                        onChange={(e) =>
+                          handleProductPackChange("width", e.target.value)
+                        }
+                        min="0"
+                        step="0.01"
+                      />
+                    </Form.Group>
+                  </div>
+
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label className="small fw-semibold">
+                        Weight (kg) <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        placeholder="e.g. 0.5"
+                        value={productPack.weight}
+                        onChange={(e) =>
+                          handleProductPackChange("weight", e.target.value)
+                        }
+                        min="0"
+                        step="0.01"
+                      />
+                    </Form.Group>
+                  </div>
+                </div>
+
+                <div className="mt-3 p-3 bg-light rounded">
+                  <small className="text-muted">
+                    <strong>📊 Calculated Volume:</strong> {calculateVolume()}{" "}
+                    cm³
+                  </small>
+                </div>
+              </Card.Body>
+            </Card>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer className="justify-content-between">
+          <Button variant="outline-secondary" onClick={handleReset}>
+            Reset Form
+          </Button>
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-danger"
+              onClick={() => setShowEditModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSubmit}>
+              Create Product
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
     </div>

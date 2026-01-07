@@ -294,7 +294,7 @@ const ProductSKUs: React.FC = () => {
         }, 0);
         return (
           <>
-            {totalWeight} gm <br />
+            {totalWeight.toFixed(2)} gm <br />
             {row.pack_id?.name}
           </>
         );
@@ -583,7 +583,7 @@ const ProductSKUs: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div >
+    </div>
   );
 };
 

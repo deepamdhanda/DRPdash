@@ -17,6 +17,7 @@ import MakeChannelAccount from "../../components/get-started/MakeChannelAccount"
 
 import { drpCrmBaseUrl } from "../../axios/urls";
 import { appAxios } from "../../axios/appAxios";
+import { getAccountSummary } from "../../APIs/user/dashboard";
 
 /**
  * Modernized GetStarted stepper — focused on clarity, speed, and progressive disclosure.
@@ -36,7 +37,7 @@ type Step = {
 const GetStarted: React.FC = () => {
   const [activeStep, setActiveStep] = useState<string>("pools");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
-  const { stats } = useStatsStore();
+  const { stats, setStatsStore } = useStatsStore();
   const verifyMe = async () => {
     try {
       await appAxios(`${drpCrmBaseUrl}/auth/verify/me`);
@@ -44,8 +45,15 @@ const GetStarted: React.FC = () => {
       console.log(err);
     }
   };
+  const fetchAccountSummary = async () => {
+    const res = await getAccountSummary();
+    if (res) {
+      setStatsStore((res as any).counts);
+    }
+  };
   useEffect(() => {
     verifyMe();
+    fetchAccountSummary();
   }, []);
 
   useEffect(() => {
