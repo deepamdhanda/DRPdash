@@ -11,6 +11,7 @@ import {
   postNewProduct,
 } from "../../APIs/user/productSKUChannelLink";
 import { toast } from "react-toastify";
+import { getAllWarehouses } from "../../APIs/user/warehouse";
 
 export type ProductChannelLink = {
   product_sku_id: string;
@@ -30,12 +31,23 @@ type newProductSKU = {
   product_description: string;
 };
 
+type Warehouse = {
+  _id: string;
+  name: string;
+};
+
+type ProductWarehouse = {
+  warehouse: string;
+  stock: number;
+};
+
 const ChannelSKU: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [productSKUs, setProductSKUs] = useState<ProductSKU[]>([]);
   const [channelAccounts, setChannelAccounts] = useState<ChannelAccount[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [unlinkedProducts, setUnlinkedProducts] = useState<newProductSKU[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [selectedProductSKUs, setSelectedProductSKUs] = useState<
@@ -57,16 +69,22 @@ const ChannelSKU: React.FC = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [productSKUsData, channelAccountsData, unlinkedProductsData] =
-        await Promise.all([
-          getAllProductSKUs(),
-          getAllChannelAccounts(),
-          getUnlinkedProductSku(page, limit),
-        ]);
+      const [
+        productSKUsData,
+        channelAccountsData,
+        unlinkedProductsData,
+        warehousesData,
+      ] = await Promise.all([
+        getAllProductSKUs(),
+        getAllChannelAccounts(),
+        getUnlinkedProductSku(page, limit),
+        getAllWarehouses(),
+      ]);
       setTotalRecords(unlinkedProductsData.total);
       setProductSKUs(productSKUsData.data);
       setChannelAccounts(channelAccountsData.data);
       setUnlinkedProducts(unlinkedProductsData.data);
+      setWarehouses(warehousesData.data || []);
     } catch (error) {
       console.error("Error fetching initial data", error);
     }
@@ -162,7 +180,7 @@ const ChannelSKU: React.FC = () => {
     },
     {
       name: "Price",
-      selector: (row: newProductSKU) => `${row.price || "0.00"}`, //₹
+      selector: (row: newProductSKU) => `${row.price || "0.00"}`,
       sortable: true,
     },
     {
@@ -201,36 +219,30 @@ const ChannelSKU: React.FC = () => {
         ) : (
           <></>
         ),
-      // <Button
-      //   variant="outline-danger"
-      //   className="me-2"
-      //   onClick={() => {
-      //     setSelectedProductSKUs([row._id]);
-      //     setSelectedChannelAccounts([row.channel_account_id]);
-      //     setSelectedVariant(row.variant_id);
-      //     setShowLinkModal(true);
-      //   }}
-      // >
-      //   Unlink Product
-      // </Button>
       width: "180px",
     },
   ];
+
   const [showEditModal, setShowEditModal] = useState(false);
 
-  // Section 1: Product SKU (Autofilled)
   const [productSKU, setProductSKU] = useState<Partial<newProductSKU>>({
     product_sku_id: "",
   });
 
-  // Section 2: Products Array
   const [products, setProducts] = useState([
-    { id: 1, name: "", weight: "", quantity: "", product_description: "" },
+    {
+      id: 1,
+      name: "",
+      weight: "",
+      warehouses: [{ warehouse: "", stock: "" }] as {
+        warehouse: string;
+        stock: string;
+      }[],
+    },
   ]);
 
-  // Section 3: Product Pack
   const [productPack, setProductPack] = useState({
-    name: "",
+    packType: "box",
     length: "",
     breadth: "",
     width: "",
@@ -246,8 +258,7 @@ const ChannelSKU: React.FC = () => {
         id: newId,
         name: "",
         weight: "",
-        quantity: "",
-        product_description: "",
+        warehouses: [{ warehouse: "", stock: "" }],
       },
     ]);
   };
@@ -264,15 +275,92 @@ const ChannelSKU: React.FC = () => {
     );
   };
 
+  const handleAddWarehouse = (productId: number) => {
+    setProducts(
+      products.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              warehouses: [...p.warehouses, { warehouse: "", stock: "" }],
+            }
+          : p
+      )
+    );
+  };
+
+  const handleRemoveWarehouse = (productId: number, warehouseIndex: number) => {
+    setProducts(
+      products.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              warehouses: p.warehouses.filter(
+                (_, idx) => idx !== warehouseIndex
+              ),
+            }
+          : p
+      )
+    );
+  };
+
+  const handleWarehouseChange = (
+    productId: number,
+    warehouseIndex: number,
+    field: string,
+    value: string
+  ) => {
+    setProducts(
+      products.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              warehouses: p.warehouses.map((w, idx) =>
+                idx === warehouseIndex ? { ...w, [field]: value } : w
+              ),
+            }
+          : p
+      )
+    );
+  };
+
   const handleProductPackChange = (field: string, value: string) => {
     setProductPack({ ...productPack, [field]: value });
   };
 
   const handleSubmit = async () => {
+    for (const product of products) {
+      if (!product.name || !product.weight) {
+        toast.error(`Please fill all fields for ${product.name || "product"}`);
+        return;
+      }
+
+      for (const warehouse of product.warehouses) {
+        if (!warehouse.warehouse || !warehouse.stock) {
+          toast.error(`Please fill warehouse and stock for ${product.name}`);
+          return;
+        }
+      }
+    }
+
+    const packName = `${productPack.packType}_${productPack.length}x${productPack.breadth}x${productPack.width}`;
+
     const formData = {
       productSKU,
-      products,
-      productPack,
+      products: products.map((p) => ({
+        name: p.name,
+        weight: p.weight,
+        warehouses: p.warehouses.map((w) => ({
+          warehouse: w.warehouse,
+          stock: Number(w.stock),
+        })),
+      })),
+      productPack: {
+        name: packName,
+        length: productPack.length,
+        breadth: productPack.breadth,
+        width: productPack.width,
+        weight: productPack.weight,
+      },
     };
 
     await postNewProduct(formData);
@@ -283,10 +371,15 @@ const ChannelSKU: React.FC = () => {
 
   const handleReset = () => {
     setProducts([
-      { id: 1, name: "", weight: "", quantity: "", product_description: "" },
+      {
+        id: 1,
+        name: "",
+        weight: "",
+        warehouses: [{ warehouse: "", stock: "" }],
+      },
     ]);
     setProductPack({
-      name: "",
+      packType: "box",
       length: "",
       breadth: "",
       width: "",
@@ -294,14 +387,15 @@ const ChannelSKU: React.FC = () => {
     });
   };
 
-  const calculateVolume = () => {
+  const calculateVolumetricWeight = () => {
     const { length, breadth, width } = productPack;
     if (length && breadth && width) {
-      return (
-        parseFloat(length) *
-        parseFloat(breadth) *
-        parseFloat(width)
+      // Volumetric weight formula: (L x B x W) / 5000
+      const volumetricWeight = (
+        (parseFloat(length) * parseFloat(breadth) * parseFloat(width)) /
+        5000
       ).toFixed(2);
+      return volumetricWeight;
     }
     return "N/A";
   };
@@ -327,11 +421,12 @@ const ChannelSKU: React.FC = () => {
         }}
         onChangeRowsPerPage={(newLimit) => {
           setLimit(newLimit);
-          setPage(1); // ALWAYS reset to page 1 when limit changes
+          setPage(1);
         }}
         highlightOnHover
         responsive
       />
+
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -344,7 +439,6 @@ const ChannelSKU: React.FC = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Step 1: Select Product SKUs & Set Price */}
           <h5 className="mb-3 text-primary fw-semibold">
             🧾 Step 1: Select Product SKUs & Set Price
           </h5>
@@ -385,12 +479,11 @@ const ChannelSKU: React.FC = () => {
                           <small>SKU ID: {sku.product_sku_id || "N/A"}</small>
                         </p>
                       </div>
-                      {/* Instead of checkbox, show a nice checkmark icon when selected */}
                       {isSelected && (
                         <span
                           style={{
                             fontSize: "1.5rem",
-                            color: "#0d6efd", // bootstrap primary color
+                            color: "#0d6efd",
                             userSelect: "none",
                           }}
                           aria-label="Selected"
@@ -414,7 +507,7 @@ const ChannelSKU: React.FC = () => {
                             sku._id &&
                             handlePriceChange(sku._id, e.target.value)
                           }
-                          onClick={(e) => e.stopPropagation()} // prevent card toggle when editing price
+                          onClick={(e) => e.stopPropagation()}
                         />
                       </Form.Group>
                     )}
@@ -424,7 +517,6 @@ const ChannelSKU: React.FC = () => {
             })}
           </div>
 
-          {/* Step 2: Select Channel Accounts */}
           <h5 className="mb-3 text-primary fw-semibold">
             📦 Step 2: Select Channel Accounts
           </h5>
@@ -489,6 +581,7 @@ const ChannelSKU: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
       <Modal
         show={showLinkModal}
         onHide={handleHideLinkModal}
@@ -529,6 +622,7 @@ const ChannelSKU: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
       <Modal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
@@ -543,7 +637,7 @@ const ChannelSKU: React.FC = () => {
         </Modal.Header>
 
         <Modal.Body style={{ maxHeight: "70vh", overflowY: "auto" }}>
-          {/* Section 1: Product SKU (Autofilled) */}
+          {/* Section 1: Product SKU */}
           <div className="mb-4">
             <h5 className="mb-3 text-primary fw-semibold">
               🧾 Section 1: Product SKU
@@ -633,7 +727,7 @@ const ChannelSKU: React.FC = () => {
                     </div>
 
                     <div className="row g-3">
-                      <div className="col-md-3">
+                      <div className="col-md-6">
                         <Form.Group>
                           <Form.Label className="small fw-semibold">
                             Product Name <span className="text-danger">*</span>
@@ -653,7 +747,7 @@ const ChannelSKU: React.FC = () => {
                         </Form.Group>
                       </div>
 
-                      <div className="col-md-3">
+                      <div className="col-md-6">
                         <Form.Group>
                           <Form.Label className="small fw-semibold">
                             Weight (gm) <span className="text-danger">*</span>
@@ -674,46 +768,89 @@ const ChannelSKU: React.FC = () => {
                           />
                         </Form.Group>
                       </div>
+                    </div>
 
-                      <div className="col-md-3">
-                        <Form.Group>
-                          <Form.Label className="small fw-semibold">
-                            Quantity <span className="text-danger">*</span>
-                          </Form.Label>
-                          <Form.Control
-                            type="number"
-                            placeholder="e.g. 10"
-                            value={product.quantity}
-                            onChange={(e) =>
-                              handleProductChange(
-                                product.id,
-                                "quantity",
-                                e.target.value
-                              )
-                            }
-                            min="1"
-                          />
-                        </Form.Group>
+                    {/* Warehouse Section */}
+                    <div className="mt-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong className="small">Warehouse Allocation</strong>
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          onClick={() => handleAddWarehouse(product.id)}
+                        >
+                          <i className="bi bi-plus"></i> Add Warehouse
+                        </Button>
                       </div>
-                      <div className="col-md-3">
-                        <Form.Group>
-                          <Form.Label className="small fw-semibold">
-                            Description <span className="text-danger">*</span>
-                          </Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Enter description..."
-                            value={product.product_description}
-                            onChange={(e) =>
-                              handleProductChange(
-                                product.id,
-                                "product_description",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </Form.Group>
-                      </div>
+
+                      {product.warehouses.map((warehouse, wIndex) => (
+                        <div
+                          key={wIndex}
+                          className="row g-2 mb-2 align-items-end"
+                        >
+                          <div className="col-md-6">
+                            <Form.Group>
+                              <Form.Label className="small">
+                                Warehouse <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Select
+                                value={warehouse.warehouse}
+                                onChange={(e) =>
+                                  handleWarehouseChange(
+                                    product.id,
+                                    wIndex,
+                                    "warehouse",
+                                    e.target.value
+                                  )
+                                }
+                              >
+                                <option value="">Select Warehouse</option>
+                                {warehouses.map((wh) => (
+                                  <option key={wh._id} value={wh._id}>
+                                    {wh.name}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </div>
+
+                          <div className="col-md-4">
+                            <Form.Group>
+                              <Form.Label className="small">
+                                Stock <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Control
+                                type="number"
+                                placeholder="e.g. 50"
+                                value={warehouse.stock}
+                                onChange={(e) =>
+                                  handleWarehouseChange(
+                                    product.id,
+                                    wIndex,
+                                    "stock",
+                                    e.target.value
+                                  )
+                                }
+                                min="0"
+                              />
+                            </Form.Group>
+                          </div>
+
+                          <div className="col-md-2">
+                            {product.warehouses.length > 1 && (
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveWarehouse(product.id, wIndex)
+                                }
+                              >
+                                <i className="bi bi-trash"></i>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </Card.Body>
                 </Card>
@@ -732,19 +869,20 @@ const ChannelSKU: React.FC = () => {
                   <div className="col-md-3">
                     <Form.Group>
                       <Form.Label className="small fw-semibold">
-                        Product Pack Name
-                        <span className="text-danger">*</span>
+                        Pack Type <span className="text-danger">*</span>
                       </Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="e.g. Shoes package"
-                        value={productPack.name}
+                      <Form.Select
+                        value={productPack.packType}
                         onChange={(e) =>
-                          handleProductPackChange("name", e.target.value)
+                          handleProductPackChange("packType", e.target.value)
                         }
-                      />
+                      >
+                        <option value="box">Box</option>
+                        <option value="bag">Bag</option>
+                      </Form.Select>
                     </Form.Group>
                   </div>
+
                   <div className="col-md-3">
                     <Form.Group>
                       <Form.Label className="small fw-semibold">
@@ -816,13 +954,27 @@ const ChannelSKU: React.FC = () => {
                       />
                     </Form.Group>
                   </div>
-                </div>
 
-                <div className="mt-3 p-3 bg-light rounded">
-                  <small className="text-muted">
-                    <strong>📊 Calculated Volume:</strong> {calculateVolume()}{" "}
-                    cm³
-                  </small>
+                  <div className="col-12">
+                    <div className="p-3 bg-light rounded">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <small className="text-muted">
+                            <strong>📦 Pack Name:</strong>{" "}
+                            {productPack.packType}_{productPack.length || "0"}x
+                            {productPack.breadth || "0"}x
+                            {productPack.width || "0"}
+                          </small>
+                        </div>
+                        <div className="col-md-6">
+                          <small className="text-muted">
+                            <strong>⚖️ Volumetric Weight:</strong>{" "}
+                            {calculateVolumetricWeight()} kg
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </Card.Body>
             </Card>

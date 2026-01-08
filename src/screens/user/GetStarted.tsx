@@ -14,10 +14,16 @@ import { Stat, useStatsStore } from "../../store/useStatsStore";
 import MakePool from "../../components/get-started/MakePool";
 import MakeWarehouse from "../../components/get-started/MakeWarehouse";
 import MakeChannelAccount from "../../components/get-started/MakeChannelAccount";
-
+import logoImg from "../../assets/logo.png";
+import logoImg1 from "../../assets/logo1.png";
+import { Navbar, Container, Nav, Dropdown } from "react-bootstrap";
+import { FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import { drpCrmBaseUrl } from "../../axios/urls";
 import { appAxios } from "../../axios/appAxios";
 import { getAccountSummary } from "../../APIs/user/dashboard";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Modernized GetStarted stepper — focused on clarity, speed, and progressive disclosure.
@@ -38,9 +44,11 @@ const GetStarted: React.FC = () => {
   const [activeStep, setActiveStep] = useState<string>("pools");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const { stats, setStatsStore } = useStatsStore();
+  const [username, setUsername] = useState("");
   const verifyMe = async () => {
     try {
-      await appAxios(`${drpCrmBaseUrl}/auth/verify/me`);
+      const { data } = await appAxios(`${drpCrmBaseUrl}/auth/verify/me`);
+      setUsername(data.username);
     } catch (err) {
       console.log(err);
     }
@@ -162,253 +170,334 @@ const GetStarted: React.FC = () => {
   );
 
   return (
-    <div
-      style={{
-        padding: "2rem 1rem",
-        backgroundColor: "#f5f7fb",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <div>
-            <h2 style={{ color: "#000434", margin: 0 }}>
-              Welcome — Let's get you set up
-            </h2>
-            <div style={{ color: "#6b7280", marginTop: 6, fontSize: 14 }}>
-              Onboarding in a few quick steps. We'll guide you.
+    <>
+      <OnboardingHeader username={username} />
+      <div
+        style={{
+          padding: "2rem 1rem",
+          backgroundColor: "#f5f7fb",
+          minHeight: "100vh",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <div>
+              <h2 style={{ color: "#000434", margin: 0 }}>
+                Welcome — Let's get you set up
+              </h2>
+              <div style={{ color: "#6b7280", marginTop: 6, fontSize: 14 }}>
+                Onboarding in a few quick steps. We'll guide you.
+              </div>
+            </div>
+
+            <div style={{ width: 320 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
+                  <ProgressBar
+                    now={progress}
+                    variant="warning"
+                    style={{ height: 8, borderRadius: 8 }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#6b7280",
+                      marginTop: 6,
+                      textAlign: "right",
+                    }}
+                  >
+                    {completedCount}/{totalSteps - 1} completed
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div style={{ width: 320 }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <div style={{ flex: 1 }}>
-                <ProgressBar
-                  now={progress}
-                  variant="warning"
-                  style={{ height: 8, borderRadius: 8 }}
-                />
+          <Row>
+            <Col lg={3} md={4} sm={12} xs={12} style={{ marginBottom: 12 }}>
+              <aside
+                style={{
+                  background: "#fff",
+                  borderRadius: 12,
+                  padding: 12,
+                  border: "1px solid #eef2f6",
+                  position: "sticky",
+                  top: 24,
+                  maxHeight: "75vh",
+                  overflow: "auto",
+                }}
+                aria-label="Onboarding steps"
+              >
+                {stepOrder.map((step, index) => {
+                  const isActive = activeStep === step.key;
+                  const isComplete = completedSteps.includes(step.key);
+                  return (
+                    <div
+                      key={step.key}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleClickStep(step.key)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ")
+                          handleClickStep(step.key);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 8px",
+                        borderRadius: 10,
+                        marginBottom: 8,
+                        cursor:
+                          isComplete || step.key === activeStep
+                            ? "pointer"
+                            : "pointer",
+                        background: isActive
+                          ? "rgba(245,137,30,0.06)"
+                          : "transparent",
+                        borderLeft: isActive
+                          ? "4px solid #F5891E"
+                          : "4px solid transparent",
+                        transition: "all 0.12s ease",
+                      }}
+                      title={step.helper}
+                    >
+                      <div style={{ width: 36, textAlign: "center" }}>
+                        {isComplete ? (
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 18,
+                              background: "#F5891E",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#fff",
+                            }}
+                          >
+                            <FaCheck />
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 18,
+                              border: "1px solid #e6e9ee",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: isActive ? "#F5891E" : "#9aa0ad",
+                              background: isActive
+                                ? "rgba(245,137,30,0.06)"
+                                : "transparent",
+                            }}
+                          >
+                            <span style={{ fontWeight: 600 }}>{index + 1}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 8,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: isActive ? 700 : 600,
+                              color: isActive ? "#000434" : "#111827",
+                            }}
+                          >
+                            {step.label}
+                          </div>
+                          <div style={{ color: "#9aa0ad", fontSize: 12 }}>
+                            {isComplete ? (
+                              <small>Done</small>
+                            ) : (
+                              <small>
+                                {index === stepOrder.length - 1
+                                  ? "Optional"
+                                  : ""}
+                              </small>
+                            )}
+                          </div>
+                        </div>
+                        {step.helper && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#6b7280",
+                              marginTop: 4,
+                            }}
+                          >
+                            {step.helper}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <OverlayTrigger
+                          overlay={
+                            <Tooltip id={`tooltip-${step.key}`}>
+                              {isComplete ? "Completed" : "Open step"}
+                            </Tooltip>
+                          }
+                        >
+                          <span style={{ color: "#9aa0ad" }}>
+                            <FaChevronRight />
+                          </span>
+                        </OverlayTrigger>
+                      </div>
+                    </div>
+                  );
+                })}
+              </aside>
+            </Col>
+
+            <Col lg={9} md={8} sm={12} xs={12}>
+              <Card
+                style={{
+                  borderRadius: 16,
+                  boxShadow: "0 8px 30px rgba(2,6,23,0.06)",
+                  minHeight: 420,
+                  padding: 18,
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 12,
-                    color: "#6b7280",
-                    marginTop: 6,
-                    textAlign: "right",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12,
                   }}
                 >
-                  {completedCount}/{totalSteps - 1} completed
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                  <div>
+                    <div style={{ fontSize: 14, color: "#6b7280" }}>
+                      Step{" "}
+                      {Math.min(
+                        stepOrder.findIndex((s) => s.key === activeStep) + 1,
+                        stepOrder.length
+                      )}{" "}
+                      of {stepOrder.length}
+                    </div>
+                    <h4 style={{ margin: 0, color: "#000434" }}>
+                      {stepOrder.find((s) => s.key === activeStep)?.label}
+                    </h4>
+                  </div>
 
-        <Row>
-          <Col lg={3} md={4} sm={12} xs={12} style={{ marginBottom: 12 }}>
-            <aside
-              style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: 12,
-                border: "1px solid #eef2f6",
-                position: "sticky",
-                top: 24,
-                maxHeight: "75vh",
-                overflow: "auto",
-              }}
-              aria-label="Onboarding steps"
-            >
-              {stepOrder.map((step, index) => {
-                const isActive = activeStep === step.key;
-                const isComplete = completedSteps.includes(step.key);
-                return (
                   <div
-                    key={step.key}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleClickStep(step.key)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ")
-                        handleClickStep(step.key);
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "10px 8px",
-                      borderRadius: 10,
-                      marginBottom: 8,
-                      cursor:
-                        isComplete || step.key === activeStep
-                          ? "pointer"
-                          : "pointer",
-                      background: isActive
-                        ? "rgba(245,137,30,0.06)"
-                        : "transparent",
-                      borderLeft: isActive
-                        ? "4px solid #F5891E"
-                        : "4px solid transparent",
-                      transition: "all 0.12s ease",
-                    }}
-                    title={step.helper}
+                    style={{ display: "flex", gap: 8, alignItems: "center" }}
                   >
-                    <div style={{ width: 36, textAlign: "center" }}>
-                      {isComplete ? (
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
-                            background: "#F5891E",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#fff",
-                          }}
-                        >
-                          <FaCheck />
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
-                            border: "1px solid #e6e9ee",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: isActive ? "#F5891E" : "#9aa0ad",
-                            background: isActive
-                              ? "rgba(245,137,30,0.06)"
-                              : "transparent",
-                          }}
-                        >
-                          <span style={{ fontWeight: 600 }}>{index + 1}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 8,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontWeight: isActive ? 700 : 600,
-                            color: isActive ? "#000434" : "#111827",
-                          }}
-                        >
-                          {step.label}
-                        </div>
-                        <div style={{ color: "#9aa0ad", fontSize: 12 }}>
-                          {isComplete ? (
-                            <small>Done</small>
-                          ) : (
-                            <small>
-                              {index === stepOrder.length - 1 ? "Optional" : ""}
-                            </small>
-                          )}
-                        </div>
-                      </div>
-                      {step.helper && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "#6b7280",
-                            marginTop: 4,
-                          }}
-                        >
-                          {step.helper}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <OverlayTrigger
-                        overlay={
-                          <Tooltip id={`tooltip-${step.key}`}>
-                            {isComplete ? "Completed" : "Open step"}
-                          </Tooltip>
-                        }
-                      >
-                        <span style={{ color: "#9aa0ad" }}>
-                          <FaChevronRight />
-                        </span>
-                      </OverlayTrigger>
-                    </div>
+                    {completedSteps.length > 0 && (
+                      <Badge bg="success" pill style={{ fontSize: 12 }}>
+                        {completedSteps.length} complete
+                      </Badge>
+                    )}
                   </div>
-                );
-              })}
-            </aside>
-          </Col>
-
-          <Col lg={9} md={8} sm={12} xs={12}>
-            <Card
-              style={{
-                borderRadius: 16,
-                boxShadow: "0 8px 30px rgba(2,6,23,0.06)",
-                minHeight: 420,
-                padding: 18,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 12,
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 14, color: "#6b7280" }}>
-                    Step{" "}
-                    {Math.min(
-                      stepOrder.findIndex((s) => s.key === activeStep) + 1,
-                      stepOrder.length
-                    )}{" "}
-                    of {stepOrder.length}
-                  </div>
-                  <h4 style={{ margin: 0, color: "#000434" }}>
-                    {stepOrder.find((s) => s.key === activeStep)?.label}
-                  </h4>
                 </div>
 
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  {completedSteps.length > 0 && (
-                    <Badge bg="success" pill style={{ fontSize: 12 }}>
-                      {completedSteps.length} complete
-                    </Badge>
-                  )}
+                <div
+                  style={{
+                    borderTop: "1px dashed #eef2f6",
+                    marginTop: 10,
+                    paddingTop: 14,
+                  }}
+                >
+                  {renderedContent}
                 </div>
-              </div>
-
-              <div
-                style={{
-                  borderTop: "1px dashed #eef2f6",
-                  marginTop: 10,
-                  paddingTop: 14,
-                }}
-              >
-                {renderedContent}
-              </div>
-            </Card>
-          </Col>
-        </Row>
+              </Card>
+            </Col>
+          </Row>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
 export default GetStarted;
+
+const OnboardingHeader = ({ username = "" }) => {
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${drpCrmBaseUrl}/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+      navigate("/login");
+    } catch (err) {
+      toast.error("Something went wrong");
+    }
+  };
+  return (
+    <Navbar
+      bg="blue"
+      expand="lg"
+      style={{
+        borderBottom: "1px solid #eef2f6",
+        padding: "0.75rem 0",
+      }}
+    >
+      <Container fluid style={{ maxWidth: 1200 }}>
+        {/* Left: Brand / App name */}
+        <div className="d-flex gap-2 align-items-center my-2">
+          <span className="nav-logo-icon">
+            <img src={logoImg} style={{ width: "30px " }} />
+          </span>
+          <span>
+            <img src={logoImg1} style={{ width: "100px " }} />
+          </span>
+        </div>
+
+        {/* Right: User menu */}
+        <Nav className="ms-auto">
+          <Dropdown align="end">
+            <Dropdown.Toggle
+              variant="light"
+              id="user-dropdown"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderRadius: 24,
+                border: "1px solid #eef2f6",
+                padding: "6px 12px",
+                background: "#fff",
+              }}
+            >
+              <FaUserCircle size={18} />
+              <span style={{ fontSize: 14, fontWeight: 500 }}>{username}</span>
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              <Dropdown.Item
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+                onClick={handleLogout}
+              >
+                <FaSignOutAlt />
+                Logout
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </Nav>
+      </Container>
+    </Navbar>
+  );
+};
