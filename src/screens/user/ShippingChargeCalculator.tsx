@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { drpCrmBaseUrl } from "../../axios/urls";
 
 const brandColors = {
   navy: "#000434",
@@ -69,7 +70,7 @@ const ShippingCalculator: React.FC = () => {
     try {
       // Replace with your actual API endpoint
       const response = await fetch(
-        "http://localhost:5001/user/courier/check-delivery",
+        `${drpCrmBaseUrl}/user/courier/check-delivery`,
         {
           method: "POST",
           headers: {
