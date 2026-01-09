@@ -36,11 +36,6 @@ type Warehouse = {
   name: string;
 };
 
-type ProductWarehouse = {
-  warehouse: string;
-  stock: number;
-};
-
 const ChannelSKU: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);

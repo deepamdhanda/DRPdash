@@ -95,24 +95,28 @@ const ShippingCalculator: React.FC = () => {
       }
 
       const data = await response.json();
-
+      console.log(data.data);
       // Adjust this based on your actual API response structure
-      const couriers = data?.data?.data?.available_courier_companies || [];
+      const couriers = data?.data || [];
 
-      const shippingRates = couriers.map((courier: any) => ({
-        partner: courier.courier_name, // e.g. "Blue Dart Air"
-        rate: Number(courier.rate), // final payable rate
-        estimatedDays: courier.estimated_delivery_days
-          ? `${courier.estimated_delivery_days} days`
-          : "N/A",
-        service: courier.is_surface
-          ? "Surface"
-          : courier.mode === 1
-          ? "Air"
-          : "Standard",
-      }));
+      const shippingRates1 = couriers.map((courier: any) => {
+        const name = courier.courier_name.toLowerCase();
 
-      setShippingRates(shippingRates);
+        let service: ShippingRate["service"] = "Standard";
+        if (name.includes("air")) service = "Air";
+        else if (name.includes("surface")) service = "Surface";
+
+        return {
+          partner: courier.courier_name,
+          rate: Number(courier.total_amount), // final payable amount
+          estimatedDays: courier.estimated_delivery_days
+            ? `${courier.estimated_delivery_days} days`
+            : "N/A",
+          service,
+        };
+      });
+      console.log(shippingRates1);
+      setShippingRates(shippingRates1);
     } catch (err) {
       console.error(err);
     } finally {

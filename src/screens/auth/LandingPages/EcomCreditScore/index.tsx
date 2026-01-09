@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import {
   Container,
   Row,
@@ -26,7 +26,6 @@ import {
   History,
   MapPin,
   Phone,
-  Mail,
   Activity,
   Plug,
   Search,
@@ -46,9 +45,6 @@ import {
   User,
   ArrowLeft,
   CheckCircle2,
-  Twitter,
-  Linkedin,
-  Instagram,
 } from "lucide-react";
 import { getScore, registerLead } from "../../../../APIs/landingPageAPIs";
 import CreditScoreMeter from "../../../../components/CreditScoreMeter";
@@ -83,14 +79,21 @@ const gradients = {
   text: `linear-gradient(135deg, ${colors.accentOrange} 0%, #fb923c 100%)`,
 };
 
-const TextGradient = ({ children }: { children: React.ReactNode }, size = "inherit") => (
-  <span style={{
-    background: gradients.text,
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-    fontSize: size,
-  }}>{children}</span>
+const TextGradient = (
+  { children }: { children: React.ReactNode },
+  size = "inherit"
+) => (
+  <span
+    style={{
+      background: gradients.text,
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+      fontSize: size,
+    }}
+  >
+    {children}
+  </span>
 );
 
 // ============ NAVBAR ============
@@ -115,35 +118,68 @@ const NavbarSection = () => {
       }}
     >
       <Container>
-        <Navbar.Brand href="#" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ background: gradients.hero, borderRadius: 8, padding: 8 }}>
+        <Navbar.Brand
+          href="#"
+          style={{ display: "flex", alignItems: "center", gap: 8 }}
+        >
+          <div
+            style={{ background: gradients.hero, borderRadius: 8, padding: 8 }}
+          >
             <Image src={Logo} alt="OrderzUp Logo" height={24} />
           </div>
           OrderzUp
         </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="navbar-nav" onClick={() => setExpanded(!expanded)}>
+        <Navbar.Toggle
+          aria-controls="navbar-nav"
+          onClick={() => setExpanded(!expanded)}
+        >
           {expanded ? <X size={24} /> : <Menu size={24} />}
         </Navbar.Toggle>
 
         <Navbar.Collapse id="navbar-nav" in={expanded}>
           <Nav style={{ margin: "0 auto" }}>
-            {["How It Works", "Benefits", "Testimonials", "FAQ"].map((label) => (
-              <Nav.Link
-                key={label}
-                onClick={() => scrollToSection(`#${label.toLowerCase().replace(/\s+/g, "-")}`)}
-                style={{ color: colors.textSecondary, fontWeight: 500, margin: "0 8px", cursor: "pointer" }}
-              >
-                {label}
-              </Nav.Link>
-            ))}
+            {["How It Works", "Benefits", "Testimonials", "FAQ"].map(
+              (label) => (
+                <Nav.Link
+                  key={label}
+                  onClick={() =>
+                    scrollToSection(
+                      `#${label.toLowerCase().replace(/\s+/g, "-")}`
+                    )
+                  }
+                  style={{
+                    color: colors.textSecondary,
+                    fontWeight: 500,
+                    margin: "0 8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {label}
+                </Nav.Link>
+              )
+            )}
           </Nav>
-          <div style={{ display: "flex", gap: 8, marginTop: window.innerWidth < 992 ? 16 : 0 }}>
-            <Button variant="light" onClick={() => scrollToSection("#credit-checker")}>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              marginTop: window.innerWidth < 992 ? 16 : 0,
+            }}
+          >
+            <Button
+              variant="light"
+              onClick={() => scrollToSection("#credit-checker")}
+            >
               Check Score
             </Button>
             <Button
-              style={{ background: gradients.accent, border: "none", color: "white", fontWeight: 600 }}
+              style={{
+                background: gradients.accent,
+                border: "none",
+                color: "white",
+                fontWeight: 600,
+              }}
               onClick={() => scrollToSection("#cta")}
             >
               Book Demo
@@ -158,62 +194,133 @@ const NavbarSection = () => {
 // ============ HERO ============
 const HeroSection = () => {
   const scrollToChecker = () => {
-    document.querySelector("#credit-checker")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .querySelector("#credit-checker")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <section style={{
-      background: gradients.hero,
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      paddingTop: 80,
-    }}>
+    <section
+      style={{
+        background: gradients.hero,
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        paddingTop: 80,
+      }}
+    >
       <Container style={{ padding: "80px 15px" }}>
         <Row style={{ alignItems: "center" }}>
-          <Col lg={6} style={{ textAlign: "center", color: "white", marginBottom: 40 }}>
-            <div style={{
-              background: "rgba(255,255,255,0.1)",
-              backdropFilter: "blur(8px)",
-              borderRadius: 50,
-              padding: "8px 16px",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 24,
-            }}>
+          <Col
+            lg={6}
+            style={{ textAlign: "center", color: "white", marginBottom: 40 }}
+          >
+            <div
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(8px)",
+                borderRadius: 50,
+                padding: "8px 16px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 24,
+              }}
+            >
               <BadgeCheck size={16} color={colors.accentOrange} />
-              <span style={{ fontSize: 14 }}>Trusted by 500+ Indian D2C Brands</span>
+              <span style={{ fontSize: 14 }}>
+                Trusted by 500+ Indian D2C Brands
+              </span>
             </div>
 
-            <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, marginBottom: 24, lineHeight: 1.2, color: "#fff!important" }}>
+            <h1
+              style={{
+                fontSize: "clamp(32px, 5vw, 56px)",
+                fontWeight: 700,
+                marginBottom: 24,
+                lineHeight: 1.2,
+                color: "#fff!important",
+              }}
+            >
               Reduce RTO by <TextGradient>40%</TextGradient>
-              <br />With Smart COD Control
+              <br />
+              With Smart COD Control
             </h1>
 
-            <p style={{ fontSize: 18, opacity: 0.75, marginBottom: 24, maxWidth: 500 }}>
+            <p
+              style={{
+                fontSize: 18,
+                opacity: 0.75,
+                marginBottom: 24,
+                maxWidth: 500,
+              }}
+            >
               Our Ecommerce Credit Score tells you which customers deserve COD
-              and which don't. Stop losing money on fake orders and courier penalties.
+              and which don't. Stop losing money on fake orders and courier
+              penalties.
             </p>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: 24 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+                justifyContent: "center",
+                marginBottom: 24,
+              }}
+            >
               <Button
                 size="lg"
-                style={{ background: gradients.accent, border: "none", color: "white", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}
+                style={{
+                  background: gradients.accent,
+                  border: "none",
+                  color: "white",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
                 onClick={scrollToChecker}
               >
                 Check Customer Score <ArrowRight size={18} />
               </Button>
-              <Button variant="outline-light" size="lg" onClick={() => { window.open("/login", "_blank") }}>
+              <Button
+                variant="outline-light"
+                size="lg"
+                onClick={() => {
+                  window.open("/login", "_blank");
+                }}
+              >
                 Start Free Trial
               </Button>
             </div>
 
-            <div style={{ display: "flex", gap: 24, justifyContent: "center", opacity: 0.75 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 24,
+                justifyContent: "center",
+                opacity: 0.75,
+              }}
+            >
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 14,
+                }}
+              >
                 <Shield size={16} /> Data Secured
               </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 14,
+                }}
+              >
                 <TrendingDown size={16} /> Reduce RTO
               </span>
             </div>
@@ -221,63 +328,95 @@ const HeroSection = () => {
 
           <Col lg={6} className=" d-lg-block">
             <div style={{ position: "relative" }}>
-              <Card style={{
-                background: "white",
-                borderRadius: 16,
-                boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
-                padding: 24,
-                border: "none",
-              }}>
+              <Card
+                style={{
+                  background: "white",
+                  borderRadius: 16,
+                  boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+                  padding: 24,
+                  border: "none",
+                }}
+              >
                 <div style={{ textAlign: "center", marginBottom: 24 }}>
-                  <div style={{
-                    background: gradients.success,
-                    borderRadius: "50%",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 16,
-                    width: 80,
-                    height: 80,
-                    marginBottom: 16,
-                    animation: "float 3s ease-in-out infinite",
-                  }}>
+                  <div
+                    style={{
+                      background: gradients.success,
+                      borderRadius: "50%",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 16,
+                      width: 80,
+                      height: 80,
+                      marginBottom: 16,
+                      animation: "float 3s ease-in-out infinite",
+                    }}
+                  >
                     <Shield size={40} color="white" />
                   </div>
-                  <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Credit Score: 847</h3>
-                  <p style={{ color: colors.successGreen, fontWeight: 600, margin: 0 }}>Excellent - Safe for COD</p>
+                  <h3
+                    style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}
+                  >
+                    Credit Score: 847
+                  </h3>
+                  <p
+                    style={{
+                      color: colors.successGreen,
+                      fontWeight: 600,
+                      margin: 0,
+                    }}
+                  >
+                    Excellent - Safe for COD
+                  </p>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                >
                   {[
                     { label: "Order History", value: "98% Delivered" },
                     { label: "Risk Level", value: "Low Risk", success: true },
                     { label: "Recommendation", value: "Allow COD ✓" },
                   ].map((item, i) => (
-                    <div key={i} style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      background: colors.lightBg,
-                      borderRadius: 8,
-                      padding: 12,
-                    }}>
-                      <span style={{ color: colors.textSecondary }}>{item.label}</span>
-                      <span style={{ fontWeight: 600, color: item.success ? colors.successGreen : "inherit" }}>{item.value}</span>
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        background: colors.lightBg,
+                        borderRadius: 8,
+                        padding: 12,
+                      }}
+                    >
+                      <span style={{ color: colors.textSecondary }}>
+                        {item.label}
+                      </span>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: item.success ? colors.successGreen : "inherit",
+                        }}
+                      >
+                        {item.value}
+                      </span>
                     </div>
                   ))}
                 </div>
               </Card>
 
-              <Badge style={{
-                position: "absolute",
-                top: -10,
-                right: -10,
-                background: gradients.accent,
-                color: "white",
-                padding: "8px 16px",
-                borderRadius: 20,
-                animation: "float 3s ease-in-out infinite",
-              }}>
+              <Badge
+                style={{
+                  position: "absolute",
+                  top: -10,
+                  right: -10,
+                  background: gradients.accent,
+                  color: "white",
+                  padding: "8px 16px",
+                  borderRadius: 20,
+                  animation: "float 3s ease-in-out infinite",
+                }}
+              >
                 Live Preview
               </Badge>
             </div>
@@ -289,14 +428,20 @@ const HeroSection = () => {
                 { value: "500+", label: "D2C Brands Trust Us" },
               ].map((stat, i) => (
                 <Col key={i}>
-                  <div style={{
-                    background: "rgba(255,255,255,0.1)",
-                    backdropFilter: "blur(8px)",
-                    borderRadius: 12,
-                    padding: 16,
-                    textAlign: "center",
-                  }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, marginBottom: 0 }}>{stat.value}</div>
+                  <div
+                    style={{
+                      background: "rgba(255,255,255,0.1)",
+                      backdropFilter: "blur(8px)",
+                      borderRadius: 12,
+                      padding: 16,
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      style={{ fontSize: 28, fontWeight: 700, marginBottom: 0 }}
+                    >
+                      {stat.value}
+                    </div>
                     <small style={{ opacity: 0.75 }}>{stat.label}</small>
                   </div>
                 </Col>
@@ -304,7 +449,6 @@ const HeroSection = () => {
             </Row>
           </Col>
         </Row>
-
       </Container>
 
       <style>{`
@@ -320,55 +464,135 @@ const HeroSection = () => {
 // ============ PROBLEM SECTION ============
 const ProblemSection = () => {
   const problems = [
-    { icon: AlertTriangle, title: "High RTO Rates", description: "30-40% of COD orders get returned, eating into your profits.", stat: "₹2,500 Cr+", statLabel: "Lost to RTO yearly" },
-    { icon: XCircle, title: "Fake Orders", description: "Pranksters and competitors placing fake orders.", stat: "15%", statLabel: "Orders are fraudulent" },
-    { icon: Wallet, title: "Courier Penalties", description: "You pay both forward and return shipping.", stat: "₹150+", statLabel: "Lost per RTO order" },
-    { icon: TrendingDown, title: "Cash Flow Block", description: "COD remittance takes 7-14 days.", stat: "21 Days", statLabel: "Average cash cycle" },
+    {
+      icon: AlertTriangle,
+      title: "High RTO Rates",
+      description:
+        "30-40% of COD orders get returned, eating into your profits.",
+      stat: "₹2,500 Cr+",
+      statLabel: "Lost to RTO yearly",
+    },
+    {
+      icon: XCircle,
+      title: "Fake Orders",
+      description: "Pranksters and competitors placing fake orders.",
+      stat: "15%",
+      statLabel: "Orders are fraudulent",
+    },
+    {
+      icon: Wallet,
+      title: "Courier Penalties",
+      description: "You pay both forward and return shipping.",
+      stat: "₹150+",
+      statLabel: "Lost per RTO order",
+    },
+    {
+      icon: TrendingDown,
+      title: "Cash Flow Block",
+      description: "COD remittance takes 7-14 days.",
+      stat: "21 Days",
+      statLabel: "Average cash cycle",
+    },
   ];
 
   return (
     <section style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
       <Container>
-        <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             The Problem
           </span>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)!important", fontWeight: 700, marginBottom: 16, color: colors.primaryNavy }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)!important",
+              fontWeight: 700,
+              marginBottom: 16,
+              color: colors.primaryNavy,
+            }}
+          >
             COD is Killing Your <TextGradient>Profit Margins</TextGradient>
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            Indian D2C brands lose crores every year to RTO. You're offering COD to everyone without knowing who's trustworthy.
+            Indian D2C brands lose crores every year to RTO. You're offering COD
+            to everyone without knowing who's trustworthy.
           </p>
         </div>
 
         <Row>
           {problems.map((problem, i) => (
             <Col md={6} lg={3} key={i} style={{ marginBottom: 24 }}>
-              <Card style={{
-                height: "100%",
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                transition: "all 0.3s ease",
-                cursor: "pointer",
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
+              <Card
+                style={{
+                  height: "100%",
+                  border: "none",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 20px 40px rgba(0,0,0,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0,0,0,0.08)";
+                }}
               >
                 <Card.Body style={{ padding: 24 }}>
-                  <div style={{
-                    background: `${colors.dangerRed}15`,
-                    borderRadius: 12,
-                    padding: 12,
-                    display: "inline-block",
-                    marginBottom: 16,
-                  }}>
+                  <div
+                    style={{
+                      background: `${colors.dangerRed}15`,
+                      borderRadius: 12,
+                      padding: 12,
+                      display: "inline-block",
+                      marginBottom: 16,
+                    }}
+                  >
                     <problem.icon size={24} color={colors.dangerRed} />
                   </div>
-                  <p style={{ fontWeight: 700, marginBottom: 8, color: colors.primaryNavy + "!important" }}>{problem.title}</p>
-                  <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>{problem.description}</p>
-                  <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 16 }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: colors.dangerRed, marginBottom: 0 }}>{problem.stat}</div>
-                    <small style={{ color: colors.textSecondary }}>{problem.statLabel}</small>
+                  <p
+                    style={{
+                      fontWeight: 700,
+                      marginBottom: 8,
+                      color: colors.primaryNavy + "!important",
+                    }}
+                  >
+                    {problem.title}
+                  </p>
+                  <p
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {problem.description}
+                  </p>
+                  <div
+                    style={{
+                      borderTop: `1px solid ${colors.border}`,
+                      paddingTop: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 28,
+                        fontWeight: 700,
+                        color: colors.dangerRed,
+                        marginBottom: 0,
+                      }}
+                    >
+                      {problem.stat}
+                    </div>
+                    <small style={{ color: colors.textSecondary }}>
+                      {problem.statLabel}
+                    </small>
                   </div>
                 </Card.Body>
               </Card>
@@ -376,12 +600,31 @@ const ProblemSection = () => {
           ))}
         </Row>
 
-        <div style={{ textAlign: "center", marginTop: 48, }}>
-          <div style={{ background: colors.bgMuted, borderRadius: 16, padding: 24, display: "inline-block", maxWidth: 600, backgroundColor: colors.textLight }}>
-            <p style={{ fontSize: 18, marginBottom: 8, color: colors.primaryNavy, fontWeight: 600 }}>
-              "We were offering COD to everyone. Our RTO was 35%. We didn't know which customers were risky."
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <div
+            style={{
+              background: colors.bgMuted,
+              borderRadius: 16,
+              padding: 24,
+              display: "inline-block",
+              maxWidth: 600,
+              backgroundColor: colors.textLight,
+            }}
+          >
+            <p
+              style={{
+                fontSize: 18,
+                marginBottom: 8,
+                color: colors.primaryNavy,
+                fontWeight: 600,
+              }}
+            >
+              "We were offering COD to everyone. Our RTO was 35%. We didn't know
+              which customers were risky."
             </p>
-            <small style={{ color: colors.textSecondary, fontSize: "1.25rem" }}>— Every D2C founder before using OrderzUp</small>
+            <small style={{ color: colors.textSecondary, fontSize: "1.25rem" }}>
+              — Every D2C founder before using OrderzUp
+            </small>
           </div>
         </div>
       </Container>
@@ -392,10 +635,26 @@ const ProblemSection = () => {
 // ============ SOLUTION SECTION ============
 const SolutionSection = () => {
   const factors = [
-    { icon: History, title: "Order History", description: "Past delivery success rate across D2C brands" },
-    { icon: MapPin, title: "Pincode Analysis", description: "RTO patterns in customer's area" },
-    { icon: Phone, title: "Phone Verification", description: "Phone number age and spam signals" },
-    { icon: Activity, title: "Behavioral Signals", description: "Purchase patterns and session behavior" },
+    {
+      icon: History,
+      title: "Order History",
+      description: "Past delivery success rate across D2C brands",
+    },
+    {
+      icon: MapPin,
+      title: "Pincode Analysis",
+      description: "RTO patterns in customer's area",
+    },
+    {
+      icon: Phone,
+      title: "Phone Verification",
+      description: "Phone number age and spam signals",
+    },
+    {
+      icon: Activity,
+      title: "Behavioral Signals",
+      description: "Purchase patterns and session behavior",
+    },
   ];
 
   return (
@@ -403,25 +662,62 @@ const SolutionSection = () => {
       <Container>
         <Row style={{ alignItems: "center" }}>
           <Col lg={6} style={{ marginBottom: 48 }}>
-            <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+            <span
+              style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+            >
               The Solution
             </span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+            <h2
+              style={{
+                fontSize: "clamp(28px, 4vw, 40px)",
+                fontWeight: 700,
+                marginBottom: 16,
+              }}
+            >
               Introducing <TextGradient>Ecommerce Credit Score</TextGradient>
             </h2>
             <p style={{ color: colors.textSecondary, marginBottom: 24 }}>
-              Think of it like a CIBIL score, but for ecommerce. We analyze multiple data points to tell you if a customer is safe for COD.
+              Think of it like a CIBIL score, but for ecommerce. We analyze
+              multiple data points to tell you if a customer is safe for COD.
             </p>
 
-            <Card style={{ border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", marginBottom: 24 }}>
-              <Card.Body style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: 20 }}>
-                <div style={{ background: gradients.hero, borderRadius: 12, padding: 12 }}>
+            <Card
+              style={{
+                border: "none",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                marginBottom: 24,
+              }}
+            >
+              <Card.Body
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 16,
+                  padding: 20,
+                }}
+              >
+                <div
+                  style={{
+                    background: gradients.hero,
+                    borderRadius: 12,
+                    padding: 12,
+                  }}
+                >
                   <Brain size={28} color="white" />
                 </div>
                 <div>
-                  <h5 style={{ fontWeight: 700, marginBottom: 4 }}>Smart Scoring</h5>
-                  <p style={{ color: colors.textSecondary, fontSize: 14, margin: 0 }}>
-                    AI-powered risk assessment analyzing <strong>15+ signals</strong> in real-time.
+                  <h5 style={{ fontWeight: 700, marginBottom: 4 }}>
+                    Smart Scoring
+                  </h5>
+                  <p
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      margin: 0,
+                    }}
+                  >
+                    AI-powered risk assessment analyzing{" "}
+                    <strong>15+ signals</strong> in real-time.
                   </p>
                 </div>
               </Card.Body>
@@ -429,22 +725,46 @@ const SolutionSection = () => {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
-                { color: colors.successGreen, bg: `${colors.successGreen}15`, text: "Score 750+ → Allow Full COD" },
-                { color: colors.warningYellow, bg: `${colors.warningYellow}25`, text: "Score 500-750 → Partial COD" },
-                { color: colors.dangerRed, bg: `${colors.dangerRed}15`, text: "Score <500 → Prepaid Only" },
+                {
+                  color: colors.successGreen,
+                  bg: `${colors.successGreen}15`,
+                  text: "Score 750+ → Allow Full COD",
+                },
+                {
+                  color: colors.warningYellow,
+                  bg: `${colors.warningYellow}25`,
+                  text: "Score 500-750 → Partial COD",
+                },
+                {
+                  color: colors.dangerRed,
+                  bg: `${colors.dangerRed}15`,
+                  text: "Score <500 → Prepaid Only",
+                },
               ].map((item, i) => (
-                <div key={i} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: 12,
-                  color: item.color,
-                  background: item.bg,
-                  borderRadius: 8,
-                  border: `1px solid ${item.color}40`,
-                }}>
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: item.color }} />
-                  <span style={{ fontWeight: 500, color: colors.primaryNavy }}>{item.text}</span>
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: 12,
+                    color: item.color,
+                    background: item.bg,
+                    borderRadius: 8,
+                    border: `1px solid ${item.color}40`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      background: item.color,
+                    }}
+                  />
+                  <span style={{ fontWeight: 500, color: colors.primaryNavy }}>
+                    {item.text}
+                  </span>
                 </div>
               ))}
             </div>
@@ -454,46 +774,69 @@ const SolutionSection = () => {
             <Row>
               {factors.map((factor, i) => (
                 <Col sm={6} key={i} style={{ marginBottom: 16 }}>
-                  <Card style={{
-                    height: "100%",
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                    transition: "all 0.3s ease",
-                  }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                  <Card
+                    style={{
+                      height: "100%",
+                      border: "none",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-4px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
                   >
                     <Card.Body style={{ padding: 20 }}>
-                      <div style={{
-                        background: "#3b82f615",
-                        borderRadius: 8,
-                        padding: 8,
-                        display: "inline-block",
-                        marginBottom: 12,
-                      }}>
+                      <div
+                        style={{
+                          background: "#3b82f615",
+                          borderRadius: 8,
+                          padding: 8,
+                          display: "inline-block",
+                          marginBottom: 12,
+                        }}
+                      >
                         <factor.icon size={20} color="#3b82f6" />
                       </div>
-                      <h6 style={{ fontWeight: 700, marginBottom: 4 }}>{factor.title}</h6>
-                      <small style={{ color: colors.textSecondary }}>{factor.description}</small>
+                      <h6 style={{ fontWeight: 700, marginBottom: 4 }}>
+                        {factor.title}
+                      </h6>
+                      <small style={{ color: colors.textSecondary }}>
+                        {factor.description}
+                      </small>
                     </Card.Body>
                   </Card>
                 </Col>
               ))}
             </Row>
 
-            <div style={{
-              background: gradients.hero,
-              borderRadius: 16,
-              padding: 24,
-              textAlign: "center",
-              color: "white",
-              marginTop: 16,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
+            <div
+              style={{
+                background: gradients.hero,
+                borderRadius: 16,
+                padding: 24,
+                textAlign: "center",
+                color: "white",
+                marginTop: 16,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  marginBottom: 8,
+                }}
+              >
                 <Shield size={28} />
                 <span style={{ fontSize: 32, fontWeight: 700 }}>15+</span>
               </div>
-              <p style={{ opacity: 0.75, margin: 0 }}>Data signals analyzed per customer in real-time</p>
+              <p style={{ opacity: 0.75, margin: 0 }}>
+                Data signals analyzed per customer in real-time
+              </p>
             </div>
           </Col>
         </Row>
@@ -501,99 +844,111 @@ const SolutionSection = () => {
     </section>
   );
 };
-const Gauge = ({ score = 750 }: { score?: number }) => {
-  const prevAngleRef = useRef<number | null>(null);
-  const [animKey, setAnimKey] = useState(0);
+// const Gauge = ({ score = 750 }: { score?: number }) => {
+//   const prevAngleRef = useRef<number | null>(null);
+//   const [animKey, setAnimKey] = useState(0);
 
-  const min = 300;
-  const max = 900;
-  const clamp = Math.max(min, Math.min(max, score));
-  const percent = (clamp - min) / (max - min); // 0..1
-  // map percent to -180 -> 0 deg (left to right sweep)
-  const angle = -180 + percent * 180;
+//   const min = 300;
+//   const max = 900;
+//   const clamp = Math.max(min, Math.min(max, score));
+//   const percent = (clamp - min) / (max - min); // 0..1
+//   // map percent to -180 -> 0 deg (left to right sweep)
+//   const angle = -180 + percent * 180;
 
-  // store previous angle and bump key to restart <animateTransform>
-  useEffect(() => {
-    // if there was a previous value, trigger animation by changing key
-    if (prevAngleRef.current !== null) {
-      setAnimKey((k) => k + 1);
-    }
-    prevAngleRef.current = angle;
-  }, [angle]);
+//   // store previous angle and bump key to restart <animateTransform>
+//   useEffect(() => {
+//     // if there was a previous value, trigger animation by changing key
+//     if (prevAngleRef.current !== null) {
+//       setAnimKey((k) => k + 1);
+//     }
+//     prevAngleRef.current = angle;
+//   }, [angle]);
 
-  const fromAngle = prevAngleRef.current ?? angle;
+//   const fromAngle = prevAngleRef.current ?? angle;
 
-  return (
-    <div className="gauge-container" aria-hidden>
-      <svg viewBox="0 0 200 120" className="gauge-svg" role="img" aria-label={`Score ${score}`}>
-        <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
-          fill="none"
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth="16"
-          strokeLinecap="round"
-        />
-        <defs>
-          <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="25%" stopColor="#f97316" />
-            <stop offset="50%" stopColor="#eab308" />
-            <stop offset="75%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#10b981" />
-          </linearGradient>
-        </defs>
+//   return (
+//     <div className="gauge-container" aria-hidden>
+//       <svg
+//         viewBox="0 0 200 120"
+//         className="gauge-svg"
+//         role="img"
+//         aria-label={`Score ${score}`}
+//       >
+//         <path
+//           d="M 20 100 A 80 80 0 0 1 180 100"
+//           fill="none"
+//           stroke="rgba(255,255,255,0.1)"
+//           strokeWidth="16"
+//           strokeLinecap="round"
+//         />
+//         <defs>
+//           <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+//             <stop offset="0%" stopColor="#ef4444" />
+//             <stop offset="25%" stopColor="#f97316" />
+//             <stop offset="50%" stopColor="#eab308" />
+//             <stop offset="75%" stopColor="#22c55e" />
+//             <stop offset="100%" stopColor="#10b981" />
+//           </linearGradient>
+//         </defs>
 
-        <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
-          fill="none"
-          stroke="url(#gaugeGradient)"
-          strokeWidth="16"
-          strokeLinecap="round"
-          className="gauge-fill"
-          style={{
-            strokeDasharray: "251.2",
-            strokeDashoffset: `${(1 - percent) * 251.2}`,
-          }}
-        />
+//         <path
+//           d="M 20 100 A 80 80 0 0 1 180 100"
+//           fill="none"
+//           stroke="url(#gaugeGradient)"
+//           strokeWidth="16"
+//           strokeLinecap="round"
+//           className="gauge-fill"
+//           style={{
+//             strokeDasharray: "251.2",
+//             strokeDashoffset: `${(1 - percent) * 251.2}`,
+//           }}
+//         />
 
-        {/* Needle: use SVG rotate(angle cx cy) so pivot is exact */}
-        <g
-          className="gauge-needle"
-          transform={`rotate(${angle} 100 100)`} // rotate around center (100,100)
-        >
-          <line x1="100" y1="100" x2="100" y2="35" stroke={colors.primaryNavy} strokeWidth="3" strokeLinecap="round" />
-          <circle cx="100" cy="100" r="8" fill={colors.primaryNavy} />
-        </g>
+//         {/* Needle: use SVG rotate(angle cx cy) so pivot is exact */}
+//         <g
+//           className="gauge-needle"
+//           transform={`rotate(${angle} 100 100)`} // rotate around center (100,100)
+//         >
+//           <line
+//             x1="100"
+//             y1="100"
+//             x2="100"
+//             y2="35"
+//             stroke={colors.primaryNavy}
+//             strokeWidth="3"
+//             strokeLinecap="round"
+//           />
+//           <circle cx="100" cy="100" r="8" fill={colors.primaryNavy} />
+//         </g>
 
-        {/* Optional: animateTransform approach (works reliably in SVG)
-            We add an <animateTransform> element keyed by animKey so it restarts
-            when score changes. If you prefer no SMIL, you can remove this block.
-        */}
-        {/*
-          Note: Some browsers disable SMIL animations; if you target those,
-          use JS animation libraries or CSS + transform/transform-box approach.
-        */}
-        <g style={{ display: "none" }} key={`anim-${animKey}`}>
-          <animateTransform
-            attributeName="transform"
-            attributeType="XML"
-            type="rotate"
-            from={`${fromAngle} 100 100`}
-            to={`${angle} 100 100`}
-            dur="0.9s"
-            fill="freeze"
-          />
-        </g>
-      </svg>
+//         {/* Optional: animateTransform approach (works reliably in SVG)
+//             We add an <animateTransform> element keyed by animKey so it restarts
+//             when score changes. If you prefer no SMIL, you can remove this block.
+//         */}
+//         {/*
+//           Note: Some browsers disable SMIL animations; if you target those,
+//           use JS animation libraries or CSS + transform/transform-box approach.
+//         */}
+//         <g style={{ display: "none" }} key={`anim-${animKey}`}>
+//           <animateTransform
+//             attributeName="transform"
+//             attributeType="XML"
+//             type="rotate"
+//             from={`${fromAngle} 100 100`}
+//             to={`${angle} 100 100`}
+//             dur="0.9s"
+//             fill="freeze"
+//           />
+//         </g>
+//       </svg>
 
-      <div className="gauge-labels" style={{ color: colors.primaryNavy }}>
-        <span>300</span>
-        <span>900</span>
-      </div>
-    </div>
-  );
-};
-
+//       <div className="gauge-labels" style={{ color: colors.primaryNavy }}>
+//         <span>300</span>
+//         <span>900</span>
+//       </div>
+//     </div>
+//   );
+// };
 
 // ============ CREDIT SCORE CHECKER ============
 const CreditScoreChecker = () => {
@@ -601,9 +956,24 @@ const CreditScoreChecker = () => {
 
   const [step, setStep] = useState<Step>("customer");
   const [isLoading, setIsLoading] = useState(false);
-  const [customerData, setCustomerData] = useState({ phone: "", pincode: "", email: "" });
-  const [businessData, setBusinessData] = useState({ brandName: "", yourName: "", email: "", phone: "", orderVolume: "" });
-  const [result, setResult] = useState<{ score: number; risk: "low" | "medium" | "high"; recommendation: string; message: string } | null>(null);
+  const [customerData, setCustomerData] = useState({
+    phone: "",
+    pincode: "",
+    email: "",
+  });
+  const [businessData, setBusinessData] = useState({
+    brandName: "",
+    yourName: "",
+    email: "",
+    phone: "",
+    orderVolume: "",
+  });
+  const [result, setResult] = useState<{
+    score: number;
+    risk: "low" | "medium" | "high";
+    recommendation: string;
+    message: string;
+  } | null>(null);
 
   const handleCustomerSubmit = () => {
     if (!customerData.phone || !customerData.pincode) return;
@@ -611,7 +981,8 @@ const CreditScoreChecker = () => {
   };
 
   const handleBusinessSubmit = async () => {
-    if (!businessData.yourName || !businessData.email || !businessData.phone) return;
+    if (!businessData.yourName || !businessData.email || !businessData.phone)
+      return;
     setIsLoading(true);
     const data = {
       sourceTypeId: 1002,
@@ -624,14 +995,22 @@ const CreditScoreChecker = () => {
     };
     const [score] = await Promise.all([getScore(data), registerLead(data)]);
 
-
-    let risk: "low" | "medium" | "high", recommendation: string, message: string;
+    let risk: "low" | "medium" | "high",
+      recommendation: string,
+      message: string;
     if (score >= 750) {
-      risk = "low"; recommendation = "Allow Full COD"; message = "This customer has excellent delivery history. Safe for COD orders.";
+      risk = "low";
+      recommendation = "Allow Full COD";
+      message =
+        "This customer has excellent delivery history. Safe for COD orders.";
     } else if (score >= 500) {
-      risk = "medium"; recommendation = "Partial COD (50%)"; message = "Moderate risk. Recommend partial payment upfront.";
+      risk = "medium";
+      recommendation = "Partial COD (50%)";
+      message = "Moderate risk. Recommend partial payment upfront.";
     } else {
-      risk = "high"; recommendation = "Prepaid Only"; message = "High-risk customer. Multiple RTO signals detected.";
+      risk = "high";
+      recommendation = "Prepaid Only";
+      message = "High-risk customer. Multiple RTO signals detected.";
     }
 
     setResult({ score, risk, recommendation, message });
@@ -642,7 +1021,13 @@ const CreditScoreChecker = () => {
   const resetChecker = () => {
     setStep("customer");
     setCustomerData({ phone: "", pincode: "", email: "" });
-    setBusinessData({ brandName: "", yourName: "", email: "", phone: "", orderVolume: "" });
+    setBusinessData({
+      brandName: "",
+      yourName: "",
+      email: "",
+      phone: "",
+      orderVolume: "",
+    });
     setResult(null);
   };
 
@@ -651,82 +1036,142 @@ const CreditScoreChecker = () => {
     if (risk === "medium") return colors.warningYellow;
     return colors.dangerRed;
   };
-  const getRiskColorGradient = (score: number) => {
-    const s = Math.max(0, Math.min(900, score));
+  // const getRiskColorGradient = (score: number) => {
+  //   const s = Math.max(0, Math.min(900, score));
 
-    let hue: number;
+  //   let hue: number;
 
-    if (s >= 750) {
-      // 750 → 900 : yellow → green
-      hue = 60 + ((s - 750) / 150) * 60;
-    } else if (s >= 500) {
-      // 500 → 750 : red → yellow
-      hue = ((s - 500) / 250) * 60;
-    } else {
-      hue = 0;
-    }
+  //   if (s >= 750) {
+  //     // 750 → 900 : yellow → green
+  //     hue = 60 + ((s - 750) / 150) * 60;
+  //   } else if (s >= 500) {
+  //     // 500 → 750 : red → yellow
+  //     hue = ((s - 500) / 250) * 60;
+  //   } else {
+  //     hue = 0;
+  //   }
 
-    // Dark, premium tones
-    const saturation = 60; // less neon
-    const lightness = 60;  // darker shade
+  //   // Dark, premium tones
+  //   const saturation = 60; // less neon
+  //   const lightness = 60; // darker shade
 
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
-  const getRiskGradient = (risk: string) => risk === "low" ? gradients.success : risk === "medium" ? gradients.warning : gradients.danger;
-  const getRiskIcon = (risk: string) => risk === "low" ? CheckCircle2 : risk === "medium" ? AlertTriangle : XCircle;
+  //   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  // };
+  const getRiskGradient = (risk: string) =>
+    risk === "low"
+      ? gradients.success
+      : risk === "medium"
+      ? gradients.warning
+      : gradients.danger;
+  const getRiskIcon = (risk: string) =>
+    risk === "low" ? CheckCircle2 : risk === "medium" ? AlertTriangle : XCircle;
 
   const steps = ["customer", "business", "result"];
   const currentIndex = steps.indexOf(step);
 
   return (
-    <section id="credit-checker" style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
+    <section
+      id="credit-checker"
+      style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}
+    >
       <Container>
-        <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             Try It Now
           </span>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
             Check Your Customer's <TextGradient>Credit Score</TextGradient>
           </h2>
-          <p style={{ color: colors.textSecondary }}>Enter customer details below to see their ecommerce credit score instantly.</p>
+          <p style={{ color: colors.textSecondary }}>
+            Enter customer details below to see their ecommerce credit score
+            instantly.
+          </p>
         </div>
 
         {/* Progress */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, maxWidth: 400, margin: "0 auto 32px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 12,
+            maxWidth: 400,
+            margin: "0 auto 32px",
+          }}
+        >
           {steps.map((s, i) => (
             <div key={s} style={{ display: "flex", alignItems: "center" }}>
-              <div style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-                background: step === s ? gradients.accent : currentIndex > i ? colors.successGreen : colors.lightBg,
-                color: step === s || currentIndex > i ? "white" : colors.textSecondary,
-              }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                  background:
+                    step === s
+                      ? gradients.accent
+                      : currentIndex > i
+                      ? colors.successGreen
+                      : colors.lightBg,
+                  color:
+                    step === s || currentIndex > i
+                      ? "white"
+                      : colors.textSecondary,
+                }}
+              >
                 {i + 1}
               </div>
               {i < 2 && (
-                <div style={{
-                  width: 60,
-                  height: 4,
-                  borderRadius: 2,
-                  margin: "0 8px",
-                  background: currentIndex > i ? colors.successGreen : colors.border,
-                }} />
+                <div
+                  style={{
+                    width: 60,
+                    height: 4,
+                    borderRadius: 2,
+                    margin: "0 8px",
+                    background:
+                      currentIndex > i ? colors.successGreen : colors.border,
+                  }}
+                />
               )}
             </div>
           ))}
         </div>
 
-        <Card style={{ border: "none", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", maxWidth: 500, margin: "0 auto" }}>
+        <Card
+          style={{
+            border: "none",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            maxWidth: 500,
+            margin: "0 auto",
+          }}
+        >
           <Card.Body style={{ padding: 32 }}>
             {step === "customer" && (
               <>
-                <h5 style={{ fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-                  <User size={20} color={colors.warningYellow} /> Customer Details
+                <h5
+                  style={{
+                    fontWeight: 700,
+                    marginBottom: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <User size={20} color={colors.warningYellow} /> Customer
+                  Details
                 </h5>
                 <Form.Group style={{ marginBottom: 16 }}>
                   <Form.Label>Phone Number *</Form.Label>
@@ -735,7 +1180,12 @@ const CreditScoreChecker = () => {
                     placeholder="Enter 10-digit phone"
                     maxLength={10}
                     value={customerData.phone}
-                    onChange={(e) => setCustomerData({ ...customerData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setCustomerData({
+                        ...customerData,
+                        phone: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
                 <Form.Group style={{ marginBottom: 16 }}>
@@ -745,23 +1195,45 @@ const CreditScoreChecker = () => {
                     placeholder="Enter 6-digit pincode"
                     maxLength={6}
                     value={customerData.pincode}
-                    onChange={(e) => setCustomerData({ ...customerData, pincode: e.target.value })}
+                    onChange={(e) =>
+                      setCustomerData({
+                        ...customerData,
+                        pincode: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
                 <Button
-                  style={{ width: "100%", background: gradients.accent, border: "none", color: "white", fontWeight: 600, padding: "12px 24px" }}
+                  style={{
+                    width: "100%",
+                    background: gradients.accent,
+                    border: "none",
+                    color: "white",
+                    fontWeight: 600,
+                    padding: "12px 24px",
+                  }}
                   onClick={handleCustomerSubmit}
                   disabled={!customerData.phone || !customerData.pincode}
                 >
-                  Next: Enter Your Details <ArrowRight size={16} style={{ marginLeft: 8 }} />
+                  Next: Enter Your Details{" "}
+                  <ArrowRight size={16} style={{ marginLeft: 8 }} />
                 </Button>
               </>
             )}
 
             {step === "business" && !isLoading && (
               <>
-                <h5 style={{ fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Building size={20} color={colors.warningYellow} /> Your Business Details
+                <h5
+                  style={{
+                    fontWeight: 700,
+                    marginBottom: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Building size={20} color={colors.warningYellow} /> Your
+                  Business Details
                 </h5>
                 <Form.Group style={{ marginBottom: 16 }}>
                   <Form.Label>Your Name *</Form.Label>
@@ -769,7 +1241,12 @@ const CreditScoreChecker = () => {
                     type="text"
                     placeholder="Your full name"
                     value={businessData.yourName}
-                    onChange={(e) => setBusinessData({ ...businessData, yourName: e.target.value })}
+                    onChange={(e) =>
+                      setBusinessData({
+                        ...businessData,
+                        yourName: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
                 <Form.Group style={{ marginBottom: 16 }}>
@@ -778,7 +1255,12 @@ const CreditScoreChecker = () => {
                     type="email"
                     placeholder="you@yourbrand.com"
                     value={businessData.email}
-                    onChange={(e) => setBusinessData({ ...businessData, email: e.target.value })}
+                    onChange={(e) =>
+                      setBusinessData({
+                        ...businessData,
+                        email: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
                 <Form.Group style={{ marginBottom: 16 }}>
@@ -788,14 +1270,24 @@ const CreditScoreChecker = () => {
                     placeholder="Your contact number"
                     maxLength={10}
                     value={businessData.phone}
-                    onChange={(e) => setBusinessData({ ...businessData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setBusinessData({
+                        ...businessData,
+                        phone: e.target.value,
+                      })
+                    }
                   />
                 </Form.Group>
                 <Form.Group style={{ marginBottom: 24 }}>
                   <Form.Label>Monthly Order Volume (per day)</Form.Label>
                   <Form.Select
                     value={businessData.orderVolume}
-                    onChange={(e) => setBusinessData({ ...businessData, orderVolume: e.target.value })}
+                    onChange={(e) =>
+                      setBusinessData({
+                        ...businessData,
+                        orderVolume: e.target.value,
+                      })
+                    }
                   >
                     <option value="">Select volume</option>
                     <option value="0-10">0 - 10 orders</option>
@@ -816,9 +1308,19 @@ const CreditScoreChecker = () => {
                     <ArrowLeft size={16} style={{ marginRight: 8 }} /> Back
                   </Button>
                   <Button
-                    style={{ flex: 1, background: gradients.accent, border: "none", color: "white", fontWeight: 600 }}
+                    style={{
+                      flex: 1,
+                      background: gradients.accent,
+                      border: "none",
+                      color: "white",
+                      fontWeight: 600,
+                    }}
                     onClick={handleBusinessSubmit}
-                    disabled={!businessData.yourName || !businessData.email || !businessData.phone}
+                    disabled={
+                      !businessData.yourName ||
+                      !businessData.email ||
+                      !businessData.phone
+                    }
                   >
                     Get Score <ArrowRight size={16} style={{ marginLeft: 8 }} />
                   </Button>
@@ -828,62 +1330,102 @@ const CreditScoreChecker = () => {
 
             {isLoading && (
               <div style={{ textAlign: "center", padding: "48px 0" }}>
-                <div style={{
-                  background: gradients.accent,
-                  borderRadius: "50%",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 64,
-                  height: 64,
-                  marginBottom: 16,
-                }}>
+                <div
+                  style={{
+                    background: gradients.accent,
+                    borderRadius: "50%",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 64,
+                    height: 64,
+                    marginBottom: 16,
+                  }}
+                >
                   <Spinner animation="border" variant="light" />
                 </div>
-                <h5 style={{ fontWeight: 700, marginBottom: 4 }}>Analyzing Customer...</h5>
-                <p style={{ color: colors.textSecondary }}>Checking 15+ data signals</p>
+                <h5 style={{ fontWeight: 700, marginBottom: 4 }}>
+                  Analyzing Customer...
+                </h5>
+                <p style={{ color: colors.textSecondary }}>
+                  Checking 15+ data signals
+                </p>
               </div>
             )}
 
             {step === "result" && result && !isLoading && (
               <div style={{ textAlign: "center" }}>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: 16,
+                  }}
+                >
                   <CreditScoreMeter score={result.score} width={300} />
                 </div>
                 <br />
-                <Badge style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  background: getRiskColor(result.risk),
-                  color: "white",
-                  padding: "8px 16px",
-                  marginBottom: 16,
-                  borderRadius: 20,
-                }}>
-                  {(() => { const Icon = getRiskIcon(result.risk); return <Icon size={16} />; })()}
-                  {result.risk.charAt(0).toUpperCase() + result.risk.slice(1)} Risk
+                <Badge
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    background: getRiskColor(result.risk),
+                    color: "white",
+                    padding: "8px 16px",
+                    marginBottom: 16,
+                    borderRadius: 20,
+                  }}
+                >
+                  {(() => {
+                    const Icon = getRiskIcon(result.risk);
+                    return <Icon size={16} />;
+                  })()}
+                  {result.risk.charAt(0).toUpperCase() + result.risk.slice(1)}{" "}
+                  Risk
                 </Badge>
                 <br />
                 {/* <a onClick={handleBusinessSubmit}>Hit me</a> */}
-                <div style={{
-                  background: getRiskGradient(result.risk),
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 16,
-                }}>
-                  <p style={{ fontWeight: 700, color: "white", margin: 0 }}>{result.recommendation}</p>
+                <div
+                  style={{
+                    background: getRiskGradient(result.risk),
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 16,
+                  }}
+                >
+                  <p style={{ fontWeight: 700, color: "white", margin: 0 }}>
+                    {result.recommendation}
+                  </p>
                 </div>
 
-                <p style={{ color: colors.textSecondary, marginBottom: 24 }}>{result.message}</p>
+                <p style={{ color: colors.textSecondary, marginBottom: 24 }}>
+                  {result.message}
+                </p>
 
                 <Button
-                  style={{ width: "100%", background: gradients.accent, border: "none", color: "white", fontWeight: 600, padding: "12px 24px", marginBottom: 8 }}
-                  onClick={() => document.querySelector("#cta")?.scrollIntoView({ behavior: "smooth" })}
+                  style={{
+                    width: "100%",
+                    background: gradients.accent,
+                    border: "none",
+                    color: "white",
+                    fontWeight: 600,
+                    padding: "12px 24px",
+                    marginBottom: 8,
+                  }}
+                  onClick={() =>
+                    document
+                      .querySelector("#cta")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
                 >
                   Get Full Access - Book Demo
                 </Button>
-                <Button variant="outline-secondary" style={{ width: "100%" }} onClick={resetChecker}>
+                <Button
+                  variant="outline-secondary"
+                  style={{ width: "100%" }}
+                  onClick={resetChecker}
+                >
                   Check Another Customer
                 </Button>
               </div>
@@ -891,7 +1433,14 @@ const CreditScoreChecker = () => {
           </Card.Body>
         </Card>
 
-        <p style={{ textAlign: "center", color: colors.textSecondary, fontSize: 14, marginTop: 16 }}>
+        <p
+          style={{
+            textAlign: "center",
+            color: colors.textSecondary,
+            fontSize: 14,
+            marginTop: 16,
+          }}
+        >
           🔒 Your data is secure and never shared with third parties
         </p>
       </Container>
@@ -902,66 +1451,120 @@ const CreditScoreChecker = () => {
 // ============ HOW IT WORKS ============
 const HowItWorksSection = () => {
   const steps = [
-    { icon: Plug, number: "01", title: "Connect Your Store", description: "Simple one-click integration with Shopify, WooCommerce, or custom platform." },
-    { icon: Search, number: "02", title: "We Score Every Customer", description: "At checkout, we instantly analyze and return their ecommerce credit score." },
-    { icon: ShieldCheck, number: "03", title: "Smart COD Control", description: "Based on the score, your store shows COD, Partial COD, or Prepaid only." },
+    {
+      icon: Plug,
+      number: "01",
+      title: "Connect Your Store",
+      description:
+        "Simple one-click integration with Shopify, WooCommerce, or custom platform.",
+    },
+    {
+      icon: Search,
+      number: "02",
+      title: "We Score Every Customer",
+      description:
+        "At checkout, we instantly analyze and return their ecommerce credit score.",
+    },
+    {
+      icon: ShieldCheck,
+      number: "03",
+      title: "Smart COD Control",
+      description:
+        "Based on the score, your store shows COD, Partial COD, or Prepaid only.",
+    },
   ];
 
   return (
-    <section id="how-it-works" style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
+    <section
+      id="how-it-works"
+      style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}
+    >
       <Container>
-        <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             How It Works
           </span>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
             Get Started in <TextGradient>3 Simple Steps</TextGradient>
           </h2>
-          <p style={{ color: colors.textSecondary }}>No technical expertise needed. Integration is fast.</p>
+          <p style={{ color: colors.textSecondary }}>
+            No technical expertise needed. Integration is fast.
+          </p>
         </div>
 
         <Row style={{ position: "relative" }}>
-          <div style={{
-            display: window.innerWidth >= 992 ? "block" : "none",
-            position: "absolute",
-            top: "50%",
-            left: 0,
-            right: 0,
-            height: 2,
-            background: colors.border,
-            transform: "translateY(-50%)",
-            zIndex: 0,
-          }} />
+          <div
+            style={{
+              display: window.innerWidth >= 992 ? "block" : "none",
+              position: "absolute",
+              top: "50%",
+              left: 0,
+              right: 0,
+              height: 2,
+              background: colors.border,
+              transform: "translateY(-50%)",
+              zIndex: 0,
+            }}
+          />
           {steps.map((step, i) => (
             <Col md={4} key={i} style={{ marginBottom: 24 }}>
-              <Card style={{
-                height: "100%",
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                position: "relative",
-                zIndex: 1,
-                transition: "all 0.3s ease",
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+              <Card
+                style={{
+                  height: "100%",
+                  border: "none",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  position: "relative",
+                  zIndex: 1,
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
-                <Badge style={{
-                  position: "absolute",
-                  top: -8,
-                  left: 24,
-                  background: gradients.accent,
-                  color: "white",
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                }}>
+                <Badge
+                  style={{
+                    position: "absolute",
+                    top: -8,
+                    left: 24,
+                    background: gradients.accent,
+                    color: "white",
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                  }}
+                >
                   {step.number}
                 </Badge>
                 <Card.Body style={{ padding: 24, paddingTop: 40 }}>
-                  <div style={{ background: gradients.hero, borderRadius: 12, padding: 12, display: "inline-block", marginBottom: 16 }}>
+                  <div
+                    style={{
+                      background: gradients.hero,
+                      borderRadius: 12,
+                      padding: 12,
+                      display: "inline-block",
+                      marginBottom: 16,
+                    }}
+                  >
                     <step.icon size={28} color="white" />
                   </div>
-                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>{step.title}</h5>
-                  <p style={{ color: colors.textSecondary, margin: 0 }}>{step.description}</p>
+                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>
+                    {step.title}
+                  </h5>
+                  <p style={{ color: colors.textSecondary, margin: 0 }}>
+                    {step.description}
+                  </p>
                 </Card.Body>
               </Card>
             </Col>
@@ -969,19 +1572,32 @@ const HowItWorksSection = () => {
         </Row>
 
         <div style={{ textAlign: "center", marginTop: 48 }}>
-          <div style={{
-            background: colors.bgMuted,
-            borderRadius: 16,
-            padding: 24,
-            display: "inline-flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 16,
-          }}>
-            <span style={{ fontWeight: 500, color: colors.textSecondary }}>Ready to reduce your RTO?</span>
+          <div
+            style={{
+              background: colors.bgMuted,
+              borderRadius: 16,
+              padding: 24,
+              display: "inline-flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 16,
+            }}
+          >
+            <span style={{ fontWeight: 500, color: colors.textSecondary }}>
+              Ready to reduce your RTO?
+            </span>
             <Button
-              style={{ background: gradients.accent, border: "none", color: "white", fontWeight: 600 }}
-              onClick={() => document.querySelector("#credit-checker")?.scrollIntoView({ behavior: "smooth" })}
+              style={{
+                background: gradients.accent,
+                border: "none",
+                color: "white",
+                fontWeight: 600,
+              }}
+              onClick={() =>
+                document
+                  .querySelector("#credit-checker")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
             >
               Try Free Score Check
             </Button>
@@ -995,58 +1611,126 @@ const HowItWorksSection = () => {
 // ============ BENEFITS ============
 const BenefitsSection = () => {
   const benefits = [
-    { icon: TrendingDown, title: "Reduce RTO by 40%", description: "Block risky customers from COD.", color: colors.successGreen },
-    { icon: Wallet, title: "Save ₹150+ Per Order", description: "Stop paying double shipping on failed deliveries.", color: colors.warningYellow },
-    { icon: BarChart3, title: "Better Cash Flow", description: "More prepaid orders = faster remittance.", color: "#3b82f6" },
-    { icon: Shield, title: "Block Fake Orders", description: "Our AI detects fraud patterns.", color: colors.successGreen },
-    { icon: Zap, title: "Real-Time Scoring", description: "Scores calculated in <200ms.", color: colors.warningYellow },
-    { icon: Globe, title: "Pan-India Coverage", description: "19,000+ serviceable pincodes in India.", color: "#3b82f6" },
+    {
+      icon: TrendingDown,
+      title: "Reduce RTO by 40%",
+      description: "Block risky customers from COD.",
+      color: colors.successGreen,
+    },
+    {
+      icon: Wallet,
+      title: "Save ₹150+ Per Order",
+      description: "Stop paying double shipping on failed deliveries.",
+      color: colors.warningYellow,
+    },
+    {
+      icon: BarChart3,
+      title: "Better Cash Flow",
+      description: "More prepaid orders = faster remittance.",
+      color: "#3b82f6",
+    },
+    {
+      icon: Shield,
+      title: "Block Fake Orders",
+      description: "Our AI detects fraud patterns.",
+      color: colors.successGreen,
+    },
+    {
+      icon: Zap,
+      title: "Real-Time Scoring",
+      description: "Scores calculated in <200ms.",
+      color: colors.warningYellow,
+    },
+    {
+      icon: Globe,
+      title: "Pan-India Coverage",
+      description: "19,000+ serviceable pincodes in India.",
+      color: "#3b82f6",
+    },
   ];
 
   return (
-    <section id="benefits" style={{ padding: "80px 0", background: colors.bgMuted }}>
+    <section
+      id="benefits"
+      style={{ padding: "80px 0", background: colors.bgMuted }}
+    >
       <Container>
-        <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             Benefits
           </span>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
             Why D2C Brands <TextGradient>Love OrderzUp</TextGradient>
           </h2>
-          <p style={{ color: colors.textSecondary }}>Join 500+ brands who've transformed their COD strategy.</p>
+          <p style={{ color: colors.textSecondary }}>
+            Join 500+ brands who've transformed their COD strategy.
+          </p>
         </div>
 
         <Row style={{ marginBottom: 48 }}>
           {benefits.map((benefit, i) => (
             <Col md={6} lg={4} key={i} style={{ marginBottom: 24 }}>
-              <Card style={{
-                height: "100%",
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                transition: "all 0.3s ease",
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+              <Card
+                style={{
+                  height: "100%",
+                  border: "none",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
                 <Card.Body style={{ padding: 24 }}>
-                  <div style={{
-                    background: `${benefit.color}15`,
-                    borderRadius: 8,
-                    padding: 8,
-                    display: "inline-block",
-                    marginBottom: 16,
-                  }}>
+                  <div
+                    style={{
+                      background: `${benefit.color}15`,
+                      borderRadius: 8,
+                      padding: 8,
+                      display: "inline-block",
+                      marginBottom: 16,
+                    }}
+                  >
                     <benefit.icon size={24} color={benefit.color} />
                   </div>
-                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>{benefit.title}</h5>
-                  <p style={{ color: colors.textSecondary, fontSize: 14, margin: 0 }}>{benefit.description}</p>
+                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>
+                    {benefit.title}
+                  </h5>
+                  <p
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      margin: 0,
+                    }}
+                  >
+                    {benefit.description}
+                  </p>
                 </Card.Body>
               </Card>
             </Col>
           ))}
         </Row>
 
-        <div style={{ background: gradients.hero, borderRadius: 16, padding: "32px 24px" }}>
+        <div
+          style={{
+            background: gradients.hero,
+            borderRadius: 16,
+            padding: "32px 24px",
+          }}
+        >
           <Row style={{ textAlign: "center", color: "white" }}>
             {[
               { value: "40%", label: "RTO Reduction" },
@@ -1055,7 +1739,12 @@ const BenefitsSection = () => {
               { value: "₹150+", label: "Saved Per RTO" },
             ].map((stat, i) => (
               <Col xs={6} lg={3} key={i} style={{ marginBottom: 16 }}>
-                <big style={{ fontSize: "36px", fontWeight: 700, marginBottom: 0 }}>{stat.value}</big><br />
+                <big
+                  style={{ fontSize: "36px", fontWeight: 700, marginBottom: 0 }}
+                >
+                  {stat.value}
+                </big>
+                <br />
                 <small style={{ opacity: 0.75 }}>{stat.label}</small>
               </Col>
             ))}
@@ -1071,58 +1760,183 @@ const TestimonialsSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const testimonials = [
-    { name: "Rahul Sharma", role: "Founder", company: "StyleBox India", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face", content: "Our RTO dropped from 35% to 18% in just 2 months. OrderzUp pays for itself 10x over.", stats: { before: "35%", after: "18%", metric: "RTO Rate" } },
-    { name: "Priya Patel", role: "Co-founder", company: "GlowUp Cosmetics", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face", content: "We were bleeding money on fake orders. OrderzUp blocked 90% of fraudulent attempts.", stats: { before: "90%", after: "Blocked", metric: "Fake Orders" } },
-    { name: "Amit Kumar", role: "CEO", company: "FitGear Pro", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face", content: "Integration took 10 minutes. The ROI was visible in the first week itself. We save ₹2L+ monthly.", stats: { before: "₹2L+", after: "Saved", metric: "Monthly" } },
-    { name: "Sneha Reddy", role: "Operations Head", company: "HomeDeco Hub", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face", content: "The partial COD feature is genius. Conversion stayed the same but RTO dropped significantly.", stats: { before: "Same", after: "CVR", metric: "Maintained" } },
+    {
+      name: "Rahul Sharma",
+      role: "Founder",
+      company: "StyleBox India",
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+      content:
+        "Our RTO dropped from 35% to 18% in just 2 months. OrderzUp pays for itself 10x over.",
+      stats: { before: "35%", after: "18%", metric: "RTO Rate" },
+    },
+    {
+      name: "Priya Patel",
+      role: "Co-founder",
+      company: "GlowUp Cosmetics",
+      image:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
+      content:
+        "We were bleeding money on fake orders. OrderzUp blocked 90% of fraudulent attempts.",
+      stats: { before: "90%", after: "Blocked", metric: "Fake Orders" },
+    },
+    {
+      name: "Amit Kumar",
+      role: "CEO",
+      company: "FitGear Pro",
+      image:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+      content:
+        "Integration took 10 minutes. The ROI was visible in the first week itself. We save ₹2L+ monthly.",
+      stats: { before: "₹2L+", after: "Saved", metric: "Monthly" },
+    },
+    {
+      name: "Sneha Reddy",
+      role: "Operations Head",
+      company: "HomeDeco Hub",
+      image:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
+      content:
+        "The partial COD feature is genius. Conversion stayed the same but RTO dropped significantly.",
+      stats: { before: "Same", after: "CVR", metric: "Maintained" },
+    },
   ];
 
   return (
-    <section id="testimonials" style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
+    <section
+      id="testimonials"
+      style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}
+    >
       <Container>
-        <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             Testimonials
           </span>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
             Trusted by <TextGradient>500+ D2C Brands</TextGradient>
           </h2>
-          <p style={{ color: colors.textSecondary }}>See what founders are saying about OrderzUp.</p>
+          <p style={{ color: colors.textSecondary }}>
+            See what founders are saying about OrderzUp.
+          </p>
         </div>
 
-        <Card style={{ border: "none", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", maxWidth: 800, margin: "0 auto", position: "relative" }}>
-          <Quote size={48} color={colors.warningYellow} style={{ position: "absolute", top: 20, right: 20, opacity: 0.25 }} />
+        <Card
+          style={{
+            border: "none",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            maxWidth: 800,
+            margin: "0 auto",
+            position: "relative",
+          }}
+        >
+          <Quote
+            size={48}
+            color={colors.warningYellow}
+            style={{ position: "absolute", top: 20, right: 20, opacity: 0.25 }}
+          />
           <Card.Body style={{ padding: "32px 40px" }}>
             <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
-              {[...Array(5)].map((_, i) => <Star key={i} size={20} color={colors.warningYellow} fill={colors.accentOrange} />)}
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={20}
+                  color={colors.warningYellow}
+                  fill={colors.accentOrange}
+                />
+              ))}
             </div>
 
-            <p style={{ fontSize: 20, fontWeight: 500, marginBottom: 24 }}>"{testimonials[activeIndex].content}"</p>
+            <p style={{ fontSize: 20, fontWeight: 500, marginBottom: 24 }}>
+              "{testimonials[activeIndex].content}"
+            </p>
 
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 24,
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <img
                   src={testimonials[activeIndex].image}
                   alt={testimonials[activeIndex].name}
-                  style={{ width: 56, height: 56, borderRadius: "50%", border: `2px solid ${colors.warningYellow}`, objectFit: "cover" }}
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    border: `2px solid ${colors.warningYellow}`,
+                    objectFit: "cover",
+                  }}
                 />
                 <div>
-                  <h6 style={{ fontWeight: 700, margin: 0 }}>{testimonials[activeIndex].name}</h6>
-                  <small style={{ color: colors.textSecondary }}>{testimonials[activeIndex].role}, {testimonials[activeIndex].company}</small>
+                  <h6 style={{ fontWeight: 700, margin: 0 }}>
+                    {testimonials[activeIndex].name}
+                  </h6>
+                  <small style={{ color: colors.textSecondary }}>
+                    {testimonials[activeIndex].role},{" "}
+                    {testimonials[activeIndex].company}
+                  </small>
                 </div>
               </div>
 
-              <div style={{ background: `${colors.successGreen}15`, borderRadius: 12, padding: 16, textAlign: "center" }}>
+              <div
+                style={{
+                  background: `${colors.successGreen}15`,
+                  borderRadius: 12,
+                  padding: 16,
+                  textAlign: "center",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 20, fontWeight: 700, color: colors.successGreen }}>{testimonials[activeIndex].stats.before}</span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: colors.successGreen,
+                    }}
+                  >
+                    {testimonials[activeIndex].stats.before}
+                  </span>
                   <span style={{ color: colors.textSecondary }}>→</span>
-                  <span style={{ fontSize: 20, fontWeight: 700, color: colors.successGreen }}>{testimonials[activeIndex].stats.after}</span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: colors.successGreen,
+                    }}
+                  >
+                    {testimonials[activeIndex].stats.after}
+                  </span>
                 </div>
-                <small style={{ color: colors.textSecondary }}>{testimonials[activeIndex].stats.metric}</small>
+                <small style={{ color: colors.textSecondary }}>
+                  {testimonials[activeIndex].stats.metric}
+                </small>
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, paddingTop: 24, borderTop: `1px solid ${colors.border}` }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: 24,
+                paddingTop: 24,
+                borderTop: `1px solid ${colors.border}`,
+              }}
+            >
               <div style={{ display: "flex", gap: 8 }}>
                 {testimonials.map((_, i) => (
                   <div
@@ -1132,7 +1946,8 @@ const TestimonialsSection = () => {
                       width: i === activeIndex ? 32 : 8,
                       height: 8,
                       borderRadius: 4,
-                      background: i === activeIndex ? colors.accentOrange : "#cbd5e1",
+                      background:
+                        i === activeIndex ? colors.accentOrange : "#cbd5e1",
                       cursor: "pointer",
                       transition: "all 0.3s ease",
                     }}
@@ -1142,15 +1957,38 @@ const TestimonialsSection = () => {
               <div style={{ display: "flex", gap: 8 }}>
                 <Button
                   variant="light"
-                  style={{ borderRadius: "50%", width: 40, height: 40, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
-                  onClick={() => setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+                  style={{
+                    borderRadius: "50%",
+                    width: 40,
+                    height: 40,
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onClick={() =>
+                    setActiveIndex(
+                      (prev) =>
+                        (prev - 1 + testimonials.length) % testimonials.length
+                    )
+                  }
                 >
                   <ChevronLeft size={20} />
                 </Button>
                 <Button
                   variant="light"
-                  style={{ borderRadius: "50%", width: 40, height: 40, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
-                  onClick={() => setActiveIndex((prev) => (prev + 1) % testimonials.length)}
+                  style={{
+                    borderRadius: "50%",
+                    width: 40,
+                    height: 40,
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onClick={() =>
+                    setActiveIndex((prev) => (prev + 1) % testimonials.length)
+                  }
                 >
                   <ChevronRight size={20} />
                 </Button>
@@ -1160,10 +1998,42 @@ const TestimonialsSection = () => {
         </Card>
 
         <div style={{ textAlign: "center", marginTop: 48 }}>
-          <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>Trusted by leading D2C brands across India</p>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32, opacity: 0.5 }}>
-            {["StyleBox", "GlowUp", "FitGear", "HomeDeco", "UrbanWear", "NutriFit"].map((brand) => (
-              <span key={brand} style={{ fontSize: 20, fontWeight: 700, color: colors.textSecondary }}>{brand}</span>
+          <p
+            style={{
+              color: colors.textSecondary,
+              fontSize: 14,
+              marginBottom: 16,
+            }}
+          >
+            Trusted by leading D2C brands across India
+          </p>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 32,
+              opacity: 0.5,
+            }}
+          >
+            {[
+              "StyleBox",
+              "GlowUp",
+              "FitGear",
+              "HomeDeco",
+              "UrbanWear",
+              "NutriFit",
+            ].map((brand) => (
+              <span
+                key={brand}
+                style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: colors.textSecondary,
+                }}
+              >
+                {brand}
+              </span>
             ))}
           </div>
         </div>
@@ -1175,86 +2045,202 @@ const TestimonialsSection = () => {
 // ============ CTA SECTION ============
 const CTASection = () => {
   return (
-    <section id="cta" style={{ padding: "80px 0", background: gradients.hero, position: "relative", overflow: "hidden" }}>
-      <div style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: 400,
-        height: 400,
-        background: colors.warningYellow,
-        opacity: 0.1,
-        borderRadius: "50%",
-        filter: "blur(80px)",
-      }} />
-      <div style={{
-        position: "absolute",
-        bottom: 0,
-        right: 0,
-        width: 300,
-        height: 300,
-        background: "white",
-        opacity: 0.1,
-        borderRadius: "50%",
-        filter: "blur(80px)",
-      }} />
+    <section
+      id="cta"
+      style={{
+        padding: "80px 0",
+        background: gradients.hero,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: 400,
+          height: 400,
+          background: colors.warningYellow,
+          opacity: 0.1,
+          borderRadius: "50%",
+          filter: "blur(80px)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          right: 0,
+          width: 300,
+          height: 300,
+          background: "white",
+          opacity: 0.1,
+          borderRadius: "50%",
+          filter: "blur(80px)",
+        }}
+      />
 
       <Container style={{ position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", color: "white", maxWidth: 800, margin: "0 auto" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{
+            textAlign: "center",
+            color: "white",
+            maxWidth: 800,
+            margin: "0 auto",
+          }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             Get Started Today
           </span>
-          <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16, color: "white!important" }}>
+          <h1
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 700,
+              marginBottom: 16,
+              color: "white!important",
+            }}
+          >
             Ready to Reduce Your <TextGradient>RTO by 40%?</TextGradient>
           </h1>
-          <p style={{ fontSize: 18, opacity: 0.75, marginBottom: 48, maxWidth: 600, margin: "0 auto 48px" }}>
+          <p
+            style={{
+              fontSize: 18,
+              opacity: 0.75,
+              marginBottom: 48,
+              maxWidth: 600,
+              margin: "0 auto 48px",
+            }}
+          >
             Join 500+ D2C brands who trust OrderzUp for smarter COD decisions.
           </p>
 
           <Row style={{ maxWidth: 600, margin: "0 auto 48px" }}>
             <Col md={6} style={{ marginBottom: 24 }}>
-              <Card style={{ height: "100%", border: "none", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "left" }}>
+              <Card
+                style={{
+                  height: "100%",
+                  border: "none",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                  textAlign: "left",
+                }}
+              >
                 <Card.Body style={{ padding: 24 }}>
-                  <div style={{ background: gradients.accent, borderRadius: 12, padding: 12, display: "inline-block", marginBottom: 16 }}>
+                  <div
+                    style={{
+                      background: gradients.accent,
+                      borderRadius: 12,
+                      padding: 12,
+                      display: "inline-block",
+                      marginBottom: 16,
+                    }}
+                  >
                     <Calendar size={24} color="white" />
                   </div>
-                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>Book Free Demo</h5>
-                  <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>See OrderzUp in action. 30-minute call.</p>
+                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>
+                    Book Free Demo
+                  </h5>
+                  <p
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      marginBottom: 16,
+                    }}
+                  >
+                    See OrderzUp in action. 30-minute call.
+                  </p>
                   <Button
-                    onClick={() => window.open("https://calendly.com/deepam-orderzup/30min", "_blank")}
-                    style={{ width: "100%", background: gradients.accent, color: "white!important", border: "none", fontWeight: 600 }}>
-                    Schedule Demo <ArrowRight size={16} style={{ marginLeft: 8 }} />
+                    onClick={() =>
+                      window.open(
+                        "https://calendly.com/deepam-orderzup/30min",
+                        "_blank"
+                      )
+                    }
+                    style={{
+                      width: "100%",
+                      background: gradients.accent,
+                      color: "white!important",
+                      border: "none",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Schedule Demo{" "}
+                    <ArrowRight size={16} style={{ marginLeft: 8 }} />
                   </Button>
                 </Card.Body>
               </Card>
             </Col>
             <Col md={6} style={{ marginBottom: 24 }}>
-              <Card style={{ height: "100%", border: "none", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "left" }}>
+              <Card
+                style={{
+                  height: "100%",
+                  border: "none",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                  textAlign: "left",
+                }}
+              >
                 <Card.Body style={{ padding: 24 }}>
-                  <div style={{ background: gradients.hero, borderRadius: 12, padding: 12, display: "inline-block", marginBottom: 16 }}>
+                  <div
+                    style={{
+                      background: gradients.hero,
+                      borderRadius: 12,
+                      padding: 12,
+                      display: "inline-block",
+                      marginBottom: 16,
+                    }}
+                  >
                     <Rocket size={24} color="white" />
                   </div>
-                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>Start Free Trial</h5>
-                  <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>Try OrderzUp free for 14 days.</p>
+                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>
+                    Start Free Trial
+                  </h5>
+                  <p
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      marginBottom: 16,
+                    }}
+                  >
+                    Try OrderzUp free for 14 days.
+                  </p>
                   <Button
                     variant="outline-dark"
                     href="/login"
                     style={{ width: "100%" }}
                   >
-                    Start Free Trial <ArrowRight size={16} style={{ marginLeft: 8 }} />
+                    Start Free Trial{" "}
+                    <ArrowRight size={16} style={{ marginLeft: 8 }} />
                   </Button>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
 
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 32, opacity: 0.75 }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 32,
+              opacity: 0.75,
+            }}
+          >
             {[
               { icon: Shield, text: "Data Encrypted" },
               { icon: Calendar, text: "No Long Contracts" },
               { icon: Rocket, text: "Setup in 5 mins" },
             ].map((item, i) => (
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+              <span
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 14,
+                }}
+              >
                 <item.icon size={16} /> {item.text}
               </span>
             ))}
@@ -1268,43 +2254,110 @@ const CTASection = () => {
 // ============ FAQ ============
 const FAQSection = () => {
   const faqs = [
-    { question: "Is collecting customer data for credit scoring legal?", answer: "Yes, absolutely. We only use publicly available data signals and comply with all Indian data protection laws." },
-    { question: "Will this affect my conversion rate?", answer: "Most brands see no drop—many see improvement. High-risk customers can still buy with prepaid." },
-    { question: "How accurate is the credit score?", answer: "Our model has 85%+ accuracy in predicting RTO risk, analyzing 15+ data signals." },
-    { question: "Does OrderzUp work with Shopify and WooCommerce?", answer: "Yes! We have native apps for both that install in under 5 minutes." },
-    { question: "What if a good customer gets a low score?", answer: "Our partial COD feature handles this—medium-risk customers pay 50% upfront." },
-    { question: "How much does OrderzUp cost?", answer: "Plans start at ₹2,999/month for up to 1,000 orders. Most brands see 10x+ ROI." },
-    { question: "Can I customize the score thresholds?", answer: "Yes! You have full control over what score triggers each payment option." },
-    { question: "How long does integration take?", answer: "For Shopify and WooCommerce, less than 5 minutes. Custom platforms: 1-2 days." },
+    {
+      question: "Is collecting customer data for credit scoring legal?",
+      answer:
+        "Yes, absolutely. We only use publicly available data signals and comply with all Indian data protection laws.",
+    },
+    {
+      question: "Will this affect my conversion rate?",
+      answer:
+        "Most brands see no drop—many see improvement. High-risk customers can still buy with prepaid.",
+    },
+    {
+      question: "How accurate is the credit score?",
+      answer:
+        "Our model has 85%+ accuracy in predicting RTO risk, analyzing 15+ data signals.",
+    },
+    {
+      question: "Does OrderzUp work with Shopify and WooCommerce?",
+      answer:
+        "Yes! We have native apps for both that install in under 5 minutes.",
+    },
+    {
+      question: "What if a good customer gets a low score?",
+      answer:
+        "Our partial COD feature handles this—medium-risk customers pay 50% upfront.",
+    },
+    {
+      question: "How much does OrderzUp cost?",
+      answer:
+        "Plans start at ₹2,999/month for up to 1,000 orders. Most brands see 10x+ ROI.",
+    },
+    {
+      question: "Can I customize the score thresholds?",
+      answer:
+        "Yes! You have full control over what score triggers each payment option.",
+    },
+    {
+      question: "How long does integration take?",
+      answer:
+        "For Shopify and WooCommerce, less than 5 minutes. Custom platforms: 1-2 days.",
+    },
   ];
 
   return (
     <section id="faq" style={{ padding: "80px 0", background: colors.lightBg }}>
       <Container>
-        <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
+        <div
+          style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}
+        >
+          <span
+            style={{ color: colors.accentOrange, textTransform: "uppercase" }}
+          >
             FAQ
           </span>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 700,
+              marginBottom: 16,
+            }}
+          >
             Frequently Asked <TextGradient>Questions</TextGradient>
           </h2>
-          <p style={{ color: colors.textSecondary }}>Everything you need to know about OrderzUp.</p>
+          <p style={{ color: colors.textSecondary }}>
+            Everything you need to know about OrderzUp.
+          </p>
         </div>
 
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <Accordion flush>
             {faqs.map((faq, i) => (
-              <Accordion.Item key={i} eventKey={String(i)} style={{ marginBottom: 12, border: `1px solid ${colors.border}`, borderRadius: 8, overflow: "hidden" }}>
-                <Accordion.Header style={{ fontWeight: 600 }}>{faq.question}</Accordion.Header>
-                <Accordion.Body style={{ color: colors.textSecondary }}>{faq.answer}</Accordion.Body>
+              <Accordion.Item
+                key={i}
+                eventKey={String(i)}
+                style={{
+                  marginBottom: 12,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                }}
+              >
+                <Accordion.Header style={{ fontWeight: 600 }}>
+                  {faq.question}
+                </Accordion.Header>
+                <Accordion.Body style={{ color: colors.textSecondary }}>
+                  {faq.answer}
+                </Accordion.Body>
               </Accordion.Item>
             ))}
           </Accordion>
         </div>
 
         <div style={{ textAlign: "center", marginTop: 48 }}>
-          <p style={{ color: colors.textSecondary, marginBottom: 8 }}>Still have questions?</p>
-          <a href="https://calendly.com/deepam-orderzup/30min" target="_blank" style={{ color: colors.warningYellow, fontWeight: 600, textDecoration: "none" }}>
+          <p style={{ color: colors.textSecondary, marginBottom: 8 }}>
+            Still have questions?
+          </p>
+          <a
+            href="https://calendly.com/deepam-orderzup/30min"
+            target="_blank"
+            style={{
+              color: colors.warningYellow,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
             Contact our team →
           </a>
         </div>
@@ -1315,35 +2368,79 @@ const FAQSection = () => {
 
 // ============ FOOTER ============
 const FooterSection = () => {
-  const currentYear = new Date().getFullYear();
+  // const currentYear = new Date().getFullYear();
 
-  const links = {
-    product: ["How It Works", "Benefits", "Pricing", "API Docs"],
-    company: ["About Us", "Careers", "Blog", "Press"],
-    support: ["Help Center", "Contact Us", "Status", "FAQ"],
-    legal: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"],
-  };
+  // const links = {
+  //   product: ["How It Works", "Benefits", "Pricing", "API Docs"],
+  //   company: ["About Us", "Careers", "Blog", "Press"],
+  //   support: ["Help Center", "Contact Us", "Status", "FAQ"],
+  //   legal: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"],
+  // };
 
   return (
-    <footer className="main-footer py-4 bg-dark text-white" style={{ background: gradients.hero, paddingTop: 48 }}>
+    <footer
+      className="main-footer py-4 bg-dark text-white"
+      style={{ background: gradients.hero, paddingTop: 48 }}
+    >
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 16px" }}>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 320px" }}>
-            <img src={logoWide} width="200px" className="p-2" alt="OrderzUp logo" />
-            <p>Your smart solution for D2C logistics. Reduce RTOs, automate shipping, and grow your brand.</p>
+            <img
+              src={logoWide}
+              width="200px"
+              className="p-2"
+              alt="OrderzUp logo"
+            />
+            <p>
+              Your smart solution for D2C logistics. Reduce RTOs, automate
+              shipping, and grow your brand.
+            </p>
           </div>
           <div style={{ flex: "1 1 200px" }}>
             <h5>Contact</h5>
-            <p>Email: <a href="mailto:hello@orderzup.com" className="text-white">hello@orderzup.com</a></p>
+            <p>
+              Email:{" "}
+              <a href="mailto:hello@orderzup.com" className="text-white">
+                hello@orderzup.com
+              </a>
+            </p>
           </div>
           <div style={{ flex: "1 1 200px" }}>
             <h5>Connect</h5>
-            <a href="https://www.linkedin.com/company/ordezup/" className="text-white mr-2" style={{ marginRight: 8 }}>LinkedIn</a>
-            <a href="https://instagram.com/officialorderzup" className="text-white mr-2" style={{ marginRight: 8 }}>Instagram</a>
-            <a href="https://facebook.com/officialorderzup" className="text-white">Facebook</a>
+            <a
+              href="https://www.linkedin.com/company/ordezup/"
+              className="text-white mr-2"
+              style={{ marginRight: 8 }}
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://instagram.com/officialorderzup"
+              className="text-white mr-2"
+              style={{ marginRight: 8 }}
+            >
+              Instagram
+            </a>
+            <a
+              href="https://facebook.com/officialorderzup"
+              className="text-white"
+            >
+              Facebook
+            </a>
             <div style={{ marginTop: 8 }}>
-              <a href="https://orderzup.com/terms-of-use" className="text-white mr-2" style={{ marginRight: 8 }}>Terms of Service</a>
-              <a href="https://orderzup.com/privacy-policy-2/" className="text-white">Privacy Policy</a>
+              <a
+                href="https://orderzup.com/terms-of-use"
+                className="text-white mr-2"
+                style={{ marginRight: 8 }}
+              >
+                Terms of Service
+              </a>
+              <a
+                href="https://orderzup.com/privacy-policy-2/"
+                className="text-white"
+              >
+                Privacy Policy
+              </a>
             </div>
           </div>
         </div>
@@ -1352,7 +2449,6 @@ const FooterSection = () => {
         </div>
       </div>
     </footer>
-
   );
 };
 
@@ -1431,7 +2527,14 @@ const Index = () => {
    
    `}</style>
 
-      <main className="ecom-credit-root" style={{ fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", backgroundColor: "white" }}>
+      <main
+        className="ecom-credit-root"
+        style={{
+          fontFamily:
+            "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          backgroundColor: "white",
+        }}
+      >
         <NavbarSection />
         <HeroSection />
         <ProblemSection />
