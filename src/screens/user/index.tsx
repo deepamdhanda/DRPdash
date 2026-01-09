@@ -17,6 +17,7 @@ import SettingsPage from "./Settings.tsx";
 import { CODRemittances } from "./CODRemittances.tsx";
 import { Invoices } from "../Invoices/Invoices.tsx";
 import DamageReport from "./DamageReport.tsx";
+import ShippingCalculator from "./ShippingChargeCalculator.tsx";
 
 export const userRoutes = [
   {
@@ -94,5 +95,9 @@ export const userRoutes = [
   {
     path: "damage-report",
     element: <DamageReport />,
+  },
+  {
+    path: "shipping-charge-calculator",
+    element: <ShippingCalculator />,
   },
 ];
