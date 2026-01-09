@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Row,
@@ -11,8 +11,9 @@ import {
   Accordion,
   Badge,
   Spinner,
+  Image,
 } from "react-bootstrap";
-import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap/dist/css/bootstrap.min.css";
 import {
   Shield,
   TrendingDown,
@@ -49,18 +50,23 @@ import {
   Linkedin,
   Instagram,
 } from "lucide-react";
+import { getScore, registerLead } from "../../../../APIs/landingPageAPIs";
+import CreditScoreMeter from "../../../../components/CreditScoreMeter";
+import Logo from "../../../../assets/logo.png";
+import logoWide from "../../../../assets/logo-wide.png";
 
 // Color constants
 const colors = {
-  primaryNavy: "#0a1628",
-  primaryDark: "#1a2744",
-  accentOrange: "#f97316",
+  primaryNavy: " #000434ff",
+  primaryDark: "#191970ff",
+  accentOrange: "#f5891e",
   accentOrangeHover: "#ea580c",
   successGreen: "#22c55e",
   warningYellow: "#eab308",
   dangerRed: "#ef4444",
   textLight: "#f1f5f9",
   textMuted: "#94a3b8",
+  bgMuted: "#f3f6f9",
   textSecondary: "#64748b",
   lightBg: "#f8fafc",
   white: "#ffffff",
@@ -77,12 +83,13 @@ const gradients = {
   text: `linear-gradient(135deg, ${colors.accentOrange} 0%, #fb923c 100%)`,
 };
 
-const TextGradient = ({ children }: { children: React.ReactNode }) => (
+const TextGradient = ({ children }: { children: React.ReactNode }, size = "inherit") => (
   <span style={{
     background: gradients.text,
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
+    fontSize: size,
   }}>{children}</span>
 );
 
@@ -110,9 +117,9 @@ const NavbarSection = () => {
       <Container>
         <Navbar.Brand href="#" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ background: gradients.hero, borderRadius: 8, padding: 8 }}>
-            <Shield size={20} color="white" />
+            <Image src={Logo} alt="OrderzUp Logo" height={24} />
           </div>
-          <span style={{ fontWeight: 700, fontSize: 20 }}>OrderzUp</span>
+          OrderzUp
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="navbar-nav" onClick={() => setExpanded(!expanded)}>
@@ -179,7 +186,7 @@ const HeroSection = () => {
               <span style={{ fontSize: 14 }}>Trusted by 500+ Indian D2C Brands</span>
             </div>
 
-            <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, marginBottom: 24, lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, marginBottom: 24, lineHeight: 1.2, color: "#fff!important" }}>
               Reduce RTO by <TextGradient>40%</TextGradient>
               <br />With Smart COD Control
             </h1>
@@ -197,8 +204,8 @@ const HeroSection = () => {
               >
                 Check Customer Score <ArrowRight size={18} />
               </Button>
-              <Button variant="outline-light" size="lg">
-                Watch Demo
+              <Button variant="outline-light" size="lg" onClick={() => { window.open("/login", "_blank") }}>
+                Start Free Trial
               </Button>
             </div>
 
@@ -212,7 +219,7 @@ const HeroSection = () => {
             </div>
           </Col>
 
-          <Col lg={6} className="d-none d-lg-block">
+          <Col lg={6} className=" d-lg-block">
             <div style={{ position: "relative" }}>
               <Card style={{
                 background: "white",
@@ -297,6 +304,7 @@ const HeroSection = () => {
             </Row>
           </Col>
         </Row>
+
       </Container>
 
       <style>{`
@@ -319,13 +327,13 @@ const ProblemSection = () => {
   ];
 
   return (
-    <section style={{ padding: "80px 0" }}>
+    <section style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
       <Container>
         <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             The Problem
-          </Badge>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          </span>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)!important", fontWeight: 700, marginBottom: 16, color: colors.primaryNavy }}>
             COD is Killing Your <TextGradient>Profit Margins</TextGradient>
           </h2>
           <p style={{ color: colors.textSecondary }}>
@@ -343,8 +351,8 @@ const ProblemSection = () => {
                 transition: "all 0.3s ease",
                 cursor: "pointer",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
               >
                 <Card.Body style={{ padding: 24 }}>
                   <div style={{
@@ -356,7 +364,7 @@ const ProblemSection = () => {
                   }}>
                     <problem.icon size={24} color={colors.dangerRed} />
                   </div>
-                  <h5 style={{ fontWeight: 700, marginBottom: 8 }}>{problem.title}</h5>
+                  <p style={{ fontWeight: 700, marginBottom: 8, color: colors.primaryNavy + "!important" }}>{problem.title}</p>
                   <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>{problem.description}</p>
                   <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 16 }}>
                     <div style={{ fontSize: 28, fontWeight: 700, color: colors.dangerRed, marginBottom: 0 }}>{problem.stat}</div>
@@ -368,12 +376,12 @@ const ProblemSection = () => {
           ))}
         </Row>
 
-        <div style={{ textAlign: "center", marginTop: 48 }}>
-          <div style={{ background: colors.lightBg, borderRadius: 16, padding: 24, display: "inline-block", maxWidth: 600 }}>
-            <p style={{ fontSize: 18, marginBottom: 8 }}>
+        <div style={{ textAlign: "center", marginTop: 48, }}>
+          <div style={{ background: colors.bgMuted, borderRadius: 16, padding: 24, display: "inline-block", maxWidth: 600, backgroundColor: colors.textLight }}>
+            <p style={{ fontSize: 18, marginBottom: 8, color: colors.primaryNavy, fontWeight: 600 }}>
               "We were offering COD to everyone. Our RTO was 35%. We didn't know which customers were risky."
             </p>
-            <small style={{ color: colors.textSecondary }}>— Every D2C founder before using OrderzUp</small>
+            <small style={{ color: colors.textSecondary, fontSize: "1.25rem" }}>— Every D2C founder before using OrderzUp</small>
           </div>
         </div>
       </Container>
@@ -391,13 +399,13 @@ const SolutionSection = () => {
   ];
 
   return (
-    <section style={{ padding: "80px 0", background: colors.lightBg }}>
+    <section style={{ padding: "80px 0", background: colors.bgMuted }}>
       <Container>
         <Row style={{ alignItems: "center" }}>
           <Col lg={6} style={{ marginBottom: 48 }}>
-            <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+            <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
               The Solution
-            </Badge>
+            </span>
             <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
               Introducing <TextGradient>Ecommerce Credit Score</TextGradient>
             </h2>
@@ -430,12 +438,13 @@ const SolutionSection = () => {
                   alignItems: "center",
                   gap: 12,
                   padding: 12,
+                  color: item.color,
                   background: item.bg,
                   borderRadius: 8,
                   border: `1px solid ${item.color}40`,
                 }}>
                   <div style={{ width: 12, height: 12, borderRadius: "50%", background: item.color }} />
-                  <span style={{ fontWeight: 500 }}>{item.text}</span>
+                  <span style={{ fontWeight: 500, color: colors.primaryNavy }}>{item.text}</span>
                 </div>
               ))}
             </div>
@@ -451,8 +460,8 @@ const SolutionSection = () => {
                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                     transition: "all 0.3s ease",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
                   >
                     <Card.Body style={{ padding: 20 }}>
                       <div style={{
@@ -492,6 +501,99 @@ const SolutionSection = () => {
     </section>
   );
 };
+const Gauge = ({ score = 750 }: { score?: number }) => {
+  const prevAngleRef = useRef<number | null>(null);
+  const [animKey, setAnimKey] = useState(0);
+
+  const min = 300;
+  const max = 900;
+  const clamp = Math.max(min, Math.min(max, score));
+  const percent = (clamp - min) / (max - min); // 0..1
+  // map percent to -180 -> 0 deg (left to right sweep)
+  const angle = -180 + percent * 180;
+
+  // store previous angle and bump key to restart <animateTransform>
+  useEffect(() => {
+    // if there was a previous value, trigger animation by changing key
+    if (prevAngleRef.current !== null) {
+      setAnimKey((k) => k + 1);
+    }
+    prevAngleRef.current = angle;
+  }, [angle]);
+
+  const fromAngle = prevAngleRef.current ?? angle;
+
+  return (
+    <div className="gauge-container" aria-hidden>
+      <svg viewBox="0 0 200 120" className="gauge-svg" role="img" aria-label={`Score ${score}`}>
+        <path
+          d="M 20 100 A 80 80 0 0 1 180 100"
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="16"
+          strokeLinecap="round"
+        />
+        <defs>
+          <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="25%" stopColor="#f97316" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="75%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+
+        <path
+          d="M 20 100 A 80 80 0 0 1 180 100"
+          fill="none"
+          stroke="url(#gaugeGradient)"
+          strokeWidth="16"
+          strokeLinecap="round"
+          className="gauge-fill"
+          style={{
+            strokeDasharray: "251.2",
+            strokeDashoffset: `${(1 - percent) * 251.2}`,
+          }}
+        />
+
+        {/* Needle: use SVG rotate(angle cx cy) so pivot is exact */}
+        <g
+          className="gauge-needle"
+          transform={`rotate(${angle} 100 100)`} // rotate around center (100,100)
+        >
+          <line x1="100" y1="100" x2="100" y2="35" stroke={colors.primaryNavy} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="100" cy="100" r="8" fill={colors.primaryNavy} />
+        </g>
+
+        {/* Optional: animateTransform approach (works reliably in SVG)
+            We add an <animateTransform> element keyed by animKey so it restarts
+            when score changes. If you prefer no SMIL, you can remove this block.
+        */}
+        {/*
+          Note: Some browsers disable SMIL animations; if you target those,
+          use JS animation libraries or CSS + transform/transform-box approach.
+        */}
+        <g style={{ display: "none" }} key={`anim-${animKey}`}>
+          <animateTransform
+            attributeName="transform"
+            attributeType="XML"
+            type="rotate"
+            from={`${fromAngle} 100 100`}
+            to={`${angle} 100 100`}
+            dur="0.9s"
+            fill="freeze"
+          />
+        </g>
+      </svg>
+
+      <div className="gauge-labels" style={{ color: colors.primaryNavy }}>
+        <span>300</span>
+        <span>900</span>
+      </div>
+    </div>
+  );
+};
+
 
 // ============ CREDIT SCORE CHECKER ============
 const CreditScoreChecker = () => {
@@ -508,27 +610,33 @@ const CreditScoreChecker = () => {
     setStep("business");
   };
 
-  const handleBusinessSubmit = () => {
-    if (!businessData.brandName || !businessData.email || !businessData.phone) return;
+  const handleBusinessSubmit = async () => {
+    if (!businessData.yourName || !businessData.email || !businessData.phone) return;
     setIsLoading(true);
+    const data = {
+      sourceTypeId: 1002,
+      name: businessData.yourName,
+      email: businessData.email,
+      phone: businessData.phone,
+      orders: businessData.orderVolume,
+      customer_mobile: customerData.phone,
+      pincode: customerData.pincode,
+    };
+    const [score] = await Promise.all([getScore(data), registerLead(data)]);
 
-    setTimeout(() => {
-      const pincodeNum = parseInt(customerData.pincode.slice(0, 3)) || 500;
-      const score = Math.min(900, Math.max(300, 600 + (pincodeNum % 300)));
 
-      let risk: "low" | "medium" | "high", recommendation: string, message: string;
-      if (score >= 750) {
-        risk = "low"; recommendation = "Allow Full COD"; message = "This customer has excellent delivery history. Safe for COD orders.";
-      } else if (score >= 500) {
-        risk = "medium"; recommendation = "Partial COD (50%)"; message = "Moderate risk. Recommend partial payment upfront.";
-      } else {
-        risk = "high"; recommendation = "Prepaid Only"; message = "High-risk customer. Multiple RTO signals detected.";
-      }
+    let risk: "low" | "medium" | "high", recommendation: string, message: string;
+    if (score >= 750) {
+      risk = "low"; recommendation = "Allow Full COD"; message = "This customer has excellent delivery history. Safe for COD orders.";
+    } else if (score >= 500) {
+      risk = "medium"; recommendation = "Partial COD (50%)"; message = "Moderate risk. Recommend partial payment upfront.";
+    } else {
+      risk = "high"; recommendation = "Prepaid Only"; message = "High-risk customer. Multiple RTO signals detected.";
+    }
 
-      setResult({ score, risk, recommendation, message });
-      setIsLoading(false);
-      setStep("result");
-    }, 2000);
+    setResult({ score, risk, recommendation, message });
+    setIsLoading(false);
+    setStep("result");
   };
 
   const resetChecker = () => {
@@ -538,7 +646,32 @@ const CreditScoreChecker = () => {
     setResult(null);
   };
 
-  const getRiskColor = (risk: string) => risk === "low" ? colors.successGreen : risk === "medium" ? colors.warningYellow : colors.dangerRed;
+  const getRiskColor = (risk: string) => {
+    if (risk === "low") return colors.successGreen;
+    if (risk === "medium") return colors.warningYellow;
+    return colors.dangerRed;
+  };
+  const getRiskColorGradient = (score: number) => {
+    const s = Math.max(0, Math.min(900, score));
+
+    let hue: number;
+
+    if (s >= 750) {
+      // 750 → 900 : yellow → green
+      hue = 60 + ((s - 750) / 150) * 60;
+    } else if (s >= 500) {
+      // 500 → 750 : red → yellow
+      hue = ((s - 500) / 250) * 60;
+    } else {
+      hue = 0;
+    }
+
+    // Dark, premium tones
+    const saturation = 60; // less neon
+    const lightness = 60;  // darker shade
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
   const getRiskGradient = (risk: string) => risk === "low" ? gradients.success : risk === "medium" ? gradients.warning : gradients.danger;
   const getRiskIcon = (risk: string) => risk === "low" ? CheckCircle2 : risk === "medium" ? AlertTriangle : XCircle;
 
@@ -546,12 +679,12 @@ const CreditScoreChecker = () => {
   const currentIndex = steps.indexOf(step);
 
   return (
-    <section id="credit-checker" style={{ padding: "80px 0" }}>
+    <section id="credit-checker" style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
       <Container>
         <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 40px" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             Try It Now
-          </Badge>
+          </span>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
             Check Your Customer's <TextGradient>Credit Score</TextGradient>
           </h2>
@@ -615,15 +748,6 @@ const CreditScoreChecker = () => {
                     onChange={(e) => setCustomerData({ ...customerData, pincode: e.target.value })}
                   />
                 </Form.Group>
-                <Form.Group style={{ marginBottom: 24 }}>
-                  <Form.Label>Email (Optional)</Form.Label>
-                  <Form.Control
-                    type="email"
-                    placeholder="customer@email.com"
-                    value={customerData.email}
-                    onChange={(e) => setCustomerData({ ...customerData, email: e.target.value })}
-                  />
-                </Form.Group>
                 <Button
                   style={{ width: "100%", background: gradients.accent, border: "none", color: "white", fontWeight: 600, padding: "12px 24px" }}
                   onClick={handleCustomerSubmit}
@@ -640,16 +764,7 @@ const CreditScoreChecker = () => {
                   <Building size={20} color={colors.warningYellow} /> Your Business Details
                 </h5>
                 <Form.Group style={{ marginBottom: 16 }}>
-                  <Form.Label>Brand Name *</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Your brand name"
-                    value={businessData.brandName}
-                    onChange={(e) => setBusinessData({ ...businessData, brandName: e.target.value })}
-                  />
-                </Form.Group>
-                <Form.Group style={{ marginBottom: 16 }}>
-                  <Form.Label>Your Name</Form.Label>
+                  <Form.Label>Your Name *</Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Your full name"
@@ -658,7 +773,7 @@ const CreditScoreChecker = () => {
                   />
                 </Form.Group>
                 <Form.Group style={{ marginBottom: 16 }}>
-                  <Form.Label>Business Email *</Form.Label>
+                  <Form.Label>Email Address *</Form.Label>
                   <Form.Control
                     type="email"
                     placeholder="you@yourbrand.com"
@@ -677,16 +792,19 @@ const CreditScoreChecker = () => {
                   />
                 </Form.Group>
                 <Form.Group style={{ marginBottom: 24 }}>
-                  <Form.Label>Monthly Order Volume</Form.Label>
+                  <Form.Label>Monthly Order Volume (per day)</Form.Label>
                   <Form.Select
                     value={businessData.orderVolume}
                     onChange={(e) => setBusinessData({ ...businessData, orderVolume: e.target.value })}
                   >
                     <option value="">Select volume</option>
-                    <option value="0-500">0 - 500 orders</option>
-                    <option value="500-2000">500 - 2,000 orders</option>
-                    <option value="2000-10000">2,000 - 10,000 orders</option>
-                    <option value="10000+">10,000+ orders</option>
+                    <option value="0-10">0 - 10 orders</option>
+                    <option value="10-50">10 - 50 orders</option>
+                    <option value="50-250">50 - 250 orders</option>
+                    <option value="250-1000">250 - 1,000 orders</option>
+                    <option value="1000-2500">1,000 - 2,500 orders</option>
+                    <option value="2500-5000">2,500 - 5,000 orders</option>
+                    <option value="1000+">5,000+ orders</option>
                   </Form.Select>
                 </Form.Group>
                 <div style={{ display: "flex", gap: 12 }}>
@@ -700,7 +818,7 @@ const CreditScoreChecker = () => {
                   <Button
                     style={{ flex: 1, background: gradients.accent, border: "none", color: "white", fontWeight: 600 }}
                     onClick={handleBusinessSubmit}
-                    disabled={!businessData.brandName || !businessData.email || !businessData.phone}
+                    disabled={!businessData.yourName || !businessData.email || !businessData.phone}
                   >
                     Get Score <ArrowRight size={16} style={{ marginLeft: 8 }} />
                   </Button>
@@ -729,30 +847,10 @@ const CreditScoreChecker = () => {
 
             {step === "result" && result && !isLoading && (
               <div style={{ textAlign: "center" }}>
-                <div style={{ position: "relative", display: "inline-block", marginBottom: 24, width: 160, height: 160 }}>
-                  <svg width="160" height="160" style={{ transform: "rotate(-90deg)" }}>
-                    <circle cx="80" cy="80" r="70" fill="none" stroke={colors.border} strokeWidth="12" />
-                    <circle
-                      cx="80" cy="80" r="70" fill="none"
-                      stroke={getRiskColor(result.risk)}
-                      strokeWidth="12"
-                      strokeLinecap="round"
-                      strokeDasharray={440}
-                      strokeDashoffset={440 - (result.score / 900) * 440}
-                    />
-                  </svg>
-                  <div style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    textAlign: "center",
-                  }}>
-                    <span style={{ fontSize: 36, fontWeight: 700 }}>{result.score}</span>
-                    <br /><small style={{ color: colors.textSecondary }}>out of 900</small>
-                  </div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                  <CreditScoreMeter score={result.score} width={300} />
                 </div>
-
+                <br />
                 <Badge style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -766,7 +864,8 @@ const CreditScoreChecker = () => {
                   {(() => { const Icon = getRiskIcon(result.risk); return <Icon size={16} />; })()}
                   {result.risk.charAt(0).toUpperCase() + result.risk.slice(1)} Risk
                 </Badge>
-
+                <br />
+                {/* <a onClick={handleBusinessSubmit}>Hit me</a> */}
                 <div style={{
                   background: getRiskGradient(result.risk),
                   borderRadius: 12,
@@ -809,12 +908,12 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section id="how-it-works" style={{ padding: "80px 0" }}>
+    <section id="how-it-works" style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
       <Container>
         <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             How It Works
-          </Badge>
+          </span>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
             Get Started in <TextGradient>3 Simple Steps</TextGradient>
           </h2>
@@ -843,8 +942,8 @@ const HowItWorksSection = () => {
                 zIndex: 1,
                 transition: "all 0.3s ease",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
               >
                 <Badge style={{
                   position: "absolute",
@@ -871,7 +970,7 @@ const HowItWorksSection = () => {
 
         <div style={{ textAlign: "center", marginTop: 48 }}>
           <div style={{
-            background: colors.lightBg,
+            background: colors.bgMuted,
             borderRadius: 16,
             padding: 24,
             display: "inline-flex",
@@ -879,7 +978,7 @@ const HowItWorksSection = () => {
             alignItems: "center",
             gap: 16,
           }}>
-            <span style={{ fontWeight: 500 }}>Ready to reduce your RTO?</span>
+            <span style={{ fontWeight: 500, color: colors.textSecondary }}>Ready to reduce your RTO?</span>
             <Button
               style={{ background: gradients.accent, border: "none", color: "white", fontWeight: 600 }}
               onClick={() => document.querySelector("#credit-checker")?.scrollIntoView({ behavior: "smooth" })}
@@ -905,12 +1004,12 @@ const BenefitsSection = () => {
   ];
 
   return (
-    <section id="benefits" style={{ padding: "80px 0", background: colors.lightBg }}>
+    <section id="benefits" style={{ padding: "80px 0", background: colors.bgMuted }}>
       <Container>
         <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             Benefits
-          </Badge>
+          </span>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
             Why D2C Brands <TextGradient>Love OrderzUp</TextGradient>
           </h2>
@@ -926,8 +1025,8 @@ const BenefitsSection = () => {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                 transition: "all 0.3s ease",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
               >
                 <Card.Body style={{ padding: 24 }}>
                   <div style={{
@@ -956,7 +1055,7 @@ const BenefitsSection = () => {
               { value: "₹150+", label: "Saved Per RTO" },
             ].map((stat, i) => (
               <Col xs={6} lg={3} key={i} style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 0 }}>{stat.value}</div>
+                <big style={{ fontSize: "36px", fontWeight: 700, marginBottom: 0 }}>{stat.value}</big><br />
                 <small style={{ opacity: 0.75 }}>{stat.label}</small>
               </Col>
             ))}
@@ -979,12 +1078,12 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <section id="testimonials" style={{ padding: "80px 0" }}>
+    <section id="testimonials" style={{ padding: "80px 0", backgroundColor: "#f9fafc" }}>
       <Container>
         <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             Testimonials
-          </Badge>
+          </span>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
             Trusted by <TextGradient>500+ D2C Brands</TextGradient>
           </h2>
@@ -1102,12 +1201,12 @@ const CTASection = () => {
 
       <Container style={{ position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", color: "white", maxWidth: 800, margin: "0 auto" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             Get Started Today
-          </Badge>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
+          </span>
+          <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16, color: "white!important" }}>
             Ready to Reduce Your <TextGradient>RTO by 40%?</TextGradient>
-          </h2>
+          </h1>
           <p style={{ fontSize: 18, opacity: 0.75, marginBottom: 48, maxWidth: 600, margin: "0 auto 48px" }}>
             Join 500+ D2C brands who trust OrderzUp for smarter COD decisions.
           </p>
@@ -1121,7 +1220,9 @@ const CTASection = () => {
                   </div>
                   <h5 style={{ fontWeight: 700, marginBottom: 8 }}>Book Free Demo</h5>
                   <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>See OrderzUp in action. 30-minute call.</p>
-                  <Button style={{ width: "100%", background: gradients.accent, border: "none", color: "white", fontWeight: 600 }}>
+                  <Button
+                    onClick={() => window.open("https://calendly.com/deepam-orderzup/30min", "_blank")}
+                    style={{ width: "100%", background: gradients.accent, color: "white!important", border: "none", fontWeight: 600 }}>
                     Schedule Demo <ArrowRight size={16} style={{ marginLeft: 8 }} />
                   </Button>
                 </Card.Body>
@@ -1137,8 +1238,8 @@ const CTASection = () => {
                   <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>Try OrderzUp free for 14 days.</p>
                   <Button
                     variant="outline-dark"
+                    href="/login"
                     style={{ width: "100%" }}
-                    onClick={() => document.querySelector("#credit-checker")?.scrollIntoView({ behavior: "smooth" })}
                   >
                     Start Free Trial <ArrowRight size={16} style={{ marginLeft: 8 }} />
                   </Button>
@@ -1181,9 +1282,9 @@ const FAQSection = () => {
     <section id="faq" style={{ padding: "80px 0", background: colors.lightBg }}>
       <Container>
         <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 48px" }}>
-          <Badge style={{ background: colors.warningYellow, color: "#1a1a1a", marginBottom: 16, textTransform: "uppercase", fontSize: 12 }}>
+          <span style={{ color: colors.accentOrange, textTransform: "uppercase" }}>
             FAQ
-          </Badge>
+          </span>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, marginBottom: 16 }}>
             Frequently Asked <TextGradient>Questions</TextGradient>
           </h2>
@@ -1203,7 +1304,7 @@ const FAQSection = () => {
 
         <div style={{ textAlign: "center", marginTop: 48 }}>
           <p style={{ color: colors.textSecondary, marginBottom: 8 }}>Still have questions?</p>
-          <a href="mailto:hello@orderzup.com" style={{ color: colors.warningYellow, fontWeight: 600, textDecoration: "none" }}>
+          <a href="https://calendly.com/deepam-orderzup/30min" target="_blank" style={{ color: colors.warningYellow, fontWeight: 600, textDecoration: "none" }}>
             Contact our team →
           </a>
         </div>
@@ -1224,81 +1325,113 @@ const FooterSection = () => {
   };
 
   return (
-    <footer style={{ background: colors.primaryNavy, color: colors.textLight, padding: "80px 0" }}>
-      <Container>
-        <Row style={{ marginBottom: 48 }}>
-          <Col lg={4} style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div style={{ background: gradients.accent, borderRadius: 8, padding: 8 }}>
-                <Shield size={20} color="white" />
-              </div>
-              <span style={{ fontSize: 20, fontWeight: 700 }}>OrderzUp</span>
+    <footer className="main-footer py-4 bg-dark text-white" style={{ background: gradients.hero, paddingTop: 48 }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 16px" }}>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 320px" }}>
+            <img src={logoWide} width="200px" className="p-2" alt="OrderzUp logo" />
+            <p>Your smart solution for D2C logistics. Reduce RTOs, automate shipping, and grow your brand.</p>
+          </div>
+          <div style={{ flex: "1 1 200px" }}>
+            <h5>Contact</h5>
+            <p>Email: <a href="mailto:hello@orderzup.com" className="text-white">hello@orderzup.com</a></p>
+          </div>
+          <div style={{ flex: "1 1 200px" }}>
+            <h5>Connect</h5>
+            <a href="https://www.linkedin.com/company/ordezup/" className="text-white mr-2" style={{ marginRight: 8 }}>LinkedIn</a>
+            <a href="https://instagram.com/officialorderzup" className="text-white mr-2" style={{ marginRight: 8 }}>Instagram</a>
+            <a href="https://facebook.com/officialorderzup" className="text-white">Facebook</a>
+            <div style={{ marginTop: 8 }}>
+              <a href="https://orderzup.com/terms-of-use" className="text-white mr-2" style={{ marginRight: 8 }}>Terms of Service</a>
+              <a href="https://orderzup.com/privacy-policy-2/" className="text-white">Privacy Policy</a>
             </div>
-            <p style={{ opacity: 0.75, marginBottom: 24, maxWidth: 280 }}>
-              Helping D2C brands reduce RTO with smart ecommerce credit scoring.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, opacity: 0.75 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Mail size={16} /> hello@orderzup.com</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Phone size={16} /> +91 98765 43210</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><MapPin size={16} /> Bangalore, India</span>
-            </div>
-          </Col>
-
-          {Object.entries(links).map(([title, items]) => (
-            <Col xs={6} md={3} lg={2} key={title} style={{ marginBottom: 24 }}>
-              <h6 style={{ fontWeight: 600, marginBottom: 16, textTransform: "capitalize" }}>{title}</h6>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {items.map((item) => (
-                  <li key={item} style={{ marginBottom: 8 }}>
-                    <a href="#" style={{ color: "inherit", textDecoration: "none", opacity: 0.75, fontSize: 14 }}>{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </Col>
-          ))}
-        </Row>
-
-        <div style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingTop: 24,
-          borderTop: "1px solid rgba(255,255,255,0.1)",
-          gap: 16,
-        }}>
-          <small style={{ opacity: 0.75 }}>© {currentYear} OrderzUp. All rights reserved.</small>
-          <div style={{ display: "flex", gap: 12 }}>
-            {[Twitter, Linkedin, Instagram].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                style={{
-                  background: "rgba(255,255,255,0.1)",
-                  borderRadius: "50%",
-                  width: 40,
-                  height: 40,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "inherit",
-                }}
-              >
-                <Icon size={18} />
-              </a>
-            ))}
           </div>
         </div>
-      </Container>
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <small>Copyright © 2025 OrderzUp. All Rights Reserved.</small>
+        </div>
+      </div>
     </footer>
+
   );
 };
 
 // ============ MAIN PAGE ============
 const Index = () => {
   return (
-    <>s
-      <main style={{ fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", backgroundColor: "white" }}>
+    <>
+      <style>{`
+      /* Scoped to this landing page root only */
+      .ecom-credit-root, .ecom-credit-root * { font-size: 18px; }
+      .ecom-credit-root h1, .ecom-credit-root h2, .ecom-credit-root h3, .ecom-credit-root h4, .ecom-credit-root h5, .ecom-credit-root h6 { font-weight: 700 !important; }
+      .ecom-credit-root h1 {
+        font-size: clamp(36px, 5vw, 48px) !important;
+        color: #fff !important;
+      }
+      .ecom-credit-root h2{
+        font-size: clamp(28px, 4vw, 40px) !important;
+        color: #111827 !important;
+      }
+      .ecom-credit-root h3{
+        font-size: clamp(24px, 3.5vw, 32px) !important;
+      }
+      .ecom-credit-root h4{
+        font-size: clamp(20px, 3vw, 28px) !important;
+      }
+      .ecom-credit-root h5{
+        font-size: clamp(18px, 2.5vw, 24px) !important;
+      }
+      .ecom-credit-root h6{
+        font-size: clamp(16px, 2vw, 20px) !important;
+      }
+      .ecom-credit-root p, .ecom-credit-root li, .ecom-credit-root div, .ecom-credit-root button, .ecom-credit-root input, .ecom-credit-root select, .ecom-credit-root textarea { font-size: 18px !important; }
+      .ecom-credit-root a { text-decoration: none !important; }
+   
+/* Gauge Meter */
+.gauge-container {
+  position: relative;
+  width: 220px;
+  margin: 0 auto 1rem;
+}
+
+.gauge-svg {
+  width: 100%;
+  height: auto;
+}
+
+.gauge-fill {
+  animation: gaugeFill 1.5s ease-out forwards;
+}
+
+@keyframes gaugeFill {
+  from {
+    stroke-dashoffset: 251.2;
+  }
+  to {
+    stroke-dashoffset: 45;
+  }
+}
+
+/* Needle: rotate via inline transform; transition for smooth movement */
+.gauge-needle {
+  transform-box: fill-box;              /* make transform-origin use SVG coords */
+  transform-origin: 100px 100px;        /* pivot at SVG cx/cy (100,100) */
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1); /* smooth motion */
+}
+
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 0 10px;
+  margin-top: -10px;
+}
+
+   
+   `}</style>
+
+      <main className="ecom-credit-root" style={{ fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", backgroundColor: "white" }}>
         <NavbarSection />
         <HeroSection />
         <ProblemSection />
