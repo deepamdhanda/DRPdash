@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { drpCrmBaseUrl } from "../../axios/urls";
+import RecomendedCouriers, { Courier } from "../../components/RecomendedCouriers";
 
 const brandColors = {
   navy: "#000434",
@@ -8,12 +9,6 @@ const brandColors = {
   white: "#FFFFFF",
 };
 
-interface ShippingRate {
-  partner: string;
-  rate: number;
-  estimatedDays?: string;
-  service?: string;
-}
 
 const ShippingCalculator: React.FC = () => {
   const [pickupPincode, setPickupPincode] = useState<string>("");
@@ -28,7 +23,7 @@ const ShippingCalculator: React.FC = () => {
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [shippingRates, setShippingRates] = useState<Courier[]>([]);
 
   // Auto-calculate chargeable weight
   useEffect(() => {
@@ -100,24 +95,8 @@ const ShippingCalculator: React.FC = () => {
       // Adjust this based on your actual API response structure
       const couriers = data?.data || [];
 
-      const shippingRates1 = couriers.map((courier: any) => {
-        const name = courier.courier_name.toLowerCase();
-
-        let service: ShippingRate["service"] = "Standard";
-        if (name.includes("air")) service = "Air";
-        else if (name.includes("surface")) service = "Surface";
-
-        return {
-          partner: courier.courier_name,
-          rate: Number(courier.total_amount), // final payable amount
-          estimatedDays: courier.estimated_delivery_days
-            ? `${courier.estimated_delivery_days} days`
-            : "N/A",
-          service,
-        };
-      });
-      console.log(shippingRates1);
-      setShippingRates(shippingRates1);
+      
+      setShippingRates(couriers);
     } catch (err) {
       console.error(err);
     } finally {
@@ -548,6 +527,7 @@ const ShippingCalculator: React.FC = () => {
                   color: brandColors.white,
                   border: "none",
                   padding: "12px 40px",
+                  marginBottom: "1rem",
                   fontSize: "1.1rem",
                   fontWeight: "600",
                   borderRadius: "4px",
@@ -578,131 +558,7 @@ const ShippingCalculator: React.FC = () => {
 
           {/* Results Table */}
           {shippingRates.length > 0 && (
-            <div style={{ marginTop: "2.5rem" }}>
-              <h5
-                style={{
-                  marginBottom: "1rem",
-                  borderBottom: `2px solid ${brandColors.orange}`,
-                  paddingBottom: "5px",
-                  color: brandColors.navy,
-                }}
-              >
-                Available Shipping Partners
-              </h5>
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    backgroundColor: brandColors.white,
-                  }}
-                >
-                  <thead>
-                    <tr
-                      style={{
-                        backgroundColor: brandColors.navy,
-                        color: brandColors.white,
-                      }}
-                    >
-                      <th
-                        style={{
-                          padding: "0.75rem",
-                          textAlign: "left",
-                          border: "1px solid #ddd",
-                        }}
-                      >
-                        Shipping Partner
-                      </th>
-                      <th
-                        style={{
-                          padding: "0.75rem",
-                          textAlign: "left",
-                          border: "1px solid #ddd",
-                        }}
-                      >
-                        Service Type
-                      </th>
-                      <th
-                        style={{
-                          padding: "0.75rem",
-                          textAlign: "left",
-                          border: "1px solid #ddd",
-                        }}
-                      >
-                        Estimated Delivery
-                      </th>
-                      <th
-                        style={{
-                          padding: "0.75rem",
-                          textAlign: "left",
-                          border: "1px solid #ddd",
-                        }}
-                      >
-                        Shipping Rate (₹)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shippingRates.map((rate, index) => (
-                      <tr
-                        key={index}
-                        style={{
-                          backgroundColor:
-                            index % 2 === 0 ? "#f9f9f9" : brandColors.white,
-                        }}
-                      >
-                        <td
-                          style={{
-                            padding: "0.75rem",
-                            fontWeight: "600",
-                            border: "1px solid #ddd",
-                          }}
-                        >
-                          {rate.partner}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem",
-                            border: "1px solid #ddd",
-                          }}
-                        >
-                          {rate.service || "Standard"}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem",
-                            border: "1px solid #ddd",
-                          }}
-                        >
-                          {rate.estimatedDays || "N/A"}
-                        </td>
-                        <td
-                          style={{
-                            padding: "0.75rem",
-                            fontWeight: "700",
-                            color: brandColors.orange,
-                            border: "1px solid #ddd",
-                          }}
-                        >
-                          ₹{rate.rate.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div
-                style={{
-                  textAlign: "center",
-                  marginTop: "1rem",
-                  color: "#666",
-                  fontSize: "0.875rem",
-                }}
-              >
-                * Rates are subject to change based on actual package dimensions
-                and courier partner policies
-              </div>
-            </div>
+            <RecomendedCouriers shipmentOptions={shippingRates} actionable={false} />
           )}
 
           <footer

@@ -30,6 +30,7 @@ import {
   Warehouse,
   ChevronRight,
 } from "lucide-react";
+import { BsGraphUp } from "react-icons/bs";
 
 type NavLink = {
   name: string;
@@ -123,11 +124,13 @@ const navLinks: NavLink[] = [
         path: "/user/Invoices",
       },
     ],
-  },
-  {
-    name: "Profit Calculator",
+  }, {
+    name: "Calculators",
     icon: <Calculator size={20} />,
-    path: "/user/ProfitCalculator",
+    children: [
+      { name: "Profit Calculator", icon: <BsGraphUp size={18} />, path: "/user/ProfitCalculator" },
+      { name: "Shipping Calculator", icon: <Truck size={18} />, path: "/user/shipping-charge-calculator" },
+    ],
   },
   {
     name: "Settings",
@@ -456,9 +459,8 @@ const UserPanel: React.FC = () => {
               </nav>
             </div>
             <div
-              className={`nav-link-1 ${
-                activeLink === "SignOut" ? "active" : ""
-              }`}
+              className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""
+                }`}
               onClick={() => handleLinkClick("SignOut")}
             >
               <span className="nav-icon">

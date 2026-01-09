@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 type Automation = {
   auto_ship: boolean;
   auto_ai_recommendation: boolean;
-  auto_whatsapp: boolean;
+  auto_address_confirm: boolean;
   auto_ai_rating: boolean;
 };
 export interface ChannelAccount {
@@ -60,7 +60,7 @@ const ChannelAccounts: React.FC = () => {
   const [automation, setAutomation] = useState({
     auto_ship: true,
     auto_ai_recommendation: true,
-    auto_whatsapp: true,
+    auto_address_confirm: true,
     auto_ai_rating: true,
   });
   const location = useLocation();
@@ -178,7 +178,7 @@ const ChannelAccounts: React.FC = () => {
     setAutomation({
       auto_ship: false,
       auto_ai_recommendation: false,
-      auto_whatsapp: false,
+      auto_address_confirm: false,
       auto_ai_rating: false,
     });
     navigate(location.pathname, { replace: true }); // updates URL without reloading
@@ -212,7 +212,7 @@ const ChannelAccounts: React.FC = () => {
       auto_ship: channelAccount.automation?.auto_ship || false,
       auto_ai_recommendation:
         channelAccount.automation?.auto_ai_recommendation || false,
-      auto_whatsapp: channelAccount.automation?.auto_whatsapp || false,
+      auto_address_confirm: channelAccount.automation?.auto_address_confirm || false,
       auto_ai_rating: channelAccount.automation?.auto_ai_rating || false,
     });
     setShowModal(true);
@@ -601,13 +601,13 @@ const ChannelAccounts: React.FC = () => {
                 />
                 <Form.Check
                   type="switch"
-                  id="auto_whatsapp"
+                  id="auto_address_confirm"
                   label="Auto WhatsApp"
-                  checked={automation.auto_whatsapp}
+                  checked={automation.auto_address_confirm}
                   onChange={(e) =>
                     setAutomation((a) => ({
                       ...a,
-                      auto_whatsapp: e.target.checked,
+                      auto_address_confirm: e.target.checked,
                     }))
                   }
                 />

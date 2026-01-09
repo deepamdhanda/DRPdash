@@ -20,7 +20,7 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 type Automation = {
   auto_ship: boolean;
   auto_ai_recommendation: boolean;
-  auto_whatsapp: boolean;
+  auto_address_confirm: boolean;
   auto_ai_rating: boolean;
 };
 
@@ -55,7 +55,7 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
   const [automation, setAutomation] = useState<Automation>({
     auto_ship: true,
     auto_ai_recommendation: true,
-    auto_whatsapp: true,
+    auto_address_confirm: true,
     auto_ai_rating: true,
   });
 
@@ -291,14 +291,14 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
                   />
                   <Form.Check
                     type="switch"
-                    id="auto_whatsapp"
+                    id="auto_address_confirm"
                     label="Auto Order Confirmation"
                     className="mb-2"
-                    checked={automation.auto_whatsapp}
+                    checked={automation.auto_address_confirm}
                     onChange={(e) =>
                       setAutomation((a) => ({
                         ...a,
-                        auto_whatsapp: e.target.checked,
+                        auto_address_confirm: e.target.checked,
                       }))
                     }
                   />

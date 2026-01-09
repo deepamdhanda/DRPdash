@@ -1,6 +1,4 @@
-import { Button, Badge, OverlayTrigger, Tooltip } from "react-bootstrap";
-import { motion } from "framer-motion";
-import { Clock, Phone, Star, Sparkles, ChevronRight } from "lucide-react";
+import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import OUAIIcon from "../assets/ouai_icon";
 
@@ -53,7 +51,7 @@ const PerformanceBar = ({ value, label }: { value: number; label?: string }) => 
     </div>
 );
 
-const ModernShipmentTable: React.FC<{
+const RecomendedCouriers: React.FC<{
     shipmentOptions: Courier[];
     actionable?: boolean;
     handleBookShipment?: (id: string) => void;
@@ -73,6 +71,7 @@ const ModernShipmentTable: React.FC<{
                     name: "Company Name",
                     selector: (row: any) => row.courier_name,
                     cell: (row: any, index: any) => {
+    console.log(row)
                         return (
                             <div style={{ padding: 10, fontSize: 12 }}>
                                 {index === 0 && (
@@ -315,7 +314,7 @@ const ModernShipmentTable: React.FC<{
                             >
                                 <Button
                                     variant="primary"
-                                    onClick={() => handleBookShipment(row._id)}
+                                    onClick={() => handleBookShipment && handleBookShipment(row._id)}
                                 >
                                     {"Book Shipment"}
                                 </Button>
@@ -325,7 +324,7 @@ const ModernShipmentTable: React.FC<{
                                     style={{ margin: 5 }}
                                     onClick={() =>
                                         shipmentOrder?._id &&
-                                        handleSelectShipment(shipmentOrder?._id, row)
+                                        handleSelectShipment && handleSelectShipment(shipmentOrder?._id, row)
                                     }
                                 >
                                     {" "}
@@ -343,4 +342,4 @@ const ModernShipmentTable: React.FC<{
     );
 };
 
-export default ModernShipmentTable;
+export default RecomendedCouriers;
