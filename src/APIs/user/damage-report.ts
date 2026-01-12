@@ -26,6 +26,7 @@ export const postStartChunks = async (postdata: {
   order_id: string;
   videoId: string;
   damage_type: string;
+  description: string;
 }) => {
   try {
     const { data } = await appAxios.post(`${damgerReport_url}`, postdata);
