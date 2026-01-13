@@ -43,9 +43,16 @@ export const AuthPage: React.FC = () => {
   } = useForm({ resolver: zodResolver(registerSchema) });
 
   const onLogin = async (data: any) => {
+    const params = new URLSearchParams(window.location.search);
+    const path = params.get("path");
+
     await LoginUser(data, (verified, email) => {
       if (verified) {
-        navigate("/user");
+        if (path) {
+          navigate(path);
+        } else {
+          navigate("/user");
+        }
       } else {
         navigate(`/verify?email=${email}`);
       }

@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import _ from "lodash";
 import { drpCrmBaseUrl } from "./urls";
 import { useUserStore } from "../store/useUserStore";
@@ -16,12 +15,6 @@ Axios.interceptors.request.use(
   (config) => {
     // Always send credentials
     config.withCredentials = true;
-
-    // If you still want to attach non-httpOnly cookie token
-    const authToken = Cookies.get("authToken");
-    if (authToken) {
-      config.headers["Authorization"] = `Bearer ${authToken}`;
-    }
 
     return config;
   },
@@ -48,9 +41,9 @@ Axios.interceptors.response.use(
       } catch (logoutErr) {
         console.log("Logout API failed:", logoutErr);
       }
-
+      const path = window.location.pathname;
       // Redirect user to login
-      window.location.href = "/login";
+      window.location.href = `/login?path=${path}`;
       return Promise.reject(error);
     }
 
