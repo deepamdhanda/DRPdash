@@ -14,6 +14,7 @@ import {
 import { useUserStore } from "../../../store/useUserStore";
 import { useStatsStore } from "../../../store/useStatsStore";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 type Topic = {
   _id: string;
@@ -257,11 +258,39 @@ const SupportChatWidget = () => {
       setSelectedSubcategory(null);
     }
   };
-
-  // --- UI ---
+  const [help, setHelp] = useState(false);
+  const toggleOpen = () => {
+    setHelp(false);
+  };
   return (
     <>
       {/* Floating Chat Button */}
+      {!help && (
+        <motion.button
+          onClick={() => {
+            setHelp(true);
+            setOpen(false);
+            setOrderly(false);
+          }}
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            backgroundColor: "#dbeafe",
+            color: "#fff",
+            padding: "16px",
+            borderRadius: "50%",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+            border: "none",
+            cursor: "pointer",
+            zIndex: 999,
+          }}
+          layout="position"
+        >
+          <HelpDeskIcon />
+        </motion.button>
+      )}
+
       <button
         onClick={() => {
           setOpen(!open);
@@ -269,7 +298,7 @@ const SupportChatWidget = () => {
         }}
         style={{
           position: "fixed",
-          bottom: "24px",
+          bottom: "84px",
           right: "24px",
           backgroundColor: "#F5891E",
           color: "#fff",
@@ -940,8 +969,87 @@ const SupportChatWidget = () => {
           </Modal>
         </div>
       )}
+      {help && (
+        <motion.div
+          layout="position"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="p-4"
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            maxWidth: "580px",
+            maxHeight: "80vh",
+            backgroundColor: "#fff",
+            borderRadius: "12px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+            overflow: "hidden",
+            zIndex: 1000,
+          }}
+        >
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="m-0">Help Desk</h4>
+            <Button variant="close" onClick={toggleOpen} size="sm" />
+          </div>
+
+          <hr />
+
+          <div className="mb-2">
+            <small className="text-muted d-block">Support Agent</small>
+            <strong>Gurdeep</strong>
+          </div>
+
+          <div className="mb-2">
+            <small className="text-muted d-block">Phone</small>
+            <a href="tel:+1234567890" className="text-decoration-none">
+              +91 92586-15313
+            </a>
+          </div>
+
+          <div>
+            <small className="text-muted d-block">Email</small>
+            <a
+              href="mailto:support@example.com"
+              className="text-decoration-none"
+            >
+              gurdeep-a24@orderzup.com
+            </a>
+          </div>
+        </motion.div>
+      )}
     </>
   );
 };
+
+const HelpDeskIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+  >
+    <rect width="20" height="20" fill="url(#pattern0_14_4)" />
+    <defs>
+      <pattern
+        id="pattern0_14_4"
+        patternContentUnits="objectBoundingBox"
+        width="1"
+        height="1"
+      >
+        <use xlinkHref="#image0_14_4" transform="scale(0.0208333)" />
+      </pattern>
+      <image
+        id="image0_14_4"
+        width="48"
+        height="48"
+        preserveAspectRatio="none"
+        xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAElUlEQVR4Ae3BX2hVdQDA8e/vd86uK1dsudyFJPZgeDe2MFDRaemJCT5MaBBkc4JSRg8RHhBEeqi0oEC4Vj4ILUxcs0haD3vIVG5/3Bzqw+bmukaBwRZX3Z+rXvfn3nPOr1tdYe6s3XN3bn8u9PlQ6AR/g/e/S5U6NiEFxaQJmJQa0VefKoqTZ4I8ORhJ1oN4TqHqgUpmd1UgToP6bJcROE0eCHw6GLG3gP2aghpyIKAHtHd3Gdqn+CCYp3AkGQSOAJvw5ytgh2kEYsyDxjyEI/YKUN8Cy/FvKdC8afvrZ04e3RcjRxo5Ckfs1WCfAR5ibpPAEHATKAZ0/loJqOZN2984dfLovl/JgSAH4UhyCXABCDK7X0BrAftL0wj0M004klwOWgPYLwOPMLsYsNI0AoN4pJOb40AQt0kQb4J+wDSExSxMI9AD9IQj6h2wdoPaD+jcKwgcB57EI4FH4UjqRVAf4hYDrdE0tG5yEI4468D6HAjiInaaRlELHkg8CEdUMaj9uCVA22waWjc5Mg15FrRGIIGL2h+OKB0PJJ4knwGCuO01De0i82QaWjewF7cgJJ/FA4knohm3XtMIHMK3osNALy6iGQ8kWYQjSgfW43aIPDANYQGHcFsfjiidLCRZpWqAElzECfJGnMCtBFI1ZCGYIdR8rlTYqkHp1GBRUVZW/OjixQufJmPRovuprnr4yu764hB5dOD0ZHTghxvLRkbGuev6tTunxuKTQ+hcExb9ShMd0dY1cabRmaZ22/mGlJU6oqAciz+MjU0wNjbBdInEVJw8O39hMH7p0jVm2MjvLFCk2Wq4dtv5HX3HVnWQIcmoburckLJS7UA5WQwO3qogzwYHb1WQXXnKSrVXN3VuIEOS4Sg+AHQ8mJqyb5NnU1P2bbzRHUWYDEladVNXCKjBozvjyVHy7M54chTvllc3dYVIk6Q5qCAFxkEFSZMUOEmBkxQ4SYGTFDhJgZMUOEmaRMQoMBIRI02SNtBWFwUuUzh6B9rqoqRJMqTgFcDiX/LgAwsq8MaSgl1kSDIG2tZ+U6QXNQLDZCXOkmeVlaU3yW64SC9qHGhb+w0ZOtP0HVvVEWo+95hwnAaliRocgszkqB4C4jB5tmrlksmShQsYGRnnrhsj42dHxyZ+RhITtupXUnb0HVsVZxqdGaKta+JAK/8wTZPU1lYww0emEfiYOUgKnOS/YxluCbLQyYOq57vKEWqPUjQAIeYWFYIOJeXb0dY1cdLCkdQWUEFctItkIfCpqqlzqVKcAirJzVUh2PjSztWVYLcDJdzrimkEQmSh45NSHAcqyV1lWdl9F8AuZVbiIB5IfKhq6qwHVjBPo6MTpUNDt3ATvaC34IHEB6VYh0+xWIIZYqC2mIaw8EDHDymKcRR+OI5imp+AzaYRiOKRjg9CqX6FP6WlxaRNAu8Bb5lGIEEOdHxQUnZgO8NAOfMTC1aU7AG+MI1AgnkQ+FSztbvBcux2QCc3li61xv5PVnfgg4ZP1/taflz8+AvfK3gCCOJNrxRsvdxW9zU+CfKouqkr5KCCzEEiYgNtdVH+96ffALdYj6H1963mAAAAAElFTkSuQmCC"
+      />
+    </defs>
+  </svg>
+);
 
 export default SupportChatWidget;

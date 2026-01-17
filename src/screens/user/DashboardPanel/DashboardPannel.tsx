@@ -124,12 +124,21 @@ const navLinks: NavLink[] = [
         path: "/user/Invoices",
       },
     ],
-  }, {
+  },
+  {
     name: "Calculators",
     icon: <Calculator size={20} />,
     children: [
-      { name: "Profit Calculator", icon: <BsGraphUp size={18} />, path: "/user/ProfitCalculator" },
-      { name: "Shipping Calculator", icon: <Truck size={18} />, path: "/user/shipping-charge-calculator" },
+      {
+        name: "Profit Calculator",
+        icon: <BsGraphUp size={18} />,
+        path: "/user/ProfitCalculator",
+      },
+      {
+        name: "Shipping Calculator",
+        icon: <Truck size={18} />,
+        path: "/user/shipping-charge-calculator",
+      },
     ],
   },
   {
@@ -459,8 +468,9 @@ const UserPanel: React.FC = () => {
               </nav>
             </div>
             <div
-              className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""
-                }`}
+              className={`nav-link-1 ${
+                activeLink === "SignOut" ? "active" : ""
+              }`}
               onClick={() => handleLinkClick("SignOut")}
             >
               <span className="nav-icon">
