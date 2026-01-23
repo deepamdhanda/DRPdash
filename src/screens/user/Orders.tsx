@@ -690,11 +690,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                    )
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                  )
                   : toast.error(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                    );
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                  );
               });
             }
             doneCount++;
@@ -856,10 +856,10 @@ const Orders: React.FC = () => {
           row.remittance_status === "pending"
             ? "#ffc107"
             : row.remittance_status === "completed"
-            ? "#28a745"
-            : row.remittance_status === "processing"
-            ? "#007bff"
-            : "#6c757d";
+              ? "#28a745"
+              : row.remittance_status === "processing"
+                ? "#007bff"
+                : "#6c757d";
 
         return (
           <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
@@ -920,10 +920,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
 
         return (
@@ -941,7 +941,9 @@ const Orders: React.FC = () => {
               {latestStatus &&
                 (latestStatus.status === "AWB & Label Generated" ||
                   latestStatus.status.toLowerCase().includes("label") ||
-                  latestStatus.status.toLowerCase().includes("pickup")) && (
+                  latestStatus.status.toLowerCase().includes("pickup") ||
+                  latestStatus.status.toLowerCase().includes("fetch") ||
+                  latestStatus.status.toLowerCase().includes("new")) && (
                   <span
                     onClick={(e) => {
                       e.stopPropagation();
@@ -996,10 +998,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )
           : [];
         const latestStatusName =
           sortedStatus[0]?.status?.replaceAll("_", " ") || "—";
@@ -1172,10 +1174,10 @@ const Orders: React.FC = () => {
       selector: (row: Order) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           : "—",
       minWidth: "90px",
     },
@@ -1186,10 +1188,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         const statusStr = latestStatus?.status?.toLowerCase() || "";
 
@@ -1340,10 +1342,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1365,7 +1367,7 @@ const Orders: React.FC = () => {
               onClick={() => setShowFilters(!showFilters)}
               size={"30px"}
               color="#F5891E"
-              // style={{minWidth:"70px!important"}}
+            // style={{minWidth:"70px!important"}}
             />
           </div>
         </Col>
@@ -1387,10 +1389,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
                     return (
                       !o.recommended_courier_id &&
@@ -1431,10 +1433,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
 
                     return (
@@ -1460,10 +1462,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
 
                     return latestStatus?.status
@@ -1706,27 +1708,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                            ([key, value]) => (
-                              <div key={key}>
-                                <strong>{key}:</strong> {String(value)}
-                              </div>
-                            )
+                          ([key, value]) => (
+                            <div key={key}>
+                              <strong>{key}:</strong> {String(value)}
+                            </div>
                           )
+                        )
                         : // If it's a JSON string, try parsing
-                          (() => {
-                            try {
-                              const parsed = JSON.parse(item.status_details);
-                              return Object.entries(parsed).map(
-                                ([key, value]) => (
-                                  <div key={key}>
-                                    <strong>{key}:</strong> {String(value)}
-                                  </div>
-                                )
-                              );
-                            } catch {
-                              return String(item.status_details);
-                            }
-                          })()
+                        (() => {
+                          try {
+                            const parsed = JSON.parse(item.status_details);
+                            return Object.entries(parsed).map(
+                              ([key, value]) => (
+                                <div key={key}>
+                                  <strong>{key}:</strong> {String(value)}
+                                </div>
+                              )
+                            );
+                          } catch {
+                            return String(item.status_details);
+                          }
+                        })()
                       : "-"}
                   </td>
                 </tr>
