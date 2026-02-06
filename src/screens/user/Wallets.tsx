@@ -8,6 +8,9 @@ import {
 } from "../../APIs/user/wallet";
 import { getAllPools } from "../../APIs/user/pool";
 import moment from "moment";
+import { appAxios } from "../../axios/appAxios";
+import { toast } from "react-toastify";
+import { drpCrmBaseUrl } from "../../axios/urls";
 
 export interface User {
   _id: string;
@@ -46,11 +49,15 @@ export type TWalletRecharge = {
   amount: number;
   razorpay_order_id: string;
   created_by: string;
-  status: "pending" | "paid" | "failed"; // Assuming these are possible statuses
+  status: "pending" | "paid" | "failed" | "freecash"; // Assuming these are possible statuses
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   razorpay_payment_id?: string;
   full_details?: any;
+  reason?: string;
+  originalRechargeAmount: number;
+  discountAmount: number;
+  paidAmount: number;
 };
 
 const WalletTransactionsComponent = () => {
@@ -245,8 +252,19 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
       sortable: true,
     },
     {
-      name: "Amount",
-      selector: (row: TWalletRecharge) => `₹${(row.amount / 100).toFixed(2)}`,
+      name: "Paid Amount",
+      selector: (row: TWalletRecharge) => `₹${row.paidAmount.toFixed(2)}`,
+      sortable: true,
+    },
+    {
+      name: "Paid Amount",
+      selector: (row: TWalletRecharge) => `₹${row.discountAmount.toFixed(2)}`,
+      sortable: true,
+    },
+    {
+      name: "Final Amount",
+      selector: (row: TWalletRecharge) =>
+        `₹${row.originalRechargeAmount.toFixed(2)}`,
       sortable: true,
     },
     {
@@ -255,7 +273,11 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
       sortable: true,
       cell: (row: TWalletRecharge) => (
         <span style={{ color: row.status === "paid" ? "green" : "orange" }}>
-          {row.status.toUpperCase()}
+          {row.status === "freecash"
+            ? row.reason
+              ? row.reason
+              : "PROMOTIONAL"
+            : row.status.toUpperCase()}
         </span>
       ),
     },
@@ -415,6 +437,7 @@ const Wallets: React.FC = () => {
   );
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState<number>(0);
+  const [coupon, setCoupon] = useState<string>("");
   const [selectedPool, setSelectedPool] = useState<string>("");
   const [pools, setPools] = useState<any>([]);
 
@@ -438,7 +461,7 @@ const Wallets: React.FC = () => {
 
   const handlePayment = async () => {
     try {
-      const res = await makePayment(amount, selectedPool);
+      const res = await makePayment(amount - discount, selectedPool, coupon);
       if (res) {
         handleModalClose();
         fetchPools(); // Refresh pools after payment
@@ -451,7 +474,24 @@ const Wallets: React.FC = () => {
   useEffect(() => {
     fetchPools();
   }, []);
-
+  const [step, setStep] = useState(1);
+  const [discount, setDiscount] = useState<number>(0);
+  const [isValidating, setIsValidating] = useState(false);
+  const handleApplyCoupon = async () => {
+    setIsValidating(true);
+    try {
+      const { data } = await appAxios.post(`${drpCrmBaseUrl}/user/coupon`, {
+        amount: amount,
+        coupon: coupon,
+      });
+      setDiscount(data.data.discount);
+    } catch (error: any) {
+      toast.error(error.message);
+      setDiscount(0);
+    } finally {
+      setIsValidating(false);
+    }
+  };
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -483,48 +523,104 @@ const Wallets: React.FC = () => {
       )}
 
       {/* Add Money Modal */}
-      <Modal show={showModal} onHide={handleModalClose}>
+      <Modal show={showModal} onHide={handleModalClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Add Money to Wallet</Modal.Title>
+          <Modal.Title>Add Money {step === 2 && "- Review"}</Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Amount</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Select Pool</Form.Label>
-              <Form.Select
-                value={selectedPool}
-                onChange={(e) => setSelectedPool(e.target.value)}
-              >
-                <option value="">Select a pool</option>
-                {pools.map((pool: any) => (
-                  <option key={pool._id} value={pool._id}>
-                    {pool.name} (₹{pool?.wallet_balance?.toFixed(2) || 0})
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Form>
+          {step === 1 ? (
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Enter Amount</Form.Label>
+                <Form.Control
+                  type="number"
+                  placeholder="0.00"
+                  value={amount || ""}
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Select Pool</Form.Label>
+                <Form.Select
+                  value={selectedPool}
+                  onChange={(e) => setSelectedPool(e.target.value)}
+                >
+                  <option value="">Select a pool</option>
+                  {pools.map((pool: any) => (
+                    <option key={pool._id} value={pool._id}>
+                      {pool.name} (₹{pool?.wallet_balance?.toFixed(2) || 0})
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Form>
+          ) : (
+            <div>
+              <div className="p-3 bg-light rounded mb-3">
+                <div className="d-flex justify-content-between">
+                  <span>Base Amount:</span>
+                  <strong>₹{amount}</strong>
+                </div>
+                {discount > 0 && (
+                  <div className="d-flex justify-content-between text-success">
+                    <span>Discount:</span>
+                    <strong>- ₹{discount}</strong>
+                  </div>
+                )}
+                <hr />
+                <div className="d-flex justify-content-between fs-5">
+                  <span>Final Amount:</span>
+                  <strong>₹{amount - discount}</strong>
+                </div>
+              </div>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Coupon Code</Form.Label>
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="text"
+                    placeholder="SAVE10"
+                    value={coupon}
+                    onChange={(e) => setCoupon(e.target.value)}
+                  />
+                  <Button
+                    variant="outline-primary"
+                    onClick={handleApplyCoupon}
+                    disabled={!coupon || isValidating}
+                  >
+                    {isValidating ? "..." : "Apply"}
+                  </Button>
+                </div>
+              </Form.Group>
+            </div>
+          )}
         </Modal.Body>
+
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleModalClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handlePayment}
-            disabled={!amount || !selectedPool}
-          >
-            Proceed to Pay
-          </Button>
+          {step === 1 ? (
+            <Button
+              variant="primary"
+              className="w-100"
+              disabled={!amount || !selectedPool}
+              onClick={() => setStep(2)}
+            >
+              Next
+            </Button>
+          ) : (
+            <div className="d-flex gap-2 w-100">
+              <Button variant="secondary" onClick={() => setStep(1)}>
+                Back
+              </Button>
+              <Button
+                variant="success"
+                className="flex-grow-1"
+                onClick={handlePayment}
+              >
+                Pay ₹{amount - discount}
+              </Button>
+            </div>
+          )}
         </Modal.Footer>
       </Modal>
     </div>

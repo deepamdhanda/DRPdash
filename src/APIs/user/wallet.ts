@@ -75,7 +75,11 @@ export const verifyPayment = async (wallet_recharge_id: any, response: any) => {
   }
 };
 
-export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
+export const makePayment = async (
+  amount: any,
+  pool: any,
+  coupon: string
+): Promise<boolean> => {
   try {
     amount = Math.round(amount * 100); // Convert to paise
     const currency = "INR";
@@ -84,6 +88,7 @@ export const makePayment = async (amount: any, pool: any): Promise<boolean> => {
       amount,
       currency,
       pool_id: pool,
+      coupon,
     });
 
     const { _id: wallet_recharge_id, razorpay_order_id: order_id } =

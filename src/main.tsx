@@ -16,12 +16,17 @@ import WarehouseDashboardPanel from "./screens/warehouse/DashboardPanel/Dashboar
 import { warehouseRoutes } from "./screens/warehouse/index.tsx";
 import EcomCreditScoreLandingPage from "./screens/auth/LandingPages/EcomCreditScore/index.tsx";
 import GetStarted from "./screens/user/GetStarted.tsx";
+import customerRoutes from "./screens/customer/index.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />, // General app layout
     children: [
+      {
+        index: true,
+        element: <JoinWaitList />,
+      },
       {
         path: "score",
         // index: true, // This will be the default route
@@ -69,6 +74,7 @@ const router = createBrowserRouter([
         element: <WarehouseDashboardPanel />, // <-- This becomes the layout for all /Dashboard/* routes
         children: warehouseRoutes,
       },
+      ...customerRoutes,
     ],
   },
 ]);
