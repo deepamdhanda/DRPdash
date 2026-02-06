@@ -24,3 +24,5 @@ export const tickets_url = `${drpCrmBaseUrl}/user/ticket`;
 export const supportChat_url = `${drpCrmBaseUrl}/user/supportChat`;
 export const initialChannelAccountFetchs_url = `${drpCrmBaseUrl}/user/initialChannelAccountFetch`;
 export const damgerReport_url = `${drpCrmBaseUrl}/user/damage-report`;
+export const creditScore_url = `${drpCrmBaseUrl}/user/creditScore`;
+export const customerAddress_url = `${drpCrmBaseUrl}/user/customerAddress`;
