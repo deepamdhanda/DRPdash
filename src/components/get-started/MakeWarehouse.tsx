@@ -1,15 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Card, Row, Col, Form, Button, Badge } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axios from "axios";
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  Autocomplete,
+} from "@react-google-maps/api";
+
 import { createWarehouse } from "../../APIs/user/warehouse";
 import { drpCrmBaseUrl } from "../../axios/urls";
-export interface User {
-  _id: string;
-  name: string;
-  email?: string;
-}
 
+const GOOGLE_MAPS_API_KEY = "AIzaSyANgy6kbp_ciumVNTAwakMFTXdCW3rVZfg";
+const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
+const LIBRARIES: "places"[] = ["places"];
+
+// --- Interfaces ---
 export interface Warehouse {
   _id?: string;
   name: string;
@@ -68,44 +75,66 @@ const INDIAN_STATES = [
 const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
   handleNext,
 }) => {
+  // --- Form State ---
   const [submitting, setSubmitting] = useState(false);
   const [fetchingPincode, setFetchingPincode] = useState(false);
-
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [email, setEmail] = useState("");
+  const [formName, setFormName] = useState("");
+  const [formAddress1, setFormAddress1] = useState("");
+  const [formAddress2, setFormAddress2] = useState("");
+  const [formPincode, setFormPincode] = useState("");
+  const [formPerson, setFormPerson] = useState("");
+  const [formPhone, setFormPhone] = useState("");
 
-  const resetForm = (form?: HTMLFormElement | null) => {
-    if (form) form.reset();
+  const { isLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES,
+  });
+
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  const resetForm = () => {
     setCity("");
     setState("");
     setEmail("");
+    setFormName("");
+    setFormAddress1("");
+    setFormAddress2("");
+    setFormPincode("");
+    setFormPerson("");
+    setFormPhone("");
+    setMarkerPosition(null);
   };
 
   const handlePincodeChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-    e.target.value = value;
+    setFormPincode(value);
 
     if (value.length === 6) {
       try {
         setFetchingPincode(true);
-
         const { data } = await axios.get(
           `${drpCrmBaseUrl}/pincode?pincode=${value}`
         );
-
         if (Array.isArray(data) && data.length > 0) {
           const info = data[0];
-          const state =
-            info.statename.charAt(0).toUpperCase() +
-            info.statename.slice(1).toLowerCase();
           setCity(info.district || "");
-          setState(state || "");
+          setState(
+            info.statename.charAt(0).toUpperCase() +
+              info.statename.slice(1).toLowerCase() || ""
+          );
         }
       } catch (err) {
-        console.error(err);
         toast.warn("Failed to fetch city/state from pincode");
       } finally {
         setFetchingPincode(false);
@@ -113,18 +142,36 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
     }
   };
 
+  // Map: Handle Click
+  const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      setMarkerPosition({
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
+      });
+    }
+  }, []);
+
+  // Map: Handle Search Selection
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+
+        setMarkerPosition({ lat, lng });
+
+        map?.panTo({ lat, lng });
+        map?.setZoom(15);
+      } else {
+        toast.error("No details available for input: '" + place.name + "'");
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement & {
-      name: { value: string };
-      address1: { value: string };
-      address2: { value: string };
-      pincode: { value: string };
-      contact_person: { value: string };
-      contact_phone: { value: string };
-      latitude: { value: string };
-      longitude: { value: string };
-    };
 
     if (!city || !state) {
       toast.warn("City and State must be resolved from pincode");
@@ -134,29 +181,26 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
     setSubmitting(true);
 
     const payload: Warehouse = {
-      name: form.name.value.trim(),
-      address1: form.address1.value.trim(),
-      address2: form.address2.value.trim() || undefined,
+      name: formName.trim(),
+      address1: formAddress1.trim(),
+      address2: formAddress2.trim() || undefined,
       City: city,
       State: state,
       Country: "IN",
-      pincode: form.pincode.value,
-      contact_person: form.contact_person.value.trim(),
-      contact_phone: form.contact_phone.value.trim(),
+      pincode: formPincode,
+      contact_person: formPerson.trim(),
+      contact_phone: formPhone.trim(),
       contact_email: email.trim(),
-      latitude: form.latitude.value
-        ? parseFloat(form.latitude.value)
-        : undefined,
-      longitude: form.longitude.value
-        ? parseFloat(form.longitude.value)
-        : undefined,
+      // Use the map state for lat/long
+      latitude: markerPosition?.lat,
+      longitude: markerPosition?.lng,
     };
 
     try {
       await createWarehouse(payload);
       toast.success("Warehouse created successfully");
       handleNext();
-      resetForm(form);
+      resetForm();
     } catch (err) {
       console.error(err);
       toast.error("Failed to create warehouse");
@@ -187,23 +231,34 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
             <Col md={7}>
               <Form.Group className="mb-3">
                 <Form.Label>Warehouse Name</Form.Label>
-                <Form.Control name="name" required />
+                <Form.Control
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  required
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>Address Line 1</Form.Label>
-                <Form.Control name="address1" required />
+                <Form.Control
+                  value={formAddress1}
+                  onChange={(e) => setFormAddress1(e.target.value)}
+                  required
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>Address Line 2</Form.Label>
-                <Form.Control name="address2" />
+                <Form.Control
+                  value={formAddress2}
+                  onChange={(e) => setFormAddress2(e.target.value)}
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>Pincode</Form.Label>
                 <Form.Control
-                  name="pincode"
+                  value={formPincode}
                   maxLength={6}
                   inputMode="numeric"
                   onChange={handlePincodeChange}
@@ -220,12 +275,7 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>City</Form.Label>
-                    <Form.Control
-                      name="City"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      required
-                    />
+                    <Form.Control value={city} readOnly required />
                   </Form.Group>
                 </Col>
 
@@ -233,7 +283,6 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
                   <Form.Group className="mb-3">
                     <Form.Label>State</Form.Label>
                     <Form.Select
-                      name="State"
                       value={state}
                       onChange={(e) => setState(e.target.value)}
                       required
@@ -251,52 +300,100 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
 
               <Form.Group className="mb-3">
                 <Form.Label>Contact Person</Form.Label>
-                <Form.Control name="contact_person" required />
+                <Form.Control
+                  value={formPerson}
+                  onChange={(e) => setFormPerson(e.target.value)}
+                  required
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>Contact Phone</Form.Label>
                 <Form.Control
-                  name="contact_phone"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
                   pattern="[6-9]\d{9}"
                   required
                   maxLength={10}
                 />
               </Form.Group>
 
-              <Form.Group className="mb-3">
-                <Form.Label>
-                  Contact Email <br /> (Required for all day-to-day pickups and
-                  RTOs stats.)
-                </Form.Label>
+              <Form.Group className="mb-4">
+                <Form.Label>Contact Email</Form.Label>
                 <Form.Control
                   type="email"
-                  name="contact_email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </Form.Group>
 
-              <Row>
-                <Col md={6}>
-                  <Form.Label>Latitude</Form.Label>
+              {/* --- Google Map Section --- */}
+              <div className="mb-4 border rounded p-3 bg-light">
+                <Form.Label className="fw-bold">
+                  Warehouse Location (Latitude & Longitude)
+                </Form.Label>
+                <div className="text-muted small mb-2">
+                  Search for your area or click on the map to pin the exact
+                  location.
+                </div>
 
-                  <Form.Control name="latitude" type="number" step="any" />
-                </Col>
-                <Col md={6}>
-                  <Form.Label>Longitude</Form.Label>
+                {isLoaded ? (
+                  <>
+                    {/* Search Box */}
+                    <div className="mb-2">
+                      <Autocomplete
+                        onLoad={(autocomplete) =>
+                          (autocompleteRef.current = autocomplete)
+                        }
+                        onPlaceChanged={onPlaceChanged}
+                      >
+                        <Form.Control
+                          type="text"
+                          placeholder="Search Location (e.g. Okhla Phase 3)"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.preventDefault();
+                          }} // Prevent form submit on Enter
+                        />
+                      </Autocomplete>
+                    </div>
 
-                  <Form.Control name="longitude" type="number" step="any" />
-                </Col>
-              </Row>
+                    {/* Map */}
+                    <div style={{ height: "300px", width: "100%" }}>
+                      <GoogleMap
+                        mapContainerStyle={{ height: "100%", width: "100%" }}
+                        center={markerPosition || DEFAULT_CENTER}
+                        zoom={markerPosition ? 15 : 5}
+                        onLoad={(mapInstance) => setMap(mapInstance)}
+                        onClick={onMapClick}
+                        options={{
+                          streetViewControl: false,
+                          mapTypeControl: false,
+                        }}
+                      >
+                        {markerPosition && <Marker position={markerPosition} />}
+                      </GoogleMap>
+                    </div>
 
-              <div className="d-flex justify-content-end gap-2 mt-4">
-                <Button
-                  variant="secondary"
-                  type="button"
-                  onClick={() => resetForm()}
-                >
+                    {/* Selected Coordinates Display */}
+                    <div className="mt-2 d-flex gap-3">
+                      <small className="text-muted">
+                        <strong>Lat:</strong>{" "}
+                        {markerPosition?.lat.toFixed(6) || "Not set"}
+                      </small>
+                      <small className="text-muted">
+                        <strong>Lng:</strong>{" "}
+                        {markerPosition?.lng.toFixed(6) || "Not set"}
+                      </small>
+                    </div>
+                  </>
+                ) : (
+                  <div>Loading Map...</div>
+                )}
+              </div>
+
+              <div className="d-flex justify-content-end gap-2">
+                <Button variant="secondary" type="button" onClick={resetForm}>
                   Reset
                 </Button>
                 <Button
@@ -308,17 +405,19 @@ const MakeWarehouse: React.FC<{ handleNext: () => void }> = ({
                 </Button>
               </div>
             </Col>
+
+            {/* Right Sidebar */}
             <Col md={5}>
               <Card className="h-100 border-0 bg-light">
                 <Card.Body>
                   <h6 className="mb-2">Tips</h6>
                   <ul className="small text-muted" style={{ paddingLeft: 18 }}>
+                    <li>Use a clear warehouse name.</li>
+                    <li>Pincode determines shipping rates.</li>
                     <li>
-                      Use a clear warehouse name to avoid confusion on shipping
-                      rules.
-                    </li>
-                    <li>
-                      Pincode should be accurate for courier rate calculations.
+                      <strong>Accurate Map Location:</strong> Ensure the pin is
+                      accurate. This helps delivery partners locate your
+                      warehouse for pickups.
                     </li>
                   </ul>
                 </Card.Body>

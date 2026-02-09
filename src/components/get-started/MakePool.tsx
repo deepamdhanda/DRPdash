@@ -8,7 +8,6 @@ import {
   Button,
   InputGroup,
   Spinner,
-  Collapse,
   Badge,
 } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -18,27 +17,12 @@ import { getUser } from "../../APIs/user/user";
 import { createAmazonS3 } from "../../APIs/user/amazonS3";
 import { getGST } from "../../APIs/user/gst";
 
-/**
- * Simplified onboarding-first Pool creation screen.
- * - Minimal required fields for first-time onboarding.
- * - Optional GST verification and Advanced section (KYC/logo/address).
- * - Admins can be added by email (press Enter).
- */
-
 /* --- Types --- */
 export interface User {
   _id: string;
   name: string;
   email?: string;
 }
-
-// const COMPANY_TYPE_OPTIONS = [
-//   { value: "individual", label: "Individual" },
-//   { value: "private_limited_company", label: "Private Ltd" },
-//   { value: "public_limited_company", label: "Public Ltd" },
-//   { value: "llp", label: "LLP" },
-//   { value: "partnership", label: "Partnership" },
-// ];
 
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -55,40 +39,45 @@ const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
 
 /* --- Component --- */
 const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
-  // Minimal required onboarding fields
-  const [businessName, setBusinessName] = useState("");
-  const [companyType, setCompanyType] = useState("individual");
-  // const companyType = "individual";
-  const [ownerName, setOwnerName] = useState("");
-  const [ownerEmail, setOwnerEmail] = useState("");
+  // --- Section 1 State ---
+  const [hasGst, setHasGst] = useState<boolean>(true); // Default to Yes
+  const [gstin, setGstin] = useState("");
+  const [businessName, setBusinessName] = useState(""); // Firm Name
+  const [ownerName, setOwnerName] = useState(""); // Contact Person
+  const [panFile, setPanFile] = useState<File | string | null>(null);
+
+  // --- Section 2 State ---
   const [bankAccount, setBankAccount] = useState("");
   const [bankIFSC, setBankIFSC] = useState("");
-  const [gstin, setGstin] = useState("");
+  const [chequeFile, setChequeFile] = useState<File | null>(null); // Cancelled Cheque
 
-  // Optional / UI state
+  // --- Additional / Hidden Functionality State ---
+  const [ownerEmail, setOwnerEmail] = useState(""); // Kept for payload
   const [admins, setAdmins] = useState<User[]>([]);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [companyType, setCompanyType] = useState("individual");
   const [submitting, setSubmitting] = useState(false);
   const [gstLoading, setGstLoading] = useState(false);
   const [gstVerified, setGstVerified] = useState(false);
-  const [logoFile, setLogoFile] = useState<File | string | null>(null);
-  const [panFile, setPanFile] = useState<File | string | null>(null);
-  const [address, setAddress] = useState("");
+  // const [address, setAddress] = useState("");
+  const address = "";
   const [stateName, setStateName] = useState("");
 
+  // Logic
   useEffect(() => {
-    setCompanyType("individual");
-  }, []);
+    // If user selects "No GST", default to individual
+    if (!hasGst) {
+      setCompanyType("individual");
+      setGstVerified(false);
+      setGstin("");
+    }
+  }, [hasGst]);
+
   // --- Admin search by email ---
   const handleUserSearch = async (email: string) => {
     const e = email.trim();
-    if (!e) {
-      toast.warn("Enter an email to add an admin");
-      return;
-    }
+    if (!e) return;
     try {
       const res = await getUser(e);
-
       if (!res || res.length === 0) {
         toast.warn("User not found");
         return;
@@ -106,7 +95,7 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
     }
   };
 
-  // --- GST verification (optional) ---
+  // --- GST verification ---
   const verifyGst = async () => {
     const g = gstin.trim().toUpperCase();
     if (!g) {
@@ -120,13 +109,12 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
     setGstLoading(true);
     try {
       const data = await getGST(g);
-      // data is expected to include business_name, state, etc.
       setGstLoading(false);
       setGstVerified(true);
       setBusinessName((prev) => prev || data.business_name || "");
       setStateName(data.state || "");
       setCompanyType(data.company_type);
-      toast.success("GST verified; business details autofilled");
+      toast.success("GST verified; Details autofilled");
     } catch (err) {
       setGstLoading(false);
       setGstVerified(false);
@@ -135,21 +123,28 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
     }
   };
 
-  // --- Submit handler (focused on onboarding) ---
+  // --- Submit handler ---
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    // Basic validations
+    // Validations
+    if (hasGst && !gstVerified) {
+      // Optional: You can force verification or just check if text exists
+      if (!gstin.trim()) {
+        toast.warn("Please enter GST Number");
+        return;
+      }
+    }
     if (!businessName.trim()) {
-      toast.warn("Business name is required");
+      toast.warn("Firm Name is required");
       return;
     }
     if (!ownerName.trim()) {
-      toast.warn("Owner name is required");
+      toast.warn("Contact Person name is required");
       return;
     }
     if (!bankAccount.trim()) {
-      toast.warn("Bank account number is required (for payouts)");
+      toast.warn("Bank account number is required");
       return;
     }
     if (!bankIFSC.trim() || !validateIFSC(bankIFSC.trim().toUpperCase())) {
@@ -172,52 +167,51 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
           ifsc: bankIFSC.trim().toUpperCase(),
         },
         status: "active",
+        kyc_documents: [],
       };
 
-      // include GST if verified
-      if (gstVerified) payload.gstin = gstin.trim().toUpperCase();
-
-      // include advanced fields when provided
+      if (hasGst && gstin) payload.gstin = gstin.trim().toUpperCase();
       if (address.trim()) payload.address = address.trim();
       if (stateName.trim()) payload.state = stateName.trim();
 
-      // upload logo if provided
-      if (logoFile && logoFile instanceof File) {
-        try {
-          const logoData = await createAmazonS3(
-            `logos/${Date.now()}-${(logoFile as File).name.replace(/ /g, "_")}`,
-            await fileToBase64(logoFile as File)
-          );
-          payload.business_logo = logoData.url;
-        } catch (err) {
-          console.warn("Logo upload skipped", err);
-        }
-      } else if (typeof logoFile === "string") {
-        payload.business_logo = logoFile;
-      }
-
-      // upload PAN if provided
+      // 1. Upload PAN
       if (panFile && panFile instanceof File) {
         try {
           const panData = await createAmazonS3(
-            `kyc/${Date.now()}-${(panFile as File).name.replace(/ /g, "_")}`,
-            await fileToBase64(panFile as File)
+            `kyc/pan/${Date.now()}-${panFile.name.replace(/ /g, "_")}`,
+            await fileToBase64(panFile)
           );
-          payload.kyc_documents = [
-            {
-              section: "PAN",
-              document_type: "PAN",
-              value: panData.url,
-              is_optional: false,
-            },
-          ];
+          payload.kyc_documents.push({
+            section: "PAN",
+            document_type: "PAN",
+            value: panData.url,
+            is_optional: false,
+          });
         } catch (err) {
           console.warn("PAN upload skipped", err);
         }
       }
 
+      // 2. Upload Cancelled Cheque
+      if (chequeFile && chequeFile instanceof File) {
+        try {
+          const chequeData = await createAmazonS3(
+            `kyc/cheque/${Date.now()}-${chequeFile.name.replace(/ /g, "_")}`,
+            await fileToBase64(chequeFile)
+          );
+          payload.kyc_documents.push({
+            section: "BANK",
+            document_type: "CANCELLED_CHEQUE",
+            value: chequeData.url,
+            is_optional: false,
+          });
+        } catch (err) {
+          console.warn("Cheque upload skipped", err);
+        }
+      }
+
       await createPool(payload);
-      toast.success("Pool created — welcome aboard!");
+      toast.success("Pool created successfully!");
       handleNext();
     } catch (err) {
       console.error("Create pool error", err);
@@ -227,277 +221,214 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
     }
   };
 
-  // --- UI ---
   return (
     <div className="shadow-sm">
-      <Card.Body>
-        <Row className="align-items-center mb-3">
-          <Col>
-            <h4 className="mb-1">Create Your Pool</h4>
-            <div className="text-muted">
-              A pool groups warehouses, teams and payouts.
-            </div>
-          </Col>
-          <Col xs="auto">
-            <Badge bg="info">Onboarding</Badge>
-          </Col>
-        </Row>
-
-        <hr />
-
+      <Card.Body className="p-4">
         <Form onSubmit={handleSubmit}>
-          <Row>
-            <Col md={7}>
+          <div className="mb-4">
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-medium d-block">
+                Do you have a GST Number?
+              </Form.Label>
+              <Form.Check
+                inline
+                type="radio"
+                label="Yes"
+                name="gstRadio"
+                id="gstYes"
+                checked={hasGst === true}
+                onChange={() => setHasGst(true)}
+              />
+              <Form.Check
+                inline
+                type="radio"
+                label="No"
+                name="gstRadio"
+                id="gstNo"
+                checked={hasGst === false}
+                onChange={() => setHasGst(false)}
+              />
+            </Form.Group>
+
+            {hasGst && (
               <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">
-                  Business / Brand Name
-                </Form.Label>
-                <Form.Control
-                  placeholder="e.g. Acme Retail"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                />
-                <Form.Text className="text-muted">
-                  This is used in invoices and internal lists.
-                </Form.Text>
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">
-                  Owner / Primary Contact
-                </Form.Label>
-                <Form.Control
-                  placeholder="Full name"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                />
-              </Form.Group>
-
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-medium">Bank Account</Form.Label>
-                    <Form.Control
-                      placeholder="Account number"
-                      value={bankAccount}
-                      onChange={(e) => setBankAccount(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-medium">IFSC</Form.Label>
-                    <Form.Control
-                      placeholder="IFSC code"
-                      value={bankIFSC}
-                      onChange={(e) =>
-                        setBankIFSC(e.target.value.toUpperCase())
-                      }
-                    />
-                    <Form.Text className="text-muted">
-                      Used for payouts (required)
-                    </Form.Text>
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Form.Group className="mb-2">
-                <Form.Label className="fw-medium">PAN</Form.Label>
-                <Form.Control
-                  type="file"
-                  accept="image/*,.pdf"
-                  required
-                  onChange={(e: any) => {
-                    const f = e.target.files?.[0];
-                    if (f) setPanFile(f);
-                  }}
-                />
-              </Form.Group>
-
-              <div className="d-flex justify-content-end gap-2 mt-2">
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => {
-                    setBusinessName("");
-                    setOwnerName("");
-                    setOwnerEmail("");
-                    setBankAccount("");
-                    setBankIFSC("");
-                    setAdmins([]);
-                    setGstin("");
-                    setGstVerified(false);
-                  }}
-                  disabled={submitting}
-                >
-                  Reset
-                </Button>
-                <Button variant="primary" type="submit" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Spinner size="sm" animation="border" className="me-2" />{" "}
-                      Creating...
-                    </>
-                  ) : (
-                    "Create Pool"
-                  )}
-                </Button>
-              </div>
-            </Col>
-
-            <Col md={5}>
-              <Card className="h-100 border-0 bg-light">
-                <Card.Body>
-                  <h6 className="mb-2">Quick Setup</h6>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-medium">
-                      GSTIN (optional)
-                    </Form.Label>
-                    <InputGroup>
-                      <Form.Control
-                        placeholder="GSTIN (optional)"
-                        value={gstin}
-                        onChange={(e) => setGstin(e.target.value.toUpperCase())}
-                      />
-                      <Button
-                        variant="outline-primary"
-                        onClick={verifyGst}
-                        disabled={gstLoading}
-                      >
-                        {gstLoading ? (
-                          <Spinner size="sm" animation="border" />
-                        ) : (
-                          "Verify"
-                        )}
-                      </Button>
-                    </InputGroup>
-                    <Form.Text className="text-muted">
-                      Verify to autofill business details.
-                    </Form.Text>
-                    {gstVerified && (
-                      <div className="mt-2">
-                        <Badge bg="success">GST Verified</Badge>
-                      </div>
+                <Form.Label className="fw-medium">GST Number</Form.Label>
+                <InputGroup>
+                  <Form.Control
+                    placeholder="Enter GSTIN"
+                    value={gstin}
+                    onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                  />
+                  <Button
+                    variant="outline-primary"
+                    onClick={verifyGst}
+                    disabled={gstLoading}
+                  >
+                    {gstLoading ? (
+                      <Spinner size="sm" animation="border" />
+                    ) : (
+                      "Verify"
                     )}
-                  </Form.Group>
+                  </Button>
+                </InputGroup>
+                {gstVerified && (
+                  <Form.Text className="text-success">
+                    Verified successfully
+                  </Form.Text>
+                )}
+              </Form.Group>
+            )}
 
-                  <hr />
+            <Row>
+              <Col md={6}>
+                {/* 3. Firm Name */}
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-medium">Firm Name</Form.Label>
+                  <Form.Control
+                    placeholder="e.g. Acme Retail"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                {/* 4. Contact Person */}
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-medium">Contact Person</Form.Label>
+                  <Form.Control
+                    placeholder="Full Name"
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
-                  <div className="mb-3">
-                    <h6 className="mb-1">Advanced (optional)</h6>
-                    <small className="text-muted">
-                      Add logo, PAN or address now or skip and do later.
-                    </small>
-                    <div>
-                      <Button
-                        variant="link"
-                        onClick={() => setAdvancedOpen((s) => !s)}
-                        aria-expanded={advancedOpen}
-                        className="p-0"
-                      >
-                        {advancedOpen ? "Hide details" : "Add advanced details"}
-                      </Button>
-                    </div>
-                  </div>
+            {/* 5. PAN Card */}
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-medium">PAN Card Upload</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e: any) => {
+                  const f = e.target.files?.[0];
+                  if (f) setPanFile(f);
+                }}
+              />
+              <Form.Text className="text-muted">
+                Upload clear image or PDF of PAN
+              </Form.Text>
+            </Form.Group>
+          </div>
+          <hr className="my-5 border-secondary" style={{ opacity: 0.2 }} />
+          <div className="mb-4">
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-medium">
+                    Bank Account Number
+                  </Form.Label>
+                  <Form.Control
+                    placeholder="Enter Account Number"
+                    value={bankAccount}
+                    onChange={(e) => setBankAccount(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-medium">IFSC Code</Form.Label>
+                  <Form.Control
+                    placeholder="Enter IFSC"
+                    value={bankIFSC}
+                    onChange={(e) => setBankIFSC(e.target.value.toUpperCase())}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
-                  <Collapse in={advancedOpen}>
-                    <div>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">
-                          Business Logo
-                        </Form.Label>
-                        <Form.Control
-                          type="file"
-                          accept="image/*"
-                          onChange={(e: any) => {
-                            const f = e.target.files?.[0];
-                            if (f) setLogoFile(f);
-                          }}
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">
-                          Address (optional)
-                        </Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={2}
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                        />
-                      </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-medium">Cancelled Cheque</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e: any) => {
+                  const f = e.target.files?.[0];
+                  if (f) setChequeFile(f);
+                }}
+              />
+              <Form.Text className="text-muted">
+                Upload a cancelled cheque for bank verification
+              </Form.Text>
+            </Form.Group>
+          </div>
 
-                      <Form.Group className="mb-2">
-                        <Form.Label className="fw-medium">
-                          State (optional)
-                        </Form.Label>
-                        <Form.Control
-                          value={stateName}
-                          onChange={(e) => setStateName(e.target.value)}
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="fw-medium">
-                          Admins (add by email)
-                        </Form.Label>
-                        <Form.Control
-                          placeholder="Type email and press Enter"
-                          onKeyDown={async (e: any) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const email = e.target.value?.trim();
-                              if (email) {
-                                await handleUserSearch(email);
-                                e.target.value = "";
-                              }
-                            }
-                          }}
-                        />
-                        <div className="mt-2">
-                          {admins.map((a) => (
-                            <Badge
-                              key={a._id}
-                              pill
-                              bg="primary"
-                              className="me-2 mb-2"
-                              style={{ cursor: "pointer" }}
-                              onClick={() =>
-                                setAdmins((p) =>
-                                  p.filter((x) => x._id !== a._id)
-                                )
-                              }
-                            >
-                              {a.name} &times;
-                            </Badge>
-                          ))}
-                        </div>
-                      </Form.Group>
-                    </div>
-                  </Collapse>
+          <details className="mb-4">
+            <summary className="text-muted small cursor-pointer">
+              Additional Settings (Admins, Email)
+            </summary>
+            <div className="p-3 border rounded mt-2 bg-light">
+              <Form.Group className="mb-2">
+                <Form.Label className="small">
+                  Admin Email (Add multiple)
+                </Form.Label>
+                <Form.Control
+                  size="sm"
+                  placeholder="Type email and press Enter"
+                  onKeyDown={async (e: any) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const email = e.target.value?.trim();
+                      if (email) {
+                        await handleUserSearch(email);
+                        e.target.value = "";
+                      }
+                    }
+                  }}
+                />
+                <div className="mt-2">
+                  {admins.map((a) => (
+                    <Badge key={a._id} bg="info" className="me-2 mb-2">
+                      {a.name}
+                    </Badge>
+                  ))}
+                </div>
+              </Form.Group>
+              <Form.Group className="mb-2">
+                <Form.Label className="small">
+                  Owner Email (Optional)
+                </Form.Label>
+                <Form.Control
+                  size="sm"
+                  value={ownerEmail}
+                  onChange={(e) => setOwnerEmail(e.target.value)}
+                  placeholder="For record keeping"
+                />
+              </Form.Group>
+            </div>
+          </details>
 
-                  <hr />
-
-                  <div>
-                    <h6 className="mb-1">Why this is needed</h6>
-                    <ul
-                      className="small text-muted"
-                      style={{ paddingLeft: 18 }}
-                    >
-                      <li>
-                        Bank details are required to enable merchant payouts.
-                      </li>
-                      <li>
-                        Admins can manage orders and shipping after onboarding.
-                      </li>
-                      <li>
-                        GST verification helps autofill company information
-                        (optional).
-                      </li>
-                    </ul>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+          <div className="d-grid gap-2">
+            <Button
+              variant="primary"
+              size="lg"
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <Spinner size="sm" animation="border" className="me-2" />
+                  Creating Pool...
+                </>
+              ) : (
+                "Submit & Create Pool"
+              )}
+            </Button>
+          </div>
         </Form>
       </Card.Body>
     </div>

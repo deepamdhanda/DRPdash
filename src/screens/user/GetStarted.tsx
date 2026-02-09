@@ -6,18 +6,19 @@ import {
   ProgressBar,
   Button,
   Badge,
-  OverlayTrigger,
-  Tooltip,
+  Navbar,
+  Container,
+  Nav,
+  Dropdown,
 } from "react-bootstrap";
-import { FaCheck, FaChevronRight } from "react-icons/fa";
+import { FaCheck, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import { Stat, useStatsStore } from "../../store/useStatsStore";
 import MakePool from "../../components/get-started/MakePool";
 import MakeWarehouse from "../../components/get-started/MakeWarehouse";
 import MakeChannelAccount from "../../components/get-started/MakeChannelAccount";
 import logoImg from "../../assets/logo.png";
 import logoImg1 from "../../assets/logo1.png";
-import { Navbar, Container, Nav, Dropdown } from "react-bootstrap";
-import { FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import { drpCrmBaseUrl } from "../../axios/urls";
 import { appAxios } from "../../axios/appAxios";
 import { getAccountSummary } from "../../APIs/user/dashboard";
@@ -26,10 +27,10 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 /**
- * Modernized GetStarted stepper — focused on clarity, speed, and progressive disclosure.
- * - Left: vertical stepper (collapses to top on small screens)
- * - Right: content card with progress and subtle visual affordances
- * - Retains integration with MakePool / MakeWarehouse / MakeChannelAccount through handleNext
+ * Horizontal Onboarding Stepper
+ * - Retains original visual style (colors, sizes, fonts)
+ * - Uses Bootstrap Grid + Flex for horizontal layout
+ * - Adds Framer Motion for smooth content switching
  */
 
 type Step = {
@@ -37,7 +38,6 @@ type Step = {
   label: string;
   helper?: string;
   content: React.ReactNode;
-  optional?: boolean;
 };
 
 const GetStarted: React.FC = () => {
@@ -45,6 +45,7 @@ const GetStarted: React.FC = () => {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const { stats, setStatsStore } = useStatsStore();
   const [username, setUsername] = useState("");
+
   const verifyMe = async () => {
     try {
       const { data } = await appAxios(`${drpCrmBaseUrl}/auth/verify/me`);
@@ -53,12 +54,14 @@ const GetStarted: React.FC = () => {
       console.log(err);
     }
   };
+
   const fetchAccountSummary = async () => {
     const res = await getAccountSummary();
     if (res) {
       setStatsStore((res as any).counts);
     }
   };
+
   useEffect(() => {
     verifyMe();
     fetchAccountSummary();
@@ -81,7 +84,6 @@ const GetStarted: React.FC = () => {
     const completedArray = Array.from(completed);
     setCompletedSteps(completedArray);
 
-    // choose next incomplete step
     const nextStep =
       stepOrder.find((step) => !completed.has(step.key)) ??
       stepOrder[stepOrder.length - 1];
@@ -90,24 +92,24 @@ const GetStarted: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats]);
 
-  // Step definitions (keeps the same children)
+  // Step definitions
   const stepOrder: Step[] = [
     {
       key: "pools",
       label: "Pool Setup",
-      helper: "Minimal business details — required for payouts",
+      helper: "Minimal business details",
       content: <MakePool handleNext={() => handleNext("pools")} />,
     },
     {
       key: "warehouses",
       label: "Warehouse",
-      helper: "Create your fulfillment location",
+      helper: "Create location",
       content: <MakeWarehouse handleNext={() => handleNext("warehouses")} />,
     },
     {
       key: "channel",
       label: "Channel Account",
-      helper: "Connect Shopify or add a manual channel",
+      helper: "Connect Shopify/Manual",
       content: <MakeChannelAccount handleNext={() => handleNext("channel")} />,
     },
     {
@@ -115,23 +117,31 @@ const GetStarted: React.FC = () => {
       label: "Finish",
       helper: "You're all set",
       content: (
-        <div style={{ textAlign: "center", padding: 18 }}>
-          <h3 style={{ marginBottom: 8 }}>Nice work 👏</h3>
-          <p className="text-muted" style={{ maxWidth: 640, margin: "0 auto" }}>
-            You completed onboarding. Explore dashboards, add products, or
-            configure integrations.
-          </p>
-          <div style={{ marginTop: 18 }}>
-            <Button
-              variant="primary"
-              onClick={() => {
-                // go to dashboard root — keep simple, user can change
-                window.location.href = "/user";
-              }}
+        <div style={{ textAlign: "center", padding: 40 }}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <h3 style={{ marginBottom: 12, color: "#000434" }}>Nice work 👏</h3>
+            <p
+              className="text-muted"
+              style={{ maxWidth: 500, margin: "0 auto" }}
             >
-              Go to Dashboard
-            </Button>
-          </div>
+              You completed onboarding. Explore dashboards, add products, or
+              configure integrations.
+            </p>
+            <div style={{ marginTop: 24 }}>
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => {
+                  window.location.href = "/user";
+                }}
+              >
+                Go to Dashboard
+              </Button>
+            </div>
+          </motion.div>
         </div>
       ),
     },
@@ -139,7 +149,7 @@ const GetStarted: React.FC = () => {
 
   const totalSteps = stepOrder.length;
   const completedCount = completedSteps.length;
-  const progress = Math.round((completedCount / (totalSteps - 1)) * 100); // exclude final as target
+  const progress = Math.round((completedCount / (totalSteps - 1)) * 100);
 
   function handleNext(key: string) {
     if (!completedSteps.includes(key)) {
@@ -148,7 +158,6 @@ const GetStarted: React.FC = () => {
     const idx = stepOrder.findIndex((s) => s.key === key);
     if (idx >= 0 && idx < stepOrder.length - 1) {
       setActiveStep(stepOrder[idx + 1].key);
-      // scroll to top of content (good UX for mobile)
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       setActiveStep("final");
@@ -156,7 +165,6 @@ const GetStarted: React.FC = () => {
   }
 
   function handleClickStep(key: string) {
-    // allow navigation to completed steps or next immediate step, or current
     const idxClicked = stepOrder.findIndex((s) => s.key === key);
     const idxActive = stepOrder.findIndex((s) => s.key === activeStep);
     const isCompleted = completedSteps.includes(key);
@@ -175,21 +183,15 @@ const GetStarted: React.FC = () => {
       <div
         style={{
           padding: "2rem 1rem",
-          backgroundColor: "#f5f7fb",
+          backgroundColor: "#f5f7fb", // Keep original bg color
           minHeight: "100vh",
         }}
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
+          {/* Header Section */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h2 style={{ color: "#000434", margin: 0 }}>
+              <h2 style={{ color: "#000434", margin: 0, fontWeight: 700 }}>
                 Welcome — Let's get you set up
               </h2>
               <div style={{ color: "#6b7280", marginTop: 6, fontSize: 14 }}>
@@ -197,8 +199,8 @@ const GetStarted: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ width: 320 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ width: 320 }} className="d-none d-md-block">
+              <div className="d-flex gap-2 align-items-center">
                 <div style={{ flex: 1 }}>
                   <ProgressBar
                     now={progress}
@@ -220,203 +222,160 @@ const GetStarted: React.FC = () => {
             </div>
           </div>
 
-          <Row>
-            <Col lg={3} md={4} sm={12} xs={12} style={{ marginBottom: 12 }}>
-              <aside
-                style={{
-                  background: "#fff",
-                  borderRadius: 12,
-                  padding: 12,
-                  border: "1px solid #eef2f6",
-                  position: "sticky",
-                  top: 24,
-                  maxHeight: "75vh",
-                  overflow: "auto",
-                }}
-                aria-label="Onboarding steps"
-              >
-                {stepOrder.map((step, index) => {
-                  const isActive = activeStep === step.key;
-                  const isComplete = completedSteps.includes(step.key);
-                  return (
-                    <div
-                      key={step.key}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleClickStep(step.key)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ")
-                          handleClickStep(step.key);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "10px 8px",
-                        borderRadius: 10,
-                        marginBottom: 8,
-                        cursor:
-                          isComplete || step.key === activeStep
-                            ? "pointer"
-                            : "pointer",
-                        background: isActive
-                          ? "rgba(245,137,30,0.06)"
-                          : "transparent",
-                        borderLeft: isActive
-                          ? "4px solid #F5891E"
-                          : "4px solid transparent",
-                        transition: "all 0.12s ease",
-                      }}
-                      title={step.helper}
-                    >
-                      <div style={{ width: 36, textAlign: "center" }}>
-                        {isComplete ? (
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 18,
-                              background: "#F5891E",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "#fff",
-                            }}
-                          >
-                            <FaCheck />
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 18,
-                              border: "1px solid #e6e9ee",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: isActive ? "#F5891E" : "#9aa0ad",
-                              background: isActive
-                                ? "rgba(245,137,30,0.06)"
-                                : "transparent",
-                            }}
-                          >
-                            <span style={{ fontWeight: 600 }}>{index + 1}</span>
-                          </div>
-                        )}
-                      </div>
+          {/* Horizontal Stepper */}
+          <Row className="mb-4 g-3">
+            {stepOrder.map((step, index) => {
+              const isActive = activeStep === step.key;
+              const isComplete = completedSteps.includes(step.key);
 
-                      <div style={{ flex: 1 }}>
+              return (
+                <Col key={step.key} xs={12} md={6} lg={3}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleClickStep(step.key)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 16px",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      backgroundColor: "#fff",
+                      // Animate background color gently
+                      background: isActive ? "rgba(245,137,30,0.06)" : "#fff",
+                      // Move border from Left to Bottom for horizontal feel
+                      borderBottom: isActive
+                        ? "4px solid #F5891E"
+                        : "4px solid transparent",
+                      border: isActive ? undefined : "1px solid transparent", // invisible border to prevent layout shift
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.03)",
+                      height: "100%",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    {/* Circle Icon - Same Size (36px) */}
+                    <div style={{ flexShrink: 0 }}>
+                      {isComplete ? (
                         <div
                           style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 8,
+                            width: 36,
+                            height: 36,
+                            borderRadius: 18,
+                            background: "#F5891E",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
                           }}
                         >
-                          <div
-                            style={{
-                              fontWeight: isActive ? 700 : 600,
-                              color: isActive ? "#000434" : "#111827",
-                            }}
-                          >
-                            {step.label}
-                          </div>
-                          <div style={{ color: "#9aa0ad", fontSize: 12 }}>
-                            {isComplete ? (
-                              <small>Done</small>
-                            ) : (
-                              <small>
-                                {index === stepOrder.length - 1
-                                  ? "Optional"
-                                  : ""}
-                              </small>
-                            )}
-                          </div>
+                          <FaCheck size={14} />
                         </div>
-                        {step.helper && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#6b7280",
-                              marginTop: 4,
-                            }}
-                          >
-                            {step.helper}
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <OverlayTrigger
-                          overlay={
-                            <Tooltip id={`tooltip-${step.key}`}>
-                              {isComplete ? "Completed" : "Open step"}
-                            </Tooltip>
-                          }
+                      ) : (
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 18,
+                            border: "1px solid #e6e9ee",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: isActive ? "#F5891E" : "#9aa0ad",
+                            background: isActive
+                              ? "rgba(245,137,30,0.06)"
+                              : "transparent",
+                            fontWeight: 600,
+                          }}
                         >
-                          <span style={{ color: "#9aa0ad" }}>
-                            <FaChevronRight />
-                          </span>
-                        </OverlayTrigger>
-                      </div>
+                          {index + 1}
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
-              </aside>
-            </Col>
 
-            <Col lg={9} md={8} sm={12} xs={12}>
+                    {/* Text Content */}
+                    <div style={{ flex: 1, overflow: "hidden" }}>
+                      <div
+                        className="text-truncate"
+                        style={{
+                          fontWeight: isActive ? 700 : 600,
+                          color: isActive ? "#000434" : "#111827",
+                          fontSize: "1rem",
+                        }}
+                      >
+                        {step.label}
+                      </div>
+                      {step.helper && (
+                        <div
+                          className="text-truncate"
+                          style={{
+                            fontSize: 12,
+                            color: "#6b7280",
+                            marginTop: 2,
+                          }}
+                        >
+                          {step.helper}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Col>
+              );
+            })}
+          </Row>
+
+          {/* Content Card */}
+          <Row>
+            <Col xs={12}>
               <Card
                 style={{
                   borderRadius: 16,
                   boxShadow: "0 8px 30px rgba(2,6,23,0.06)",
-                  minHeight: 420,
-                  padding: 18,
+                  minHeight: 450,
+                  padding: 24,
+                  border: "none",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 12,
-                  }}
-                >
+                <div className="d-flex align-items-center justify-content-between mb-3">
                   <div>
-                    <div style={{ fontSize: 14, color: "#6b7280" }}>
-                      Step{" "}
-                      {Math.min(
-                        stepOrder.findIndex((s) => s.key === activeStep) + 1,
-                        stepOrder.length
-                      )}{" "}
-                      of {stepOrder.length}
-                    </div>
-                    <h4 style={{ margin: 0, color: "#000434" }}>
+                    <h4
+                      style={{ margin: 0, color: "#000434", fontWeight: 700 }}
+                    >
                       {stepOrder.find((s) => s.key === activeStep)?.label}
                     </h4>
+                    <span style={{ fontSize: 13, color: "#9aa0ad" }}>
+                      Step{" "}
+                      {stepOrder.findIndex((s) => s.key === activeStep) + 1} of{" "}
+                      {stepOrder.length}
+                    </span>
                   </div>
 
-                  <div
-                    style={{ display: "flex", gap: 8, alignItems: "center" }}
-                  >
-                    {completedSteps.length > 0 && (
-                      <Badge bg="success" pill style={{ fontSize: 12 }}>
-                        {completedSteps.length} complete
-                      </Badge>
-                    )}
-                  </div>
+                  {completedSteps.length > 0 && activeStep !== "final" && (
+                    <Badge bg="success" pill style={{ fontSize: 12 }}>
+                      {completedSteps.length} completed
+                    </Badge>
+                  )}
                 </div>
 
                 <div
                   style={{
                     borderTop: "1px dashed #eef2f6",
-                    marginTop: 10,
-                    paddingTop: 14,
+                    marginBottom: 20,
                   }}
-                >
-                  {renderedContent}
-                </div>
+                />
+
+                {/* Framer Motion Transition */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeStep}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {renderedContent}
+                  </motion.div>
+                </AnimatePresence>
               </Card>
             </Col>
           </Row>
@@ -442,40 +401,42 @@ const OnboardingHeader = ({ username = "" }) => {
       toast.error("Something went wrong");
     }
   };
+
+  // Reusing exact logic/colors from your original code
   return (
     <Navbar
-      bg="blue"
       expand="lg"
       style={{
-        borderBottom: "1px solid #eef2f6",
+        backgroundColor: "#000434", // Explicit blue color from brand
+        borderBottom: "1px solid #1a1e4b",
         padding: "0.75rem 0",
       }}
+      variant="dark" // Ensures text/hamburger is light
     >
       <Container fluid style={{ maxWidth: 1200 }}>
-        {/* Left: Brand / App name */}
         <div className="d-flex gap-2 align-items-center my-2">
           <span className="nav-logo-icon">
-            <img src={logoImg} style={{ width: "30px " }} />
+            <img src={logoImg} style={{ width: "30px " }} alt="logo" />
           </span>
           <span>
-            <img src={logoImg1} style={{ width: "100px " }} />
+            <img src={logoImg1} style={{ width: "100px " }} alt="logo text" />
           </span>
         </div>
 
-        {/* Right: User menu */}
         <Nav className="ms-auto">
           <Dropdown align="end">
             <Dropdown.Toggle
-              variant="light"
+              variant="outline-light" // Changed to fit dark header
               id="user-dropdown"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
                 borderRadius: 24,
-                border: "1px solid #eef2f6",
                 padding: "6px 12px",
-                background: "#fff",
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.1)",
+                color: "#fff",
               }}
             >
               <FaUserCircle size={18} />

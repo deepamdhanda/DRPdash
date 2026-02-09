@@ -16,6 +16,7 @@ import { getAllChannels } from "../../APIs/user/channel";
 import { getAllPools } from "../../APIs/user/pool";
 import { initialChannelAccountFetch } from "../../APIs/user/initialChannelAccountFetch";
 import { FaExternalLinkAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 type Automation = {
   auto_ship: boolean;
@@ -39,9 +40,8 @@ export interface ChannelAccount {
   createdAt?: string;
 }
 
-const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
-  handleNext,
-}) => {
+const MakeChannelAccount: React.FC<{ handleNext: () => void }> = () => {
+  const navigate = useNavigate();
   const [channels, setChannels] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
   const [selectedPoolId, setSelectedPoolId] = useState<string>("");
@@ -156,7 +156,7 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
       channels.find((c) => c._id === selectedChannelId)?.channel_name !==
         "Custom" &&
         (await startInitialChannelAccountFetch(result?._id || result));
-      handleNext();
+      navigate("/user");
     } catch (err) {
       console.error("Error creating channel account", err);
       toast.error("Failed to create channel account. Please try again.");

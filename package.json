@@ -13,6 +13,7 @@
     "@cashfreepayments/cashfree-js": "^1.0.5",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@hookform/resolvers": "^5.0.1",
+    "@react-google-maps/api": "^2.20.8",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
