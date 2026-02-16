@@ -47,3 +47,20 @@ export const postNewProduct = async (formdata: any) => {
     throw err;
   }
 };
+
+export const createProductFromOrderApi = async (
+  selectedOrderId: any,
+  formdata: any
+) => {
+  try {
+    formdata.productSKU.product_description = " ";
+    const response = await appAxios.post(
+      `${productSKUChannelLinks_url}/newproduct/${selectedOrderId}`,
+      formdata
+    );
+    return response.data;
+  } catch (err) {
+    toast.error("Failed to fetch Product SKU.");
+    throw err;
+  }
+};

@@ -96,9 +96,12 @@ const SupportChatWidget = () => {
     if (res) {
       setStatsStore((res as any).counts);
       setStats(res);
-
+      if (window.location.pathname === "/user/channel_accounts") {
+        return;
+      }
       (res as any).counts.forEach((stat: any) => {
         const token = stat.label.split(" ")[1]?.toLowerCase();
+
         if (
           (token === "pools" ||
             token === "warehouses" ||

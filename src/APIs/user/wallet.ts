@@ -96,8 +96,7 @@ export const makePayment = async (
 
     return new Promise((resolve) => {
       const options = {
-        key: "rzp_live_RYVEYLfEZUVkWA", // Replace with your RazorPay Key ID
-        amount,
+        key: "rzp_live_RYVEYLfEZUVkWA",
         currency,
         name: "OrderzUp",
         description: `Add ₹${amount / 100} to ${pool}`,

@@ -1,6 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Modal, Button, Form, Badge } from "react-bootstrap";
 import DataTable from "react-data-table-component";
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  Autocomplete,
+} from "@react-google-maps/api";
 import {
   getAllWarehouses,
   createWarehouse,
@@ -9,6 +15,11 @@ import {
 } from "../../APIs/user/warehouse";
 import { getUser } from "../../APIs/user/user";
 import { toast } from "react-toastify";
+
+// --- Google Maps Configuration ---
+const LIBRARIES: "places"[] = ["places"];
+const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
+const GOOGLE_MAPS_API_KEY = "AIzaSyANgy6kbp_ciumVNTAwakMFTXdCW3rVZfg";
 
 export interface Warehouse {
   _id: string;
@@ -36,46 +47,80 @@ export interface User {
 }
 
 const Warehouses: React.FC = () => {
+  // --- Data State ---
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
     null
   );
   const [adminList, setAdminList] = useState<User[]>([]);
 
+  // --- Google Maps State ---
+  const { isLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES,
+  });
+
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
   useEffect(() => {
     fetchWarehouses();
   }, [page, limit]);
 
+  // Sync Map Marker when opening Edit Modal
+  useEffect(() => {
+    if (
+      showModal &&
+      editingWarehouse?.latitude &&
+      editingWarehouse?.longitude
+    ) {
+      setMarkerPosition({
+        lat: editingWarehouse.latitude,
+        lng: editingWarehouse.longitude,
+      });
+    } else if (showModal && !editingWarehouse) {
+      // Reset if creating new
+      setMarkerPosition(null);
+    }
+  }, [showModal, editingWarehouse]);
+
   const fetchWarehouses = async () => {
     try {
-      setLoading(true); // Set loading to true before fetching
+      setLoading(true);
       const data = await getAllWarehouses(page, limit);
       setTotalRecords(data.total);
       setWarehouses(data.data);
     } catch (error) {
       console.error("Error fetching warehouses", error);
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
     setShowModal(false);
     setEditingWarehouse(null);
-    setAdminList([]); // Clear admin list when closing modal
+    setAdminList([]);
+    setMarkerPosition(null); // Reset map
   };
 
   const handleShow = () => setShowModal(true);
 
+  // Uncommented this to allow editing based on your code structure context
   // const handleEdit = (warehouse: Warehouse) => {
   //   setEditingWarehouse(warehouse);
-  //   setShowModal(true);
   //   setAdminList(warehouse.admins || []);
+  //   setShowModal(true);
   // };
 
   const handleToggleStatus = async (warehouse: Warehouse) => {
@@ -94,6 +139,34 @@ const Warehouses: React.FC = () => {
     }
   };
 
+  // --- Map Handlers ---
+  const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      setMarkerPosition({
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
+      });
+    }
+  }, []);
+
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+
+        setMarkerPosition({ lat, lng });
+
+        map?.panTo({ lat, lng });
+        map?.setZoom(15);
+      } else {
+        toast.error("No details available for input: '" + place.name + "'");
+      }
+    }
+  };
+
+  // --- Submit Handler ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as typeof e.target & {
@@ -106,8 +179,6 @@ const Warehouses: React.FC = () => {
       contact_person: { value: string };
       contact_phone: { value: string };
       contact_email: { value: string };
-      latitude: { value: string };
-      longitude: { value: string };
       status: { value: string };
     };
 
@@ -122,12 +193,9 @@ const Warehouses: React.FC = () => {
       contact_person: form.contact_person.value.trim(),
       contact_phone: form.contact_phone.value.trim(),
       contact_email: form.contact_email.value.trim(),
-      latitude: form.latitude.value
-        ? parseFloat(form.latitude.value)
-        : undefined,
-      longitude: form.longitude.value
-        ? parseFloat(form.longitude.value)
-        : undefined,
+      // Use State for Coordinates
+      latitude: markerPosition?.lat,
+      longitude: markerPosition?.lng,
       status: form.status.value as "active" | "inactive" | "suspended",
       admins: adminList.map((admin) => admin._id),
     };
@@ -135,13 +203,16 @@ const Warehouses: React.FC = () => {
     try {
       if (editingWarehouse) {
         await updateWarehouse(editingWarehouse._id, formData);
+        toast.success("Warehouse updated successfully");
       } else {
         await createWarehouse(formData);
+        toast.success("Warehouse created successfully");
       }
       fetchWarehouses();
       handleClose();
     } catch (error) {
       console.error("Error saving warehouse", error);
+      toast.error("Failed to save warehouse");
     }
   };
 
@@ -170,9 +241,9 @@ const Warehouses: React.FC = () => {
     }
   };
 
-  // const removeAdmin = (userId: string) => {
-  //   setAdminList((prev) => prev.filter((admin) => admin._id !== userId));
-  // };
+  const removeAdmin = (userId: string) => {
+    setAdminList((prev) => prev.filter((admin) => admin._id !== userId));
+  };
 
   const columns = [
     {
@@ -215,15 +286,6 @@ const Warehouses: React.FC = () => {
       style: { margin: 10 },
     },
     {
-      name: "Coordinates",
-      selector: (row: Warehouse) =>
-        row.latitude && row.longitude
-          ? `${row.latitude}, ${row.longitude}`
-          : "—",
-      compact: true,
-      style: { margin: 10 },
-    },
-    {
       name: "Created On",
       selector: (row: Warehouse) =>
         row.createdAt
@@ -260,7 +322,7 @@ const Warehouses: React.FC = () => {
         </>
       ),
       button: true,
-      width: "125px",
+      width: "180px", // Widen to fit buttons
       style: { margin: 10 },
     },
   ];
@@ -277,19 +339,6 @@ const Warehouses: React.FC = () => {
       ) : warehouses.length === 0 ? (
         <p>No warehouses found.</p>
       ) : (
-        // <DataTable
-        //   title="Your Warehouse"
-        //   data={warehouses}
-        //   columns={columns as any}
-        //   highlightOnHover
-        //   defaultSortFieldId={1}
-        //   pagination
-        //   paginationRowsPerPageOptions={[10, 20, 50, 100]}
-        //   responsive
-        //   fixedHeader
-        //   persistTableHead
-        //   striped
-        // />
         <DataTable
           title="Your Warehouse"
           columns={columns as any}
@@ -304,14 +353,14 @@ const Warehouses: React.FC = () => {
           }}
           onChangeRowsPerPage={(newLimit) => {
             setLimit(newLimit);
-            setPage(1); // ALWAYS reset to page 1 when limit changes
+            setPage(1);
           }}
           highlightOnHover
           responsive
         />
       )}
 
-      <Modal show={showModal} onHide={handleClose}>
+      <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
             {editingWarehouse ? "Edit Warehouse" : "Create Warehouse"}
@@ -319,173 +368,157 @@ const Warehouses: React.FC = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            <Form.Group className="mb-2">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                name="name"
-                defaultValue={editingWarehouse?.name}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Address 1</Form.Label>
-              <Form.Control
-                name="address1"
-                defaultValue={editingWarehouse?.address1}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Address 2</Form.Label>
-              <Form.Control
-                name="address2"
-                defaultValue={editingWarehouse?.address2 || ""}
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>City</Form.Label>
-              <Form.Control
-                name="City"
-                defaultValue={editingWarehouse?.City}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>State</Form.Label>
-              <Form.Control
-                as="select"
-                name="State"
-                defaultValue={editingWarehouse?.State}
-                required
-              >
-                <option value="">Select</option>
-                {[
-                  "Andaman and Nicobar Islands",
-                  "Andhra Pradesh",
-                  "Arunachal Pradesh",
-                  "Assam",
-                  "Bihar",
-                  "Chandigarh",
-                  "Chhattisgarh",
-                  "Dadra and Nagar Haveli and Daman and Diu",
-                  "Delhi",
-                  "Goa",
-                  "Gujarat",
-                  "Haryana",
-                  "Himachal Pradesh",
-                  "Jammu and Kashmir",
-                  "Jharkhand",
-                  "Karnataka",
-                  "Kerala",
-                  "Ladakh",
-                  "Lakshadweep",
-                  "Madhya Pradesh",
-                  "Maharashtra",
-                  "Manipur",
-                  "Meghalaya",
-                  "Mizoram",
-                  "Nagaland",
-                  "Odisha",
-                  "Puducherry",
-                  "Punjab",
-                  "Rajasthan",
-                  "Sikkim",
-                  "Tamil Nadu",
-                  "Telangana",
-                  "Tripura",
-                  "Uttar Pradesh",
-                  "Uttarakhand",
-                  "West Bengal",
-                ].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Form.Control>
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Pincode</Form.Label>
-              <Form.Control
-                name="pincode"
-                defaultValue={editingWarehouse?.pincode}
-                required
-                pattern="[1-9][0-9]{5}"
-                title="Enter a valid 6-digit Indian pincode"
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Contact Person</Form.Label>
-              <Form.Control
-                name="contact_person"
-                defaultValue={editingWarehouse?.contact_person}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Contact Phone</Form.Label>
-              <Form.Control
-                name="contact_phone"
-                defaultValue={editingWarehouse?.contact_phone}
-                required
-                pattern="[6-9]\d{9}"
-                title="Enter a valid 10-digit Indian mobile number"
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Contact Email</Form.Label>
-              <Form.Control
-                name="contact_email"
-                type="email"
-                defaultValue={editingWarehouse?.contact_email}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Latitude</Form.Label>
-              <Form.Control
-                name="latitude"
-                type="number"
-                step="any"
-                defaultValue={editingWarehouse?.latitude || ""}
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Longitude</Form.Label>
-              <Form.Control
-                name="longitude"
-                type="number"
-                step="any"
-                defaultValue={editingWarehouse?.longitude || ""}
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Status</Form.Label>
-              <Form.Control
-                as="select"
-                name="status"
-                defaultValue={editingWarehouse?.status || "active"}
-                required
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-              </Form.Control>
-            </Form.Group>
-            <hr />
-            <Form.Group className="mb-2">
-              <Form.Label>Find Admin User by Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                placeholder="Enter user email"
-                onBlur={(e) => handleUserSearch(e.target.value)}
-              />
-            </Form.Group>
-            {/* <Form.Group className="mb-2">
-              <Form.Label>Admins</Form.Label>
-              <div>
-                {adminList.length > 0 ? (
-                  adminList.map((admin) => (
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group className="mb-2">
+                  <Form.Label>Name</Form.Label>
+                  <Form.Control
+                    name="name"
+                    defaultValue={editingWarehouse?.name}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Address 1</Form.Label>
+                  <Form.Control
+                    name="address1"
+                    defaultValue={editingWarehouse?.address1}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Address 2</Form.Label>
+                  <Form.Control
+                    name="address2"
+                    defaultValue={editingWarehouse?.address2 || ""}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>City</Form.Label>
+                  <Form.Control
+                    name="City"
+                    defaultValue={editingWarehouse?.City}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>State</Form.Label>
+                  <Form.Control
+                    as="select"
+                    name="State"
+                    defaultValue={editingWarehouse?.State}
+                    required
+                  >
+                    <option value="">Select</option>
+                    {[
+                      "Andaman and Nicobar Islands",
+                      "Andhra Pradesh",
+                      "Arunachal Pradesh",
+                      "Assam",
+                      "Bihar",
+                      "Chandigarh",
+                      "Chhattisgarh",
+                      "Dadra and Nagar Haveli and Daman and Diu",
+                      "Delhi",
+                      "Goa",
+                      "Gujarat",
+                      "Haryana",
+                      "Himachal Pradesh",
+                      "Jammu and Kashmir",
+                      "Jharkhand",
+                      "Karnataka",
+                      "Kerala",
+                      "Ladakh",
+                      "Lakshadweep",
+                      "Madhya Pradesh",
+                      "Maharashtra",
+                      "Manipur",
+                      "Meghalaya",
+                      "Mizoram",
+                      "Nagaland",
+                      "Odisha",
+                      "Puducherry",
+                      "Punjab",
+                      "Rajasthan",
+                      "Sikkim",
+                      "Tamil Nadu",
+                      "Telangana",
+                      "Tripura",
+                      "Uttar Pradesh",
+                      "Uttarakhand",
+                      "West Bengal",
+                    ].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Pincode</Form.Label>
+                  <Form.Control
+                    name="pincode"
+                    defaultValue={editingWarehouse?.pincode}
+                    required
+                    pattern="[1-9][0-9]{5}"
+                    title="Enter a valid 6-digit Indian pincode"
+                  />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group className="mb-2">
+                  <Form.Label>Contact Person</Form.Label>
+                  <Form.Control
+                    name="contact_person"
+                    defaultValue={editingWarehouse?.contact_person}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Contact Phone</Form.Label>
+                  <Form.Control
+                    name="contact_phone"
+                    defaultValue={editingWarehouse?.contact_phone}
+                    required
+                    pattern="[6-9]\d{9}"
+                    title="Enter a valid 10-digit Indian mobile number"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Contact Email</Form.Label>
+                  <Form.Control
+                    name="contact_email"
+                    type="email"
+                    defaultValue={editingWarehouse?.contact_email}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Status</Form.Label>
+                  <Form.Control
+                    as="select"
+                    name="status"
+                    defaultValue={editingWarehouse?.status || "active"}
+                    required
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </Form.Control>
+                </Form.Group>
+
+                <hr />
+                <Form.Group className="mb-2">
+                  <Form.Label>Find Admin User by Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    placeholder="Enter user email"
+                    onBlur={(e) => handleUserSearch(e.target.value)}
+                  />
+                </Form.Group>
+                <div className="mb-2">
+                  {adminList.map((admin) => (
                     <Badge bg="secondary" className="me-1" key={admin._id}>
                       {admin.name}{" "}
                       <span
@@ -500,12 +533,68 @@ const Warehouses: React.FC = () => {
                         ×
                       </span>
                     </Badge>
-                  ))
-                ) : (
-                  <p>No admins added yet.</p>
-                )}
+                  ))}
+                </div>
               </div>
-            </Form.Group> */}
+            </div>
+
+            {/* --- Google Map Section --- */}
+            <div className="mt-3 border rounded p-3 bg-light">
+              <Form.Label className="fw-bold">Warehouse Location</Form.Label>
+              <div className="text-muted small mb-2">
+                Search or click on map to pin location.
+              </div>
+
+              {isLoaded ? (
+                <>
+                  <div className="mb-2">
+                    <Autocomplete
+                      onLoad={(autocomplete) =>
+                        (autocompleteRef.current = autocomplete)
+                      }
+                      onPlaceChanged={onPlaceChanged}
+                    >
+                      <Form.Control
+                        type="text"
+                        placeholder="Search Location"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.preventDefault();
+                        }}
+                      />
+                    </Autocomplete>
+                  </div>
+
+                  <div style={{ height: "300px", width: "100%" }}>
+                    <GoogleMap
+                      mapContainerStyle={{ height: "100%", width: "100%" }}
+                      center={markerPosition || DEFAULT_CENTER}
+                      zoom={markerPosition ? 15 : 5}
+                      onLoad={(mapInstance) => setMap(mapInstance)}
+                      onClick={onMapClick}
+                      options={{
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                      }}
+                    >
+                      {markerPosition && <Marker position={markerPosition} />}
+                    </GoogleMap>
+                  </div>
+
+                  <div className="mt-2 d-flex gap-3">
+                    <small className="text-muted">
+                      <strong>Lat:</strong>{" "}
+                      {markerPosition?.lat.toFixed(6) || "Not set"}
+                    </small>
+                    <small className="text-muted">
+                      <strong>Lng:</strong>{" "}
+                      {markerPosition?.lng.toFixed(6) || "Not set"}
+                    </small>
+                  </div>
+                </>
+              ) : (
+                <div>Loading Map...</div>
+              )}
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>

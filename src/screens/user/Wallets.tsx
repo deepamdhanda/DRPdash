@@ -55,8 +55,8 @@ export type TWalletRecharge = {
   razorpay_payment_id?: string;
   full_details?: any;
   reason?: string;
-  originalRechargeAmount: number;
-  discountAmount: number;
+  finalAmount: number;
+  bonusAmount: number;
   paidAmount: number;
 };
 
@@ -258,13 +258,12 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
     },
     {
       name: "Paid Amount",
-      selector: (row: TWalletRecharge) => `₹${row.discountAmount.toFixed(2)}`,
+      selector: (row: TWalletRecharge) => `₹${row.bonusAmount.toFixed(2)}`,
       sortable: true,
     },
     {
       name: "Final Amount",
-      selector: (row: TWalletRecharge) =>
-        `₹${row.originalRechargeAmount.toFixed(2)}`,
+      selector: (row: TWalletRecharge) => `₹${row.finalAmount.toFixed(2)}`,
       sortable: true,
     },
     {
@@ -415,7 +414,7 @@ const WalletRechargeComponent = ({ pools }: { pools: any }) => {
         progressPending={loading}
         pagination
         paginationServer
-        paginationTotalRows={pagination.limit}
+        paginationTotalRows={pagination.total}
         paginationDefaultPage={pagination.page}
         onChangePage={(newPage) => {
           fetchWalletsRecharges(newPage, pagination.limit);
@@ -461,7 +460,7 @@ const Wallets: React.FC = () => {
 
   const handlePayment = async () => {
     try {
-      const res = await makePayment(amount - discount, selectedPool, coupon);
+      const res = await makePayment(amount, selectedPool, coupon);
       if (res) {
         handleModalClose();
         fetchPools(); // Refresh pools after payment
@@ -475,7 +474,7 @@ const Wallets: React.FC = () => {
     fetchPools();
   }, []);
   const [step, setStep] = useState(1);
-  const [discount, setDiscount] = useState<number>(0);
+  const [bonus, setBonus] = useState<number>(0);
   const [isValidating, setIsValidating] = useState(false);
   const handleApplyCoupon = async () => {
     setIsValidating(true);
@@ -484,10 +483,10 @@ const Wallets: React.FC = () => {
         amount: amount,
         coupon: coupon,
       });
-      setDiscount(data.data.discount);
+      setBonus(data.data.discount);
     } catch (error: any) {
       toast.error(error.message);
-      setDiscount(0);
+      setBonus(0);
     } finally {
       setIsValidating(false);
     }
@@ -562,16 +561,16 @@ const Wallets: React.FC = () => {
                   <span>Base Amount:</span>
                   <strong>₹{amount}</strong>
                 </div>
-                {discount > 0 && (
+                {bonus > 0 && (
                   <div className="d-flex justify-content-between text-success">
-                    <span>Discount:</span>
-                    <strong>- ₹{discount}</strong>
+                    <span>Bonus:</span>
+                    <strong>+ ₹{bonus}</strong>
                   </div>
                 )}
                 <hr />
                 <div className="d-flex justify-content-between fs-5">
                   <span>Final Amount:</span>
-                  <strong>₹{amount - discount}</strong>
+                  <strong>₹{amount + bonus}</strong>
                 </div>
               </div>
 
@@ -582,7 +581,7 @@ const Wallets: React.FC = () => {
                     type="text"
                     placeholder="SAVE10"
                     value={coupon}
-                    onChange={(e) => setCoupon(e.target.value)}
+                    onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                   />
                   <Button
                     variant="outline-primary"
@@ -617,7 +616,7 @@ const Wallets: React.FC = () => {
                 className="flex-grow-1"
                 onClick={handlePayment}
               >
-                Pay ₹{amount - discount}
+                Pay ₹{amount}
               </Button>
             </div>
           )}

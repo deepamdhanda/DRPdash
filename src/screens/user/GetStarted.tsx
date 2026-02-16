@@ -4,7 +4,6 @@ import {
   Col,
   Card,
   ProgressBar,
-  Button,
   Badge,
   Navbar,
   Container,
@@ -25,6 +24,7 @@ import { getAccountSummary } from "../../APIs/user/dashboard";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import GetStartedRecharge from "../../components/get-started/MakeWalletRecharge";
 
 /**
  * Horizontal Onboarding Stepper
@@ -89,7 +89,6 @@ const GetStarted: React.FC = () => {
       stepOrder[stepOrder.length - 1];
 
     setActiveStep(nextStep.key);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats]);
 
   // Step definitions
@@ -113,38 +112,44 @@ const GetStarted: React.FC = () => {
       content: <MakeChannelAccount handleNext={() => handleNext("channel")} />,
     },
     {
-      key: "final",
-      label: "Finish",
-      helper: "You're all set",
-      content: (
-        <div style={{ textAlign: "center", padding: 40 }}>
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <h3 style={{ marginBottom: 12, color: "#000434" }}>Nice work 👏</h3>
-            <p
-              className="text-muted"
-              style={{ maxWidth: 500, margin: "0 auto" }}
-            >
-              You completed onboarding. Explore dashboards, add products, or
-              configure integrations.
-            </p>
-            <div style={{ marginTop: 24 }}>
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => {
-                  window.location.href = "/user";
-                }}
-              >
-                Go to Dashboard
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      ),
+      key: "recharge",
+      label: "Wallet Recharge",
+      helper: "Let's add some balance.",
+      content: <GetStartedRecharge />,
     },
+    // {
+    //   key: "final",
+    //   label: "Finish",
+    //   helper: "You're all set",
+    //   content: (
+    //     <div style={{ textAlign: "center", padding: 40 }}>
+    //       <motion.div
+    //         initial={{ scale: 0.9, opacity: 0 }}
+    //         animate={{ scale: 1, opacity: 1 }}
+    //       >
+    //         <h3 style={{ marginBottom: 12, color: "#000434" }}>Nice work 👏</h3>
+    //         <p
+    //           className="text-muted"
+    //           style={{ maxWidth: 500, margin: "0 auto" }}
+    //         >
+    //           You completed onboarding. Explore dashboards, add products, or
+    //           configure integrations.
+    //         </p>
+    //         <div style={{ marginTop: 24 }}>
+    //           <Button
+    //             variant="primary"
+    //             size="lg"
+    //             onClick={() => {
+    //               window.location.href = "/user";
+    //             }}
+    //           >
+    //             Go to Dashboard
+    //           </Button>
+    //         </div>
+    //       </motion.div>
+    //     </div>
+    //   ),
+    // },
   ];
 
   const totalSteps = stepOrder.length;

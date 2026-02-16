@@ -41,9 +41,10 @@ Axios.interceptors.response.use(
       } catch (logoutErr) {
         console.log("Logout API failed:", logoutErr);
       }
-      const path = window.location.pathname;
-      // Redirect user to login
-      window.location.href = `/login?path=${path}`;
+      const { pathname, search } = window.location;
+      const fullPath = pathname + search;
+
+      window.location.href = `/login?path=${encodeURIComponent(fullPath)}`;
       return Promise.reject(error);
     }
 

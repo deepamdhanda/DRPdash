@@ -18,6 +18,7 @@ import { CODRemittances } from "./CODRemittances.tsx";
 import { Invoices } from "../Invoices/Invoices.tsx";
 import DamageReport from "./DamageReport.tsx";
 import ShippingCalculator from "./ShippingChargeCalculator.tsx";
+import WeightDiscrepancy from "./WeightDiscrepancy.tsx";
 
 export const userRoutes = [
   {
@@ -99,5 +100,9 @@ export const userRoutes = [
   {
     path: "shipping-charge-calculator",
     element: <ShippingCalculator />,
+  },
+  {
+    path: "weight-discrepancy",
+    element: <WeightDiscrepancy />,
   },
 ];

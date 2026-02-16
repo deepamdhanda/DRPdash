@@ -33,7 +33,7 @@ const router = createBrowserRouter([
         element: <EcomCreditScoreLandingPage />, // or a default landing page
       },
       {
-        path: "waiting",
+        index: true,
         element: <JoinWaitList />, // or a default landing page
       },
       {

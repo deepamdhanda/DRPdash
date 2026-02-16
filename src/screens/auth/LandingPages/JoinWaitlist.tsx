@@ -7,7 +7,6 @@ import logoWide from "../../../assets/logo-wide.png";
 import { registerLead } from "../../../APIs/landingPageAPIs";
 
 const JoinWaitingList: React.FC = () => {
-  // Spots state and constants
   const [spots, setSpots] = useState<number>(() => {
     const stored = localStorage.getItem("orderzup_spots");
     return stored ? parseInt(stored, 10) : 37;
