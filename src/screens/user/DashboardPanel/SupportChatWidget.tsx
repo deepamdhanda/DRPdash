@@ -1005,8 +1005,8 @@ const SupportChatWidget = () => {
 
           <div className="mb-2">
             <small className="text-muted d-block">Phone</small>
-            <a href="tel:+1234567890" className="text-decoration-none">
-              +91 92586-15313
+            <a href="tel:+918640000446" className="text-decoration-none">
+              +91 86400-00446
             </a>
           </div>
 

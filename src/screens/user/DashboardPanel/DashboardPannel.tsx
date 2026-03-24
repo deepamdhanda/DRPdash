@@ -29,6 +29,8 @@ import {
   Radio,
   Warehouse,
   ChevronRight,
+  Scale,
+  ClipboardMinus,
 } from "lucide-react";
 import { BsGraphUp } from "react-icons/bs";
 
@@ -155,6 +157,16 @@ const navLinks: NavLink[] = [
         name: "Warehouse",
         icon: <Warehouse size={18} />,
         path: "/user/Warehouses",
+      },
+      {
+        name: "Damage Reports",
+        icon: <ClipboardMinus size={18} />,
+        path: "/user/damage-report",
+      },
+      {
+        name: "Weight Discrepancy",
+        icon: <Scale size={18} />,
+        path: "/user/weight-discrepancy",
       },
     ],
   },

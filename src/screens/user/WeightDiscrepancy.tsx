@@ -8,7 +8,7 @@ import { drpCrmBaseUrl } from "../../axios/urls";
 type DiscrepancyStatus = "pending" | "dispute" | "accepted";
 
 interface IChat {
-  sender: "user" | "admin" | "courier";
+  type: "reporter" | "admin";
   message: string;
   createdAt: string;
 }
@@ -354,14 +354,14 @@ const WeightDiscrepancy: React.FC = () => {
                 <div
                   key={i}
                   className={`d-flex mb-2 ${
-                    c.sender === "user"
+                    c.type === "reporter"
                       ? "justify-content-end"
                       : "justify-content-start"
                   }`}
                 >
                   <div
                     className={`p-2 rounded ${
-                      c.sender === "user"
+                      c.type === "reporter"
                         ? "bg-primary text-white"
                         : "bg-white border"
                     }`}
@@ -371,7 +371,7 @@ const WeightDiscrepancy: React.FC = () => {
                       className="small opacity-75 mb-1"
                       style={{ fontSize: "0.7em" }}
                     >
-                      {c.sender === "user" ? "You" : "Support"} •{" "}
+                      {c.type === "reporter" ? "You" : "Support"} •{" "}
                       {new Date(c.createdAt).toLocaleString("en-IN", {
                         day: "2-digit",
                         month: "short",

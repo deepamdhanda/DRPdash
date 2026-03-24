@@ -35,7 +35,6 @@ export interface ChannelAccount {
 }
 
 const ChannelAccounts: React.FC = () => {
-
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -182,7 +181,6 @@ const ChannelAccounts: React.FC = () => {
       auto_ai_rating: false,
     });
     navigate(location.pathname, { replace: true }); // updates URL without reloading
-
   };
 
   const handleShow = () => setShowModal(true);
@@ -212,7 +210,8 @@ const ChannelAccounts: React.FC = () => {
       auto_ship: channelAccount.automation?.auto_ship || false,
       auto_ai_recommendation:
         channelAccount.automation?.auto_ai_recommendation || false,
-      auto_address_confirm: channelAccount.automation?.auto_address_confirm || false,
+      auto_address_confirm:
+        channelAccount.automation?.auto_address_confirm || false,
       auto_ai_rating: channelAccount.automation?.auto_ai_rating || false,
     });
     setShowModal(true);
@@ -310,14 +309,16 @@ const ChannelAccounts: React.FC = () => {
     let result: any = false;
     try {
       if (editingChannelAccount) {
-        result = (await updateChannelAccount(
+        result = await updateChannelAccount(
           editingChannelAccount._id!,
           formData
-        )) as ChannelAccount;
+        );
       } else {
         result = (await createChannelAccount(formData)) as ChannelAccount;
       }
-      channels.find((c) => c._id === form.channel_id.value)?.channel_name !== "Custom" && startInitialChannelAccountFetch(result);
+      console.log(result);
+      channels.find((c) => c._id === form.channel_id.value)?.channel_name !==
+        "Custom" && startInitialChannelAccountFetch(result.data);
       fetchInitialData();
       handleClose();
     } catch (error) {
@@ -333,8 +334,8 @@ const ChannelAccounts: React.FC = () => {
           {row.status === "active"
             ? "🟢"
             : row.status === "inactive"
-              ? "🔴"
-              : "❌"}{" "}
+            ? "🔴"
+            : "❌"}{" "}
           <strong>{row.channel_account_name}</strong>
         </div>
       ),
@@ -403,10 +404,10 @@ const ChannelAccounts: React.FC = () => {
       selector: (row: ChannelAccount) =>
         row.createdAt
           ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
           : "—",
       sortable: true,
     },

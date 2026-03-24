@@ -50,6 +50,7 @@ import CreditScoreMeter from "../../components/CreditScoreMeter";
 import RecommendedCouriers from "../../components/RecomendedCouriers";
 import { generateCreditScore } from "../../APIs/user/creditScore";
 import { updateCustomerAddress } from "../../APIs/user/customerAddress";
+import { Link } from "react-router-dom";
 
 export interface User {
   _id: string;
@@ -1380,7 +1381,7 @@ const Orders: React.FC = () => {
             {row.awb_number ? (
               <div style={{ marginTop: 2 }}>
                 <strong>AWB: </strong>
-                <a
+                {/* <a
                   href={row.tracking_url?.replace(
                     "{{awb_number}}",
                     row.awb_number
@@ -1388,9 +1389,9 @@ const Orders: React.FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#007bff", textDecoration: "underline" }}
-                >
-                  {row.awb_number}
-                </a>
+                > */}
+                <Link to={`/customer/track/${row._id}`}>{row.awb_number}</Link>
+                {/* </a> */}
               </div>
             ) : (
               <div>

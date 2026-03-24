@@ -22,7 +22,6 @@ export const getAllCouriers = async () => {
   }
 };
 
-
 export const getCommonWarehouses = (order: any): CommonWarehouse[] => {
   if (!order.product_details?.length) return [];
 
@@ -60,8 +59,10 @@ export const getCommonWarehouses = (order: any): CommonWarehouse[] => {
   return result;
 };
 
-
-export const checkShipmentServiceavailablity = async (order: any, warehouse: any = null) => {
+export const checkShipmentServiceavailablity = async (
+  order: any,
+  warehouse: any = null
+) => {
   try {
     if (!order || !order.product_details) {
       throw new Error("Invalid order data");
@@ -69,7 +70,12 @@ export const checkShipmentServiceavailablity = async (order: any, warehouse: any
     if (!order.product_details || !order.product_details.length) {
       throw new Error("No product details found in order");
     }
-    if (!order.shipping_address || !order.shipping_city || !order.shipping_state || !order.shipping_pincode) {
+    if (
+      !order.shipping_address ||
+      !order.shipping_city ||
+      !order.shipping_state ||
+      !order.shipping_pincode
+    ) {
       throw new Error("Incomplete shipping information in order");
     }
     if (!order.pack_deatils || !order.pack_deatils.length) {
@@ -84,19 +90,26 @@ export const checkShipmentServiceavailablity = async (order: any, warehouse: any
     if (!order._id) {
       throw new Error("Order ID not specified");
     }
-    const weight = (order.product_details.reduce((total: number, product: any) =>
-      total + (product.product_weight || 0) * (product.product_quantity || 0), 0)) || 0.100;
+    const weight =
+      order.product_details.reduce(
+        (total: number, product: any) =>
+          total +
+          (product.product_weight || 0) * (product.product_quantity || 0),
+        0
+      ) || 0.1;
 
     let commonWarehouses = warehouse;
     if (commonWarehouses === null) {
-      commonWarehouses = getCommonWarehouses(order)
+      commonWarehouses = getCommonWarehouses(order);
     }
     // Handle delivery details from order shipping info
-    const delivery_address = (`${order.shipping_address}, ${order.shipping_city}, ${order.shipping_state} - ${order.shipping_pincode}`) || 'Unknown';
-    const delivery_postcode = order.shipping_pincode || '000000';
+    const delivery_address =
+      `${order.shipping_address}, ${order.shipping_city}, ${order.shipping_state} - ${order.shipping_pincode}` ||
+      "Unknown";
+    const delivery_postcode = order.shipping_pincode || "000000";
 
-    const type = 'delivery'; // Assuming default shipment type
-    const cod = order.payment_method?.toLowerCase().includes('cod') ? 1 : 0;
+    const type = "delivery"; // Assuming default shipment type
+    const cod = order.payment_method?.toLowerCase().includes("cod") ? 1 : 0;
 
     // Defaults or derived from product SKU or packing config (mocked here)
     const length = order.pack_deatils.length; // Set from product packaging if known
@@ -118,51 +131,50 @@ export const checkShipmentServiceavailablity = async (order: any, warehouse: any
       declared_value,
     };
 
-    const response = await appAxios.get(
-      `${couriers_url}/checkServiceability`,
-      { params }
-    );
+    const response = await appAxios.get(`${couriers_url}/checkServiceability`, {
+      params,
+    });
     return response.data;
-  }
-  catch (error: any) {
-    toast.error("Failed to check shipment service availability. Error: " + error);
-    return false
+  } catch (error: any) {
+    toast.error(
+      "Failed to check shipment service availability. Error: " + error
+    );
+    return false;
     throw error;
   }
-}
+};
 
-export const bookCourier = async (orderId: any, courierId: any, warehouseId: any) => {
+export const bookCourier = async (
+  orderId: any,
+  courierId: any,
+  warehouseId: any
+) => {
   try {
-    const response = await appAxios.get(
-      `${couriers_url}/book`,
-      {
-        params: { orderId, courierId, warehouseId }
-      }
-    );
+    const response = await appAxios.get(`${couriers_url}/book`, {
+      params: { orderId, courierId, warehouseId },
+    });
     return response.data;
-  }
-  catch (error: any) {
-    toast.error("Failed to check shipment service availability. Error: " + error);
+  } catch (error: any) {
+    toast.error(
+      "Failed to check shipment service availability. Error: " + error
+    );
     throw error;
   }
-}
-
+};
 
 export const schedulePickup = async (orderId: any, date: Date) => {
   try {
-    const response = await appAxios.get(
-      `${couriers_url}/schedulePickup`,
-      {
-        params: { orderId, date }
-      }
-    );
+    const response = await appAxios.get(`${couriers_url}/schedulePickup`, {
+      params: { orderId, date },
+    });
     return response.data;
-  }
-  catch (error: any) {
-    toast.error("Failed to check shipment service availability. Error: " + error);
+  } catch (error: any) {
+    toast.error(
+      "Failed to check shipment service availability. Error: " + error
+    );
     throw error;
   }
-}
+};
 
 export const createCourier = async (data: any) => {
   try {
