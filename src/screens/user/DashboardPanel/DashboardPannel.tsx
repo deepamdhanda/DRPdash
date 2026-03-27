@@ -182,6 +182,7 @@ const UserPanel: React.FC = () => {
   const { reset } = useUserStore();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [sidebarHovered, setSidebarHovered] = useState<boolean>(false);
 
   // Automatically sync active link with current URL
   useEffect(() => {
@@ -232,13 +233,17 @@ const UserPanel: React.FC = () => {
       }
     };
 
+    const showName = isMobile || sidebarOpen || sidebarHovered;
+
     return (
       <div
-        className="position-relative overflow-hidden"
+        className="position-relative"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         style={{ marginBottom: "4px" }}
       >
+
+        {!hasChildren && (
         <motion.div
           className={`d-flex align-items-center justify-content-between px-3 py-2 rounded mx-2 `}
           style={{
@@ -261,19 +266,20 @@ const UserPanel: React.FC = () => {
             <span style={{ color: isActive ? "white" : "#F5891E" }}>
               {link.icon}
             </span>
-            <span
-              className="fw-medium nav-name"
-              style={{
-                fontSize: "14px",
-                color: isActive ? "white" : "#F5891E",
-              }}
-            >
-              {link.name}
-            </span>
+            {showName && (
+              <span
+                className="fw-medium nav-name"
+                style={{
+                  fontSize: "14px",
+                  color: isActive ? "white" : "#F5891E",
+                }}
+              >
+                {link.name}
+              </span>
+            )}
           </div>
           {hasChildren && (
             <motion.span
-              animate={{ rotate: isExpanded || isHovered ? 90 : 0 }}
               transition={{ duration: 0.2 }}
               style={{ color: isActive ? "white" : "white" }}
               className="nav-name"
@@ -281,96 +287,47 @@ const UserPanel: React.FC = () => {
               <ChevronRight size={16} />
             </motion.span>
           )}
-        </motion.div>
-
-        {/* Desktop: Hover menu */}
-
-        <AnimatePresence initial={false}>
-          {isHovered && (
-            <motion.div
-              animate={{ transform: "translateX(15px)" }}
-              transition={{ duration: 0.4 }}
-              className="py-2"
-            >
-              {link.children?.map((child) => (
-                <div
-                  key={child.name}
-                  className="d-flex align-items-center gap-3 px-3 py-2 ml-5"
-                  style={{
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    backgroundColor:
-                      activeLink === child.name ? "#FFF5E6" : "transparent",
-                    color: activeLink === child.name ? "#F5891E" : "#fff",
-                    borderLeft:
-                      activeLink === child.name
-                        ? "4px solid #F5891E"
-                        : "4px solid transparent",
-                  }}
-                  onClick={() =>
-                    child.path && handleLinkClick(child.name, child.path)
+        </motion.div>)}
+        {/* Always show children with a separator to reduce clicks */}
+        {hasChildren && (
+          <div>
+            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 8px" }} />
+            {link.children?.map((child) => (
+              <div
+                key={child.name}
+                className="d-flex align-items-center gap-3 px-3 py-2 mx-2"
+                style={{
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  marginLeft: level === 0 ? 24 : 32,
+                  backgroundColor:
+                    activeLink === child.name ? "#FFF5E6" : "transparent",
+                  color: activeLink === child.name ? "#F5891E" : "#fff",
+                  borderLeft: activeLink === child.name ? "4px solid #F5891E" : "4px solid transparent",
+                }}
+                onClick={() => child.path && handleLinkClick(child.name, child.path)}
+                onMouseEnter={(e) => {
+                  if (activeLink !== child.name) {
+                    e.currentTarget.style.backgroundColor = "#FFF5E6";
+                    e.currentTarget.style.color = "#F5891E";
                   }
-                  onMouseEnter={(e) => {
-                    if (activeLink !== child.name) {
-                      e.currentTarget.style.backgroundColor = "#FFF5E6";
-                      e.currentTarget.style.color = "#F5891E";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeLink !== child.name) {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                      e.currentTarget.style.color = "#fff";
-                    }
-                  }}
-                >
-                  <span style={{ color: "#F5891E" }}>{child.icon}</span>
+                }}
+                onMouseLeave={(e) => {
+                  if (activeLink !== child.name) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "#fff";
+                  }
+                }}
+              >
+                <span style={{ color: "#F5891E" }}>{child.icon}</span>
+                {(isMobile || sidebarOpen || sidebarHovered) && (
                   <span className="fw-medium" style={{ fontSize: "14px" }}>
                     {child.name}
                   </span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Mobile: Expandable menu */}
-        {isMobile && hasChildren && (
-          <AnimatePresence initial={false}>
-            {isExpanded && (
-              <motion.div
-                initial={false}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                style={{ overflow: "hidden" }}
-              >
-                {link.children?.map((child) => (
-                  <motion.div
-                    key={child.name}
-                    animate={{ x: 10, opacity: 1 }}
-                    className="d-flex align-items-center gap-3 px-3 py-2 rounded mx-2"
-                    style={{
-                      cursor: "pointer",
-                      marginLeft: "32px",
-                      marginBottom: "4px",
-                      transition: "all 0.2s",
-                      backgroundColor:
-                        activeLink === child.name ? "#FFE8CC" : "transparent",
-                      color: activeLink === child.name ? "#F5891E" : "#fff",
-                    }}
-                    onClick={() =>
-                      child.path && handleLinkClick(child.name, child.path)
-                    }
-                  >
-                    <span style={{ color: "#F5891E" }}>{child.icon}</span>
-                    <span className="fw-medium" style={{ fontSize: "14px" }}>
-                      {child.name}
-                    </span>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     );
@@ -403,6 +360,8 @@ const UserPanel: React.FC = () => {
       )}
       <div
         className={`sidebar sidebar-visible`}
+        onMouseEnter={() => setSidebarHovered(true)}
+        onMouseLeave={() => setSidebarHovered(false)}
         style={{
           display:
             isMobile && !sidebarOpen ? "none!imporant" : "flex!important",
@@ -431,11 +390,11 @@ const UserPanel: React.FC = () => {
             >
               Hello, {username}!
             </div>
-            <nav className="flex-fill overflow-auto py-3">
+            <div className="nav-list-1">
               {navLinks.map((link) => (
                 <NavItem key={link.name} link={link} />
               ))}
-            </nav>
+            </div>
           </div>
           <div
             className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""}`}
@@ -449,7 +408,11 @@ const UserPanel: React.FC = () => {
         </nav>
       </div>
       {isMobile && sidebarOpen && (
-        <div className={`side-mobile ${sidebarOpen ? " open" : ""}`}>
+        <div
+          className={`side-mobile ${sidebarOpen ? " open" : ""}`}
+          onMouseEnter={() => setSidebarHovered(true)}
+          onMouseLeave={() => setSidebarHovered(false)}
+        >
           <nav className="nav-1">
             <div>
               <div className="nav-logo">
@@ -473,11 +436,11 @@ const UserPanel: React.FC = () => {
               >
                 Hello, {username}!
               </div>
-              <nav className="flex-fill overflow-auto py-3">
+              <div className="nav-list-2">
                 {navLinks.map((link) => (
                   <NavItem key={link.name} link={link} />
                 ))}
-              </nav>
+              </div>
             </div>
             <div
               className={`nav-link-1 ${
@@ -493,7 +456,7 @@ const UserPanel: React.FC = () => {
           </nav>
         </div>
       )}
-      <div className="main-content">
+      <div className="main-content" style={{ backgroundColor: "#f6f7f9" }}>
         {/* hello */}
         <Outlet />
         <SupportChatWidget />

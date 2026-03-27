@@ -1,14 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Modal,
-  Button,
-  Form,
-  Row,
-  Col,
-  Table,
-  OverlayTrigger,
-  Tooltip,
-} from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Table, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import {
   getAllOrders,
@@ -24,12 +15,13 @@ import {
 } from "../../URLs/user";
 import {
   BsClockFill,
-  BsFillFilterCircleFill,
+  BsFillFunnelFill,
   BsPhoneFill,
 } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
-import { FaBriefcase, FaLocationPin } from "react-icons/fa6";
-import { FaDollarSign, FaPlane, FaStore, FaTruck } from "react-icons/fa";
+import { FaBriefcase, FaGear, FaLocationPin } from "react-icons/fa6";
+// import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck } from "react-icons/fa";
+import { FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck} from "react-icons/fa";
 import { BiCalendar, BiSolidPencil } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
 import {
@@ -46,9 +38,9 @@ import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import DatePicker from "react-datepicker";
 import { pincodeDetails } from "../../APIs/pincodeAPIs";
 import OUAIIcon from "../../assets/ouai_icon";
-import CreditScoreMeter from "../../components/CreditScoreMeter";
+// import CreditScoreMeter from "../../components/CreditScoreMeter";
 import RecommendedCouriers from "../../components/RecomendedCouriers";
-import { generateCreditScore } from "../../APIs/user/creditScore";
+// import { generateCreditScore } from "../../APIs/user/creditScore";
 import { updateCustomerAddress } from "../../APIs/user/customerAddress";
 import { Link } from "react-router-dom";
 
@@ -119,15 +111,15 @@ interface PaymentMethod {
   method?: string;
   count?: Number;
 }
-const orderTabs = [
-  { key: "new_orders", label: "New Orders" },
-  { key: "pickup_pending", label: "Pending Pickups" },
-  { key: "in_transit", label: "In Transit" },
-  { key: "delivered", label: "Delivered" },
-  { key: "rto", label: "RTO" },
-  // { key: "others", label: "Others" },
-  { key: "all", label: "All Orders" },
-];
+// const orderTabs = [
+//   { key: "new_orders", label: "New Orders" },
+//   { key: "pickup_pending", label: "Pending Pickups" },
+//   { key: "in_transit", label: "In Transit" },
+//   { key: "delivered", label: "Delivered" },
+//   { key: "rto", label: "RTO" },
+//   // { key: "others", label: "Others" },
+//   { key: "all", label: "All Orders" },
+// ];
 const ShippingLabel = ({ labelData }: any) => {
   const data = labelData;
   return (
@@ -170,10 +162,10 @@ const ShippingLabel = ({ labelData }: any) => {
             <u>Shipping Address</u>
           </b>
         </div>
-        <div>
-          <b>{data.customer_name}</b>
-        </div>
-        <div>
+        <div
+          className="orders-header d-flex align-items-center justify-content-between mb-3"
+          style={{ gap: 12 }}
+        >
           {data.customer_address}, {data.customer_address2} -{" "}
           {data.customer_pincode}
         </div>
@@ -285,6 +277,7 @@ const ShippingLabel = ({ labelData }: any) => {
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([10, 20, 50, 100, 200, 500, 1000]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [rowsPerPage, setRowsPerPage] = useState<number>(50);
   const [showModal, setShowModal] = useState(false);
@@ -383,6 +376,30 @@ const Orders: React.FC = () => {
 
       setOrders(response.orders);
       setTotalOrders(response.total);
+      let newrpOptions = [] as any;
+      if (response.total > 10 && !newrpOptions.includes(10)) {
+        newrpOptions.push(10)
+      }
+      if (response.total > 20 && !newrpOptions.includes(20)) {
+        newrpOptions.push(20)
+      }
+      if (response.total > 50 && !newrpOptions.includes(50)) {
+        newrpOptions.push(50)
+      }
+      if (response.total > 100 && !newrpOptions.includes(100)) {
+        newrpOptions.push(100)
+      }
+      if (response.total > 200 && !newrpOptions.includes(200)) {
+        newrpOptions.push(200)
+      }
+      if (response.total > 500 && !newrpOptions.includes(500)) {
+        newrpOptions.push(500)
+      }
+      if (response.total > 1000 && !newrpOptions.includes(1000)) {
+        newrpOptions.push(1000)
+      }
+      newrpOptions.push(response.total)
+      setRowsPerPageOptions(newrpOptions);
     } catch (error) {
       toast.error("Error fetching orders" + error);
     } finally {
@@ -938,20 +955,20 @@ const Orders: React.FC = () => {
     return s !== "" && s !== "-" && s !== "—";
   };
 
-  const handleGenerateEcomScore = async (orderId: string) => {
-    try {
-      generateCreditScore(orderId).then((response) => {
-        if (response) {
-          toast.success("AI Score generated successfully.");
-          fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
-        } else {
-          toast.error("Failed to generate AI score.");
-        }
-      });
-    } catch (err) {
-      toast.error("Failed to request AI score: " + err);
-    }
-  };
+  // const handleGenerateEcomScore = async (orderId: string) => {
+  //   try {
+  //     generateCreditScore(orderId).then((response) => {
+  //       if (response) {
+  //         toast.success("AI Score generated successfully.");
+  //         fetchOrders(currentPage, rowsPerPage, filters); // Refresh orders
+  //       } else {
+  //         toast.error("Failed to generate AI score.");
+  //       }
+  //     });
+  //   } catch (err) {
+  //     toast.error("Failed to request AI score: " + err);
+  //   }
+  // };
   const columns = [
     {
       name: "Order Details",
@@ -1228,111 +1245,88 @@ const Orders: React.FC = () => {
       style: { padding: "5px 2px" },
     },
 
-    {
-      name: "Ecom Credit Score",
-      cell: (row: any) => {
-        // const score = row.customer_rating * 100 - 192;
-        return (
-          <div>
-            {row.ecom_credit_score && row.ecom_credit_score_valid ? (
-              <CreditScoreMeter
-                score={row.ecom_credit_score}
-                validTill={row.ecom_credit_score_validtill.split("T")[0]}
-              />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <button
-                  onClick={() => handleGenerateEcomScore(row._id)}
-                  title="Generate AI-Based Ecom Credit Score"
-                  style={{
-                    // display: "flex",
-                    alignItems: "center",
-                    gap: 0,
-                    padding: "6px 10px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "#dbeafe",
-                    // background: "linear-gradient(180deg, #000434 0%, #1a1f6b 100%)",
-                    color: "#000434",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.3px",
-                    cursor: "pointer",
-                    boxShadow: `
-      0 8px 24px rgba(0,4,52,0.35),
-      inset 0 1px 0 rgba(255,255,255,0.08)
-    `,
-                    transition: "all 0.25s ease",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = `
-      0 12px 30px rgba(26,31,107,0.45),
-      0 0 0 1px rgba(245,137,30,0.25),
-      inset 0 1px 0 rgba(255,255,255,0.12)
-    `;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = `
-      0 8px 24px rgba(0,4,52,0.35),
-      inset 0 1px 0 rgba(255,255,255,0.08)
-    `;
-                  }}
-                  onMouseDown={(e) => {
-                    e.currentTarget.style.transform =
-                      "translateY(1px) scale(0.98)";
-                  }}
-                  onMouseUp={(e) => {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <OUAIIcon style={{ width: 16, opacity: 0.95 }} />
-                    <span
-                      style={{
-                        whiteSpace: "nowrap",
-                        fontWeight: 900,
-                        marginLeft: 4,
-                      }}
-                    >
-                      Get Ecom Credit Score
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 8, color: "#28a745", marginTop: 6 }}>
-                    Totally Free - No Extra charge
-                  </div>
-                </button>
-                {row.ecom_credit_score &&
-                  row.ecom_credit_score_valid === false && (
-                    <div
-                      style={{
-                        fontSize: 10,
-                        color: "#dc3545",
-                        marginTop: 4,
-                        textAlign: "center",
-                      }}
-                    >
-                      Ecom Credit Score expired.
-                    </div>
-                  )}
-              </div>
-            )}
-          </div>
-        );
-      },
-      minWidth: "190px",
-      center: true,
-      style: { padding: "5px 2px" },
-    },
+    // {
+    //   name: "Ecom Credit Score",
+    //   cell: (row: any) => {
+    //     // const score = row.customer_rating * 100 - 192;
+    //     return (
+    //       <div>
+    //         {row.ecom_credit_score && row.ecom_credit_score_valid ? (
+    //           <CreditScoreMeter score={row.ecom_credit_score} validTill={row.ecom_credit_score_validtill.split("T")[0]} />
+    //         ) : (
+    //           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+
+    //             <button
+    //               onClick={() => handleGenerateEcomScore(row._id)}
+    //               title="Generate AI-Based Ecom Credit Score"
+    //               style={{
+    //                 // display: "flex",
+    //                 alignItems: "center",
+    //                 gap: 0,
+    //                 padding: "6px 10px",
+    //                 borderRadius: 10,
+    //                 border: "1px solid rgba(255,255,255,0.08)",
+    //                 background: "#dbeafe",
+    //                 // background: "linear-gradient(180deg, #000434 0%, #1a1f6b 100%)",
+    //                 color: "#000434",
+    //                 fontSize: 11,
+    //                 fontWeight: 700,
+    //                 letterSpacing: "0.3px",
+    //                 cursor: "pointer",
+    //                 boxShadow: `
+    //   0 8px 24px rgba(0,4,52,0.35),
+    //   inset 0 1px 0 rgba(255,255,255,0.08)
+    // `,
+    //                 transition: "all 0.25s ease",
+    //                 position: "relative",
+    //                 overflow: "hidden",
+    //               }}
+    //               onMouseEnter={(e) => {
+    //                 e.currentTarget.style.transform = "translateY(-1px)";
+    //                 e.currentTarget.style.boxShadow = `
+    //   0 12px 30px rgba(26,31,107,0.45),
+    //   0 0 0 1px rgba(245,137,30,0.25),
+    //   inset 0 1px 0 rgba(255,255,255,0.12)
+    // `;
+    //               }}
+    //               onMouseLeave={(e) => {
+    //                 e.currentTarget.style.transform = "translateY(0)";
+    //                 e.currentTarget.style.boxShadow = `
+    //   0 8px 24px rgba(0,4,52,0.35),
+    //   inset 0 1px 0 rgba(255,255,255,0.08)
+    // `;
+    //               }}
+    //               onMouseDown={(e) => {
+    //                 e.currentTarget.style.transform = "translateY(1px) scale(0.98)";
+    //               }}
+    //               onMouseUp={(e) => {
+    //                 e.currentTarget.style.transform = "translateY(-1px)";
+    //               }}
+    //             >
+    //               <div style={{ display: "flex", alignItems: "center" }}>
+    //                 <OUAIIcon style={{ width: 16, opacity: 0.95 }} />
+    //                 <span style={{ whiteSpace: "nowrap", fontWeight: 900, marginLeft: 4 }}>
+    //                   Get Ecom Credit Score
+    //                 </span>
+    //               </div>
+    //               <div style={{ fontSize: 8, color: "#28a745", marginTop: 6 }}>
+    //                 Totally Free - No Extra charge
+    //               </div>
+    //             </button>
+    //             {row.ecom_credit_score && row.ecom_credit_score_valid === false && (
+    //               <div style={{ fontSize: 10, color: "#dc3545", marginTop: 4, textAlign: "center" }}>
+    //                 Ecom Credit Score expired.
+    //               </div>
+    //             )}
+    //           </div>
+    //         )}
+    //       </div>
+    //     );
+    //   },
+    //   minWidth: "190px",
+    //   center: true,
+    //   style: { padding: "5px 2px" },
+    // },
 
     {
       name: "Courier Details",
@@ -1553,79 +1547,72 @@ const Orders: React.FC = () => {
           statusStr.includes("pickup") ||
           statusStr.includes("not picked");
 
+        const handleMainClick = () => {
+          if (hasAwb && canAction) return handlePickup(row);
+          if (!hasAwb && statusStr !== "cancelled") return handleShipment([row]);
+        };
+
         return (
           <div
+            className="order-actions"
             style={{
               textAlign: "center",
               display: "flex",
               flexDirection: "column",
-              gap: "5px",
+              gap: "6px",
+              alignItems: "center",
             }}
           >
-            <div
-              style={{ display: "flex", gap: "5px", justifyContent: "center" }}
-            >
-              {hasAwb && canAction && (
-                <>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => handlePickup(row)}
-                  >
-                    🗓️ Pickup
-                  </Button>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => setLabelData([row.label])}
-                  >
-                    🖨️ Label
-                  </Button>
-                </>
-              )}
-              {!hasAwb && statusStr !== "cancelled" && (
-                <Button
-                  style={{
-                    backgroundColor: "#F5891E",
-                    border: 0,
-                    fontWeight: "bold",
-                    color: "white",
-                    fontSize: "10px",
-                  }}
-                  onClick={() => handleShipment([row])}
-                >
-                  🚚 Ship Now
-                </Button>
-              )}
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <Button
+                size="sm"
+                onClick={handleMainClick}
+                variant={hasAwb && canAction ? "outline-primary" : (!hasAwb && statusStr !== "cancelled" ? "warning" : "outline-secondary")}
+                style={{
+                  minWidth: 84,
+                  fontWeight: 700,
+                  background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)",
+                  color: "#fff",
+                  borderRadius: 20,
+                }}
+                title={hasAwb && canAction ? "Schedule Pickup" : !hasAwb && statusStr !== "cancelled" ? "Ship this order now" : "No primary action"}
+              >
+                {hasAwb && canAction ? "Pickup" : !hasAwb && statusStr !== "cancelled" ? "Ship Now" : (statusStr === "cancelled" ? "Cancelled" : "Action")}
+              </Button>
+
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="link" size="sm" id={`actions-dd-${row._id}`}>
+                  {/* <FaEllipsisV /> */}
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {hasAwb && canAction && (
+                    <>
+                      <Dropdown.Item onClick={() => setLabelData([row.label])}>
+                        🖨️ Print Label
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleShipment([row])}>
+                        🔁 Change Courier
+                      </Dropdown.Item>
+                    </>
+                  )}
+
+                  {!hasAwb && statusStr !== "cancelled" && (
+                    <>
+                      <Dropdown.Item onClick={() => handleShipment([row])}>
+                        🚚 Ship Now
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleBookBulkShipment([row])}>
+                        📦 Recommend / Book
+                      </Dropdown.Item>
+                    </>
+                  )}
+
+                  <Dropdown.Item onClick={() => handleCancelOrder(row, statusStr === "cancelled" ? "re_activate" : "cancelled")}>
+                    {statusStr === "cancelled" ? "Re-Activate" : "❌ Cancel"}
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             </div>
-            {hasAwb && canAction && (
-              <Button
-                variant="link"
-                size="sm"
-                style={{ padding: 0, fontSize: "11px" }}
-                onClick={() => handleShipment([row])}
-              >
-                Change Courier
-              </Button>
-            )}
-            {!hasAwb && (
-              <Button
-                variant={
-                  statusStr === "cancelled"
-                    ? "outline-success"
-                    : "outline-danger"
-                }
-                size="sm"
-                onClick={() =>
-                  handleCancelOrder(
-                    row,
-                    statusStr === "cancelled" ? "re_activate" : "cancelled"
-                  )
-                }
-              >
-                {statusStr === "cancelled" ? "Re-Activate" : "❌ Cancel"}
-              </Button>
-            )}
           </div>
         );
       },
@@ -1711,17 +1698,29 @@ const Orders: React.FC = () => {
 
   return (
     <div className="container">
+      <style>{`
+        /* Orders screen responsive styles */
+        .orders-header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+        .orders-header .input-group { flex:1; max-width:720px; min-width:180px; }
+        .orders-header .input-group .form-control { min-width:120px; }
+        .orders-tabs { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+        .orders-tabs .tab-pill { border-radius:20px; padding:6px 12px; font-weight:600; }
+        .order-actions { display:flex; flex-direction:column; gap:6px; align-items:center; }
+
+        @media (max-width: 768px) {
+          .orders-header { flex-direction:column; align-items:stretch; }
+          .orders-header .input-group { order:2; width:100%; margin-top:8px; }
+          .orders-header > div:first-child { order:1; }
+          .orders-header > div:last-child { order:3; display:flex; justify-content:flex-end; margin-top:8px; }
+          .orders-tabs { flex-direction:row; gap:6px; align-items:center; overflow:auto; padding-bottom:6px; }
+          .orders-tabs .tab-pill { padding:6px 10px; font-size:13px; }
+          .order-actions { flex-direction:row; }
+          .order-actions .btn { padding:6px 8px; font-size:12px; }
+        }
+      `}</style>
       <div className="row d-flex justify-content-between align-items-center mb-3">
         <Col className="md-6 d-flex align-items-center">
           <h4>Orders</h4>
-          <div style={{ minWidth: "30px", margin: "0 4px" }}>
-            <BsFillFilterCircleFill
-              onClick={() => setShowFilters(!showFilters)}
-              size={"30px"}
-              color="#F5891E"
-              // style={{minWidth:"70px!important"}}
-            />
-          </div>
         </Col>
         <Col className="md-6 d-flex align-items-center justify-content-end">
           <Button
@@ -2248,19 +2247,114 @@ const Orders: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
-      <div
-        className="shadow"
-        style={{
-          border: "none",
-          borderTop: "solid",
-          // minWidth: "450px",
-          // width: "100%",
-          padding: 5,
-        }}
-      >
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <Row>
-            {orderTabs.map(({ key, label }) => (
+      <div>
+        <div className="orders-tabs d-flex justify-content-between align-items-center mb-2">
+          <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: "100%", margin: "0 20px" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
+                  <FaBoxOpen style={{ marginRight: "4px", color: "#fff" }} size={15} />
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "new_orders" ? "#000" : "#fff", backgroundColor: activeTab !== "new_orders" ? "#fff" : "#000434", border: activeTab !== "new_orders" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
+                  onClick={() => activeTab !== "new_orders" && handleTabChange("new_orders")}
+                >
+                  New
+                  {activeTab === "new_orders" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "pickup_pending" ? "#000" : "#fff", backgroundColor: activeTab !== "pickup_pending" ? "#fff" : "#000434", border: activeTab !== "pickup_pending" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap", borderEndEndRadius: "14px", borderStartEndRadius: "14px" }}
+                  onClick={() => activeTab !== "pickup_pending" && handleTabChange("pickup_pending")}
+                >
+                  Pickups
+                  {activeTab === "pickup_pending" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
+                  <FaTruck style={{ marginRight: "4px", color: "#fff" }} size={15} />
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "in_transit" ? "#000" : "#fff", backgroundColor: activeTab !== "in_transit" ? "#fff" : "#000434", border: activeTab !== "in_transit" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
+                  onClick={() => activeTab !== "in_transit" && handleTabChange("in_transit")}
+                >
+                  In Transit
+                  {activeTab === "in_transit" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "delivered" ? "#000" : "#fff", backgroundColor: activeTab !== "delivered" ? "#fff" : "#000434", border: activeTab !== "delivered" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
+                  onClick={() => activeTab !== "delivered" && handleTabChange("delivered")}
+                >
+                  Delivered
+                  {activeTab === "delivered" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "rto" ? "#000" : "#fff", backgroundColor: activeTab !== "rto" ? "#fff" : "#000434", border: activeTab !== "rto" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap", borderEndEndRadius: "14px", borderStartEndRadius: "14px" }}
+                  onClick={() => activeTab !== "rto" && handleTabChange("rto")}
+                >
+                  RTO
+                  {activeTab === "rto" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
+                  <FaGear style={{ marginRight: "4px", color: "#fff" }} size={15} />
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "all" ? "#000" : "#fff", backgroundColor: activeTab !== "all" ? "#fff" : "#000434", border: activeTab !== "all" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
+                  onClick={() => activeTab !== "all" && handleTabChange("all")}
+                >
+                  All Orders
+                  {activeTab === "all" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "others" ? "#000" : "#fff", backgroundColor: activeTab !== "others" ? "#fff" : "#000434", border: activeTab !== "others" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap", borderEndEndRadius: "14px", borderStartEndRadius: "14px" }}
+                  onClick={() => activeTab !== "others" && handleTabChange("others")}
+                >
+                  Archived
+                  {activeTab === "others" && (
+                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                      {totalOrders}
+                    </label>
+                  )}
+                </div>
+              </div>
+
+            </div>
+            <Button
+              variant={"outline-secondary"}
+              // size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              style={{
+                marginLeft: "14px",
+                textWrap: "nowrap",
+              }}
+            >
+              <BsFillFunnelFill
+                onClick={() => setShowFilters(!showFilters)}
+              // size={"30px"}
+              // color="#F5891E"
+              /> Filter
+            </Button>
+            {/* {orderTabs.map(({ key, label }) => (
               <Col className="md-2" key={key} style={{ padding: "2px 4px" }}>
                 <Button
                   variant={activeTab === key ? "success" : "outline-primary"}
@@ -2273,33 +2367,34 @@ const Orders: React.FC = () => {
                   {label}
                 </Button>
               </Col>
-            ))}
-          </Row>
+            ))} */}
+          </div>
         </div>
-        <DataTable
-          // title="Your Orders"
-          data={orders}
-          columns={columns}
-          highlightOnHover
-          pagination
-          paginationServer
-          paginationTotalRows={totalOrders}
-          paginationRowsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
-          paginationPerPage={rowsPerPage}
-          onChangePage={handlePageChange}
-          onChangeRowsPerPage={handleRowsPerPageChange}
-          fixedHeader
-          fixedHeaderScrollHeight={tableHeight}
-          defaultSortFieldId="createdAt"
-          defaultSortAsc={false}
-          sortIcon={<i className="fa-solid fa-sort"></i>}
-          noDataComponent="No orders found"
-          responsive
-          striped
-          persistTableHead
-          progressPending={isLoading}
-          conditionalRowStyles={conditionalRowStyles}
-        />
+        <div className="shadow">
+          <DataTable
+            data={orders}
+            columns={columns}
+            highlightOnHover
+            pagination
+            paginationServer
+            paginationTotalRows={totalOrders}
+            paginationRowsPerPageOptions={rowsPerPageOptions}
+            paginationPerPage={rowsPerPage}
+            onChangePage={handlePageChange}
+            onChangeRowsPerPage={handleRowsPerPageChange}
+            fixedHeader
+            fixedHeaderScrollHeight={tableHeight}
+            defaultSortFieldId="createdAt"
+            defaultSortAsc={false}
+            sortIcon={<i className="fa-solid fa-sort"></i>}
+            noDataComponent="No orders found"
+            responsive
+            striped
+            persistTableHead
+            progressPending={isLoading}
+            conditionalRowStyles={conditionalRowStyles}
+          />
+        </div>
       </div>
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Form className="" onSubmit={handleEditSubmit}>
