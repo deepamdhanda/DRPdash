@@ -24,6 +24,10 @@ html {
   border-top-right-radius: 10px;
 }
 
+.rdt_Pagination {
+  justify-content: center !important;
+}
+
 /* Layout container */
 #user-panel {
   display: flex;
@@ -50,7 +54,7 @@ html {
 }
 
 .sidebar:hover {
-  width: 220px;
+  min-width: 220px!important;
 }
 
 .nav-logo {
@@ -102,7 +106,7 @@ html {
   /* vertical scroll */
   overflow-x: hidden;
   /* prevent horizontal scroll */
-  /* height: calc(100vh - 200px); */
+  height: calc(100vh - 220px);
   flex-direction: column;
 }
 
@@ -307,6 +311,13 @@ html {
 
   /* Initially hide sidebar by shifting left */
   transform: translateX(-100%);
+}
+
+/* Make mobile sidebar scrollable and smoother on touch devices */
+.side-mobile {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: 100vh;
 }
 
 /* Class to show sidebar by resetting transform */
