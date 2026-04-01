@@ -21,7 +21,7 @@ import {
 import { MdEmail } from "react-icons/md";
 import { FaBriefcase, FaGear, FaLocationPin } from "react-icons/fa6";
 // import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck } from "react-icons/fa";
-import { FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck} from "react-icons/fa";
+import { FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck } from "react-icons/fa";
 import { BiCalendar, BiSolidPencil } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
 import {
@@ -723,11 +723,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                    )
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                  )
                   : toast.error(
-                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                    );
+                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                  );
               });
             }
             doneCount++;
@@ -989,15 +989,15 @@ const Orders: React.FC = () => {
           <div style={{ fontSize: 9 }}>
             {row.createdAt
               ? new Date(row.createdAt)
-                  .toLocaleString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })
-                  .replace(",", " -")
+                .toLocaleString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+                .replace(",", " -")
               : "—"}
           </div>
           <div style={{ paddingTop: "5px" }}>
@@ -1063,10 +1063,10 @@ const Orders: React.FC = () => {
           row.remittance_status === "pending"
             ? "#ffc107"
             : row.remittance_status === "completed"
-            ? "#28a745"
-            : row.remittance_status === "processing"
-            ? "#007bff"
-            : "#6c757d";
+              ? "#28a745"
+              : row.remittance_status === "processing"
+                ? "#007bff"
+                : "#6c757d";
 
         return (
           <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
@@ -1175,10 +1175,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         const editable =
           latestStatus &&
@@ -1236,7 +1236,7 @@ const Orders: React.FC = () => {
             <div style={{ marginTop: 4, color: "#666", fontSize: 10 }}>
               <FaLocationPin style={{ fontSize: 10, marginRight: 4 }} />
               {row.shipping_address}, {row.shipping_city}, {row.shipping_state}{" "}
-              – <strong>{row.shipping_pincode}</strong>
+              — <strong>{row.shipping_pincode}</strong>
             </div>
           </div>
         );
@@ -1333,10 +1333,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )
           : [];
         const latestStatusName =
           sortedStatus[0]?.status?.replaceAll("_", " ") || "—";
@@ -1533,10 +1533,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         const statusStr = latestStatus?.status?.toLowerCase() || "";
 
@@ -1681,10 +1681,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-              (a: any, b: any) =>
-                new Date(b.status_date).getTime() -
-                new Date(a.status_date).getTime()
-            )[0]
+            (a: any, b: any) =>
+              new Date(b.status_date).getTime() -
+              new Date(a.status_date).getTime()
+          )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1740,10 +1740,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
                     return (
                       !o.recommended_courier_id &&
@@ -1773,7 +1773,7 @@ const Orders: React.FC = () => {
               }}
             >
               <OUAIIcon style={{ width: 16, height: 16 }} />
-              Recommend Best Couriers
+              Auto Assign Courier
             </Button>
           )}
           {activeTab === "new_orders" && (
@@ -1784,10 +1784,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
 
                     return (
@@ -1813,10 +1813,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                          (a: any, b: any) =>
-                            new Date(b.status_date).getTime() -
-                            new Date(a.status_date).getTime()
-                        )[0]
+                        (a: any, b: any) =>
+                          new Date(b.status_date).getTime() -
+                          new Date(a.status_date).getTime()
+                      )[0]
                       : null;
 
                     return latestStatus?.status
@@ -2206,27 +2206,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                            ([key, value]) => (
-                              <div key={key}>
-                                <strong>{key}:</strong> {String(value)}
-                              </div>
-                            )
+                          ([key, value]) => (
+                            <div key={key}>
+                              <strong>{key}:</strong> {String(value)}
+                            </div>
                           )
+                        )
                         : // If it's a JSON string, try parsing
-                          (() => {
-                            try {
-                              const parsed = JSON.parse(item.status_details);
-                              return Object.entries(parsed).map(
-                                ([key, value]) => (
-                                  <div key={key}>
-                                    <strong>{key}:</strong> {String(value)}
-                                  </div>
-                                )
-                              );
-                            } catch {
-                              return String(item.status_details);
-                            }
-                          })()
+                        (() => {
+                          try {
+                            const parsed = JSON.parse(item.status_details);
+                            return Object.entries(parsed).map(
+                              ([key, value]) => (
+                                <div key={key}>
+                                  <strong>{key}:</strong> {String(value)}
+                                </div>
+                              )
+                            );
+                          } catch {
+                            return String(item.status_details);
+                          }
+                        })()
                       : "-"}
                   </td>
                 </tr>
@@ -2249,8 +2249,8 @@ const Orders: React.FC = () => {
 
       <div>
         <div className="orders-tabs d-flex justify-content-between align-items-center mb-2">
-          <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: "100%", margin: "0 20px" }}>
-            <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+          <div className="row" style={{ justifyContent: "space-between", width: "100%", margin: "0 20px" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: 6 }} className="col-md-8">
               <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
                 <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
                   <FaBoxOpen style={{ marginRight: "4px", color: "#fff" }} size={15} />
@@ -2339,21 +2339,23 @@ const Orders: React.FC = () => {
               </div>
 
             </div>
-            <Button
-              variant={"outline-secondary"}
-              // size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              style={{
-                marginLeft: "14px",
-                textWrap: "nowrap",
-              }}
-            >
-              <BsFillFunnelFill
+            <div style={{ display: "flex", justifyContent: "flex-end" }} className="col-md-4">
+              <Button
+                variant={"outline-secondary"}
+                // size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-              // size={"30px"}
-              // color="#F5891E"
-              /> Filter
-            </Button>
+                style={{
+                  marginLeft: "14px",
+                  textWrap: "nowrap",
+                }}
+              >
+                <BsFillFunnelFill
+                  onClick={() => setShowFilters(!showFilters)}
+                // size={"30px"}
+                // color="#F5891E"
+                /> Filter
+              </Button>
+            </div>
             {/* {orderTabs.map(({ key, label }) => (
               <Col className="md-2" key={key} style={{ padding: "2px 4px" }}>
                 <Button
@@ -2377,6 +2379,7 @@ const Orders: React.FC = () => {
             highlightOnHover
             pagination
             paginationServer
+            selectableRows
             paginationTotalRows={totalOrders}
             paginationRowsPerPageOptions={rowsPerPageOptions}
             paginationPerPage={rowsPerPage}
@@ -2389,7 +2392,7 @@ const Orders: React.FC = () => {
             sortIcon={<i className="fa-solid fa-sort"></i>}
             noDataComponent="No orders found"
             responsive
-            striped
+            // striped
             persistTableHead
             progressPending={isLoading}
             conditionalRowStyles={conditionalRowStyles}
@@ -2425,15 +2428,15 @@ const Orders: React.FC = () => {
                   <div style={{ fontSize: 9 }}>
                     {editOrder?.createdAt
                       ? new Date(editOrder?.createdAt)
-                          .toLocaleString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })
-                          .replace(",", " -")
+                        .toLocaleString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })
+                        .replace(",", " -")
                       : "—"}
                   </div>
                   <div style={{ paddingTop: "5px" }}>
@@ -2562,7 +2565,7 @@ const Orders: React.FC = () => {
                         ₹
                         {editOrder?.first_line_item_price && editOrder?.quantity
                           ? Number(editOrder?.first_line_item_price) *
-                            editOrder?.quantity
+                          editOrder?.quantity
                           : editOrder?.total_amount || "—"}{" "}
                         (
                         {editOrder?.payment_method
@@ -2588,10 +2591,10 @@ const Orders: React.FC = () => {
                               editOrder?.remittance_status === "pending"
                                 ? "#ffc107"
                                 : editOrder?.remittance_status === "completed"
-                                ? "#28a745"
-                                : editOrder?.remittance_status === "processing"
-                                ? "#007bff"
-                                : "#6c757d",
+                                  ? "#28a745"
+                                  : editOrder?.remittance_status === "processing"
+                                    ? "#007bff"
+                                    : "#6c757d",
                             color: "#fff",
                           }}
                         >
@@ -2983,7 +2986,7 @@ const Orders: React.FC = () => {
                   <FaLocationPin /> {shipmentOrder?.shipping_address},{" "}
                   {shipmentOrder?.shipping_city},{" "}
                   {shipmentOrder?.shipping_state},{" "}
-                  {shipmentOrder?.shipping_country} -{" "}
+                  {shipmentOrder?.shipping_country} —{" "}
                   {shipmentOrder?.shipping_pincode}
                 </div>
               </div>

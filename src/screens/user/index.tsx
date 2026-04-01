@@ -19,6 +19,7 @@ import { Invoices } from "../Invoices/Invoices.tsx";
 import DamageReport from "./DamageReport.tsx";
 import ShippingCalculator from "./ShippingChargeCalculator.tsx";
 import WeightDiscrepancy from "./WeightDiscrepancy.tsx";
+import DiscoverDashboard from "./Discovery.tsx";
 
 export const userRoutes = [
   {
@@ -104,5 +105,9 @@ export const userRoutes = [
   {
     path: "weight-discrepancy",
     element: <WeightDiscrepancy />,
+  },
+  {
+    path: "product-discovery",
+    element: <DiscoverDashboard />,
   },
 ];

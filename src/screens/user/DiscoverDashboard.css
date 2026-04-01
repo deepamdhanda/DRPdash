@@ -1,0 +1,123 @@
+/* Custom Variable Colors based on design */
+:root {
+  --bg-sidebar: #1a1e29;
+  --bg-sidebar-hover: #2a3040;
+  --brand-orange: #F5891E;
+  --brand-orange-light: #fff7ed;
+  --bg-main: #f8fafc;
+  --hero-bg: #000434;
+  --success-light: #ecfdf5;
+  --success-text: #00b141;
+}
+
+.dashboard-wrapper {
+  min-height: 100vh;
+}
+
+.bg-orange {
+  background-color: var(--brand-orange) !important;
+}
+
+.text-orange {
+  color: var(--brand-orange) !important;
+}
+
+.btn-orange {
+  background-color: var(--brand-orange);
+  color: white;
+  border: none;
+}
+
+.btn-orange:hover {
+  background-color: #ea580c;
+  color: white;
+}
+
+.bg-orange-light {
+  background-color: var(--brand-orange-light);
+}
+
+.search-bar-global input {
+  font-size: 0.9rem;
+}
+
+.content-padding {
+  padding: 2rem 3rem;
+}
+
+/* Hero Banner */
+.hero-banner {
+  background: linear-gradient(135deg, rgb(0, 4, 52), rgb(25, 25, 112));
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+}
+
+.stat-badge {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Filter Section */
+.btn-white {
+  background-color: white;
+}
+
+.category-pills {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.category-pills::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.category-pills .btn {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Product Cards */
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+}
+
+.placeholder-img {
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  background-color: #e2e8f0; /* Fallback */
+}
+
+/* Simulated Image Backgrounds */
+.img-cooler {
+  background-image: url('https://images.unsplash.com/photo-1599839619722-39751411ea63?q=80&w=600&auto=format&fit=crop'); 
+}
+
+.img-fitness {
+  background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop');
+}
+
+.img-beauty {
+  background-image: url('https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=600&auto=format&fit=crop');
+}
+
+.profit-box {
+  background-color: var(--success-light);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.bg-success-light {
+  background-color: var(--success-light);
+}
+
+.text-success {
+  color: var(--success-text) !important;
+}
