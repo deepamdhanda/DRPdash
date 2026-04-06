@@ -1,5 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Form, Row, Col, Table, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Form,
+  Row,
+  Col,
+  Table,
+  OverlayTrigger,
+  Tooltip,
+  Dropdown,
+} from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import {
   getAllOrders,
@@ -13,15 +23,17 @@ import {
   channelAccounts_url,
   productSKUChannelLinks_url,
 } from "../../URLs/user";
-import {
-  BsClockFill,
-  BsFillFunnelFill,
-  BsPhoneFill,
-} from "react-icons/bs";
+import { BsClockFill, BsFillFunnelFill, BsPhoneFill } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { FaBriefcase, FaGear, FaLocationPin } from "react-icons/fa6";
 // import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck } from "react-icons/fa";
-import { FaBoxOpen, FaDollarSign, FaPlane, FaStore, FaTruck } from "react-icons/fa";
+import {
+  FaBoxOpen,
+  FaDollarSign,
+  FaPlane,
+  FaStore,
+  FaTruck,
+} from "react-icons/fa";
 import { BiCalendar, BiSolidPencil } from "react-icons/bi";
 import { ProductSKU } from "./ProductSKUs";
 import {
@@ -277,7 +289,9 @@ const ShippingLabel = ({ labelData }: any) => {
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState<number>(0);
-  const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([10, 20, 50, 100, 200, 500, 1000]);
+  const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([
+    10, 20, 50, 100, 200, 500, 1000,
+  ]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [rowsPerPage, setRowsPerPage] = useState<number>(50);
   const [showModal, setShowModal] = useState(false);
@@ -319,7 +333,7 @@ const Orders: React.FC = () => {
   const [pickupDate, setPickupDate] = useState<Date>();
   const [activeTab, setActiveTab] = useState<string>("new_orders");
   const [statusList, setStatusList] = useState<any>([]);
-
+  const [selectedOrders, setSelectedOrders] = useState([]);
   useEffect(() => {
     setIsLoading(false);
     fetchOrders(currentPage, rowsPerPage, filters);
@@ -334,6 +348,10 @@ const Orders: React.FC = () => {
   useEffect(() => {
     innitialFetch();
   }, []);
+  const handleChange = ({ selectedRows }: { selectedRows: any }) => {
+    setSelectedOrders(selectedRows);
+  };
+
   const innitialFetch = async () => {
     const allFiltersData = await getAllFilters();
     const allWarehouseData = await getAllWarehouses();
@@ -378,27 +396,27 @@ const Orders: React.FC = () => {
       setTotalOrders(response.total);
       let newrpOptions = [] as any;
       if (response.total > 10 && !newrpOptions.includes(10)) {
-        newrpOptions.push(10)
+        newrpOptions.push(10);
       }
       if (response.total > 20 && !newrpOptions.includes(20)) {
-        newrpOptions.push(20)
+        newrpOptions.push(20);
       }
       if (response.total > 50 && !newrpOptions.includes(50)) {
-        newrpOptions.push(50)
+        newrpOptions.push(50);
       }
       if (response.total > 100 && !newrpOptions.includes(100)) {
-        newrpOptions.push(100)
+        newrpOptions.push(100);
       }
       if (response.total > 200 && !newrpOptions.includes(200)) {
-        newrpOptions.push(200)
+        newrpOptions.push(200);
       }
       if (response.total > 500 && !newrpOptions.includes(500)) {
-        newrpOptions.push(500)
+        newrpOptions.push(500);
       }
       if (response.total > 1000 && !newrpOptions.includes(1000)) {
-        newrpOptions.push(1000)
+        newrpOptions.push(1000);
       }
-      newrpOptions.push(response.total)
+      newrpOptions.push(response.total);
       setRowsPerPageOptions(newrpOptions);
     } catch (error) {
       toast.error("Error fetching orders" + error);
@@ -723,11 +741,11 @@ const Orders: React.FC = () => {
               response.inventoryUpdate.forEach((i: any) => {
                 i.success
                   ? toast.success(
-                    `${i.channel_account}: ${i.sku_id} – ${i.message}`
-                  )
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}`
+                    )
                   : toast.error(
-                    `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
-                  );
+                      `${i.channel_account}: ${i.sku_id} – ${i.message}. Try manual updation.`
+                    );
               });
             }
             doneCount++;
@@ -944,7 +962,12 @@ const Orders: React.FC = () => {
     toast.info(
       "Printing labels for " + orders.length + " orders. Please wait..."
     );
-    setLabelData(orders.map((order) => order.label));
+
+    if (selectedOrders.length == 0) {
+      setLabelData(orders.map((order) => order.label));
+    } else {
+      setLabelData(selectedOrders.map((order: any) => order.label));
+    }
   };
   // ================== CREDIT SCORE SPEEDOMETER HELPER ==================
 
@@ -989,15 +1012,15 @@ const Orders: React.FC = () => {
           <div style={{ fontSize: 9 }}>
             {row.createdAt
               ? new Date(row.createdAt)
-                .toLocaleString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-                .replace(",", " -")
+                  .toLocaleString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })
+                  .replace(",", " -")
               : "—"}
           </div>
           <div style={{ paddingTop: "5px" }}>
@@ -1063,10 +1086,10 @@ const Orders: React.FC = () => {
           row.remittance_status === "pending"
             ? "#ffc107"
             : row.remittance_status === "completed"
-              ? "#28a745"
-              : row.remittance_status === "processing"
-                ? "#007bff"
-                : "#6c757d";
+            ? "#28a745"
+            : row.remittance_status === "processing"
+            ? "#007bff"
+            : "#6c757d";
 
         return (
           <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
@@ -1175,10 +1198,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         const editable =
           latestStatus &&
@@ -1333,10 +1356,10 @@ const Orders: React.FC = () => {
       cell: (row: any) => {
         const sortedStatus = row.status
           ? [...row.status].sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )
           : [];
         const latestStatusName =
           sortedStatus[0]?.status?.replaceAll("_", " ") || "—";
@@ -1533,10 +1556,10 @@ const Orders: React.FC = () => {
         const hasAwb = Boolean(row.awb_number);
         const latestStatus = row.status?.length
           ? [...row.status].sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         const statusStr = latestStatus?.status?.toLowerCase() || "";
 
@@ -1549,7 +1572,8 @@ const Orders: React.FC = () => {
 
         const handleMainClick = () => {
           if (hasAwb && canAction) return handlePickup(row);
-          if (!hasAwb && statusStr !== "cancelled") return handleShipment([row]);
+          if (!hasAwb && statusStr !== "cancelled")
+            return handleShipment([row]);
         };
 
         return (
@@ -1567,21 +1591,44 @@ const Orders: React.FC = () => {
               <Button
                 size="sm"
                 onClick={handleMainClick}
-                variant={hasAwb && canAction ? "outline-primary" : (!hasAwb && statusStr !== "cancelled" ? "warning" : "outline-secondary")}
+                variant={
+                  hasAwb && canAction
+                    ? "outline-primary"
+                    : !hasAwb && statusStr !== "cancelled"
+                    ? "warning"
+                    : "outline-secondary"
+                }
                 style={{
                   minWidth: 84,
                   fontWeight: 700,
-                  background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)",
+                  background:
+                    "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)",
                   color: "#fff",
                   borderRadius: 20,
                 }}
-                title={hasAwb && canAction ? "Schedule Pickup" : !hasAwb && statusStr !== "cancelled" ? "Ship this order now" : "No primary action"}
+                title={
+                  hasAwb && canAction
+                    ? "Schedule Pickup"
+                    : !hasAwb && statusStr !== "cancelled"
+                    ? "Ship this order now"
+                    : "No primary action"
+                }
               >
-                {hasAwb && canAction ? "Pickup" : !hasAwb && statusStr !== "cancelled" ? "Ship Now" : (statusStr === "cancelled" ? "Cancelled" : "Action")}
+                {hasAwb && canAction
+                  ? "Pickup"
+                  : !hasAwb && statusStr !== "cancelled"
+                  ? "Ship Now"
+                  : statusStr === "cancelled"
+                  ? "Cancelled"
+                  : "Action"}
               </Button>
 
               <Dropdown align="end">
-                <Dropdown.Toggle variant="link" size="sm" id={`actions-dd-${row._id}`}>
+                <Dropdown.Toggle
+                  variant="link"
+                  size="sm"
+                  id={`actions-dd-${row._id}`}
+                >
                   {/* <FaEllipsisV /> */}
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
@@ -1601,13 +1648,22 @@ const Orders: React.FC = () => {
                       <Dropdown.Item onClick={() => handleShipment([row])}>
                         🚚 Ship Now
                       </Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleBookBulkShipment([row])}>
+                      <Dropdown.Item
+                        onClick={() => handleBookBulkShipment([row])}
+                      >
                         📦 Recommend / Book
                       </Dropdown.Item>
                     </>
                   )}
 
-                  <Dropdown.Item onClick={() => handleCancelOrder(row, statusStr === "cancelled" ? "re_activate" : "cancelled")}>
+                  <Dropdown.Item
+                    onClick={() =>
+                      handleCancelOrder(
+                        row,
+                        statusStr === "cancelled" ? "re_activate" : "cancelled"
+                      )
+                    }
+                  >
                     {statusStr === "cancelled" ? "Re-Activate" : "❌ Cancel"}
                   </Dropdown.Item>
                 </Dropdown.Menu>
@@ -1681,10 +1737,10 @@ const Orders: React.FC = () => {
       when: (row: any) => {
         const latestStatus = row.status?.length
           ? row.status.sort(
-            (a: any, b: any) =>
-              new Date(b.status_date).getTime() -
-              new Date(a.status_date).getTime()
-          )[0]
+              (a: any, b: any) =>
+                new Date(b.status_date).getTime() -
+                new Date(a.status_date).getTime()
+            )[0]
           : null;
         return latestStatus && latestStatus.status === "cancelled";
       },
@@ -1740,10 +1796,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
                       : null;
                     return (
                       !o.recommended_courier_id &&
@@ -1784,10 +1840,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
                       : null;
 
                     return (
@@ -1813,10 +1869,10 @@ const Orders: React.FC = () => {
                   orders.filter((o: any) => {
                     const latestStatus = o.status?.length
                       ? o.status.sort(
-                        (a: any, b: any) =>
-                          new Date(b.status_date).getTime() -
-                          new Date(a.status_date).getTime()
-                      )[0]
+                          (a: any, b: any) =>
+                            new Date(b.status_date).getTime() -
+                            new Date(a.status_date).getTime()
+                        )[0]
                       : null;
 
                     return latestStatus?.status
@@ -2206,27 +2262,27 @@ const Orders: React.FC = () => {
                     {item.status_details
                       ? typeof item.status_details === "object"
                         ? Object.entries(item.status_details).map(
-                          ([key, value]) => (
-                            <div key={key}>
-                              <strong>{key}:</strong> {String(value)}
-                            </div>
+                            ([key, value]) => (
+                              <div key={key}>
+                                <strong>{key}:</strong> {String(value)}
+                              </div>
+                            )
                           )
-                        )
                         : // If it's a JSON string, try parsing
-                        (() => {
-                          try {
-                            const parsed = JSON.parse(item.status_details);
-                            return Object.entries(parsed).map(
-                              ([key, value]) => (
-                                <div key={key}>
-                                  <strong>{key}:</strong> {String(value)}
-                                </div>
-                              )
-                            );
-                          } catch {
-                            return String(item.status_details);
-                          }
-                        })()
+                          (() => {
+                            try {
+                              const parsed = JSON.parse(item.status_details);
+                              return Object.entries(parsed).map(
+                                ([key, value]) => (
+                                  <div key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                  </div>
+                                )
+                              );
+                            } catch {
+                              return String(item.status_details);
+                            }
+                          })()
                       : "-"}
                   </td>
                 </tr>
@@ -2249,97 +2305,362 @@ const Orders: React.FC = () => {
 
       <div>
         <div className="orders-tabs d-flex justify-content-between align-items-center mb-2">
-          <div className="row" style={{ justifyContent: "space-between", width: "100%", margin: "0 20px" }}>
-            <div style={{ display: "flex", flexDirection: "row", gap: 6 }} className="col-md-8">
-              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
-                  <FaBoxOpen style={{ marginRight: "4px", color: "#fff" }} size={15} />
+          <div
+            className="row"
+            style={{
+              justifyContent: "space-between",
+              width: "100%",
+              margin: "0 20px",
+            }}
+          >
+            <div
+              style={{ display: "flex", flexDirection: "row", gap: 6 }}
+              className="col-md-8"
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    background:
+                      "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)",
+                    color: "#fff",
+                    padding: "5px 5px 5px 12px",
+                    borderStartStartRadius: "14px",
+                    borderEndStartRadius: "14px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <FaBoxOpen
+                    style={{ marginRight: "4px", color: "#fff" }}
+                    size={15}
+                  />
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "new_orders" ? "#000" : "#fff", backgroundColor: activeTab !== "new_orders" ? "#fff" : "#000434", border: activeTab !== "new_orders" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
-                  onClick={() => activeTab !== "new_orders" && handleTabChange("new_orders")}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "new_orders" ? "#000" : "#fff",
+                    backgroundColor:
+                      activeTab !== "new_orders" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "new_orders"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                  }}
+                  onClick={() =>
+                    activeTab !== "new_orders" && handleTabChange("new_orders")
+                  }
                 >
                   New
                   {activeTab === "new_orders" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "pickup_pending" ? "#000" : "#fff", backgroundColor: activeTab !== "pickup_pending" ? "#fff" : "#000434", border: activeTab !== "pickup_pending" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap", borderEndEndRadius: "14px", borderStartEndRadius: "14px" }}
-                  onClick={() => activeTab !== "pickup_pending" && handleTabChange("pickup_pending")}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "pickup_pending" ? "#000" : "#fff",
+                    backgroundColor:
+                      activeTab !== "pickup_pending" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "pickup_pending"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                    borderEndEndRadius: "14px",
+                    borderStartEndRadius: "14px",
+                  }}
+                  onClick={() =>
+                    activeTab !== "pickup_pending" &&
+                    handleTabChange("pickup_pending")
+                  }
                 >
                   Pickups
                   {activeTab === "pickup_pending" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
-                  <FaTruck style={{ marginRight: "4px", color: "#fff" }} size={15} />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    background:
+                      "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)",
+                    color: "#fff",
+                    padding: "5px 5px 5px 12px",
+                    borderStartStartRadius: "14px",
+                    borderEndStartRadius: "14px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <FaTruck
+                    style={{ marginRight: "4px", color: "#fff" }}
+                    size={15}
+                  />
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "in_transit" ? "#000" : "#fff", backgroundColor: activeTab !== "in_transit" ? "#fff" : "#000434", border: activeTab !== "in_transit" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
-                  onClick={() => activeTab !== "in_transit" && handleTabChange("in_transit")}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "in_transit" ? "#000" : "#fff",
+                    backgroundColor:
+                      activeTab !== "in_transit" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "in_transit"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                  }}
+                  onClick={() =>
+                    activeTab !== "in_transit" && handleTabChange("in_transit")
+                  }
                 >
                   In Transit
                   {activeTab === "in_transit" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "delivered" ? "#000" : "#fff", backgroundColor: activeTab !== "delivered" ? "#fff" : "#000434", border: activeTab !== "delivered" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
-                  onClick={() => activeTab !== "delivered" && handleTabChange("delivered")}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "delivered" ? "#000" : "#fff",
+                    backgroundColor:
+                      activeTab !== "delivered" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "delivered"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                  }}
+                  onClick={() =>
+                    activeTab !== "delivered" && handleTabChange("delivered")
+                  }
                 >
                   Delivered
                   {activeTab === "delivered" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "rto" ? "#000" : "#fff", backgroundColor: activeTab !== "rto" ? "#fff" : "#000434", border: activeTab !== "rto" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap", borderEndEndRadius: "14px", borderStartEndRadius: "14px" }}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "rto" ? "#000" : "#fff",
+                    backgroundColor: activeTab !== "rto" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "rto"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                    borderEndEndRadius: "14px",
+                    borderStartEndRadius: "14px",
+                  }}
                   onClick={() => activeTab !== "rto" && handleTabChange("rto")}
                 >
                   RTO
                   {activeTab === "rto" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <div style={{ fontSize: 12, background: "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)", color: "#fff", padding: "5px 5px 5px 12px", borderStartStartRadius: "14px", borderEndStartRadius: "14px", display: "inline-flex", alignItems: "center" }}>
-                  <FaGear style={{ marginRight: "4px", color: "#fff" }} size={15} />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    background:
+                      "linear-gradient(90deg, rgb(245, 137, 30) 0%, rgb(255, 107, 53) 100%)",
+                    color: "#fff",
+                    padding: "5px 5px 5px 12px",
+                    borderStartStartRadius: "14px",
+                    borderEndStartRadius: "14px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <FaGear
+                    style={{ marginRight: "4px", color: "#fff" }}
+                    size={15}
+                  />
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "all" ? "#000" : "#fff", backgroundColor: activeTab !== "all" ? "#fff" : "#000434", border: activeTab !== "all" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap" }}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "all" ? "#000" : "#fff",
+                    backgroundColor: activeTab !== "all" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "all"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                  }}
                   onClick={() => activeTab !== "all" && handleTabChange("all")}
                 >
                   All Orders
                   {activeTab === "all" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
-                <div style={{ borderLeft: "0px", fontSize: 12, color: activeTab !== "others" ? "#000" : "#fff", backgroundColor: activeTab !== "others" ? "#fff" : "#000434", border: activeTab !== "others" ? "1px solid #f5891e" : "1px solid #000434", justifyContent: "center", display: "flex", alignItems: "center", padding: "5px 10px", textWrap: "nowrap", borderEndEndRadius: "14px", borderStartEndRadius: "14px" }}
-                  onClick={() => activeTab !== "others" && handleTabChange("others")}
+                <div
+                  style={{
+                    borderLeft: "0px",
+                    fontSize: 12,
+                    color: activeTab !== "others" ? "#000" : "#fff",
+                    backgroundColor:
+                      activeTab !== "others" ? "#fff" : "#000434",
+                    border:
+                      activeTab !== "others"
+                        ? "1px solid #f5891e"
+                        : "1px solid #000434",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "5px 10px",
+                    textWrap: "nowrap",
+                    borderEndEndRadius: "14px",
+                    borderStartEndRadius: "14px",
+                  }}
+                  onClick={() =>
+                    activeTab !== "others" && handleTabChange("others")
+                  }
                 >
                   Archived
                   {activeTab === "others" && (
-                    <label style={{ marginLeft: 4, backgroundColor: "#FFE8CC", color: "#f5891e", borderRadius: "3px", padding: "0px 6px", fontSize: 10 }}>
+                    <label
+                      style={{
+                        marginLeft: 4,
+                        backgroundColor: "#FFE8CC",
+                        color: "#f5891e",
+                        borderRadius: "3px",
+                        padding: "0px 6px",
+                        fontSize: 10,
+                      }}
+                    >
                       {totalOrders}
                     </label>
                   )}
                 </div>
               </div>
-
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end" }} className="col-md-4">
+            <div
+              style={{ display: "flex", justifyContent: "flex-end" }}
+              className="col-md-4"
+            >
               <Button
                 variant={"outline-secondary"}
                 // size="sm"
@@ -2351,9 +2672,10 @@ const Orders: React.FC = () => {
               >
                 <BsFillFunnelFill
                   onClick={() => setShowFilters(!showFilters)}
-                // size={"30px"}
-                // color="#F5891E"
-                /> Filter
+                  // size={"30px"}
+                  // color="#F5891E"
+                />{" "}
+                Filter
               </Button>
             </div>
             {/* {orderTabs.map(({ key, label }) => (
@@ -2380,6 +2702,7 @@ const Orders: React.FC = () => {
             pagination
             paginationServer
             selectableRows
+            onSelectedRowsChange={handleChange}
             paginationTotalRows={totalOrders}
             paginationRowsPerPageOptions={rowsPerPageOptions}
             paginationPerPage={rowsPerPage}
@@ -2428,15 +2751,15 @@ const Orders: React.FC = () => {
                   <div style={{ fontSize: 9 }}>
                     {editOrder?.createdAt
                       ? new Date(editOrder?.createdAt)
-                        .toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: false,
-                        })
-                        .replace(",", " -")
+                          .toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })
+                          .replace(",", " -")
                       : "—"}
                   </div>
                   <div style={{ paddingTop: "5px" }}>
@@ -2565,7 +2888,7 @@ const Orders: React.FC = () => {
                         ₹
                         {editOrder?.first_line_item_price && editOrder?.quantity
                           ? Number(editOrder?.first_line_item_price) *
-                          editOrder?.quantity
+                            editOrder?.quantity
                           : editOrder?.total_amount || "—"}{" "}
                         (
                         {editOrder?.payment_method
@@ -2591,10 +2914,10 @@ const Orders: React.FC = () => {
                               editOrder?.remittance_status === "pending"
                                 ? "#ffc107"
                                 : editOrder?.remittance_status === "completed"
-                                  ? "#28a745"
-                                  : editOrder?.remittance_status === "processing"
-                                    ? "#007bff"
-                                    : "#6c757d",
+                                ? "#28a745"
+                                : editOrder?.remittance_status === "processing"
+                                ? "#007bff"
+                                : "#6c757d",
                             color: "#fff",
                           }}
                         >
