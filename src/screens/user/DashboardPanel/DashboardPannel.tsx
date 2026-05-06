@@ -9,7 +9,7 @@ import SupportChatWidget from "./SupportChatWidget";
 import axios from "axios";
 import { drpCrmBaseUrl } from "../../../axios/urls";
 import { useUserStore } from "../../../store/useUserStore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -181,7 +181,7 @@ const UserPanel: React.FC = () => {
   const isMobile = window.innerWidth < 787;
   const { reset } = useUserStore();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  // const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [sidebarHovered, setSidebarHovered] = useState<boolean>(false);
 
   // Automatically sync active link with current URL
@@ -206,20 +206,20 @@ const UserPanel: React.FC = () => {
     setExpandedItems(newExpanded);
   };
   const NavItem = ({ link, level = 0 }: { link: NavLink; level?: number }) => {
-    const isExpanded = expandedItems.has(link.name);
-    const isHovered = hoveredItem === link.name;
+    // const isExpanded = expandedItems.has(link.name);
+    // const isHovered = hoveredItem === link.name;
     const isActive = activeLink === link.name;
     const hasChildren = link.children && link.children.length > 0;
 
     const handleMouseEnter = () => {
       if (!isMobile && hasChildren) {
-        setHoveredItem(link.name);
+        // setHoveredItem(link.name);
       }
     };
 
     const handleMouseLeave = () => {
       if (!isMobile) {
-        setHoveredItem(null);
+        // setHoveredItem(null);
       }
     };
 
@@ -242,56 +242,64 @@ const UserPanel: React.FC = () => {
         onMouseLeave={handleMouseLeave}
         style={{ marginBottom: "4px" }}
       >
-
         {!hasChildren && (
-        <motion.div
-          className={`d-flex align-items-center justify-content-between px-3 py-2 rounded mx-2 `}
-          style={{
-            cursor: "pointer",
-            transition: "all 0.2s",
-            background: isActive
-              ? "linear-gradient(90deg, #F5891E 0%, #FF6B35 100%)"
-              : "transparent",
-            boxShadow: isActive ? "0 4px 6px rgba(245, 137, 30, 0.3)" : "none",
-          }}
-          onClick={handleClick}
-          whileHover={{
-            x: level === 0 ? 4 : 2,
-            backgroundColor: isActive ? undefined : "#FFF5E6",
-            color: isActive ? undefined : "#F5891E!important",
-          }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <div className="d-flex align-items-center gap-3">
-            <span style={{ color: isActive ? "white" : "#F5891E" }}>
-              {link.icon}
-            </span>
-            {showName && (
-              <span
-                className="fw-medium nav-name"
-                style={{
-                  fontSize: "14px",
-                  color: isActive ? "white" : "#F5891E",
-                }}
-              >
-                {link.name}
+          <motion.div
+            className={`d-flex align-items-center justify-content-between px-3 py-2 rounded mx-2 `}
+            style={{
+              cursor: "pointer",
+              transition: "all 0.2s",
+              background: isActive
+                ? "linear-gradient(90deg, #F5891E 0%, #FF6B35 100%)"
+                : "transparent",
+              boxShadow: isActive
+                ? "0 4px 6px rgba(245, 137, 30, 0.3)"
+                : "none",
+            }}
+            onClick={handleClick}
+            whileHover={{
+              x: level === 0 ? 4 : 2,
+              backgroundColor: isActive ? undefined : "#FFF5E6",
+              color: isActive ? undefined : "#F5891E!important",
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="d-flex align-items-center gap-3">
+              <span style={{ color: isActive ? "white" : "#F5891E" }}>
+                {link.icon}
               </span>
+              {showName && (
+                <span
+                  className="fw-medium nav-name"
+                  style={{
+                    fontSize: "14px",
+                    color: isActive ? "white" : "#F5891E",
+                  }}
+                >
+                  {link.name}
+                </span>
+              )}
+            </div>
+            {hasChildren && (
+              <motion.span
+                transition={{ duration: 0.2 }}
+                style={{ color: isActive ? "white" : "white" }}
+                className="nav-name"
+              >
+                <ChevronRight size={16} />
+              </motion.span>
             )}
-          </div>
-          {hasChildren && (
-            <motion.span
-              transition={{ duration: 0.2 }}
-              style={{ color: isActive ? "white" : "white" }}
-              className="nav-name"
-            >
-              <ChevronRight size={16} />
-            </motion.span>
-          )}
-        </motion.div>)}
+          </motion.div>
+        )}
         {/* Always show children with a separator to reduce clicks */}
         {hasChildren && (
           <div>
-            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 8px" }} />
+            <div
+              style={{
+                height: 1,
+                background: "rgba(255,255,255,0.06)",
+                margin: "6px 8px",
+              }}
+            />
             {link.children?.map((child) => (
               <div
                 key={child.name}
@@ -303,9 +311,14 @@ const UserPanel: React.FC = () => {
                   backgroundColor:
                     activeLink === child.name ? "#FFF5E6" : "transparent",
                   color: activeLink === child.name ? "#F5891E" : "#fff",
-                  borderLeft: activeLink === child.name ? "4px solid #F5891E" : "4px solid transparent",
+                  borderLeft:
+                    activeLink === child.name
+                      ? "4px solid #F5891E"
+                      : "4px solid transparent",
                 }}
-                onClick={() => child.path && handleLinkClick(child.name, child.path)}
+                onClick={() =>
+                  child.path && handleLinkClick(child.name, child.path)
+                }
                 onMouseEnter={(e) => {
                   if (activeLink !== child.name) {
                     e.currentTarget.style.backgroundColor = "#FFF5E6";

@@ -25,6 +25,9 @@ export interface Product {
   product_name: string;
   product_description: string;
   product_weight: number;
+  length: number;
+  breadth: number;
+  height: number;
   product_attributes: ProductAttribute[];
   product_image: string;
   warehouse: WarehouseStock[];
@@ -52,7 +55,6 @@ const Products: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
 
-  // Fetch warehouses once
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
@@ -65,17 +67,15 @@ const Products: React.FC = () => {
     fetchWarehouses();
   }, []);
 
-  // Fetch products whenever page/limit changes
   useEffect(() => {
     fetchProducts(page, limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit]);
 
   const fetchProducts = async (pageParam = page, limitParam = limit) => {
     setLoading(true);
     try {
       const productData = await getAllProducts(pageParam, limitParam);
-      // expected: { total: number, data: Product[] }
+
       setTotalRecords(productData.total);
       setProducts(productData.data);
     } catch (error) {
@@ -131,7 +131,7 @@ const Products: React.FC = () => {
     ) {
       try {
         await updateProduct(product._id!, { ...product, status: newStatus });
-        await fetchProducts(); // refresh current page
+        await fetchProducts();
       } catch (error) {
         console.error("Error updating status", error);
       }
@@ -193,6 +193,15 @@ const Products: React.FC = () => {
       product_weight: parseFloat(
         (form.elements.namedItem("product_weight") as HTMLInputElement).value
       ),
+      length: parseFloat(
+        (form.elements.namedItem("length") as HTMLInputElement).value
+      ),
+      breadth: parseFloat(
+        (form.elements.namedItem("breadth") as HTMLInputElement).value
+      ),
+      height: parseFloat(
+        (form.elements.namedItem("height") as HTMLInputElement).value
+      ),
       product_attributes: productAttributes,
       product_image: imagePreview || "",
       warehouse: warehouseStocks.filter((ws) => ws.stock > 0),
@@ -212,11 +221,10 @@ const Products: React.FC = () => {
         await updateProduct(editingProduct._id, newProduct);
       } else {
         await createProduct(newProduct);
-        // optional: go back to first page after create
+
         setPage(1);
       }
 
-      // Refresh list for current page
       await fetchProducts();
       handleClose();
     } catch (err) {
@@ -224,7 +232,6 @@ const Products: React.FC = () => {
     }
   };
 
-  // Map warehouses by id for O(1) lookups in table render
   const warehouseMap = useMemo(() => {
     return warehouses.reduce<Record<string, Warehouse>>((acc, wh) => {
       acc[wh._id] = wh;
@@ -242,6 +249,11 @@ const Products: React.FC = () => {
       {
         name: "Description",
         selector: (row: Product) => row.product_description,
+      },
+      {
+        name: "Dimensions (L×B×H)",
+        selector: (row: Product) =>
+          `${row.length} × ${row.breadth} × ${row.height}`,
       },
       {
         name: "Weight",
@@ -299,7 +311,7 @@ const Products: React.FC = () => {
         ),
       },
     ],
-    [warehouseMap] // handlers are stable enough here; if lint complains, wrap them in useCallback
+    [warehouseMap]
   );
 
   return (
@@ -328,7 +340,7 @@ const Products: React.FC = () => {
           }}
           onChangeRowsPerPage={(newLimit) => {
             setLimit(newLimit);
-            setPage(1); // ALWAYS reset to page 1 when limit changes
+            setPage(1);
           }}
           highlightOnHover
           responsive
@@ -362,6 +374,47 @@ const Products: React.FC = () => {
                     defaultValue={editingProduct?.product_description || ""}
                   />
                 </Form.Group>
+
+                {/* DIMENSIONS ROW */}
+                <Row>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Length (cm)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        name="length"
+                        defaultValue={editingProduct?.length || 0}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Breadth (cm)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        name="breadth"
+                        defaultValue={editingProduct?.breadth || 0}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Height (cm)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        name="height"
+                        defaultValue={editingProduct?.height || 0}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
                 <Form.Group className="mb-3">
                   <Form.Label>Weight (kg)</Form.Label>
                   <Form.Control

@@ -20,6 +20,8 @@ import DamageReport from "./DamageReport.tsx";
 import ShippingCalculator from "./ShippingChargeCalculator.tsx";
 import WeightDiscrepancy from "./WeightDiscrepancy.tsx";
 import DiscoverDashboard from "./Discovery.tsx";
+import NewOrder from "./NewOrder.tsx";
+import OrderDash from "./OrderDash.tsx";
 
 export const userRoutes = [
   {
@@ -110,4 +112,6 @@ export const userRoutes = [
     path: "product-discovery",
     element: <DiscoverDashboard />,
   },
+  { path: "new-order", element: <NewOrder /> },
+  { path: "order-dash", element: <OrderDash /> },
 ];
