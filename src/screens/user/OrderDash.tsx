@@ -1,7 +1,7 @@
 import AddOrderModal, {
   OrderFormData,
 } from "../../components/order-dash/AddOrderDialog";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { createOrder } from "../../APIs/user/order";
 import { appAxios } from "../../axios/appAxios";
@@ -18,7 +18,7 @@ import { FaGear } from "react-icons/fa6";
 import "../../components/order-dash/OrderDash.css";
 import OrderTable from "../../components/order-dash/OrderTable";
 import ShipmentModal from "../../components/order-dash/ShipmentModal";
-import { bookCourier } from "../../APIs/user/courier";
+import { bookCourier, schedulePickup } from "../../APIs/user/courier";
 import { EditOrderModal } from "../../components/order-dash/EditOrderModal";
 import { updateOrder } from "../../APIs/user/order";
 import { pincodeDetails } from "../../APIs/pincodeAPIs";
@@ -27,6 +27,13 @@ import {
   PhysicalDetails,
 } from "../../components/order-dash/LinkProductModal";
 import { Warehouse } from "./Warehouse";
+import Pagination from "../../components/order-dash/Pagination";
+import { getAllWarehouses } from "../../APIs/user/warehouse";
+import { SchedulePickupModal } from "../../components/order-dash/SchedulePickupModal";
+import {
+  LabelPrinter,
+  LabelPrinterRef,
+} from "../../components/order-dash/LabelPreviewModal";
 
 export interface Order {
   _id: string;
@@ -61,6 +68,7 @@ export interface Order {
       product_sku_id: string;
       product_sku_name: string;
     };
+    variantId?: string;
     quantity: number;
   }>;
   flags: Array<any>;
@@ -96,10 +104,14 @@ const OrderDash = () => {
     breadth: "",
     width: "",
     packWeight: "",
-    warehouseStock: 0, // Simplified for single warehouse, or use array logic
+    warehouse: [],
   });
+
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [pickupOrder, setPickupOrder] = useState<string | null>(null);
+  const [showPickupModal, setShowPickupModal] = useState(false);
+  const printerRef = useRef<LabelPrinterRef>(null);
 
   const tabs = [
     { key: "new", label: "New", icon: <FaBoxOpen /> },
@@ -117,10 +129,27 @@ const OrderDash = () => {
     { key: "rto", label: "RTO", icon: <Info size={14} /> },
     { key: "all", label: "All Orders", icon: <FaGear /> },
   ];
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Add this
+  const fetchWarehouses = async () => {
+    try {
+      const warehouseData = await getAllWarehouses();
+      setWarehouses(warehouseData.data);
+    } catch (error) {
+      console.error("Error loading warehouses", error);
+    }
+  };
+  const limit = 10;
+  useEffect(() => {
+    setPage(1);
+  }, [tab]);
   const addOrder = async (payload: OrderFormData) => {
     try {
       await createOrder(payload);
       setShow(false);
+      setPage(1);
+      fetchOrders();
       toast.success("Order created successfully");
     } catch (error: any) {
       toast.error("Error creating order: " + error.message);
@@ -129,10 +158,11 @@ const OrderDash = () => {
   useEffect(() => {
     fetchChannelAccounts();
     fetchProductSkus();
+    fetchWarehouses();
   }, []);
   useEffect(() => {
     fetchOrders();
-  }, [tab]);
+  }, [tab, page]);
 
   const fetchChannelAccounts = async () => {
     try {
@@ -156,9 +186,20 @@ const OrderDash = () => {
     setLoading(true);
     try {
       const { data } = await appAxios.get(`${drpCrmBaseUrl}/user/order/new`, {
-        params: { tab },
+        params: {
+          tab,
+          page,
+          limit,
+        },
       });
+
       setOrders(data.data || data);
+
+      if (data.totalPages) {
+        setTotalPages(data.totalPages);
+      } else {
+        setTotalPages(1);
+      }
     } catch (error) {
       toast.error("Error fetching Orders");
     } finally {
@@ -167,9 +208,6 @@ const OrderDash = () => {
   };
 
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-
-  const [page, setPage] = useState(1);
-  const limit = 10;
 
   // --- Checkbox Logic ---
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,18 +264,49 @@ const OrderDash = () => {
       toast.error((err as any).message);
     }
   };
+  const handlePickupClose = () => {
+    setShowPickupModal(false);
+    setPickupOrder(null);
+  };
+  const handlePickupSubmit = async (pickupDate: Date) => {
+    if (!pickupOrder || !pickupDate) {
+      toast.error("Invalid Date or Order Id");
+    }
+    const res = pickupDate && (await schedulePickup(pickupOrder, pickupDate));
+    if (res) {
+      toast.success(
+        "Pickup Scheduled for " + pickupDate.toISOString().split("T")[0]
+      );
+      fetchOrders();
+      handlePickupClose();
+    }
+  };
+
   const handlePickup = (order: Order) => {
-    /* setPickupOrder(order._id); setShowPickupModal(true); */
+    setPickupOrder(order._id);
+    setShowPickupModal(true);
   };
   const handlePrintLabel = (labelData: string) => {
-    /* setLabelData([labelData]); */
+    setLabelData([labelData]);
+    setTimeout(() => {
+      printerRef.current?.print();
+    }, 100);
   };
+
   const handleAutoBook = (ordersArray: Order[]) => {
     /* handleBookBulkShipment(ordersArray) */
   };
-  const handleCancelOrder = (orderId: string) => {
-    /* cancel logic */
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await appAxios.get(`${couriers_url}/cancelShipment?order_id=${orderId}`);
+      fetchOrders();
+      toast.success("Shipment has been cancelled");
+    } catch (err) {
+      console.log(err);
+      toast.error((err as any).message);
+    }
   };
+
   const handleBookShipment = async (courier_id: any) => {
     try {
       const response = await bookCourier(
@@ -248,7 +317,7 @@ const OrderDash = () => {
       toast.success(response.message);
       if (response) {
         fetchOrders();
-        setLabelData([response.data]);
+        handlePrintLabel(response.data);
         handleShipmentClose();
       }
     } catch (error) {
@@ -289,11 +358,11 @@ const OrderDash = () => {
       breadth: "",
       width: "",
       packWeight: "",
-      warehouseStock: order.quantity || 1,
+      warehouse: [],
     });
     setShowLinkModal(true);
   };
-  const handleLinkSubmit = async () => {
+  const handleLinkSubmit = async (variantId?: string) => {
     if (!linkOrderData) return;
 
     // Basic validation
@@ -303,8 +372,6 @@ const OrderDash = () => {
     }
 
     try {
-      // Construct the payload matching backend expectation
-
       const payload = {
         orderId: linkOrderData._id,
         physicalDetails: {
@@ -313,14 +380,10 @@ const OrderDash = () => {
           breadth: Number(physicalDetails.breadth),
           width: Number(physicalDetails.width),
           packWeight: Number(physicalDetails.packWeight),
-          // Assuming you want to add stock to the order's warehouse or a default one
-          warehouses: [
-            {
-              warehouse: warehouses[0]?._id, // Default to first available warehouse
-              stock: Number(physicalDetails.warehouseStock),
-            },
-          ],
+
+          warehouses: physicalDetails.warehouse,
         },
+        ...(variantId ? { bodyVariantId: variantId } : {}),
       };
 
       const res = await appAxios.post(
@@ -338,9 +401,9 @@ const OrderDash = () => {
       toast.error(err.response?.data?.message || "Linking failed");
     }
   };
+
   return (
     <>
-      {" "}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h1 className="h4 fw-bold text-dark mb-1">Orders Management</h1>
@@ -384,6 +447,11 @@ const OrderDash = () => {
         onAutoBook={handleAutoBook}
         onCancelOrder={handleCancelOrder}
       />
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={(newPage) => setPage(newPage)}
+      />
       <ShipmentModal
         showShipmentModal={showShipmentModal}
         handleShipmentClose={handleShipmentClose}
@@ -417,7 +485,16 @@ const OrderDash = () => {
         linkOrderData={linkOrderData}
         physicalDetails={physicalDetails}
         setPhysicalDetails={setPhysicalDetails}
+        warehouses={warehouses}
       />
+      <SchedulePickupModal
+        show={showPickupModal}
+        onHide={() => setShowPickupModal(false)}
+        onSubmit={(date) => {
+          handlePickupSubmit(date);
+        }}
+      />
+      <LabelPrinter ref={printerRef} labelData={labelData} />
     </>
   );
 };

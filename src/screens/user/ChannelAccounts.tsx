@@ -140,6 +140,7 @@ const ChannelAccounts: React.FC = () => {
           ca.channel_id?.channel_name.toLowerCase() === "shopify" &&
           ca.keys?.store_url === params.get("store_url")
       );
+
       if (existingAccount) {
         toast.info(
           "A Shopify channel account with this store URL already exists. Just click on update if you want to update the keys."
@@ -155,6 +156,7 @@ const ChannelAccounts: React.FC = () => {
       const shopifyChannel = channels.find(
         (c) => c.channel_name.toLowerCase() === "shopify"
       );
+
       if (shopifyChannel) setSelectedChannelId(shopifyChannel._id);
       setSelectedChannelName("shopify");
 
@@ -556,15 +558,22 @@ const ChannelAccounts: React.FC = () => {
                 <option value="" disabled>
                   Select Channel
                 </option>
-                {channels.map((channel) => {
-                  if (channel.channel_name !== "Shopify") {
-                    return (
-                      <option key={channel._id} value={channel._id}>
-                        {channel.channel_name}
-                      </option>
-                    );
-                  }
-                })}
+                {channels
+                  .filter((channel) => {
+                    // If selected channel is Shopify,
+                    // only keep the selected Shopify channel
+                    if (selectedChannelName?.toLowerCase() === "shopify") {
+                      return channel._id === selectedChannelId;
+                    }
+
+                    // Otherwise remove all Shopify channels
+                    return channel.channel_name?.toLowerCase() !== "shopify";
+                  })
+                  .map((channel) => (
+                    <option key={channel._id} value={channel._id}>
+                      {channel.channel_name}
+                    </option>
+                  ))}
               </Form.Select>
             </Form.Group>
 

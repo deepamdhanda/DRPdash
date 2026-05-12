@@ -647,7 +647,6 @@ const Orders: React.FC = () => {
         printWindow.focus();
         printWindow.print();
         setLabelData(null);
-        // printWindow.close();
       }
     }
   };

@@ -55,15 +55,15 @@ const Products: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
 
+  const fetchWarehouses = async () => {
+    try {
+      const warehouseData = await getAllWarehouses();
+      setWarehouses(warehouseData.data);
+    } catch (error) {
+      console.error("Error loading warehouses", error);
+    }
+  };
   useEffect(() => {
-    const fetchWarehouses = async () => {
-      try {
-        const warehouseData = await getAllWarehouses();
-        setWarehouses(warehouseData.data);
-      } catch (error) {
-        console.error("Error loading warehouses", error);
-      }
-    };
     fetchWarehouses();
   }, []);
 
@@ -278,7 +278,7 @@ const Products: React.FC = () => {
             {row.warehouse.map((wh, i) => (
               <div key={i}>
                 <strong>
-                  {warehouseMap[wh.warehouse._id]?.name || "N/A"}:
+                  {warehouseMap[wh.warehouse?._id]?.name || "N/A"}:
                 </strong>{" "}
                 {wh.stock}
               </div>
