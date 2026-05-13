@@ -1,479 +1,316 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "react-datepicker/dist/react-datepicker.css";
-import "./dashboardPannel.css";
-import { FaSignOutAlt } from "react-icons/fa";
-import logoImg from "../../../assets/logo.png";
-import logoImg1 from "../../../assets/logo1.png";
 import SupportChatWidget from "./SupportChatWidget";
 import axios from "axios";
 import { drpCrmBaseUrl } from "../../../axios/urls";
 import { useUserStore } from "../../../store/useUserStore";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  ShoppingCart,
-  Flag,
-  Scan,
   Truck,
-  Package,
-  Tag,
-  Gift,
   Link2,
-  DollarSign,
   Wallet,
-  FileText,
-  Calculator,
-  Settings,
-  Layers,
-  Radio,
   Warehouse,
-  ChevronRight,
   Scale,
-  ClipboardMinus,
+  Menu,
+  X,
+  LogOut,
+  ShoppingBag,
+  ShieldAlert,
+  ScanLine,
+  Boxes,
+  Tags,
+  PackagePlus,
+  WalletCards,
+  BadgeIndianRupee,
+  ReceiptText,
+  ChartNoAxesCombined,
+  Calculator,
+  Layers3,
+  RadioTower,
+  ClipboardX,
 } from "lucide-react";
-import { BsGraphUp } from "react-icons/bs";
 
 type NavLink = {
   name: string;
   icon: React.ReactNode;
-  path?: string;
-  children?: NavLink[];
+  path: string;
 };
 
-type TNavLinkName =
-  | ""
-  | "Dashboard"
-  | "Orders"
-  | "Pools"
-  | "Channels"
-  | "Products"
-  | "Product SKUs"
-  | "Channels linked SKU"
-  | "NDR"
-  | "Finance"
-  | "invoices"
-  | "SignOut";
+const iconProps = { size: 20, strokeWidth: 2.5 };
 
-const navLinks: NavLink[] = [
-  {
-    name: "Dashboard",
-    icon: <LayoutDashboard size={20} />,
-    path: "/user",
-  },
-  {
-    name: "Orders",
-    icon: <ShoppingCart size={20} />,
-    children: [
-      {
-        name: "View Orders",
-        icon: <ShoppingCart size={18} />,
-        path: "/user/order-dash",
-      },
-      {
-        name: "Flagged Orders",
-        icon: <Flag size={18} />,
-        path: "/user/flaggedOrders",
-      },
-      {
-        name: "Scan Orders",
-        icon: <Scan size={18} />,
-        path: "/user/scanOrders",
-      },
-      { name: "NDR", icon: <Truck size={18} />, path: "/user/NDR" },
-    ],
-  },
-  {
-    name: "Products",
-    icon: <Package size={20} />,
-    children: [
-      {
-        name: "View Products",
-        icon: <Package size={18} />,
-        path: "/user/Products",
-      },
-      {
-        name: "Product SKUs",
-        icon: <Tag size={18} />,
-        path: "/user/ProductSKU",
-      },
-      {
-        name: "Product Packs",
-        icon: <Gift size={18} />,
-        path: "/user/ProductPacks",
-      },
-      {
-        name: "Channel SKU",
-        icon: <Link2 size={18} />,
-        path: "/user/ChannelSKU",
-      },
-    ],
-  },
-  {
-    name: "Finance",
-    icon: <DollarSign size={20} />,
-    children: [
-      { name: "Ledger", icon: <FileText size={18} />, path: "/user/Finance" },
-      {
-        name: "COD Remittance",
-        icon: <DollarSign size={18} />,
-        path: "/user/CODRemittance",
-      },
-      { name: "Wallet", icon: <Wallet size={18} />, path: "/user/Wallet" },
-      {
-        name: "Invoices",
-        icon: <FileText size={18} />,
-        path: "/user/Invoices",
-      },
-    ],
-  },
-  {
-    name: "Calculators",
-    icon: <Calculator size={20} />,
-    children: [
-      {
-        name: "Profit Calculator",
-        icon: <BsGraphUp size={18} />,
-        path: "/user/ProfitCalculator",
-      },
-      {
-        name: "Shipping Calculator",
-        icon: <Truck size={18} />,
-        path: "/user/shipping-charge-calculator",
-      },
-    ],
-  },
-  {
-    name: "Settings",
-    icon: <Settings size={20} />,
-    children: [
-      { name: "Pools", icon: <Layers size={18} />, path: "/user/pools" },
-      {
-        name: "Channel Accounts",
-        icon: <Radio size={18} />,
-        path: "/user/channel_accounts",
-      },
-      {
-        name: "Warehouse",
-        icon: <Warehouse size={18} />,
-        path: "/user/Warehouses",
-      },
-      {
-        name: "Damage Reports",
-        icon: <ClipboardMinus size={18} />,
-        path: "/user/damage-report",
-      },
-      {
-        name: "Weight Discrepancy",
-        icon: <Scale size={18} />,
-        path: "/user/weight-discrepancy",
-      },
-    ],
-  },
+const navGroups: NavLink[][] = [
+  [
+    {
+      name: "Dashboard",
+      icon: <LayoutDashboard {...iconProps} />,
+      path: "/user",
+    },
+  ],
+  [
+    {
+      name: "View Orders",
+      icon: <ShoppingBag {...iconProps} />,
+      path: "/user/order-dash",
+    },
+    {
+      name: "Flagged Orders",
+      icon: <ShieldAlert {...iconProps} />,
+      path: "/user/flaggedOrders",
+    },
+    {
+      name: "Scan Orders",
+      icon: <ScanLine {...iconProps} />,
+      path: "/user/scanOrders",
+    },
+    { name: "NDR", icon: <Truck {...iconProps} />, path: "/user/NDR" },
+  ],
+  [
+    {
+      name: "View Products",
+      icon: <Boxes {...iconProps} />,
+      path: "/user/Products",
+    },
+    {
+      name: "Product SKUs",
+      icon: <Tags {...iconProps} />,
+      path: "/user/ProductSKU",
+    },
+    {
+      name: "Product Packs",
+      icon: <PackagePlus {...iconProps} />,
+      path: "/user/ProductPacks",
+    },
+    {
+      name: "Channel SKU",
+      icon: <Link2 {...iconProps} />,
+      path: "/user/ChannelSKU",
+    },
+  ],
+  [
+    {
+      name: "Ledger",
+      icon: <WalletCards {...iconProps} />,
+      path: "/user/Finance",
+    },
+    {
+      name: "COD Remittance",
+      icon: <BadgeIndianRupee {...iconProps} />,
+      path: "/user/CODRemittance",
+    },
+    { name: "Wallet", icon: <Wallet {...iconProps} />, path: "/user/Wallet" },
+    {
+      name: "Invoices",
+      icon: <ReceiptText {...iconProps} />,
+      path: "/user/Invoices",
+    },
+  ],
+  [
+    {
+      name: "Profit Calculator",
+      icon: <ChartNoAxesCombined {...iconProps} />,
+      path: "/user/ProfitCalculator",
+    },
+    {
+      name: "Shipping Calculator",
+      icon: <Calculator {...iconProps} />,
+      path: "/user/shipping-charge-calculator",
+    },
+  ],
+  [
+    { name: "Pools", icon: <Layers3 {...iconProps} />, path: "/user/pools" },
+    {
+      name: "Channel Accounts",
+      icon: <RadioTower {...iconProps} />,
+      path: "/user/channel_accounts",
+    },
+    {
+      name: "Warehouse",
+      icon: <Warehouse {...iconProps} />,
+      path: "/user/Warehouses",
+    },
+    {
+      name: "Damage Reports",
+      icon: <ClipboardX {...iconProps} />,
+      path: "/user/damage-report",
+    },
+    {
+      name: "Weight Discrepancy",
+      icon: <Scale {...iconProps} />,
+      path: "/user/weight-discrepancy",
+    },
+  ],
 ];
 
 const UserPanel: React.FC = () => {
-  const { username } = useUserStore();
-  const [activeLink, setActiveLink] = useState<TNavLinkName>("");
+  const { username, reset } = useUserStore();
+  const [activeLink, setActiveLink] = useState<string>("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = window.innerWidth < 787;
-  const { reset } = useUserStore();
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  // const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [sidebarHovered, setSidebarHovered] = useState<boolean>(false);
 
-  // Automatically sync active link with current URL
   useEffect(() => {
     const currentPath = location.pathname;
-    const matchedLink = navLinks.find((link) => link.path === currentPath);
-    if (matchedLink) {
-      setActiveLink(matchedLink.name as TNavLinkName);
-      document.title = `${matchedLink.name} - Orderz Up`; // Dynamically update the title
+    let matchedName = "";
+
+    navGroups.forEach((group) => {
+      group.forEach((link) => {
+        if (link.path === currentPath) matchedName = link.name;
+      });
+    });
+
+    if (matchedName) {
+      setActiveLink(matchedName);
+      document.title = `${matchedName} - OrderzUp`;
     } else {
-      document.title = "Dashboard - Orderz Up"; // Default title
+      document.title = "Dashboard - OrderzUp";
     }
   }, [location.pathname]);
 
-  const toggleExpanded = (name: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(name)) {
-      newExpanded.delete(name);
-    } else {
-      newExpanded.add(name);
-    }
-    setExpandedItems(newExpanded);
+  const handleLinkClick = (name: string, path: string) => {
+    setActiveLink(name);
+    navigate(path);
+    if (window.innerWidth < 768) setSidebarOpen(false);
   };
-  const NavItem = ({ link, level = 0 }: { link: NavLink; level?: number }) => {
-    // const isExpanded = expandedItems.has(link.name);
-    // const isHovered = hoveredItem === link.name;
+
+  const handleLogout = async () => {
+    reset();
+    await axios.post(
+      `${drpCrmBaseUrl}/auth/logout`,
+      {},
+      { withCredentials: true }
+    );
+    navigate("/login");
+  };
+
+  const NavItem = ({ link }: { link: NavLink }) => {
     const isActive = activeLink === link.name;
-    const hasChildren = link.children && link.children.length > 0;
-
-    const handleMouseEnter = () => {
-      if (!isMobile && hasChildren) {
-        // setHoveredItem(link.name);
-      }
-    };
-
-    const handleMouseLeave = () => {
-      if (!isMobile) {
-        // setHoveredItem(null);
-      }
-    };
-
-    const handleClick = () => {
-      if (hasChildren) {
-        if (isMobile) {
-          toggleExpanded(link.name);
-        }
-      } else if (link.path) {
-        handleLinkClick(link.name, link.path);
-      }
-    };
-
-    const showName = isMobile || sidebarOpen || sidebarHovered;
 
     return (
       <div
-        className="position-relative"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        style={{ marginBottom: "4px" }}
+        onClick={() => handleLinkClick(link.name, link.path)}
+        className={`group flex items-center gap-4 px-4 py-3 mx-4 mb-1 rounded-xl cursor-pointer transition-all duration-200 ${
+          isActive
+            ? "bg-linear-to-tr to-[#f5891d]/40 from-amber-600 text-white border border-white shadow-md  font-semibold"
+            : "text-neutral-500 font-medium hover:text-[#F5891E] hover:bg-orange-50"
+        }`}
       >
-        {!hasChildren && (
-          <motion.div
-            className={`d-flex align-items-center justify-content-between px-3 py-2 rounded mx-2 `}
-            style={{
-              cursor: "pointer",
-              transition: "all 0.2s",
-              background: isActive
-                ? "linear-gradient(90deg, #F5891E 0%, #FF6B35 100%)"
-                : "transparent",
-              boxShadow: isActive
-                ? "0 4px 6px rgba(245, 137, 30, 0.3)"
-                : "none",
-            }}
-            onClick={handleClick}
-            whileHover={{
-              x: level === 0 ? 4 : 2,
-              backgroundColor: isActive ? undefined : "#FFF5E6",
-              color: isActive ? undefined : "#F5891E!important",
-            }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="d-flex align-items-center gap-3">
-              <span style={{ color: isActive ? "white" : "#F5891E" }}>
-                {link.icon}
-              </span>
-              {showName && (
-                <span
-                  className="fw-medium nav-name"
-                  style={{
-                    fontSize: "14px",
-                    color: isActive ? "white" : "#F5891E",
-                  }}
-                >
-                  {link.name}
-                </span>
-              )}
-            </div>
-            {hasChildren && (
-              <motion.span
-                transition={{ duration: 0.2 }}
-                style={{ color: isActive ? "white" : "white" }}
-                className="nav-name"
-              >
-                <ChevronRight size={16} />
-              </motion.span>
-            )}
-          </motion.div>
-        )}
-        {/* Always show children with a separator to reduce clicks */}
-        {hasChildren && (
-          <div>
-            <div
-              style={{
-                height: 1,
-                background: "rgba(255,255,255,0.06)",
-                margin: "6px 8px",
-              }}
-            />
-            {link.children?.map((child) => (
-              <div
-                key={child.name}
-                className="d-flex align-items-center gap-3 px-3 py-2 mx-2"
-                style={{
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                  marginLeft: level === 0 ? 24 : 32,
-                  backgroundColor:
-                    activeLink === child.name ? "#FFF5E6" : "transparent",
-                  color: activeLink === child.name ? "#F5891E" : "#fff",
-                  borderLeft:
-                    activeLink === child.name
-                      ? "4px solid #F5891E"
-                      : "4px solid transparent",
-                }}
-                onClick={() =>
-                  child.path && handleLinkClick(child.name, child.path)
-                }
-                onMouseEnter={(e) => {
-                  if (activeLink !== child.name) {
-                    e.currentTarget.style.backgroundColor = "#FFF5E6";
-                    e.currentTarget.style.color = "#F5891E";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeLink !== child.name) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "#fff";
-                  }
-                }}
-              >
-                <span style={{ color: "#F5891E" }}>{child.icon}</span>
-                {(isMobile || sidebarOpen || sidebarHovered) && (
-                  <span className="fw-medium" style={{ fontSize: "14px" }}>
-                    {child.name}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <span
+          className={`${
+            isActive
+              ? "text-white"
+              : "text-neutral-500 group-hover:text-[#F5891E]"
+          } transition-colors`}
+        >
+          {link.icon}
+        </span>
+        <span className="text-[15px]">{link.name}</span>
       </div>
     );
   };
-  const handleLinkClick = async (name: string, path?: string) => {
-    setSidebarOpen(false);
-    if (name === "SignOut") {
-      reset();
-      await axios.post(
-        `${drpCrmBaseUrl}/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-      navigate("/login");
-      return;
-    }
-    setActiveLink(name as TNavLinkName);
-    if (path) navigate(path);
-  };
 
   return (
-    <div id="user-panel" className="nav-visible">
-      {isMobile && (
-        <button
-          className="hamburger-menu"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? "X" : "☰"}
-        </button>
-      )}
-      <div
-        className={`sidebar sidebar-visible`}
-        onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
-        style={{
-          display:
-            isMobile && !sidebarOpen ? "none!imporant" : "flex!important",
-        }}
+    <div className="flex h-screen bg-neutral-50 font-sans overflow-hidden">
+      {/* Mobile Dark Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar - Flat layout with robust typography and orange theme */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-neutral-200 flex flex-col transform transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        }`}
       >
-        <nav className="nav-1">
-          <div>
-            <div className="nav-logo">
-              <span className="nav-logo-icon">
-                <img src={logoImg} style={{ width: "30px " }} />
-              </span>
-              <span className="nav-logo-name">
-                <img src={logoImg1} style={{ width: "100px " }} />
-              </span>
-            </div>
-            <div
-              style={{
-                margin: "5px 0 15px 0",
-                padding: "10px 10px",
-                borderWidth: "1px 0",
-                borderColor: "#F5891E",
-                borderStyle: "solid",
-                fontSize: "14px",
-                fontWeight: "200",
-              }}
-            >
-              Hello, {username}!
-            </div>
-            <div className="nav-list-1">
-              {navLinks.map((link) => (
+        {/* Header/Logo Section */}
+        <div className="flex items-center justify-between px-8 pt-6 pb-4">
+          <div className="flex items-center justify-center gap-3">
+            <img src="/Orderzup.png" alt="Logo Icon" className="w-15" />
+            <span className="font-bold text-[#000967] text-5xl">
+              Orderz<span className="text-[#F5891E]">Up</span>
+            </span>
+          </div>
+          <button
+            className="md:hidden text-neutral-400 hover:text-[#F5891E]"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={24} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* User Greeting Divider */}
+        <div className="px-8 pb-4">
+          <div className="text-[13px] font-semibold text-neutral-400 uppercase tracking-wider pb-2">
+            Hello, <span className="text-[#F5891E]">{username}</span>
+          </div>
+        </div>
+
+        {/* Scrollable Navigation List */}
+        <nav className="flex-1 overflow-y-auto scrollbar-hide py-2 pb-6">
+          {navGroups.map((group, groupIndex) => (
+            <React.Fragment key={groupIndex}>
+              {/* Divider lines between groups */}
+              {groupIndex > 0 && (
+                <div className="h-px bg-linear-to-r from-transparent to-neutral-300 my-4 mx-8"></div>
+              )}
+              {group.map((link) => (
                 <NavItem key={link.name} link={link} />
               ))}
-            </div>
-          </div>
-          <div
-            className={`nav-link-1 ${activeLink === "SignOut" ? "active" : ""}`}
-            onClick={() => handleLinkClick("SignOut")}
-          >
-            <span className="nav-icon">
-              <FaSignOutAlt />
-            </span>
-            <span className="nav-name"> Sign Out</span>
-          </div>
+            </React.Fragment>
+          ))}
         </nav>
-      </div>
-      {isMobile && sidebarOpen && (
-        <div
-          className={`side-mobile ${sidebarOpen ? " open" : ""}`}
-          onMouseEnter={() => setSidebarHovered(true)}
-          onMouseLeave={() => setSidebarHovered(false)}
-        >
-          <nav className="nav-1">
-            <div>
-              <div className="nav-logo">
-                <span className="nav-logo-icon">
-                  <img src={logoImg} style={{ width: "30px " }} />
-                </span>
-                <span className="nav-logo-name">
-                  <img src={logoImg1} style={{ width: "100px " }} />
-                </span>
-              </div>
-              <div
-                style={{
-                  margin: "5px 0 15px 0",
-                  padding: "10px 10px",
-                  borderWidth: "1px 0",
-                  borderColor: "#F5891E",
-                  borderStyle: "solid",
-                  fontSize: "14px",
-                  fontWeight: "200",
-                }}
-              >
-                Hello, {username}!
-              </div>
-              <div className="nav-list-2">
-                {navLinks.map((link) => (
-                  <NavItem key={link.name} link={link} />
-                ))}
-              </div>
-            </div>
-            <div
-              className={`nav-link-1 ${
-                activeLink === "SignOut" ? "active" : ""
-              }`}
-              onClick={() => handleLinkClick("SignOut")}
-            >
-              <span className="nav-icon">
-                <FaSignOutAlt />
-              </span>
-              <span className="nav-name"> Sign Out</span>
-            </div>
-          </nav>
+
+        {/* Pinned Log Out Section */}
+        <div className="mt-auto pb-6 pt-4 px-4 bg-white">
+          <div className="border-t border-neutral-100 mb-3 mx-4"></div>
+          <div
+            onClick={handleLogout}
+            className="group flex items-center gap-4 px-4 py-3 mx-4 rounded-xl cursor-pointer text-neutral-600 font-medium hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+          >
+            <LogOut
+              size={20}
+              strokeWidth={2.5}
+              className="text-neutral-400 group-hover:text-red-600"
+            />
+            <span className="text-[15px]">Sign Out</span>
+          </div>
         </div>
-      )}
-      <div className="main-content" style={{ backgroundColor: "#f6f7f9" }}>
-        {/* hello */}
-        <Outlet />
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-neutral-50">
+        {/* Mobile Header */}
+        <header className="md:hidden bg-white p-4 flex items-center justify-between z-30 shadow-sm border-b border-neutral-200">
+          <div className="flex items-center justify-center gap-2">
+            <img src="/Orderzup.png" alt="Logo Icon" className="w-10" />
+            <span className="font-bold text-[#000967] text-4xl">
+              Orderz<span className="text-[#F5891E]">Up</span>
+            </span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 text-neutral-600 hover:bg-orange-50 hover:text-[#F5891E] rounded-md transition-colors"
+          >
+            <Menu size={26} strokeWidth={2.5} />
+          </button>
+        </header>
+
+        {/* Scrollable Main Views */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <Outlet />
+        </div>
+
         <SupportChatWidget />
-      </div>
+      </main>
     </div>
   );
 };

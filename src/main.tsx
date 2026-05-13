@@ -2,7 +2,6 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
 import LoginPage from "./screens/auth/LoginPage.tsx";
 import RegisterPage from "./screens/auth/RegisterPage.tsx";
 import VerifyPage from "./screens/auth/VerifyPage.tsx";
