@@ -147,12 +147,16 @@ export const checkShipmentServiceavailablity = async (
 export const bookCourier = async (
   orderId: any,
   courierId: any,
-  warehouseId: any
+  warehouseId: any,
+  v2: boolean
 ) => {
   try {
-    const response = await appAxios.get(`${couriers_url}/book`, {
-      params: { orderId, courierId, warehouseId },
-    });
+    const response = await appAxios.get(
+      `${couriers_url}/book${v2 ? "v2" : ""}`,
+      {
+        params: { orderId, courierId, warehouseId },
+      }
+    );
     return response.data;
   } catch (error: any) {
     toast.error(

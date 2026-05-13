@@ -236,7 +236,8 @@ const FlaggedOrders: React.FC = () => {
       const response = await bookCourier(
         shipmentOrder?._id,
         courier_id,
-        selectedWarehouse.warehouseAddress.warehouse_id
+        selectedWarehouse.warehouseAddress.warehouse_id,
+        false
       );
       toast.success(response.message);
       if (response) {

@@ -68,7 +68,7 @@ const navLinks: NavLink[] = [
       {
         name: "View Orders",
         icon: <ShoppingCart size={18} />,
-        path: "/user/orders",
+        path: "/user/order-dash",
       },
       {
         name: "Flagged Orders",

@@ -34,6 +34,7 @@ import {
   LabelPrinter,
   LabelPrinterRef,
 } from "../../components/order-dash/LabelPreviewModal";
+import { Link } from "react-router-dom";
 
 export interface Order {
   _id: string;
@@ -166,7 +167,7 @@ const OrderDash = () => {
 
   const fetchChannelAccounts = async () => {
     try {
-      const response = await appAxios.get(channelAccounts_url);
+      const response = await appAxios.get(`${channelAccounts_url}?limit=1000`);
       const data = response.data;
       setChannelAccounts(data.data || []);
     } catch (error) {
@@ -235,13 +236,14 @@ const OrderDash = () => {
 
   const handleViewStatus = (statusList: string[]) => {
     /* setStatusList(statusList); setShowStatusModal(true); */
+    console.log(statusList);
   };
 
   const handleShipNow = async (order: Order) => {
     try {
       setShipmentOrder(order);
       const response = await appAxios.get(
-        `${couriers_url}/checkServiceability?id=${order._id}`
+        `${couriers_url}/checkServiceabilityv2?id=${order._id}`
       );
       const details = response.data.data;
 
@@ -295,6 +297,7 @@ const OrderDash = () => {
 
   const handleAutoBook = (ordersArray: Order[]) => {
     /* handleBookBulkShipment(ordersArray) */
+    console.log(ordersArray);
   };
   const handleCancelOrder = async (orderId: string) => {
     try {
@@ -312,7 +315,8 @@ const OrderDash = () => {
       const response = await bookCourier(
         shipmentOrder?._id,
         courier_id,
-        selectedWarehouse.warehouseAddress.warehouse_id
+        selectedWarehouse.warehouseAddress.warehouse_id,
+        true
       );
       toast.success(response.message);
       if (response) {
@@ -418,6 +422,9 @@ const OrderDash = () => {
           >
             + Add Order
           </button>
+          <Link className="fw-semibold tab-btn activehover" to={"/user/orders"}>
+            Old Orders
+          </Link>
         </div>
       </div>
       <div className="custom-tabs mb-3">

@@ -204,6 +204,7 @@ const GetStartedRecharge = () => {
             <Form.Label className="fw-bold small text-uppercase text-muted ls-1">
               Promo Code
             </Form.Label>
+
             <InputGroup>
               <Form.Control
                 placeholder="Enter Coupon Code"
@@ -213,6 +214,7 @@ const GetStartedRecharge = () => {
                 className="text-uppercase"
                 style={{ border: "2px solid #e9ecef" }}
               />
+
               <Button
                 variant={bonus > 0 ? "success" : "outline-primary"}
                 onClick={handleApplyCoupon}
@@ -229,10 +231,22 @@ const GetStartedRecharge = () => {
                 )}
               </Button>
             </InputGroup>
+
+            {/* Promo Hint */}
+            {!bonus && (
+              <div className="mt-2 small text-muted">
+                <i className="bi bi-gift me-1 text-primary"></i>
+                Use code <strong>NEW500</strong> to get{" "}
+                <strong>50% extra bonus</strong> on your first recharge. Valid
+                only on recharges above <strong>₹500</strong>.
+              </div>
+            )}
+
+            {/* Success Message */}
             {bonus > 0 && (
               <div className="mt-2 small text-success fw-bold fade-in">
-                <i className="bi bi-stars me-1"></i> Coupon applied! ₹{bonus}{" "}
-                bonus added.
+                <i className="bi bi-stars me-1"></i>
+                Coupon applied! ₹{bonus} bonus added.
               </div>
             )}
           </Form.Group>
