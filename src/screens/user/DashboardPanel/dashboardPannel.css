@@ -5,9 +5,7 @@ html {
   padding: 0;
   font-family: 'Hiragino Maru Gothic ProN W4', sans-serif !important;
   background-color: #000434;
-  /* Navy */
   color: #FFFFFF;
-  /* White */
   font-size: 10px !important;
 }
 
@@ -18,7 +16,6 @@ html {
 
 .rdt_TableHeadRow {
   background-color: #000434 !important;
-  /* Orange */
   color: #FFFFFF !important;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
@@ -38,14 +35,11 @@ html {
 /* Sidebar */
 .sidebar {
   background-color: #000434;
-  /* Navy */
   color: #FFFFFF;
-  /* White */
   width: 60px;
   min-width: 60px;
   transition: width 0.3s ease;
   overflow: hidden;
-  /* display: flex; */
   flex-direction: column;
   justify-content: space-between;
   padding: 1rem 0;
@@ -54,7 +48,7 @@ html {
 }
 
 .sidebar:hover {
-  min-width: 220px!important;
+  min-width: 220px !important;
 }
 
 .nav-logo {
@@ -68,7 +62,6 @@ html {
 .nav-logo-icon {
   font-size: 1.5rem;
   color: #F5891E;
-  /* Orange */
 }
 
 .nav-logo-name {
@@ -76,7 +69,6 @@ html {
   font-weight: bold;
   display: none;
   color: #FFFFFF;
-  /* White */
 }
 
 .sidebar:hover .nav-logo-name {
@@ -90,24 +82,38 @@ html {
   justify-content: space-between;
 }
 
+/* =========================
+   NAV LIST 1
+========================= */
 .nav-list-1 {
-  /* display: flex; */
   overflow-y: auto;
-  /* vertical scroll */
   overflow-x: hidden;
-  /* prevent horizontal scroll */
   height: calc(100vh - 200px);
   flex-direction: column;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
+.nav-list-1::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================
+   NAV LIST 2
+========================= */
 .nav-list-2 {
-  /* display: flex; */
   overflow-y: auto;
-  /* vertical scroll */
   overflow-x: hidden;
-  /* prevent horizontal scroll */
   height: calc(100vh - 220px);
   flex-direction: column;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-list-2::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-link-1 {
@@ -116,7 +122,6 @@ html {
   padding: 0.75rem 1rem;
   cursor: pointer;
   color: #FFFFFF;
-  /* White */
   transition: background-color 0.2s ease, color 0.2s ease;
   gap: 10px;
   white-space: nowrap;
@@ -124,16 +129,12 @@ html {
 
 .nav-link-1:hover {
   background-color: #F5891E;
-  /* Orange */
   color: #FFFFFF;
-  /* White */
 }
 
 .nav-link-1.active {
   background-color: #F5891E;
-  /* Orange */
   color: #FFFFFF;
-  /* White */
 }
 
 .nav-link {
@@ -142,7 +143,6 @@ html {
   padding: 0.75rem 1rem;
   cursor: pointer;
   color: #000434;
-  /* White */
   transition: background-color 0.2s ease, color 0.2s ease;
   gap: 10px;
   white-space: nowrap;
@@ -150,29 +150,23 @@ html {
 
 .nav-link:hover {
   background-color: #F5891E !important;
-  /* Orange */
   color: #000434;
-  /* White */
 }
 
 .nav-link.active {
   background-color: #F5891E !important;
-  /* Orange */
   color: #000434;
-  /* White */
 }
 
 .nav-icon {
   font-size: 1.25rem;
   color: #FFFFFF;
-  /* White */
 }
 
 .nav-name {
   display: none;
   font-size: 1rem;
   color: #FFFFFF;
-  /* White */
 }
 
 .sidebar:hover .nav-name {
@@ -187,24 +181,20 @@ html {
   padding: 1.25rem 0.5rem;
   overflow-y: auto;
   background-color: #f8f9fa;
-  /* White */
   color: #000434;
-  /* Navy */
 }
 
-/* Scrollbar Styling */
+/* Main content scrollbar */
 .main-content::-webkit-scrollbar {
   width: 6px;
 }
 
 .main-content::-webkit-scrollbar-thumb {
   background-color: #F5891E;
-  /* Orange */
   border-radius: 10px;
 }
 
-
-/* Container for the scanner */
+/* Scanner */
 .scanner-container {
   position: relative;
   width: 100%;
@@ -212,7 +202,6 @@ html {
   overflow: hidden;
 }
 
-/* Overlay to highlight the scanning area */
 .scanner-overlay {
   position: absolute;
   top: 0;
@@ -220,26 +209,22 @@ html {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  /* Dark overlay */
   z-index: 1;
 }
 
-/* Transparent box for the barcode scanning area */
 .scanner-box {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 80%;
   height: 100px;
-  /* Adjust height to match barcode shape */
   transform: translate(-50%, -50%);
   border: 2px solid #00ff00;
-  /* Green border for the scanning area */
   background: transparent;
   z-index: 2;
 }
 
-/* custom-datepicker.css */
+/* Datepicker */
 .react-datepicker {
   font-family: 'Hiragino Maru Gothic ProN', sans-serif;
   border-radius: 12px;
@@ -271,8 +256,8 @@ html {
   color: white;
 }
 
+/* Mobile */
 @media (max-width: 767px) {
-
   .sidebar {
     display: none !important;
   }
@@ -291,46 +276,47 @@ html {
   }
 }
 
+/* =========================
+   DROPDOWN MENU STYLING
+========================= */
+.dropdown-menu {
+  background-color: #f4f5fd !important;
+  border: 1px solid rgba(245, 137, 30, 0.25) !important;
+  border-radius: 10px !important;
 
+  padding: 12px !important;
+  min-width: 150px !important;
 
-
-
-.side-mobile {
-  background-color: #000434;
-  /* Navy */
-  color: #FFFFFF;
-  /* White */
-  width: 100% !important;
-  transition: transform 3s ease;
-  /* Animate transform */
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1rem 0;
-  position: fixed;
-  z-index: 10;
-
-  /* Initially hide sidebar by shifting left */
-  transform: translateX(-100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18) !important;
 }
 
-/* Make mobile sidebar scrollable and smoother on touch devices */
-.side-mobile {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  height: 100vh;
+/* Dropdown items */
+.dropdown-item {
+  color: #f5891e !important;
+  border-radius: 5px !important;
+ 
+  padding: 8px 8px !important;
+  background: transparent !important;
+  transition: background 0.2s ease;
+  font-size: 12px;
 }
 
-/* Class to show sidebar by resetting transform */
-.side-mobile.open {
-  transform: translateX(0);
-  height: 100vh;
+/* Hover */
+.dropdown-item:hover {
+  background-color: rgb(6, 2, 49) !important;
+  color: #ffffff !important;
 }
 
-
-.side-mobile .nav-logo-name {
-  display: inline;
+/* Active */
+.dropdown-item:active,
+.dropdown-item.active {
+  background-color: #F5891E !important;
+  color: #000434 !important;
 }
 
-.side-mobile .nav-name {
-  display: inline;
+/* Focus */
+.dropdown-item:focus {
+  background-color: rgb(6, 2, 49) !important;
+  color: #ffffff !important;
+  outline: none !important;
 }
