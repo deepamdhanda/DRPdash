@@ -1,3 +1,5 @@
+import React, { useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
   Info,
@@ -8,20 +10,15 @@ import {
   Star,
   Store,
   Truck,
+  X,
+  Loader2,
+  Zap,
+  TrendingDown,
+  Award,
+  ArrowRight,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import {
-  Badge,
-  Button,
-  Col,
-  Form,
-  Modal,
-  OverlayTrigger,
-  Row,
-  Tooltip,
-} from "react-bootstrap";
 
-function ShipmentModal({
+export default function ShipmentModal({
   showShipmentModal,
   handleShipmentClose,
   shipmentOrder,
@@ -29,10 +26,17 @@ function ShipmentModal({
   handleBookShipment,
 }: any) {
   const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
-  const [sortBy, setSortBy] = useState("recommended"); // recommended, cheapest, fastest, best-rated
-  const [filterType, setFilterType] = useState("all"); // all, air, surface
+  const [sortBy, setSortBy] = useState("recommended");
+  const [filterType, setFilterType] = useState("all");
 
-  // Process and sort couriers
+  useEffect(() => {
+    if (showShipmentModal) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showShipmentModal]);
+
   const { couriers, cheapestId, fastestId, bestRatedId } = useMemo(() => {
     if (!shipmentDetails?.couriers) {
       return {
@@ -44,12 +48,9 @@ function ShipmentModal({
     }
 
     let list = [...shipmentDetails.couriers];
-
-    // Helper to determine if a courier is surface (since the new API doesn't explicitly send is_surface)
     const checkIsSurface = (c: any) =>
       c.is_surface === true || c.name?.toLowerCase().includes("surface");
 
-    // Identify smart tags using _id and total_amount
     const cheapest = [...list].sort(
       (a, b) => a.total_amount - b.total_amount
     )[0]?._id;
@@ -59,11 +60,9 @@ function ShipmentModal({
     )[0]?._id;
     const bestRated = [...list].sort((a, b) => b.rating - a.rating)[0]?._id;
 
-    // Filter
     if (filterType === "air") list = list.filter((c) => !checkIsSurface(c));
     if (filterType === "surface") list = list.filter((c) => checkIsSurface(c));
 
-    // Sort using total_amount instead of rate
     if (sortBy === "cheapest")
       list.sort((a, b) => a.total_amount - b.total_amount);
     if (sortBy === "fastest")
@@ -72,12 +71,10 @@ function ShipmentModal({
           Number(a.estimated_delivery_days) - Number(b.estimated_delivery_days)
       );
     if (sortBy === "best-rated") list.sort((a, b) => b.rating - a.rating);
-    if (sortBy === "recommended") {
-      // Custom recommendation logic: high rating + lower price
+    if (sortBy === "recommended")
       list.sort(
         (a, b) => b.rating - a.rating || a.total_amount - b.total_amount
       );
-    }
 
     return {
       couriers: list,
@@ -87,820 +84,496 @@ function ShipmentModal({
     };
   }, [shipmentDetails, sortBy, filterType]);
 
-  const primaryDark = "#000434";
-  const primaryAccent = "#F5891E";
-  const softShadow = "0 2px 12px rgba(0,0,0,0.04)";
-  const cardBorder = "1px solid #f1f3f5";
-
   return (
-    <Modal
-      show={showShipmentModal}
-      onHide={handleShipmentClose}
-      size="xl"
-      centered
-      backdrop="static"
-    >
-      <Modal.Header
-        closeButton
-        style={{
-          backgroundColor: "#ffffff",
-          borderBottom: cardBorder,
-          padding: "16px 24px",
-        }}
-      >
-        <Modal.Title
-          style={{
-            color: primaryDark,
-            fontWeight: 700,
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            fontSize: "20px",
-          }}
-        >
-          <PackageOpen color={primaryAccent} size={24} />
-          Process Shipment
-          <span
-            style={{
-              fontSize: "13px",
-              backgroundColor: "#FFF7F0",
-              color: primaryAccent,
-              padding: "4px 10px",
-              borderRadius: "6px",
-              marginLeft: "8px",
-              border: `1px solid ${primaryAccent}`,
-              fontWeight: 600,
-            }}
+    <AnimatePresence>
+      {showShipmentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 md:p-6">
+          {/* Glassmorphic Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleShipmentClose}
+            className="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm"
+          />
+
+          {/* Main Modal Container - Widened for SaaS Aesthetic */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 20 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="relative w-full h-full sm:h-auto max-h-[100vh] sm:max-h-[95vh] max-w-[1300px] w-[96vw] bg-zinc-50 sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200/50"
           >
-            Order #{shipmentOrder?.order_id || "—"}
-          </span>
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body style={{ backgroundColor: "#f8f9fb", padding: "24px" }}>
-        {shipmentDetails ? (
-          <div className="d-flex flex-column" style={{ gap: "24px" }}>
-            {/* ================= 1. TOP SUMMARY BAR ================= */}
-            <Row className="g-3">
-              {/* Dispatch From */}
-              <Col lg={4}>
-                <div
-                  className="bg-white p-3 h-100 d-flex align-items-start gap-3"
-                  style={{
-                    borderRadius: "10px",
-                    border: cardBorder,
-                    boxShadow: softShadow,
-                  }}
-                >
-                  <div
-                    className="mt-1 p-2 rounded"
-                    style={{ backgroundColor: "#FFF7F0" }}
-                  >
-                    <Store color={primaryAccent} size={20} />
-                  </div>
-                  <div>
-                    <div
-                      className="text-muted text-uppercase fw-bold mb-1"
-                      style={{ fontSize: "10px", letterSpacing: "0.5px" }}
-                    >
-                      Dispatch From
-                    </div>
-                    <div
-                      className="fw-bold text-truncate"
-                      style={{ fontSize: "13px", color: primaryDark }}
-                    >
-                      {shipmentDetails.fulfillment.warehouseDetails.name}
-                    </div>
-                    <div
-                      className="text-muted mt-1"
-                      style={{ fontSize: "11px", lineHeight: "1.4" }}
-                    >
-                      {shipmentDetails.fulfillment.warehouseDetails.City},{" "}
-                      {shipmentDetails.fulfillment.warehouseDetails.State} -{" "}
-                      {shipmentDetails.fulfillment.warehouseDetails.pincode}
-                    </div>
-                  </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-zinc-200 z-10 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-orange-50 text-[#F5891E] p-2 rounded-xl shadow-sm border border-orange-100/50 hidden sm:block">
+                  <PackageOpen size={22} />
                 </div>
-              </Col>
-
-              {/* Shipping To */}
-              <Col lg={4}>
-                <div
-                  className="bg-white p-3 h-100 d-flex align-items-start gap-3"
-                  style={{
-                    borderRadius: "10px",
-                    border: cardBorder,
-                    boxShadow: softShadow,
-                  }}
-                >
-                  <div
-                    className="mt-1 p-2 rounded"
-                    style={{ backgroundColor: "#E6F4EA" }}
-                  >
-                    <MapPin color="#28a745" size={20} />
-                  </div>
-                  <div>
-                    <div
-                      className="text-muted text-uppercase fw-bold mb-1"
-                      style={{ fontSize: "10px", letterSpacing: "0.5px" }}
-                    >
-                      Shipping To
-                    </div>
-                    <div
-                      className="fw-bold text-truncate"
-                      style={{ fontSize: "13px", color: primaryDark }}
-                    >
-                      {shipmentOrder?.customer_name}
-                    </div>
-                    <div
-                      className="text-muted mt-1"
-                      style={{ fontSize: "11px", lineHeight: "1.4" }}
-                    >
-                      {shipmentOrder?.shipping_city},{" "}
-                      {shipmentOrder?.shipping_state} -{" "}
-                      {shipmentOrder?.shipping_pincode}
-                    </div>
-                    <div
-                      className="mt-1 fw-bold"
-                      style={{
-                        fontSize: "11px",
-                        color: shipmentOrder?.payment_method
-                          ?.toLowerCase()
-                          .includes("cod")
-                          ? "#d9534f"
-                          : "#28a745",
-                      }}
-                    >
-                      {shipmentOrder?.payment_method
-                        ?.toLowerCase()
-                        .includes("cod")
-                        ? "💰 COD: "
-                        : "💳 Prepaid: "}{" "}
-                      ₹{shipmentOrder?.total_amount}
-                    </div>
-                  </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-zinc-900 flex items-center gap-2 sm:gap-3 tracking-tight">
+                    Process Shipment
+                    <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 border border-zinc-200 rounded-md text-[11px] sm:text-[13px] font-bold tracking-wider">
+                      ORD-{shipmentOrder?.order_id || "—"}
+                    </span>
+                  </h2>
                 </div>
-              </Col>
+              </div>
+              <button
+                onClick={handleShipmentClose}
+                className="p-2 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-              {/* Weight Summary */}
-              <Col lg={4}>
-                <div
-                  className="bg-white p-3 h-100 d-flex align-items-start gap-3 position-relative"
-                  style={{
-                    borderRadius: "10px",
-                    border: cardBorder,
-                    boxShadow: softShadow,
-                  }}
-                >
-                  <div
-                    className="mt-1 p-2 rounded"
-                    style={{ backgroundColor: "#F0F4FF" }}
-                  >
-                    <Scale color="#4285F4" size={20} />
-                  </div>
-                  <div className="w-100">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                      <div
-                        className="text-muted text-uppercase fw-bold"
-                        style={{ fontSize: "10px", letterSpacing: "0.5px" }}
-                      >
-                        Weight Summary
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 custom-scrollbar">
+              {shipmentDetails ? (
+                <>
+                  {/* --- 1. OVERVIEW WIDGETS --- */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                    {/* Dispatch */}
+                    <div className="bg-white p-4 lg:p-5 rounded-xl border border-zinc-200 shadow-sm flex items-start gap-3.5">
+                      <div className="bg-zinc-100 text-zinc-600 p-2.5 rounded-lg shrink-0 border border-zinc-200/60">
+                        <Store size={18} />
                       </div>
-                      <OverlayTrigger
-                        placement="left"
-                        overlay={
-                          <Tooltip>
-                            Higher of actual & volumetric is charged
-                          </Tooltip>
-                        }
-                      >
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mb-1">
+                          Dispatch From
+                        </div>
+                        <div className="text-[14px] font-bold text-zinc-900 truncate">
+                          {shipmentDetails.fulfillment.warehouseDetails.name}
+                        </div>
+                        <div className="text-[12px] text-zinc-500 mt-0.5 leading-snug">
+                          {shipmentDetails.fulfillment.warehouseDetails.City},{" "}
+                          {shipmentDetails.fulfillment.warehouseDetails.State} -{" "}
+                          {shipmentDetails.fulfillment.warehouseDetails.pincode}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Destination */}
+                    <div className="bg-white p-4 lg:p-5 rounded-xl border border-zinc-200 shadow-sm flex items-start gap-3.5">
+                      <div className="bg-zinc-100 text-zinc-600 p-2.5 rounded-lg shrink-0 border border-zinc-200/60">
+                        <MapPin size={18} />
+                      </div>
+                      <div className="min-w-0 w-full">
+                        <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest mb-1">
+                          Shipping To
+                        </div>
+                        <div className="text-[14px] font-bold text-zinc-900 truncate">
+                          {shipmentOrder?.customer_name}
+                        </div>
+                        <div className="text-[12px] text-zinc-500 mt-0.5 leading-snug truncate">
+                          {shipmentOrder?.shipping_city},{" "}
+                          {shipmentOrder?.shipping_state} -{" "}
+                          {shipmentOrder?.shipping_pincode}
+                        </div>
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold border bg-zinc-50 border-zinc-200">
+                          {shipmentOrder?.payment_method
+                            ?.toLowerCase()
+                            .includes("cod") ? (
+                            <>
+                              <span className="text-red-600">COD</span> • ₹
+                              {shipmentOrder?.total_amount}
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-emerald-600">Prepaid</span>{" "}
+                              • ₹{shipmentOrder?.total_amount}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Weight Calc */}
+                    <div className="bg-white p-4 lg:p-5 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-between">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest flex items-center gap-1.5">
+                          <Scale size={14} className="text-zinc-400" /> Weight
+                          Summary
+                        </div>
                         <Info
                           size={14}
-                          color="#adb5bd"
-                          style={{ cursor: "pointer" }}
+                          className="text-zinc-300 hover:text-zinc-500 cursor-help transition-colors"
                         />
-                      </OverlayTrigger>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            color: primaryDark,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {shipmentDetails.weight.actual} kg
-                        </div>
-                        <div
-                          className="text-muted"
-                          style={{ fontSize: "10px" }}
-                        >
-                          Actual
-                        </div>
                       </div>
-                      <div
-                        className="text-muted"
-                        style={{ fontSize: "14px", opacity: 0.5 }}
-                      >
-                        /
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            color: primaryDark,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {shipmentDetails.weight.volumetric} kg
+                      <div className="flex items-center justify-between text-center bg-zinc-50 rounded-lg p-2.5 border border-zinc-100">
+                        <div>
+                          <div className="text-[13px] font-bold text-zinc-800">
+                            {shipmentDetails.weight.actual} kg
+                          </div>
+                          <div className="text-[10px] text-zinc-400 font-medium">
+                            Actual
+                          </div>
                         </div>
-                        <div
-                          className="text-muted"
-                          style={{ fontSize: "10px" }}
-                        >
-                          Volumetric
+                        <div className="text-zinc-300">/</div>
+                        <div>
+                          <div className="text-[13px] font-bold text-zinc-800">
+                            {shipmentDetails.weight.volumetric} kg
+                          </div>
+                          <div className="text-[10px] text-zinc-400 font-medium">
+                            Volumetric
+                          </div>
                         </div>
-                      </div>
-                      <div
-                        className="text-muted"
-                        style={{ fontSize: "14px", opacity: 0.5 }}
-                      >
-                        =
-                      </div>
-                      <div
-                        className="text-end px-2 py-1 rounded"
-                        style={{ backgroundColor: "rgba(40, 167, 69, 0.1)" }}
-                      >
-                        <div
-                          style={{
-                            color: "#28a745",
-                            fontSize: "14px",
-                            fontWeight: 800,
-                          }}
-                        >
-                          {shipmentDetails.weight.billable} kg
-                        </div>
-                        <div
-                          className="fw-bold"
-                          style={{ fontSize: "9px", color: "#28a745" }}
-                        >
-                          BILLABLE
+                        <div className="text-zinc-300">=</div>
+                        <div className="bg-emerald-50 border border-emerald-100 px-3 py-1 rounded shadow-sm">
+                          <div className="text-[14px] font-black text-emerald-600">
+                            {shipmentDetails.weight.billable} kg
+                          </div>
+                          <div className="text-[9px] font-bold text-emerald-600/70 tracking-widest mt-0.5">
+                            BILLED
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Col>
-            </Row>
 
-            {/* ================= 2. PACKAGE SELECTION ================= */}
-            <div>
-              <h6
-                className="fw-bold text-uppercase mb-2"
-                style={{
-                  fontSize: "11px",
-                  color: "#6c757d",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Select Packaging{" "}
-                <span className="text-lowercase fw-normal ms-1">
-                  ({shipmentDetails.recommendedPacks.length} options)
-                </span>
-              </h6>
-              <Row className="g-3">
-                {shipmentDetails.recommendedPacks.map(
-                  (pack: any, index: number) => {
-                    const isSelected = selectedPackageIndex === index;
-                    return (
-                      <Col md={6} lg={4} key={index}>
-                        <div
-                          onClick={() => setSelectedPackageIndex(index)}
-                          className="d-flex align-items-center p-3 position-relative"
-                          style={{
-                            backgroundColor: isSelected ? "#FFF7F0" : "#ffffff",
-                            border: isSelected
-                              ? `1px solid ${primaryAccent}`
-                              : cardBorder,
-                            borderRadius: "10px",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                            boxShadow: isSelected
-                              ? "0 4px 12px rgba(245, 137, 30, 0.15)"
-                              : softShadow,
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isSelected)
-                              e.currentTarget.style.transform =
-                                "translateY(-2px)";
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isSelected)
-                              e.currentTarget.style.transform = "translateY(0)";
-                          }}
-                        >
-                          {isSelected && (
-                            <CheckCircle2
-                              color={primaryAccent}
-                              size={18}
-                              style={{
-                                position: "absolute",
-                                top: "-8px",
-                                right: "-8px",
-                                backgroundColor: "#fff",
-                                borderRadius: "50%",
-                              }}
-                            />
-                          )}
-
-                          <div
-                            className="me-3 p-2 rounded-circle"
-                            style={{
-                              backgroundColor: isSelected
-                                ? "rgba(245, 137, 30, 0.1)"
-                                : "#f8f9fa",
-                            }}
-                          >
-                            <PackageOpen
-                              size={20}
-                              color={isSelected ? primaryAccent : "#6c757d"}
-                            />
-                          </div>
-
-                          <div className="flex-grow-1">
+                  {/* --- 2. PACKAGING --- */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <h6 className="text-[12px] font-bold text-zinc-800 uppercase tracking-wider m-0">
+                        Packaging Selection
+                      </h6>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {shipmentDetails.recommendedPacks.map(
+                        (pack: any, index: number) => {
+                          const isSelected = selectedPackageIndex === index;
+                          return (
                             <div
-                              className="fw-bold text-truncate"
-                              style={{
-                                fontSize: "13px",
-                                color: isSelected ? "#a05206" : primaryDark,
-                              }}
+                              key={index}
+                              onClick={() => setSelectedPackageIndex(index)}
+                              className={`relative p-4 rounded-xl cursor-pointer transition-all duration-200 flex items-center border ${
+                                isSelected
+                                  ? "bg-orange-50/40 border-[#F5891E] shadow-[0_2px_12px_rgba(245,137,30,0.12)] ring-1 ring-[#F5891E]/30"
+                                  : "bg-white border-zinc-200 shadow-sm hover:border-zinc-300"
+                              }`}
                             >
-                              {pack.name}
-                            </div>
-                            <div
-                              className="text-muted"
-                              style={{ fontSize: "11px" }}
-                            >
-                              {pack.length} × {pack.breadth} × {pack.height} cm
-                            </div>
-                          </div>
-
-                          <div
-                            className="text-end ps-2"
-                            style={{ borderLeft: "1px solid #e9ecef" }}
-                          >
-                            <div
-                              className="fw-bold"
-                              style={{ fontSize: "12px", color: primaryDark }}
-                            >
-                              ₹{pack.packingCost}
-                            </div>
-                            <div
-                              className="text-muted"
-                              style={{ fontSize: "10px" }}
-                            >
-                              Max {pack.maxWeight}kg
-                            </div>
-                          </div>
-                        </div>
-                      </Col>
-                    );
-                  }
-                )}
-              </Row>
-            </div>
-
-            {/* ================= 3. COURIER OPTIONS ================= */}
-            <div
-              className="d-flex flex-column flex-grow-1 bg-white p-3"
-              style={{
-                borderRadius: "12px",
-                border: cardBorder,
-                boxShadow: softShadow,
-              }}
-            >
-              {/* Controls Toolbar */}
-              <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 pb-3 border-bottom gap-3">
-                <div className="d-flex align-items-center gap-2">
-                  <h6
-                    className="fw-bold mb-0 me-2"
-                    style={{ color: primaryDark, fontSize: "15px" }}
-                  >
-                    Available Couriers
-                  </h6>
-                  <Badge
-                    bg="light"
-                    text="dark"
-                    style={{ border: "1px solid #dee2e6", fontWeight: 600 }}
-                  >
-                    {couriers.length} Options
-                  </Badge>
-                </div>
-
-                <div className="d-flex gap-3 align-items-center">
-                  {/* Sorting */}
-                  <div
-                    className="d-flex rounded"
-                    style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "4px",
-                      border: cardBorder,
-                    }}
-                  >
-                    {["recommended", "cheapest", "fastest", "best-rated"].map(
-                      (sortOption) => (
-                        <button
-                          key={sortOption}
-                          onClick={() => setSortBy(sortOption)}
-                          style={{
-                            border: "none",
-                            background:
-                              sortBy === sortOption ? "#fff" : "transparent",
-                            color:
-                              sortBy === sortOption ? primaryDark : "#6c757d",
-                            padding: "4px 12px",
-                            fontSize: "11px",
-                            fontWeight: sortBy === sortOption ? 700 : 500,
-                            borderRadius: "4px",
-                            boxShadow:
-                              sortBy === sortOption
-                                ? "0 1px 3px rgba(0,0,0,0.1)"
-                                : "none",
-                            textTransform: "capitalize",
-                            transition: "all 0.2s",
-                          }}
-                        >
-                          {sortOption.replace("-", " ")}
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  {/* Filter Toggle */}
-                  <Form.Select
-                    size="sm"
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    style={{
-                      width: "120px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      borderColor: "#dee2e6",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="air">✈️ Air Only</option>
-                    <option value="surface">🚚 Surface Only</option>
-                  </Form.Select>
-                </div>
-              </div>
-
-              {/* Courier List */}
-              <div
-                className="p-3"
-                style={{ overflowY: "auto", maxHeight: "40vh" }}
-              >
-                {couriers.length === 0 ? (
-                  <div
-                    className="text-center py-4 text-muted"
-                    style={{ fontSize: "13px" }}
-                  >
-                    No couriers match your filter criteria.
-                  </div>
-                ) : (
-                  couriers.map((courier: any) => {
-                    // Update variables to use `_id`
-                    const isCheapest = courier._id === cheapestId;
-                    const isFastest = courier._id === fastestId;
-                    const isBestRated = courier._id === bestRatedId;
-                    const isRecommended =
-                      sortBy === "recommended" &&
-                      courier._id === couriers[0]?._id;
-
-                    // Derive surface flag safely from name if is_surface is missing
-                    const isSurfaceCourier =
-                      courier.is_surface === true ||
-                      courier.name?.toLowerCase().includes("surface");
-
-                    return (
-                      <div
-                        key={courier._id} // Changed to _id
-                        className="mb-3 p-3 position-relative"
-                        style={{
-                          border: isRecommended
-                            ? `1px solid ${primaryAccent}80`
-                            : cardBorder,
-                          backgroundColor: isRecommended
-                            ? "#FFFAF5"
-                            : "#ffffff",
-                          borderRadius: "10px",
-                          transition: "all 0.2s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.boxShadow =
-                            "0 6px 16px rgba(0,0,0,0.06)";
-                          e.currentTarget.style.borderColor = isRecommended
-                            ? primaryAccent
-                            : "#ced4da";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.boxShadow = "none";
-                          e.currentTarget.style.borderColor = isRecommended
-                            ? `1px solid ${primaryAccent}80`
-                            : cardBorder;
-                        }}
-                      >
-                        {/* Smart Tags Array */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "-10px",
-                            left: "16px",
-                            display: "flex",
-                            gap: "6px",
-                          }}
-                        >
-                          {isRecommended && (
-                            <span
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, #F5891E, #E0730A)",
-                                color: "#fff",
-                                padding: "2px 10px",
-                                borderRadius: "12px",
-                                fontSize: "9px",
-                                fontWeight: 700,
-                              }}
-                            >
-                              ★ Recommended
-                            </span>
-                          )}
-                          {isCheapest && (
-                            <span
-                              style={{
-                                backgroundColor: "#E6F4EA",
-                                color: "#137333",
-                                border: "1px solid #CEEAD6",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                fontSize: "9px",
-                                fontWeight: 700,
-                              }}
-                            >
-                              📉 Cheapest
-                            </span>
-                          )}
-                          {isFastest && (
-                            <span
-                              style={{
-                                backgroundColor: "#E8F0FE",
-                                color: "#1967D2",
-                                border: "1px solid #D2E3FC",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                fontSize: "9px",
-                                fontWeight: 700,
-                              }}
-                            >
-                              ⚡ Fastest
-                            </span>
-                          )}
-                          {isBestRated && (
-                            <span
-                              style={{
-                                backgroundColor: "#FEF7E0",
-                                color: "#B06000",
-                                border: "1px solid #FCE8B2",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                fontSize: "9px",
-                                fontWeight: 700,
-                              }}
-                            >
-                              🏆 Top Rated
-                            </span>
-                          )}
-                        </div>
-
-                        <Row className="align-items-center mt-2">
-                          {/* LEFT: Courier Identity */}
-                          <Col md={4} className="d-flex align-items-center">
-                            <div
-                              className="d-flex justify-content-center align-items-center me-3"
-                              style={{
-                                width: "42px",
-                                height: "42px",
-                                borderRadius: "8px",
-                                backgroundColor: isSurfaceCourier
-                                  ? "#F3F4F6"
-                                  : "#EBF5FF",
-                                color: isSurfaceCourier ? "#4B5563" : "#3B82F6",
-                              }}
-                            >
-                              {isSurfaceCourier ? (
-                                <Truck size={20} />
-                              ) : (
-                                <Plane size={20} />
-                              )}
-                            </div>
-                            <div>
-                              <div
-                                className="fw-bold"
-                                style={{ fontSize: "14px", color: primaryDark }}
-                              >
-                                {courier.courier_name}
-                              </div>
-                              <div
-                                className="d-flex align-items-center gap-2 mt-1"
-                                style={{ fontSize: "11px" }}
-                              >
-                                <span className="d-flex align-items-center gap-1 text-muted">
-                                  <Star
-                                    size={12}
-                                    fill="#F5891E"
-                                    color="#F5891E"
+                              {isSelected && (
+                                <div className="absolute -top-2 -right-2 bg-white rounded-full">
+                                  <CheckCircle2
+                                    className="text-[#F5891E]"
+                                    size={20}
                                   />
-                                  <span
-                                    style={{
-                                      fontWeight: 600,
-                                      color: primaryDark,
-                                    }}
-                                  >
-                                    {courier.rating}
-                                  </span>
-                                  /5
-                                </span>
-                                <span style={{ color: "#dee2e6" }}>|</span>
-                                <span className="text-muted">
-                                  {isSurfaceCourier ? "Surface" : "Air"}
-                                </span>
-                              </div>
-                            </div>
-                          </Col>
-
-                          {/* MIDDLE: Delivery Stats */}
-                          <Col
-                            md={4}
-                            className="text-center"
-                            style={{
-                              borderLeft: cardBorder,
-                              borderRight: cardBorder,
-                            }}
-                          >
-                            <div className="d-flex justify-content-around align-items-center">
-                              <div>
-                                <div
-                                  className="text-muted text-uppercase fw-bold mb-1"
-                                  style={{
-                                    fontSize: "9px",
-                                    letterSpacing: "0.5px",
-                                  }}
-                                >
-                                  Est. Delivery
                                 </div>
-                                <div
-                                  className="fw-bold"
-                                  style={{
-                                    color: primaryDark,
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  {courier.etd}
-                                </div>
-                              </div>
-                              <div>
-                                <div
-                                  className="text-muted text-uppercase fw-bold mb-1"
-                                  style={{
-                                    fontSize: "9px",
-                                    letterSpacing: "0.5px",
-                                  }}
-                                >
-                                  Transit Time
-                                </div>
-                                <div
-                                  className="fw-bold"
-                                  style={{
-                                    color: primaryDark,
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  {courier.estimated_delivery_days} Days
-                                </div>
-                              </div>
-                              <div>
-                                <div
-                                  className="text-muted text-uppercase fw-bold mb-1"
-                                  style={{
-                                    fontSize: "9px",
-                                    letterSpacing: "0.5px",
-                                  }}
-                                >
-                                  Reliability
-                                </div>
-                                <div
-                                  className="fw-bold"
-                                  style={{ color: "#28a745", fontSize: "13px" }}
-                                >
-                                  {courier.rto_performance}/10
-                                </div>
-                              </div>
-                            </div>
-                          </Col>
-
-                          {/* RIGHT: Price & CTA */}
-                          <Col
-                            md={4}
-                            className="d-flex flex-row align-items-center justify-content-end gap-4"
-                          >
-                            <div className="text-end">
+                              )}
                               <div
-                                className="text-muted text-uppercase fw-bold mb-1"
-                                style={{
-                                  fontSize: "9px",
-                                  letterSpacing: "0.5px",
-                                }}
+                                className={`p-2.5 rounded-full mr-3 shrink-0 ${
+                                  isSelected
+                                    ? "bg-orange-100 text-[#F5891E]"
+                                    : "bg-zinc-100 text-zinc-500"
+                                }`}
                               >
-                                Final Rate
+                                <PackageOpen size={18} />
                               </div>
-                              <div
-                                className="fw-bold"
-                                style={{
-                                  fontSize: "20px",
-                                  color: primaryDark,
-                                  lineHeight: 1,
-                                }}
-                              >
-                                {/* Changed from courier.rate to courier.total_amount */}
-                                ₹{Number(courier.total_amount).toFixed(2)}
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className={`text-[13px] font-bold truncate ${
+                                    isSelected
+                                      ? "text-orange-950"
+                                      : "text-zinc-900"
+                                  }`}
+                                >
+                                  {pack.name}
+                                </div>
+                                <div className="text-[11px] text-zinc-500 mt-0.5">
+                                  {pack.length}×{pack.breadth}×{pack.height} cm
+                                </div>
                               </div>
                             </div>
-                            <Button
-                              className="border-0 shadow-sm"
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, #000434 0%, #1a1e4a 100%)",
-                                fontWeight: 600,
-                                padding: "8px 20px",
-                                borderRadius: "8px",
-                                fontSize: "12px",
-                                transition: "all 0.3s ease",
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background =
-                                  "linear-gradient(135deg, #F5891E 0%, #d97716 100%)";
-                                e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.boxShadow =
-                                  "0 4px 12px rgba(245, 137, 30, 0.3)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background =
-                                  "linear-gradient(135deg, #000434 0%, #1a1e4a 100%)";
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.boxShadow =
-                                  "0 2px 4px rgba(0,0,0,0.1)";
-                              }}
-                              onClick={() => handleBookShipment(courier._id)} // Pass _id instead of id
-                            >
-                              Ship Now
-                            </Button>
-                          </Col>
-                        </Row>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
+
+                  {/* --- 3. COURIERS LIST --- */}
+                  <div className="bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col flex-1">
+                    {/* Toolbar */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 lg:px-6 border-b border-zinc-200 gap-4 bg-zinc-50/50 rounded-t-xl">
+                      <div className="flex items-center gap-2">
+                        <h6 className="text-[14px] font-bold text-zinc-900 m-0">
+                          Available Routes
+                        </h6>
+                        <span className="bg-white text-zinc-600 px-2 py-0.5 rounded text-[11px] font-bold border border-zinc-200 shadow-sm">
+                          {couriers.length} Found
+                        </span>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+
+                      <div className="flex items-center gap-2.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                        <div className="flex p-1 bg-zinc-200/60 rounded-lg shrink-0">
+                          {[
+                            "recommended",
+                            "cheapest",
+                            "fastest",
+                            "best-rated",
+                          ].map((sortOption) => (
+                            <button
+                              key={sortOption}
+                              onClick={() => setSortBy(sortOption)}
+                              className={`px-4 py-1.5 text-[11px] font-bold rounded-md capitalize transition-all duration-200 ${
+                                sortBy === sortOption
+                                  ? "bg-white text-zinc-900 shadow-sm"
+                                  : "text-zinc-500 hover:text-zinc-800"
+                              }`}
+                            >
+                              {sortOption.replace("-", " ")}
+                            </button>
+                          ))}
+                        </div>
+                        <select
+                          value={filterType}
+                          onChange={(e) => setFilterType(e.target.value)}
+                          className="bg-white border border-zinc-200 text-zinc-700 text-[11px] font-bold rounded-lg focus:ring-[#F5891E] focus:border-[#F5891E] px-3 py-2 outline-none cursor-pointer shrink-0 shadow-sm"
+                        >
+                          <option value="all">All Modes</option>
+                          <option value="air">✈️ Air</option>
+                          <option value="surface">🚚 Surface</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Courier List - Wide Horizontal Layout */}
+                    <div className="p-2 sm:p-4 lg:p-6 overflow-y-auto max-h-[55vh] bg-zinc-50/30 rounded-b-xl space-y-4">
+                      {couriers.length === 0 ? (
+                        <div className="text-center py-10 text-zinc-400 text-[13px] font-medium">
+                          No couriers match your criteria.
+                        </div>
+                      ) : (
+                        couriers.map((courier: any) => {
+                          const isRecommended =
+                            sortBy === "recommended" &&
+                            courier._id === couriers[0]?._id;
+                          const isSurfaceCourier =
+                            courier.is_surface === true ||
+                            courier.name?.toLowerCase().includes("surface");
+
+                          return (
+                            <motion.div
+                              layout
+                              key={courier._id}
+                              className={`relative bg-white p-4 lg:p-5 rounded-xl border transition-all duration-200 hover:shadow-md ${
+                                isRecommended
+                                  ? "border-[#F5891E]/40 shadow-[0_2px_16px_rgba(245,137,30,0.06)]"
+                                  : "border-zinc-200 shadow-sm"
+                              }`}
+                            >
+                              {/* Smart Tags Array */}
+                              <div className="absolute -top-3 left-4 flex gap-1.5 z-10">
+                                {isRecommended && (
+                                  <Badge
+                                    icon={
+                                      <Star size={10} className="fill-white" />
+                                    }
+                                    text="Recommended"
+                                    bg="bg-gradient-to-r from-[#F5891E] to-[#E0730A]"
+                                    textCol="text-white"
+                                    border="border-transparent"
+                                  />
+                                )}
+                                {courier._id === cheapestId && (
+                                  <Badge
+                                    icon={<TrendingDown size={10} />}
+                                    text="Cheapest"
+                                    bg="bg-emerald-100"
+                                    textCol="text-emerald-700"
+                                    border="border-emerald-200"
+                                  />
+                                )}
+                                {courier._id === fastestId && (
+                                  <Badge
+                                    icon={<Zap size={10} />}
+                                    text="Fastest"
+                                    bg="bg-blue-100"
+                                    textCol="text-blue-700"
+                                    border="border-blue-200"
+                                  />
+                                )}
+                                {courier._id === bestRatedId && (
+                                  <Badge
+                                    icon={<Award size={10} />}
+                                    text="Top Rated"
+                                    bg="bg-amber-100"
+                                    textCol="text-amber-700"
+                                    border="border-amber-200"
+                                  />
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-0 items-center mt-2 lg:mt-0">
+                                {/* 1. Courier Identity (Col 3) */}
+                                <div className="lg:col-span-3 flex items-center gap-3">
+                                  <div
+                                    className={`flex justify-center items-center w-12 h-12 rounded-xl shrink-0 border ${
+                                      isSurfaceCourier
+                                        ? "bg-zinc-50 border-zinc-200 text-zinc-500"
+                                        : "bg-blue-50 border-blue-100 text-blue-500"
+                                    }`}
+                                  >
+                                    {isSurfaceCourier ? (
+                                      <Truck size={22} />
+                                    ) : (
+                                      <Plane size={22} />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-[15px] font-bold text-zinc-900 truncate">
+                                      {courier.courier_name}
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1 text-[11px]">
+                                      <span className="flex items-center gap-1 bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-700 font-bold border border-zinc-200">
+                                        <Star
+                                          size={10}
+                                          className="text-[#F5891E] fill-[#F5891E]"
+                                        />{" "}
+                                        {courier.rating}
+                                      </span>
+                                      <span className="text-zinc-500 font-medium">
+                                        {isSurfaceCourier
+                                          ? "Surface Cargo"
+                                          : "Air Express"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* 2. Delivery Stats (Col 3) */}
+                                <div className="lg:col-span-3 flex lg:justify-center gap-8 lg:gap-10 lg:border-l lg:border-zinc-100 lg:px-6">
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">
+                                      Delivery By
+                                    </span>
+                                    <span className="text-[13px] font-bold text-zinc-900">
+                                      {courier.etd}
+                                    </span>
+                                    <span className="text-[11px] text-zinc-500 font-medium">
+                                      {courier.estimated_delivery_days} transit
+                                      days
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">
+                                      Risk Score
+                                    </span>
+                                    <span className="text-[13px] font-bold text-emerald-600">
+                                      {courier.rto_performance}/10
+                                    </span>
+                                    <span className="text-[11px] text-zinc-500 font-medium">
+                                      Reliability
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* 3. Detailed Price Breakdown (Col 4) */}
+                                <div className="lg:col-span-4 lg:border-l lg:border-zinc-100 lg:px-6">
+                                  <div className="flex flex-col gap-1.5 text-[11px] text-zinc-600">
+                                    <div className="flex justify-between items-center">
+                                      <span>Freight Charge</span>
+                                      <span className="font-semibold text-zinc-900">
+                                        ₹{courier.freight_charge || "0.00"}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span>COD Fees</span>
+                                      <span className="font-semibold text-zinc-900">
+                                        ₹{courier.cod_charges || "0.00"}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span>Other Surcharges</span>
+                                      <span className="font-semibold text-zinc-900">
+                                        ₹{courier.other_charges || "0.00"}
+                                      </span>
+                                    </div>
+                                    {/* RTO displayed subtly as an extra condition */}
+                                    <div className="flex justify-between items-center text-red-500/80 mt-1 border-t border-zinc-100 pt-1">
+                                      <span className="italic">
+                                        RTO (If Failed)
+                                      </span>
+                                      <span className="font-medium">
+                                        ₹{courier.rto_charges || "0.00"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* 4. Total & Action (Col 2) */}
+                                <div className="lg:col-span-2 flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-3 lg:border-l lg:border-zinc-100 lg:pl-6">
+                                  <div className="text-left lg:text-right">
+                                    <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">
+                                      Total
+                                    </div>
+                                    <div className="text-[20px] lg:text-[22px] font-bold text-neutral-900 leading-none">
+                                      ₹{Number(courier.total_amount).toFixed(2)}
+                                    </div>
+                                  </div>
+
+                                  {/* Sleek, aesthetic "Book" button */}
+                                  <button
+                                    onClick={() =>
+                                      handleBookShipment(courier._id)
+                                    }
+                                    className="group relative inline-flex items-center justify-center gap-2 px-5 py-2 lg:py-2.5 text-[12px] font-bold text-white bg-neutral-700 rounded-full overflow-hidden transition-all duration-300 hover:bg-[#F5891E] shadow-sm hover:shadow-[0_4px_12px_rgba(245,137,30,0.3)] w-32 shrink-0"
+                                  >
+                                    <span>Book</span>
+                                    <ArrowRight
+                                      size={14}
+                                      className="transition-transform duration-300 group-hover:translate-x-1"
+                                    />
+                                  </button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Loading State */
+                <div className="flex flex-col items-center justify-center py-24 min-h-[400px]">
+                  <Loader2
+                    className="animate-spin text-[#F5891E] mb-4"
+                    size={44}
+                  />
+                  <h6 className="text-[18px] font-bold text-zinc-900 mb-1 tracking-tight">
+                    Analyzing Routes...
+                  </h6>
+                  <p className="text-[14px] text-zinc-500 font-medium">
+                    Calculating freight, COD charges, and delivery timelines.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-        ) : (
-          /* Loading State */
-          <div
-            className="d-flex flex-column align-items-center justify-content-center py-5"
-            style={{ minHeight: "400px" }}
-          >
-            <div
-              className="spinner-border mb-3"
-              style={{
-                color: primaryAccent,
-                width: "2.5rem",
-                height: "2.5rem",
-              }}
-              role="status"
-            ></div>
-            <h6 className="fw-bold" style={{ color: primaryDark }}>
-              Analyzing Best Shipping Routes...
-            </h6>
-            <p className="text-muted" style={{ fontSize: "13px" }}>
-              Comparing rates, delivery times, and reliability.
-            </p>
-          </div>
-        )}
-      </Modal.Body>
-    </Modal>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 
-export default ShipmentModal;
+// Reusable micro-component for Smart Tags
+const Badge = ({
+  text,
+  icon,
+  bg,
+  textCol,
+  border,
+}: {
+  text: string;
+  icon: React.ReactNode;
+  bg: string;
+  textCol: string;
+  border: string;
+}) => (
+  <span
+    className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm ${bg} ${textCol} border ${border}`}
+  >
+    {icon} {text}
+  </span>
+);

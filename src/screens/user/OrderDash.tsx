@@ -35,6 +35,7 @@ import {
   LabelPrinterRef,
 } from "../../components/order-dash/LabelPreviewModal";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export interface Order {
   _id: string;
@@ -408,35 +409,70 @@ const OrderDash = () => {
 
   return (
     <>
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-        <div>
-          <h1 className="h4 fw-bold text-dark mb-1">Orders Management</h1>
-          <p className="text-secondary small mb-0">
-            Streamline your shipping and fulfillment
-          </p>
-        </div>
-        <div className="d-flex gap-2 flex-wrap">
-          <button
-            className="fw-semibold tab-btn activehover"
-            onClick={() => setShow(true)}
-          >
-            + Add Order
-          </button>
-          <Link className="fw-semibold tab-btn activehover" to={"/user/orders"}>
-            Old Orders
-          </Link>
-        </div>
-      </div>
-      <div className="custom-tabs mb-3">
-        {tabs.map((tabi) => (
-          <div
-            key={tabi.key}
-            className={`tab-btn ${tabi.key === tab ? "active" : ""}`}
-            onClick={() => setTab(tabi.key)}
-          >
-            {tabi.icon} {tabi.label}
+      <div className="w-full">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">
+              Orders Management
+            </h1>
+            <p className="text-sm text-gray-500">
+              Streamline your shipping and fulfillment
+            </p>
           </div>
-        ))}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/user/orders"
+              className="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm"
+            >
+              Old Orders
+            </Link>
+            <button
+              onClick={() => setShow(true)}
+              className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+            >
+              + Add Order
+            </button>
+          </div>
+        </div>
+
+        {/* Modern Segmented Tabs Section */}
+        <div className="flex items-center p-1 bg-gray-100/80 backdrop-blur-sm rounded-2xl w-max mb-6 border border-gray-200/50">
+          {tabs.map((tabs) => {
+            const isActive = tab === tabs.key;
+
+            return (
+              <button
+                key={tabs.key}
+                onClick={() => setTab(tabs.key)}
+                className={`relative flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-xl transition-colors duration-300 outline-none ${
+                  isActive
+                    ? "text-gray-900"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                style={{ WebkitTapHighlightColor: "transparent" }}
+              >
+                {/* The Sliding Pill Background */}
+                {isActive && (
+                  <motion.div
+                    layoutId="active-tab-pill"
+                    className="absolute inset-0 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+
+                {/* Tab Content (Z-index ensures it sits above the sliding pill) */}
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className={isActive ? "text-[#F5891E]" : "opacity-70"}>
+                    {tabs.icon}
+                  </span>
+                  {tabs.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
       <OrderTable
         orders={orders}

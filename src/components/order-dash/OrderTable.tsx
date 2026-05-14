@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Badge, Button, Dropdown, Collapse } from "react-bootstrap";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreVertical,
   Flag,
@@ -10,9 +10,12 @@ import {
   Store,
   Plane,
   ChevronDown,
-  ChevronUp,
   Package,
   Loader2,
+  Printer,
+  Box,
+  XCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 // --- Types / Interfaces ---
@@ -33,34 +36,32 @@ export interface OrderTableProps {
   onCancelOrder: (orderId: string) => void;
 }
 
+// --- Modern Skeleton Loader (Deepened Neutrals) ---
 const SkeletonRow = () => (
-  <tr className="placeholder-glow">
-    <td className="p-3">
-      <span className="placeholder col-12 rounded"></span>
+  <tr className="border-b border-slate-100 animate-pulse bg-white">
+    <td className="p-4">
+      <div className="h-4 w-4 bg-slate-200 rounded"></div>
     </td>
-    <td className="p-3">
-      <span className="placeholder col-8 rounded"></span>
-      <br />
-      <span className="placeholder col-6 mt-1 rounded"></span>
+    <td className="p-4">
+      <div className="h-4 w-24 bg-slate-200 rounded mb-2"></div>
+      <div className="h-3 w-32 bg-slate-100 rounded"></div>
     </td>
-    <td className="p-3">
-      <span className="placeholder col-10 rounded"></span>
-      <br />
-      <span className="placeholder col-7 mt-1 rounded"></span>
+    <td className="p-4">
+      <div className="h-16 w-full bg-slate-100/80 rounded-xl border border-slate-200"></div>
     </td>
-    <td className="p-3">
-      <span className="placeholder col-9 rounded"></span>
-      <br />
-      <span className="placeholder col-8 mt-1 rounded"></span>
+    <td className="p-4">
+      <div className="h-4 w-28 bg-slate-200 rounded mb-2"></div>
+      <div className="h-3 w-40 bg-slate-100 rounded"></div>
     </td>
-    <td className="p-3">
-      <span className="placeholder col-6 rounded"></span>
+    <td className="p-4">
+      <div className="h-6 w-20 bg-slate-100 rounded-full mb-2"></div>
+      <div className="h-4 w-24 bg-slate-100 rounded"></div>
     </td>
-    <td className="p-3">
-      <span className="placeholder col-5 rounded"></span>
+    <td className="p-4">
+      <div className="h-6 w-24 bg-slate-100 rounded-md"></div>
     </td>
-    <td className="p-3">
-      <span className="placeholder col-8 rounded"></span>
+    <td className="p-4">
+      <div className="h-8 w-20 bg-slate-200 rounded-lg float-right"></div>
     </td>
   </tr>
 );
@@ -79,34 +80,49 @@ const OrdersTable: React.FC<OrderTableProps> = ({
   onAutoBook,
   onCancelOrder,
 }) => {
-  // State to track which rows have their multiple items expanded
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [shipLoading, setShipLoading] = useState<string | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const tableRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        tableRef.current &&
+        !tableRef.current.contains(event.target as Node)
+      ) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const toggleItems = (orderId: string) => {
     const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(orderId)) {
-      newExpanded.delete(orderId);
-    } else {
-      newExpanded.add(orderId);
-    }
+    if (newExpanded.has(orderId)) newExpanded.delete(orderId);
+    else newExpanded.add(orderId);
     setExpandedItems(newExpanded);
   };
+
   const handleShipNow = async (order: any) => {
     setShipLoading(order._id);
     await onShipNow(order);
     setShipLoading(null);
   };
-  const getStatusBadgeVariant = (status: string) => {
+
+  // Deepened badge colors for better contrast against white rows
+  const getStatusStyle = (status: string) => {
     const s = status?.toLowerCase() || "";
     if (s.includes("new") || s.includes("open"))
-      return { bg: "bg-primary-subtle", text: "text-primary" };
+      return "bg-blue-100/60 text-blue-700 border-blue-200";
     if (s.includes("delivered"))
-      return { bg: "bg-success-subtle", text: "text-success" };
+      return "bg-emerald-100/60 text-emerald-700 border-emerald-200";
     if (s.includes("transit") || s.includes("shipped"))
-      return { bg: "bg-info-subtle", text: "text-info" };
+      return "bg-indigo-100/60 text-indigo-700 border-indigo-200";
     if (s.includes("cancelled") || s.includes("rto"))
-      return { bg: "bg-danger-subtle", text: "text-danger" };
-    return { bg: "bg-secondary-subtle", text: "text-secondary" };
+      return "bg-red-100/60 text-red-700 border-red-200";
+    return "bg-slate-100 text-slate-700 border-slate-300";
   };
 
   const isAllSelected =
@@ -114,72 +130,33 @@ const OrdersTable: React.FC<OrderTableProps> = ({
 
   return (
     <div
-      className="bg-white rounded-3 shadow-sm border"
-      style={{ minHeight: "500px", overflow: "hidden" }}
+      ref={tableRef}
+      className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible min-h-125"
     >
-      <div className="table-responsive">
-        <table
-          className="table table-hover align-middle mb-0 custom-table"
-          style={{ fontSize: "13.5px" }}
-        >
-          <thead className="bg-light text-secondary">
-            <tr>
-              <th
-                style={{ width: "40px" }}
-                className="text-center py-3 border-bottom-0"
-              >
+      <div className="w-full overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            {/* Darker, structured neutral header to anchor the table */}
+            <tr className="bg-slate-100/80 text-slate-600 text-[11px] uppercase tracking-wider font-bold border-b-2 border-slate-200">
+              <th className="p-4 text-center w-12">
                 <input
                   type="checkbox"
-                  className="form-check-input shadow-none cursor-pointer border-secondary-subtle"
+                  className="w-4 h-4 rounded border-slate-300 text-[#F5891E] focus:ring-[#F5891E] transition-colors cursor-pointer"
                   checked={isAllSelected}
                   onChange={onSelectAll}
                   disabled={isLoading || orders.length === 0}
                 />
               </th>
-              <th
-                className="fw-semibold py-3 border-bottom-0 text-uppercase"
-                style={{ fontSize: "11px", letterSpacing: "0.5px" }}
-              >
-                Order Info
-              </th>
-              <th
-                className="fw-semibold py-3 border-bottom-0 text-uppercase"
-                style={{
-                  fontSize: "11px",
-                  letterSpacing: "0.5px",
-                  width: "28%",
-                }}
-              >
-                Items & Value
-              </th>
-              <th
-                className="fw-semibold py-3 border-bottom-0 text-uppercase"
-                style={{ fontSize: "11px", letterSpacing: "0.5px" }}
-              >
-                Customer Details
-              </th>
-              <th
-                className="fw-semibold py-3 border-bottom-0 text-uppercase"
-                style={{ fontSize: "11px", letterSpacing: "0.5px" }}
-              >
-                Status & Shipping
-              </th>
-              <th
-                className="fw-semibold py-3 border-bottom-0 text-uppercase"
-                style={{ fontSize: "11px", letterSpacing: "0.5px" }}
-              >
-                Risk Flags
-              </th>
-              <th
-                className="text-end fw-semibold py-3 pe-4 border-bottom-0 text-uppercase"
-                style={{ fontSize: "11px", letterSpacing: "0.5px" }}
-              >
-                Actions
-              </th>
+              <th className="p-4 w-[12%]">Order Info</th>
+              <th className="p-4 w-[25%]">Items & Value</th>
+              <th className="p-4 w-[20%]">Customer Details</th>
+              <th className="p-4 w-[15%]">Status & Shipping</th>
+              <th className="p-4 w-[15%]">Risk Flags</th>
+              <th className="p-4 text-right pr-6 w-[13%]">Actions</th>
             </tr>
           </thead>
 
-          <tbody className="border-top-0">
+          <tbody>
             {isLoading ? (
               <>
                 <SkeletonRow />
@@ -189,11 +166,15 @@ const OrdersTable: React.FC<OrderTableProps> = ({
               </>
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-5">
-                  <div className="d-flex flex-column align-items-center justify-content-center text-muted">
-                    <Package size={48} className="mb-3 opacity-25" />
-                    <h5 className="fw-semibold text-dark">No orders found</h5>
-                    <p className="mb-0" style={{ fontSize: "14px" }}>
+                <td colSpan={7} className="text-center py-24">
+                  <div className="flex flex-col items-center justify-center text-slate-400">
+                    <div className="bg-slate-50 p-4 rounded-full mb-4 border border-slate-100">
+                      <Package size={40} className="opacity-50 stroke-1" />
+                    </div>
+                    <h5 className="text-lg font-semibold text-slate-700 mb-1">
+                      No orders found
+                    </h5>
+                    <p className="text-sm text-slate-500">
                       Adjust your filters or tab selection to see results.
                     </p>
                   </div>
@@ -206,14 +187,11 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                   order.latest_status?.toUpperCase() ||
                   order.order_status?.toUpperCase() ||
                   "NEW";
-
                 const issues = order.issues || [];
                 const hasRedFlags =
                   issues.length > 0 ||
                   !order.customer_phone ||
                   !order.shipping_pincode;
-                const statusColors = getStatusBadgeVariant(statusName);
-
                 const itemsList = order.items || [];
                 const hasMultipleItems = itemsList.length > 1;
                 const isItemsExpanded = expandedItems.has(order._id);
@@ -221,30 +199,34 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                 return (
                   <tr
                     key={order._id}
-                    style={{
-                      backgroundColor: isChecked ? "#f0f7ff" : "transparent",
-                      transition: "all 0.2s ease",
-                    }}
+                    // Added a structural left border highlight when selected
+                    className={`border-b border-slate-100 transition-all duration-200 group relative ${
+                      isChecked
+                        ? "bg-orange-50/50"
+                        : "bg-white hover:bg-slate-50/60"
+                    }`}
                   >
-                    <td className="text-center py-3">
+                    {isChecked && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#F5891E]"></div>
+                    )}
+
+                    {/* 1. Checkbox */}
+                    <td className="p-4 text-center">
                       <input
                         type="checkbox"
-                        className="form-check-input shadow-none cursor-pointer border-secondary-subtle"
+                        className="w-4 h-4 rounded border-slate-300 text-[#F5891E] focus:ring-[#F5891E] transition-colors cursor-pointer"
                         checked={isChecked}
                         onChange={() => onSelectOne(order._id)}
                       />
                     </td>
 
-                    {/* 1. Order Details */}
-                    <td className="py-3">
-                      <div className="d-flex flex-column gap-1">
-                        <span className="fw-bold text-dark fs-6">
+                    {/* 2. Order Info */}
+                    <td className="p-4 align-top">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="font-bold text-slate-900 text-sm tracking-tight">
                           #{order.order_id || order.channel_order_id}
                         </span>
-                        <span
-                          className="text-muted"
-                          style={{ fontSize: "12px" }}
-                        >
+                        <span className="text-slate-500 text-[12px] font-medium">
                           {new Date(
                             order.order_date || order.createdAt
                           ).toLocaleString("en-IN", {
@@ -254,59 +236,49 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                             minute: "2-digit",
                           })}
                         </span>
-                        <div
-                          className="d-flex align-items-center gap-1 text-secondary mt-1 bg-light rounded px-2 py-1 w-auto d-inline-flex"
-                          style={{ fontSize: "11px", width: "fit-content" }}
-                        >
-                          <Store size={12} />
-                          <span className="fw-medium">
-                            {order.channel_account?.channel_account_name ||
-                              "Manual Store"}
-                          </span>
+                        <div className="flex items-center gap-1.5 text-slate-700 mt-1.5 bg-slate-100 rounded-md px-2 py-1 w-max text-[11px] font-semibold border border-slate-200">
+                          <Store size={12} className="text-slate-500" />
+                          {order.channel_account?.channel_account_name ||
+                            "Manual Store"}
                         </div>
                       </div>
                     </td>
 
-                    {/* 2. Items & Value (WITH ACCORDION) */}
-                    <td className="py-3 pe-4">
-                      <div className="d-flex flex-column border rounded-3 p-2 bg-white shadow-sm">
-                        {/* Financial Summary Header */}
-                        <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
-                          <span className="d-flex align-items-center gap-1 fw-bold">
-                            Amount :
-                            <span className="fw-bold fs-6">
+                    {/* 3. Items & Value (Nested Card Design) */}
+                    <td className="p-4 align-top">
+                      <div className="flex flex-col bg-slate-50 rounded-xl p-3.5 border border-slate-200 shadow-sm inner-glow">
+                        {/* Financial Header */}
+                        <div className="flex justify-between items-center mb-3 pb-2.5 border-b border-slate-200/80">
+                          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+                            Amount:{" "}
+                            <span className="font-bold text-[15px] text-slate-900">
                               ₹{order.total_amount}
                             </span>
                           </span>
-                          <Badge
-                            bg="light"
-                            text="dark"
-                            className="border text-uppercase"
-                            style={{ fontSize: "10px", letterSpacing: "0.5px" }}
-                          >
+                          <span className="px-2 py-0.5 bg-white border border-slate-300 rounded text-[10px] uppercase font-bold text-slate-600 tracking-wider shadow-sm">
                             {order.payment_method}
-                          </Badge>
+                          </span>
                         </div>
 
                         {/* Single Item View */}
                         {!hasMultipleItems && itemsList.length > 0 && (
-                          <div className="d-flex flex-column gap-1">
+                          <div className="flex flex-col gap-1.5">
                             <span
-                              className="fw-semibold text-dark text-truncate"
+                              className="font-semibold text-slate-800 text-xs truncate"
                               title={itemsList[0].product?.product_sku_name}
                             >
                               {itemsList[0].product?.product_sku_name ||
                                 "Unknown Product"}
                             </span>
-                            <div
-                              className="d-flex justify-content-between text-muted"
-                              style={{ fontSize: "12px" }}
-                            >
-                              <span>
+                            <div className="flex justify-between items-center text-slate-500 text-[11px]">
+                              <span className="font-medium">
                                 SKU:{" "}
-                                {itemsList[0].product?.product_sku_id || "N/A"}
+                                <span className="text-slate-700">
+                                  {itemsList[0].product?.product_sku_id ||
+                                    "N/A"}
+                                </span>
                               </span>
-                              <span className="fw-semibold bg-light px-2 rounded">
+                              <span className="font-bold bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm text-slate-700">
                                 Qty: {itemsList[0].quantity}
                               </span>
                             </div>
@@ -315,119 +287,106 @@ const OrdersTable: React.FC<OrderTableProps> = ({
 
                         {/* Multiple Items Accordion View */}
                         {hasMultipleItems && (
-                          <div className="d-flex flex-column">
-                            {/* Accordion Toggle */}
+                          <div className="flex flex-col">
                             <div
-                              className="d-flex justify-content-between align-items-center cursor-pointer p-1 rounded hover-bg-light transition-all"
+                              className="flex justify-between items-center cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-200/50 transition-colors"
                               onClick={() => toggleItems(order._id)}
                             >
-                              <div className="d-flex align-items-center gap-2">
-                                <Package size={14} className="text-primary" />
-                                <span
-                                  className="fw-semibold text-primary"
-                                  style={{ fontSize: "13px" }}
-                                >
+                              <div className="flex items-center gap-2">
+                                <Package size={14} className="text-[#F5891E]" />
+                                <span className="font-bold text-[#F5891E] text-xs">
                                   {itemsList.length} Items in Order
                                 </span>
                               </div>
-                              <div className="text-primary bg-primary-subtle rounded-circle p-1 d-flex">
-                                {isItemsExpanded ? (
-                                  <ChevronUp size={14} />
-                                ) : (
-                                  <ChevronDown size={14} />
-                                )}
-                              </div>
+                              <motion.div
+                                animate={{ rotate: isItemsExpanded ? 180 : 0 }}
+                                transition={{
+                                  type: "spring",
+                                  bounce: 0.3,
+                                  duration: 0.4,
+                                }}
+                                className="text-slate-500 bg-white shadow-sm border border-slate-200 rounded-full p-0.5"
+                              >
+                                <ChevronDown size={14} />
+                              </motion.div>
                             </div>
 
-                            {/* Expanded Content */}
-                            <Collapse in={isItemsExpanded}>
-                              <div className="mt-2 pt-2 border-top border-light">
-                                <div
-                                  className="d-flex flex-column gap-2"
-                                  style={{
-                                    maxHeight: "200px",
-                                    overflowY: "auto",
+                            <AnimatePresence initial={false}>
+                              {isItemsExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{
+                                    type: "spring",
+                                    bounce: 0,
+                                    duration: 0.3,
                                   }}
+                                  className="overflow-hidden"
                                 >
-                                  {itemsList.map((item: any, idx: number) => (
-                                    <div
-                                      key={idx}
-                                      className="d-flex flex-column p-2 bg-light rounded border border-light"
-                                    >
-                                      <span
-                                        className="fw-semibold text-dark text-wrap lh-sm mb-1"
-                                        style={{ fontSize: "12px" }}
-                                      >
-                                        {item.product?.product_sku_name ||
-                                          "Unknown Product"}
-                                      </span>
+                                  <div className="mt-2.5 pt-2.5 border-t border-slate-200/80 flex flex-col gap-2 max-h-50 overflow-y-auto custom-scrollbar">
+                                    {itemsList.map((item: any, idx: number) => (
                                       <div
-                                        className="d-flex justify-content-between text-secondary"
-                                        style={{ fontSize: "11px" }}
+                                        key={idx}
+                                        className="flex flex-col p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm"
                                       >
-                                        <span>
-                                          {item.product?.product_sku_id ||
-                                            "No SKU"}
+                                        <span className="font-semibold text-slate-800 text-[11px] leading-snug mb-1.5">
+                                          {item.product?.product_sku_name ||
+                                            "Unknown Product"}
                                         </span>
-                                        <span className="fw-bold text-dark">
-                                          x{item.quantity}
-                                        </span>
+                                        <div className="flex justify-between items-center text-slate-500 text-[10px]">
+                                          <span className="font-medium">
+                                            {item.product?.product_sku_id ||
+                                              "No SKU"}
+                                          </span>
+                                          <span className="font-bold text-slate-900 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                                            x{item.quantity}
+                                          </span>
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </Collapse>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         )}
 
                         {itemsList.length === 0 && (
-                          <span
-                            className="text-muted fst-italic"
-                            style={{ fontSize: "12px" }}
-                          >
+                          <span className="text-slate-400 italic text-xs font-medium">
                             No items found
                           </span>
                         )}
                       </div>
                     </td>
 
-                    {/* 3. Customer Info */}
-                    <td className="py-3">
-                      <div className="d-flex align-items-center gap-2 mb-1">
-                        <span
-                          className="fw-bold text-dark fs-6 text-truncate"
-                          style={{ maxWidth: "160px" }}
-                        >
+                    {/* 4. Customer Info */}
+                    <td className="p-4 align-top">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold text-slate-900 text-sm truncate max-w-40">
                           {order.customer_name}
                         </span>
                         <button
-                          className="btn btn-sm btn-light p-1 rounded-circle text-primary hover-shadow transition-all"
                           onClick={() => onEditOrder(order)}
+                          className="p-1 rounded-full text-slate-400 hover:text-[#F5891E] hover:bg-orange-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                           title="Edit Customer"
                         >
-                          <Pencil size={12} />
+                          <Pencil size={13} />
                         </button>
                       </div>
-                      <div
-                        className="d-flex flex-column gap-1 text-secondary"
-                        style={{ fontSize: "12px" }}
-                      >
-                        <span className="d-flex align-items-center gap-2">
-                          <Phone size={12} className="opacity-75" />
+                      <div className="flex flex-col gap-2 text-slate-600 text-xs font-medium">
+                        <span className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded px-2 py-1 w-max">
+                          <Phone size={12} className="text-slate-400" />
                           {order.customer_phone || "No Phone"}
                         </span>
-                        <span
-                          className="d-flex align-items-start gap-2 text-wrap"
-                          style={{ maxWidth: "200px" }}
-                        >
+                        <span className="flex items-start gap-1.5 max-w-50">
                           <MapPin
                             size={12}
-                            className="mt-1 opacity-75 flex-shrink-0"
+                            className="mt-0.5 text-slate-400 shrink-0"
                           />
-                          <span className="lh-sm">
+                          <span className="leading-snug text-slate-500">
                             {order.shipping_city}, {order.shipping_state} <br />
-                            <span className="fw-bold text-dark">
+                            <span className="font-bold text-slate-700">
                               {order.shipping_pincode}
                             </span>
                           </span>
@@ -435,172 +394,170 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                       </div>
                     </td>
 
-                    {/* 4. Status & Courier */}
-                    <td className="py-3">
-                      <div className="d-flex flex-column align-items-start gap-2">
-                        <Badge
-                          className={`cursor-pointer px-3 py-2 rounded-pill fw-semibold ${statusColors.bg} ${statusColors.text} border-0`}
+                    {/* 5. Status & Courier */}
+                    <td className="p-4 align-top">
+                      <div className="flex flex-col items-start gap-2.5">
+                        <button
                           onClick={() => onViewStatus(order.status)}
-                          title="Click to view timeline"
+                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide border shadow-sm ${getStatusStyle(
+                            statusName
+                          )} hover:opacity-80 transition-opacity`}
                         >
                           {statusName}
-                        </Badge>
+                        </button>
 
                         {order.awb_number ? (
-                          <div
-                            className="bg-light border rounded px-2 py-1 mt-1"
-                            style={{ fontSize: "12px" }}
-                          >
-                            <span className="text-muted">AWB: </span>
+                          <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 mt-1 text-xs shadow-sm">
+                            <span className="text-slate-500 font-medium">
+                              AWB:{" "}
+                            </span>
                             <Link
                               to={`/track/${order.awb_number}`}
-                              className="fw-bold text-primary text-decoration-none"
+                              className="font-bold text-[#F5891E] hover:underline"
                             >
                               {order.awb_number}
                             </Link>
                           </div>
                         ) : order.recomended_courier_id ? (
-                          <div
-                            className="d-flex align-items-center gap-1 text-warning bg-warning bg-opacity-10 px-2 py-1 rounded mt-1"
-                            style={{ fontSize: "11px", fontWeight: 600 }}
-                          >
+                          <div className="flex items-center gap-1.5 text-orange-700 bg-orange-50 px-2.5 py-1.5 rounded-lg border border-orange-200 mt-1 text-[11px] font-bold shadow-sm">
                             <Plane size={12} /> Rec:{" "}
                             {order.recomended_courier_id}
                           </div>
                         ) : (
-                          <span
-                            className="text-muted fst-italic mt-1"
-                            style={{ fontSize: "12px" }}
-                          >
+                          <span className="text-slate-400 italic text-[11px] mt-1 px-1 font-medium">
                             Unassigned
                           </span>
                         )}
                       </div>
                     </td>
 
-                    {/* 5. Risk Flags */}
-                    <td className="py-3">
-                      <div
-                        className="d-flex flex-wrap gap-1"
-                        style={{ maxWidth: "160px" }}
-                      >
+                    {/* 6. Risk Flags */}
+                    <td className="p-4 align-top">
+                      <div className="flex flex-wrap gap-2 max-w-40">
                         {hasRedFlags ? (
                           <>
                             {issues.map((issue: any, idx: number) => (
-                              <Badge
+                              <span
                                 key={idx}
-                                bg="danger"
-                                className="d-flex align-items-center gap-1 fw-medium text-start text-wrap px-2 py-1 rounded"
-                                style={{ fontSize: "11px" }}
+                                className="flex items-center gap-1 bg-red-100/80 text-red-700 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold tracking-wide shadow-sm"
                               >
                                 <Flag size={10} />{" "}
                                 {issue.message || "Action Required"}
-                              </Badge>
+                              </span>
                             ))}
                             {!order.customer_phone && (
-                              <Badge
-                                bg="danger"
-                                className="fw-medium px-2 py-1 rounded"
-                                style={{ fontSize: "11px" }}
-                              >
+                              <span className="bg-red-100/80 text-red-700 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold tracking-wide shadow-sm">
                                 Missing Phone
-                              </Badge>
+                              </span>
                             )}
                             {!order.shipping_pincode && (
-                              <Badge
-                                bg="danger"
-                                className="fw-medium px-2 py-1 rounded"
-                                style={{ fontSize: "11px" }}
-                              >
+                              <span className="bg-red-100/80 text-red-700 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold tracking-wide shadow-sm">
                                 Missing ZIP
-                              </Badge>
+                              </span>
                             )}
                           </>
                         ) : (
-                          <div
-                            className="d-flex align-items-center gap-1 text-success bg-success bg-opacity-10 px-2 py-1 rounded border border-success border-opacity-25"
-                            style={{ fontSize: "12px", fontWeight: 600 }}
-                          >
-                            <span style={{ fontSize: "14px" }}>✓</span> Clear to
-                            Ship
+                          <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-200 text-[11px] font-bold shadow-sm">
+                            <CheckCircle2 size={14} /> Clear to Ship
                           </div>
                         )}
                       </div>
                     </td>
 
-                    {/* 6. Actions */}
-                    <td className="text-end pe-4 py-3">
-                      <div className="d-flex align-items-center justify-content-end gap-2">
+                    {/* 7. Actions */}
+                    <td className="p-4 align-top text-right pr-6">
+                      <div className="flex items-center justify-end gap-2.5 relative">
                         {order.awb_number ? (
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            className="px-3 rounded-pill fw-semibold border-2"
-                            style={{ fontSize: "12px" }}
+                          <button
                             onClick={() => onPickup(order)}
+                            className="px-4 py-1.5 rounded-full text-xs font-bold text-slate-700 bg-white border border-slate-300 shadow-sm hover:bg-slate-50 hover:border-slate-400 transition-all"
                           >
                             Pickup
-                          </Button>
+                          </button>
                         ) : (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="rounded-pill d-flex align-items-center justify-content-center fw-semibold shadow-sm border-0 text-white"
-                            style={{
-                              fontSize: "12px",
-                              backgroundColor: "#f97316",
-                              width: "80px",
-                            }}
+                          <button
                             onClick={() => handleShipNow(order)}
+                            className="w-24 h-8 flex items-center justify-center rounded-full text-xs font-bold text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] shadow-[0_2px_10px_rgba(245,137,30,0.3)] hover:shadow-[0_4px_14px_rgba(245,137,30,0.4)] transition-all hover:-translate-y-0.5 active:translate-y-0"
                           >
                             {shipLoading === order._id ? (
-                              <Loader2
-                                height={15}
-                                width={15}
-                                className="rotate"
-                              />
+                              <Loader2 size={14} className="animate-spin" />
                             ) : (
                               "Ship Now"
                             )}
-                          </Button>
+                          </button>
                         )}
 
-                        <Dropdown align="end">
-                          <Dropdown.Toggle
-                            variant="light"
-                            size="sm"
-                            className="btn-icon rounded-circle p-2 border-0 shadow-none text-secondary bg-transparent hover-bg-light"
+                        {/* Custom Dropdown */}
+                        <div className="relative">
+                          <button
+                            onClick={() =>
+                              setActiveDropdown(
+                                activeDropdown === order._id ? null : order._id
+                              )
+                            }
+                            className="p-1.5 rounded-md text-slate-400 border border-transparent hover:border-slate-200 hover:text-slate-700 hover:bg-slate-50 transition-all shadow-sm hover:shadow"
                           >
-                            <MoreVertical size={16} />
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu
-                            className="shadow border-0 mt-2 rounded-3"
-                            style={{ fontSize: "13px", minWidth: "180px" }}
-                          >
-                            {order.awb_number ? (
-                              <Dropdown.Item
-                                onClick={() => onPrintLabel(order.label)}
-                                className="py-2 d-flex align-items-center gap-2 fw-medium"
+                            <MoreVertical size={18} />
+                          </button>
+
+                          <AnimatePresence>
+                            {activeDropdown === order._id && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden"
                               >
-                                🖨️ Print Label
-                              </Dropdown.Item>
-                            ) : (
-                              <Dropdown.Item
-                                onClick={() => onAutoBook([order])}
-                                className="py-2 d-flex align-items-center gap-2 fw-medium"
-                              >
-                                📦 Auto Book
-                              </Dropdown.Item>
+                                <div className="py-1">
+                                  {order.awb_number ? (
+                                    <button
+                                      onClick={() => {
+                                        onPrintLabel(order.label);
+                                        setActiveDropdown(null);
+                                      }}
+                                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold transition-colors"
+                                    >
+                                      <Printer
+                                        size={16}
+                                        className="text-slate-400"
+                                      />{" "}
+                                      Print Label
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        onAutoBook([order]);
+                                        setActiveDropdown(null);
+                                      }}
+                                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold transition-colors"
+                                    >
+                                      <Box
+                                        size={16}
+                                        className="text-slate-400"
+                                      />{" "}
+                                      Auto Book
+                                    </button>
+                                  )}
+                                  <div className="h-px bg-slate-100 my-1"></div>
+                                  <button
+                                    onClick={() => {
+                                      onCancelOrder(order._id);
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold transition-colors"
+                                  >
+                                    <XCircle
+                                      size={16}
+                                      className="text-red-500"
+                                    />{" "}
+                                    Cancel Order
+                                  </button>
+                                </div>
+                              </motion.div>
                             )}
-                            <Dropdown.Divider className="my-1" />
-                            <Dropdown.Item
-                              onClick={() => onCancelOrder(order._id)}
-                              className="text-danger py-2 d-flex align-items-center gap-2 fw-medium"
-                            >
-                              ❌ Cancel Order
-                            </Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
+                          </AnimatePresence>
+                        </div>
                       </div>
                     </td>
                   </tr>

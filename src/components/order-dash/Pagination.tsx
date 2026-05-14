@@ -67,31 +67,25 @@ const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    // Changed to justify-content-center and added gap-3
-    <div className="d-flex justify-content-center align-items-center mt-5 mb-4 gap-3">
+    <div className="flex justify-center items-center mt-10 mb-8 gap-3">
       {/* Previous Button */}
       <button
         onClick={handlePrevious}
         disabled={currentPage === 1}
-        className="btn btn-light d-flex align-items-center gap-1 rounded-pill px-3 shadow-sm border-0"
-        style={{
-          opacity: currentPage === 1 ? 0.6 : 1,
-          transition: "all 0.2s ease-in-out",
-        }}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-semibold text-sm shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
       >
         <ChevronLeft size={18} />
-        {/* Hides text on tiny mobile screens, shows on small+ */}
-        <span className="d-none d-sm-inline fw-medium">Prev</span>
+        <span className="hidden sm:inline">Prev</span>
       </button>
 
       {/* Page Numbers */}
-      <div className="d-flex align-items-center gap-2">
+      <div className="flex items-center gap-2">
         {getPageNumbers().map((page, index) => {
           if (page === "...") {
             return (
               <span
                 key={`ellipsis-${index}`}
-                className="text-secondary px-1 fw-bold"
+                className="text-slate-400 px-1 font-bold tracking-widest"
               >
                 &hellip;
               </span>
@@ -104,17 +98,11 @@ const Pagination: React.FC<PaginationProps> = ({
             <button
               key={`page-${page}`}
               onClick={() => onPageChange(page as number)}
-              className={`btn d-flex justify-content-center align-items-center rounded-circle border-0 ${
+              className={`flex justify-center items-center w-10 h-10 rounded-full text-sm transition-all duration-200 ${
                 isCurrent
-                  ? "btn-primary shadow"
-                  : "btn-light shadow-sm text-secondary hover-bg-light"
+                  ? "bg-linear-to-r from-[#F5891E] to-[#FF6B35] text-white font-bold shadow-md shadow-orange-500/30 border-transparent"
+                  : "bg-white border border-slate-200 text-slate-600 font-semibold shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900"
               }`}
-              style={{
-                width: "40px",
-                height: "40px",
-                fontWeight: isCurrent ? "600" : "500",
-                transition: "all 0.2s ease-in-out",
-              }}
             >
               {page}
             </button>
@@ -126,13 +114,9 @@ const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className="btn btn-light d-flex align-items-center gap-1 rounded-pill px-3 shadow-sm border-0"
-        style={{
-          opacity: currentPage === totalPages ? 0.6 : 1,
-          transition: "all 0.2s ease-in-out",
-        }}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 font-semibold text-sm shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
       >
-        <span className="d-none d-sm-inline fw-medium">Next</span>
+        <span className="hidden sm:inline">Next</span>
         <ChevronRight size={18} />
       </button>
     </div>
