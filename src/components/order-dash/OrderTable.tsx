@@ -221,145 +221,157 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                     </td>
 
                     {/* 2. Order Info */}
-                    <td className="p-4 align-top">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="font-bold text-slate-900 text-sm tracking-tight">
-                          #{order.order_id || order.channel_order_id}
-                        </span>
-                        <span className="text-slate-500 text-[12px] font-medium">
-                          {new Date(
-                            order.order_date || order.createdAt
-                          ).toLocaleString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <div className="flex items-center gap-1.5 text-slate-700 mt-1.5 bg-slate-100 rounded-md px-2 py-1 w-max text-[11px] font-semibold border border-slate-200">
-                          <Store size={12} className="text-slate-500" />
-                          {order.channel_account?.channel_account_name ||
-                            "Manual Store"}
-                        </div>
-                      </div>
-                    </td>
+   <td className="p-4 align-top">
+  <div className="flex flex-col gap-1.5">
+    <span className="font-bold text-slate-900 text-sm tracking-tight">
+      #{order.order_id || order.channel_order_id}
+    </span>
+    <span className="text-slate-500 text-[12px] font-medium">
+      {new Date(order.order_date || order.createdAt).toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}
+    </span>
+
+    <div className="flex items-center gap-2 mt-1.5 px-2.5 py-2 rounded-lg w-max border border-slate-200 bg-slate-50">
+      <Store size={13} className="text-[#F5891E] flex-shrink-0" />
+      <div className="flex flex-col leading-snug">
+        <span className="text-[12px] font-semibold text-slate-800">
+          {order.channel_account?.channel_account_name || "Manual Store"}
+        </span>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-slate-400">Pool:</span>
+          <span className="text-[10px] font-semibold text-[#F5891E]">
+            {order.channel_account?.pool_id || "N/A"}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</td>
 
                     {/* 3. Items & Value (Nested Card Design) */}
-                    <td className="p-4 align-top">
-                      <div className="flex flex-col bg-slate-50 rounded-xl p-3.5 border border-slate-200 shadow-sm inner-glow">
-                        {/* Financial Header */}
-                        <div className="flex justify-between items-center mb-3 pb-2.5 border-b border-slate-200/80">
-                          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                            Amount:{" "}
-                            <span className="font-bold text-[15px] text-slate-900">
-                              ₹{order.total_amount}
-                            </span>
-                          </span>
-                          <span className="px-2 py-0.5 bg-white border border-slate-300 rounded text-[10px] uppercase font-bold text-slate-600 tracking-wider shadow-sm">
-                            {order.payment_method}
-                          </span>
-                        </div>
+                  <td className="p-4 align-top">
+  <div className="flex flex-col bg-slate-50 rounded-xl p-3.5 border border-slate-200 shadow-sm inner-glow">
 
-                        {/* Single Item View */}
-                        {!hasMultipleItems && itemsList.length > 0 && (
-                          <div className="flex flex-col gap-1.5">
-                            <span
-                              className="font-semibold text-slate-800 text-xs truncate"
-                              title={itemsList[0].product?.product_sku_name}
-                            >
-                              {itemsList[0].product?.product_sku_name ||
-                                "Unknown Product"}
-                            </span>
-                            <div className="flex justify-between items-center text-slate-500 text-[11px]">
-                              <span className="font-medium">
-                                SKU:{" "}
-                                <span className="text-slate-700">
-                                  {itemsList[0].product?.product_sku_id ||
-                                    "N/A"}
-                                </span>
-                              </span>
-                              <span className="font-bold bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm text-slate-700">
-                                Qty: {itemsList[0].quantity}
-                              </span>
-                            </div>
-                          </div>
-                        )}
+    {/* Single Item View */}
+    {!hasMultipleItems && itemsList.length > 0 && (
+      <div className="flex flex-col gap-1.5 mb-3 pb-3 border-b border-slate-200/80">
+        <span
+          className="font-semibold text-slate-800 text-xs truncate"
+          title={itemsList[0].product?.product_sku_name}
+        >
+          {itemsList[0].product?.product_sku_name || "Unknown Product"}
+        </span>
 
-                        {/* Multiple Items Accordion View */}
-                        {hasMultipleItems && (
-                          <div className="flex flex-col">
-                            <div
-                              className="flex justify-between items-center cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-200/50 transition-colors"
-                              onClick={() => toggleItems(order._id)}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Package size={14} className="text-[#F5891E]" />
-                                <span className="font-bold text-[#F5891E] text-xs">
-                                  {itemsList.length} Items in Order
-                                </span>
-                              </div>
-                              <motion.div
-                                animate={{ rotate: isItemsExpanded ? 180 : 0 }}
-                                transition={{
-                                  type: "spring",
-                                  bounce: 0.3,
-                                  duration: 0.4,
-                                }}
-                                className="text-slate-500 bg-white shadow-sm border border-slate-200 rounded-full p-0.5"
-                              >
-                                <ChevronDown size={14} />
-                              </motion.div>
-                            </div>
+        <div className="flex justify-between items-center text-slate-500 text-[11px]">
+          <span className="italic text-slate-500">
+            {itemsList[0].product?.product_sku_id || "N/A"}
+          </span>
 
-                            <AnimatePresence initial={false}>
-                              {isItemsExpanded && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{
-                                    type: "spring",
-                                    bounce: 0,
-                                    duration: 0.3,
-                                  }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="mt-2.5 pt-2.5 border-t border-slate-200/80 flex flex-col gap-2 max-h-50 overflow-y-auto custom-scrollbar">
-                                    {itemsList.map((item: any, idx: number) => (
-                                      <div
-                                        key={idx}
-                                        className="flex flex-col p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm"
-                                      >
-                                        <span className="font-semibold text-slate-800 text-[11px] leading-snug mb-1.5">
-                                          {item.product?.product_sku_name ||
-                                            "Unknown Product"}
-                                        </span>
-                                        <div className="flex justify-between items-center text-slate-500 text-[10px]">
-                                          <span className="font-medium">
-                                            {item.product?.product_sku_id ||
-                                              "No SKU"}
-                                          </span>
-                                          <span className="font-bold text-slate-900 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
-                                            x{item.quantity}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        )}
+          <span className="font-bold bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm text-slate-700">
+            Qty: {itemsList[0].quantity}
+          </span>
+        </div>
+      </div>
+    )}
 
-                        {itemsList.length === 0 && (
-                          <span className="text-slate-400 italic text-xs font-medium">
-                            No items found
-                          </span>
-                        )}
-                      </div>
-                    </td>
+    {/* Multiple Items Accordion View */}
+    {hasMultipleItems && (
+      <div className="flex flex-col mb-3 pb-3 border-b border-slate-200/80">
+        <div
+          className="flex justify-between items-center cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-200/50 transition-colors"
+          onClick={() => toggleItems(order._id)}
+        >
+          <div className="flex items-center gap-2">
+            <Package size={14} className="text-[#F5891E]" />
 
+            <span className="font-bold text-[#F5891E] text-xs">
+              {itemsList.length} Items in Order
+            </span>
+          </div>
+
+          <motion.div
+            animate={{ rotate: isItemsExpanded ? 180 : 0 }}
+            transition={{
+              type: "spring",
+              bounce: 0.3,
+              duration: 0.4,
+            }}
+            className="text-slate-500 bg-white shadow-sm border border-slate-200 rounded-full p-0.5"
+          >
+            <ChevronDown size={14} />
+          </motion.div>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {isItemsExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{
+                type: "spring",
+                bounce: 0,
+                duration: 0.3,
+              }}
+              className="overflow-hidden"
+            >
+              <div className="mt-2.5 pt-2.5 border-t border-slate-200/80 flex flex-col gap-2 max-h-50 overflow-y-auto custom-scrollbar">
+                {itemsList.map((item: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm"
+                  >
+                    <span className="font-semibold text-slate-800 text-[11px] leading-snug mb-1.5">
+                      {item.product?.product_sku_name ||
+                        "Unknown Product"}
+                    </span>
+
+                    <div className="flex justify-between items-center text-slate-500 text-[10px]">
+                      <span className="font-medium">
+                        {item.product?.product_sku_id || "No SKU"}
+                      </span>
+
+                      <span className="font-bold text-slate-900 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                        x{item.quantity}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )}
+
+    {/* Empty State */}
+    {itemsList.length === 0 && (
+      <span className="text-slate-400 italic text-xs font-medium mb-3">
+        No items found
+      </span>
+    )}
+
+    {/* Amount & Payment Section */}
+    <div className="flex justify-between items-center pt-2.5 border-t border-slate-200/80">
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+        Amount:
+        <span className="font-bold text-[15px] text-slate-900">
+          ₹{order.total_amount}
+        </span>
+      </span>
+
+     <span className="px-2 py-0.5 bg-white border border-slate-300 rounded text-[10px] uppercase font-bold text-slate-600 tracking-wider shadow-sm">
+  {order.payment_method?.length > 15
+    ? `${order.payment_method.slice(0, 15)}...`
+    : order.payment_method}
+</span>
+    </div>
+  </div>
+</td>
                     {/* 4. Customer Info */}
                     <td className="p-4 align-top">
                       <div className="flex items-center gap-2 mb-2">

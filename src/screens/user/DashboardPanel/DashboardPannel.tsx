@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Truck,
-  Link2,
   Wallet,
   Warehouse,
   Scale,
@@ -17,12 +16,8 @@ import {
   X,
   LogOut,
   ShoppingBag,
-  ShieldAlert,
-  ScanLine,
   Boxes,
-  Tags,
   PackagePlus,
-  WalletCards,
   BadgeIndianRupee,
   ReceiptText,
   ChartNoAxesCombined,
@@ -48,64 +43,68 @@ const navGroups: NavLink[][] = [
       path: "/user",
     },
   ],
+
   [
     {
-      name: "View Orders",
+      name: "Orders",
       icon: <ShoppingBag {...iconProps} />,
       path: "/user/order-dash",
     },
-    {
-      name: "Flagged Orders",
-      icon: <ShieldAlert {...iconProps} />,
-      path: "/user/flaggedOrders",
-    },
-    {
-      name: "Scan Orders",
-      icon: <ScanLine {...iconProps} />,
-      path: "/user/scanOrders",
-    },
-    { name: "NDR", icon: <Truck {...iconProps} />, path: "/user/NDR" },
   ],
+
   [
     {
-      name: "View Products",
+      name: "Business Account",
+      icon: <Layers3 {...iconProps} />,
+      path: "/user/pools",
+    },
+  ],
+
+  [
+    {
+      name: "Warehouses",
+      icon: <Warehouse {...iconProps} />,
+      path: "/user/Warehouses",
+    },
+  ],
+
+  [
+    {
+      name: "Products",
       icon: <Boxes {...iconProps} />,
       path: "/user/Products",
-    },
-    {
-      name: "Product SKUs",
-      icon: <Tags {...iconProps} />,
-      path: "/user/ProductSKU",
     },
     {
       name: "Product Packs",
       icon: <PackagePlus {...iconProps} />,
       path: "/user/ProductPacks",
     },
-    {
-      name: "Channel SKU",
-      icon: <Link2 {...iconProps} />,
-      path: "/user/ChannelSKU",
-    },
   ],
+
   [
-    {
-      name: "Ledger",
-      icon: <WalletCards {...iconProps} />,
-      path: "/user/Finance",
-    },
     {
       name: "COD Remittance",
       icon: <BadgeIndianRupee {...iconProps} />,
       path: "/user/CODRemittance",
     },
-    { name: "Wallet", icon: <Wallet {...iconProps} />, path: "/user/Wallet" },
     {
       name: "Invoices",
       icon: <ReceiptText {...iconProps} />,
       path: "/user/Invoices",
     },
+    {
+      name: "Wallet",
+      icon: <Wallet {...iconProps} />,
+      path: "/user/Wallet",
+    },
   ],
+
+  [
+    { name: "NDR",                icon: <Truck {...iconProps} />,      path: "/user/NDR" },
+    { name: "Damage Report",      icon: <ClipboardX {...iconProps} />, path: "/user/damage-report" },
+    { name: "Weight Discrepancy", icon: <Scale {...iconProps} />,      path: "/user/weight-discrepancy" },
+  ],
+
   [
     {
       name: "Profit Calculator",
@@ -116,29 +115,6 @@ const navGroups: NavLink[][] = [
       name: "Shipping Calculator",
       icon: <Calculator {...iconProps} />,
       path: "/user/shipping-charge-calculator",
-    },
-  ],
-  [
-    { name: "Pools", icon: <Layers3 {...iconProps} />, path: "/user/pools" },
-    {
-      name: "Channel Accounts",
-      icon: <RadioTower {...iconProps} />,
-      path: "/user/channel_accounts",
-    },
-    {
-      name: "Warehouse",
-      icon: <Warehouse {...iconProps} />,
-      path: "/user/Warehouses",
-    },
-    {
-      name: "Damage Reports",
-      icon: <ClipboardX {...iconProps} />,
-      path: "/user/damage-report",
-    },
-    {
-      name: "Weight Discrepancy",
-      icon: <Scale {...iconProps} />,
-      path: "/user/weight-discrepancy",
     },
   ],
 ];
@@ -192,7 +168,7 @@ const UserPanel: React.FC = () => {
         onClick={() => handleLinkClick(link.name, link.path)}
         className={`group flex items-center gap-4 px-4 py-3 mx-4 mb-1 rounded-xl cursor-pointer transition-all duration-200 ${
           isActive
-            ? "bg-linear-to-tr to-[#f5891d]/40 from-amber-600 text-white border border-white shadow-md  font-semibold"
+            ? "bg-linear-to-tr to-[#f5891d]/40 from-amber-600 text-white border border-white shadow-md font-semibold"
             : "text-neutral-500 font-medium hover:text-[#F5891E] hover:bg-orange-50"
         }`}
       >
@@ -225,13 +201,13 @@ const UserPanel: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar - Flat layout with robust typography and orange theme */}
+      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-neutral-200 flex flex-col transform transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
-        {/* Header/Logo Section */}
+        {/* Header/Logo */}
         <div className="flex items-center justify-between px-8 pt-6 pb-4">
           <div className="flex items-center justify-center gap-3">
             <img src="/Orderzup.png" alt="Logo Icon" className="w-15" />
@@ -247,21 +223,20 @@ const UserPanel: React.FC = () => {
           </button>
         </div>
 
-        {/* User Greeting Divider */}
+        {/* User Greeting */}
         <div className="px-8 pb-4">
           <div className="text-[13px] font-semibold text-neutral-400 uppercase tracking-wider pb-2">
             Hello, <span className="text-[#F5891E]">{username}</span>
           </div>
         </div>
 
-        {/* Scrollable Navigation List */}
+        {/* Scrollable Navigation */}
         <nav className="flex-1 overflow-y-auto scrollbar-hide py-2 pb-6">
           {navGroups.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
-              {/* Divider lines between groups */}
-              {groupIndex > 0 && (
-                <div className="h-px bg-linear-to-r from-transparent to-neutral-300 my-4 mx-8"></div>
-              )}
+             {groupIndex > 0 && group.length > 1 && (
+  <div className="h-px bg-linear-to-r from-transparent to-neutral-300 my-4 mx-8" />
+)}
               {group.map((link) => (
                 <NavItem key={link.name} link={link} />
               ))}
@@ -269,9 +244,9 @@ const UserPanel: React.FC = () => {
           ))}
         </nav>
 
-        {/* Pinned Log Out Section */}
+        {/* Sign Out */}
         <div className="mt-auto pb-6 pt-4 px-4 bg-white">
-          <div className="border-t border-neutral-100 mb-3 mx-4"></div>
+          <div className="border-t border-neutral-100 mb-3 mx-4" />
           <div
             onClick={handleLogout}
             className="group flex items-center gap-4 px-4 py-3 mx-4 rounded-xl cursor-pointer text-neutral-600 font-medium hover:text-red-600 hover:bg-red-50 transition-all duration-200"
@@ -286,7 +261,7 @@ const UserPanel: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-neutral-50">
         {/* Mobile Header */}
         <header className="md:hidden bg-white p-4 flex items-center justify-between z-30 shadow-sm border-b border-neutral-200">
@@ -304,7 +279,7 @@ const UserPanel: React.FC = () => {
           </button>
         </header>
 
-        {/* Scrollable Main Views */}
+        {/* Scrollable Views */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <Outlet />
         </div>
