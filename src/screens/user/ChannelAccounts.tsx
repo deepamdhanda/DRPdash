@@ -12,6 +12,7 @@ import { getAllPools } from "../../APIs/user/pool";
 import { useLocation, useNavigate } from "react-router-dom";
 import { initialChannelAccountFetch } from "../../APIs/user/initialChannelAccountFetch";
 import { toast } from "react-toastify";
+import { channelAccounts_url } from "../../URLs/user";
 
 type Automation = {
   auto_ship: boolean;
@@ -48,6 +49,7 @@ const ChannelAccounts: React.FC = () => {
   const [pools, setPools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [storeurl, setStoreUrl] = useState("");
   const [editingChannelAccount, setEditingChannelAccount] =
     useState<ChannelAccount | null>(null);
   const [keys, setKeys] = useState<
@@ -463,12 +465,59 @@ const ChannelAccounts: React.FC = () => {
       width: "210px",
     },
   ];
+  const [woo, setWoo] = useState(false);
+  const [wooName, setWooName] = useState("");
+  const [wooPoolId, setWooPoolId] = useState("");
+  const [isWooConnecting, setIsWooConnecting] = useState(false);
 
+  const handleConnectWooCommerce = async () => {
+    if (!storeurl || !wooName || !wooPoolId) {
+      toast.error("Please fill in all fields (URL, Name, and Pool).");
+      return;
+    }
+
+    setIsWooConnecting(true);
+    try {
+      const woocomId = channels.find(
+        (item) => item.channel_name.toLowerCase() === "woocommerce"
+      )._id;
+
+      const response = await fetch(`${channelAccounts_url}/woo/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          store_url: storeurl,
+          channel_account_name: wooName,
+          pool_id: wooPoolId,
+          channel_id: woocomId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        toast.error("Failed to generate authorization URL.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred connecting to the server.");
+    } finally {
+      setIsWooConnecting(false);
+    }
+  };
   return (
     <div className="container mt-4 ms-2 me-2">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Channel Accounts</h4>
-        <Button onClick={handleShow}>+ New Channel Account</Button>
+        <div className="d-flex gap-3">
+          <Button onClick={handleShow}>+ New Channel Account</Button>
+          <Button onClick={() => setWoo(true)}>
+            + Add WooCommerce Account
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -662,6 +711,65 @@ const ChannelAccounts: React.FC = () => {
             </Button>
           </Modal.Footer>
         </Form>
+      </Modal>
+      <Modal show={woo} onHide={() => setWoo(false)} centered backdrop="static">
+        {/* Header */}
+        <div className="bg-dark text-white px-4 py-3 border-bottom">
+          <h5 className="mb-1 fw-bold">Connect WooCommerce Store</h5>
+        </div>
+
+        <div className="p-4 bg-white">
+          {/* Account Name */}
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-semibold">Account Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="e.g., My Woo Store - US"
+              value={wooName}
+              onChange={(e) => setWooName(e.target.value)}
+            />
+          </Form.Group>
+
+          {/* Pool Selection */}
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-semibold">Assign to Pool</Form.Label>
+            <Form.Select
+              value={wooPoolId}
+              onChange={(e) => setWooPoolId(e.target.value)}
+            >
+              <option value="">Select a Pool...</option>
+              {pools.map((pool) => (
+                <option key={pool._id} value={pool._id}>
+                  {pool.name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+
+          {/* Store URL */}
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-semibold">Store URL</Form.Label>
+            <Form.Control
+              type="url"
+              placeholder="https://yourstore.com"
+              value={storeurl}
+              onChange={(e) => setStoreUrl(e.target.value)}
+            />
+          </Form.Group>
+
+          <div className="d-flex justify-content-end gap-2 mt-4">
+            <Button variant="light" onClick={() => setWoo(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="dark"
+              onClick={handleConnectWooCommerce}
+              disabled={isWooConnecting}
+            >
+              {isWooConnecting ? "Connecting..." : "Connect Store"}
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <Modal show={showFetchingModal} onHide={handleClose} size="lg">

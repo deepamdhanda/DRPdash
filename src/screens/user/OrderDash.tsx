@@ -35,6 +35,7 @@ import {
   LabelPrinterRef,
 } from "../../components/order-dash/LabelPreviewModal";
 import { Link } from "react-router-dom";
+import { UpdateDimensionsModal } from "../../components/order-dash/UpdateDimensionsModal";
 
 export interface Order {
   _id: string;
@@ -107,7 +108,9 @@ const OrderDash = () => {
     packWeight: "",
     warehouse: [],
   });
-
+  const [missingDataProductId, setMissingDataProductId] = useState<
+    string | null
+  >(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [pickupOrder, setPickupOrder] = useState<string | null>(null);
@@ -263,6 +266,12 @@ const OrderDash = () => {
       if ((err as any).message.toLowerCase() === "product sku not linked") {
         handleOpenLinkModal(order);
       }
+      console.log(err);
+      // if (
+      //   (err as any).message.toLowerCase() === "product has missing information"
+      // ) {
+      //   setMissingDataProductId(order.items);
+      // }
       toast.error((err as any).message);
     }
   };
@@ -502,6 +511,15 @@ const OrderDash = () => {
         }}
       />
       <LabelPrinter ref={printerRef} labelData={labelData} />
+      <UpdateDimensionsModal
+        show={!!missingDataProductId}
+        onHide={() => setMissingDataProductId(null)}
+        productId={missingDataProductId}
+        onSuccess={() => {
+          setMissingDataProductId(null);
+          fetchOrders(); // Refresh the table
+        }}
+      />
     </>
   );
 };
