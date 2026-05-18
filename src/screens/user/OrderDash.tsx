@@ -408,50 +408,48 @@ const OrderDash = () => {
   };
 
   return (
-   <>
-  <div className="w-full">
-    {/* Top Notice Banner */}
-    <div className="w-full mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
-      <span className="font-bold text-amber-950">
-        Important Notice:
-      </span>{" "}
-      In order to provide better service to your brand, we have launched our
-      new Orders Panel — faster, more efficient, reliable, and secure. We
-      encourage all users to start using the new panel. The Old Orders page
-      will be deprecated from{" "}
-      <span className="font-bold">1st July 2026</span>. However, your
-      historical orders will still be accessible through our support team
-      whenever required.
-    </div>
+    <>
+      <div className="w-full">
+        {/* Top Notice Banner */}
+        <div className="w-full mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+          <span className="font-bold text-amber-950">Important Notice:</span> In
+          order to provide better service to your brand, we have launched our
+          new Orders Panel — faster, more efficient, reliable, and secure. We
+          encourage all users to start using the new panel. The Old Orders page
+          will be deprecated from{" "}
+          <span className="font-bold">1st July 2026</span>. However, your
+          historical orders will still be accessible through our support team
+          whenever required.
+        </div>
 
-    {/* Header Section */}
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-1">
-          Orders Management
-        </h1>
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-1">
+              Orders Management
+            </h1>
 
-        <p className="text-sm text-gray-500">
-          Streamline your shipping and fulfillment
-        </p>
-      </div>
+            <p className="text-sm text-gray-500">
+              Streamline your shipping and fulfillment
+            </p>
+          </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Link
-          to="/user/orders"
-          className="px-4 py-2.5 text-sm font-medium text-gray-800 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm"
-        >
-          Old Orders
-        </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/user/orders"
+              className="px-4 py-2.5 text-sm font-medium text-gray-800 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm"
+            >
+              Old Orders
+            </Link>
 
-        <button
-          onClick={() => setShow(true)}
-          className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-        >
-          + Add Order
-        </button>
-      </div>
-    </div>
+            <button
+              onClick={() => setShow(true)}
+              className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+            >
+              + Add Order
+            </button>
+          </div>
+        </div>
 
         {/* Modern Segmented Tabs Section */}
         <div className="flex items-center p-1 bg-gray-100/80 backdrop-blur-sm rounded-2xl w-max mb-6 border border-gray-200/50">

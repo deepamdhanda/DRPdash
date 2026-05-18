@@ -15,6 +15,8 @@ import {
 } from "../../APIs/user/warehouse";
 import { getUser } from "../../APIs/user/user";
 import { toast } from "react-toastify";
+import CustomDataTable from "../../components/DataTable";
+import { Mail, MapPin, Phone, User } from "lucide-react";
 
 // --- Google Maps Configuration ---
 const LIBRARIES: "places"[] = ["places"];
@@ -247,118 +249,116 @@ const Warehouses: React.FC = () => {
 
   const columns = [
     {
-      name: "Name",
-      selector: (row: Warehouse) => (
-        <div>
-          {row.status === "active"
-            ? `🟢`
-            : row.status === "inactive"
-            ? `🔴`
-            : `❌`}{" "}
-          <strong style={{ fontSize: 16 }}> {row.name}</strong>
+      name: "Warehouse Name",
+      selector: (row: Warehouse) => row.name,
+      sortable: true,
+      width: "280px", // Gives the name and status enough room
+      cell: (row: Warehouse) => (
+        <div className="flex items-center gap-3 py-2 text-xl font-semibold text-neutral-600">
+          {row.name}
         </div>
       ),
-      sortable: true,
-      style: { margin: 10 },
     },
     {
-      name: "Address",
-      selector: (row: Warehouse) =>
-        `${row.address1}${row.address2 ? `, ${row.address2}` : ""}, ${
-          row.City
-        }, ${row.State}, ${row.Country} - ${row.pincode}`,
+      name: "Location",
+      selector: (row: Warehouse) => row.City, // Sorting primarily by City makes sense here
       wrap: true,
-      compact: true,
-      style: { margin: 10 },
+      minWidth: "300px",
+      cell: (row: Warehouse) => (
+        <div className="flex items-start gap-2.5 py-2 text-sm text-gray-600">
+          <MapPin className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" />
+          <div className="flex flex-col leading-relaxed">
+            <span className="text-gray-900 font-medium">
+              {row.address1}
+              {row.address2 ? `, ${row.address2}` : ""}
+            </span>
+            <span>
+              {row.City}, {row.State}
+            </span>
+            <span className="text-gray-500 text-xs mt-0.5">
+              {row.Country} - {row.pincode}
+            </span>
+          </div>
+        </div>
+      ),
     },
     {
       name: "Contact Details",
+      minWidth: "220px",
       cell: (row: Warehouse) => (
-        <div>
-          <strong>{row.contact_person}</strong>
-          <br />
-          📞 {row.contact_phone}
-          <br />
-          📧 {row.contact_email}
+        <div className="flex flex-col gap-2 py-2 text-sm">
+          <div className="flex items-center gap-2 text-gray-900 font-medium">
+            <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="truncate">{row.contact_person}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-600">
+            <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span>{row.contact_phone}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-600">
+            <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="truncate">{row.contact_email}</span>
+          </div>
         </div>
       ),
-      compact: true,
-      style: { margin: 10 },
     },
     {
       name: "Created On",
-      selector: (row: Warehouse) =>
-        row.createdAt
-          ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-          : "—",
+      selector: (row: Warehouse) => row.createdAt,
       sortable: true,
-      style: { margin: 10 },
+      width: "150px",
+      cell: (row: Warehouse) => (
+        <div className="py-2 text-sm font-medium text-gray-600">
+          {row.createdAt
+            ? new Date(row.createdAt).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "—"}
+        </div>
+      ),
     },
     {
       name: "Actions",
-      cell: (row: Warehouse) => (
-        <>
-          {/* <Button
-            variant="outline-primary"
-            size="sm"
-            className="me-2"
-            onClick={() => handleEdit(row)}
-          >
-            Edit
-          </Button> */}
-          <Button
-            variant={
-              row.status === "active" ? "outline-danger" : "outline-success"
-            }
-            size="sm"
-            onClick={() => handleToggleStatus(row)}
-          >
-            {row.status === "active" ? "Deactivate" : "Activate"}
-          </Button>
-        </>
-      ),
-      button: true,
-      width: "180px", // Widen to fit buttons
-      style: { margin: 10 },
+      width: "160px",
+      cell: (row: Warehouse) => {
+        const isActive = row.status === "active";
+        return (
+          <div className="py-2 flex items-center">
+            <button
+              onClick={() => handleToggleStatus(row)}
+              className={`w-full font-semibold px-4  text-neutral-600 py-2 rounded-lg shadow-sm transition-all duration-200 border border-neutral-600 ${
+                isActive
+                  ? "hover:bg-red-50 hover:border-red-300"
+                  : "hover:bg-green-50 hover:border-green-300"
+              }`}
+            >
+              {isActive ? "Deactivate" : "Activate"}
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
   return (
-    <div className="container mt-4 ms-2 me-2">
+    <>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Warehouses</h4>
         <Button onClick={handleShow}>+ New Warehouse</Button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : warehouses.length === 0 ? (
-        <p>No warehouses found.</p>
-      ) : (
-        <DataTable
-          title="Your Warehouse"
-          columns={columns as any}
-          data={warehouses}
-          pagination
-          paginationServer
-          paginationTotalRows={totalRecords}
-          paginationDefaultPage={page}
-          paginationPerPage={limit}
-          onChangePage={(p) => {
-            setPage(p);
-          }}
-          onChangeRowsPerPage={(newLimit) => {
-            setLimit(newLimit);
-            setPage(1);
-          }}
-          highlightOnHover
-          responsive
-        />
-      )}
+      <CustomDataTable
+        // title="Your Warehouse"
+        columns={columns as any}
+        data={warehouses}
+        totalRecords={totalRecords}
+        page={page}
+        limit={limit}
+        setPage={setPage}
+        isLoading={loading}
+      />
 
       <Modal show={showModal} onHide={handleClose} size="lg">
         <Modal.Header closeButton>
@@ -606,7 +606,7 @@ const Warehouses: React.FC = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div>
+    </>
   );
 };
 
