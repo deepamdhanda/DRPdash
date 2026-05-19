@@ -13,7 +13,7 @@ import {
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import { drpCrmBaseUrl } from "../../axios/urls";
 import { FaBoxOpen, FaTruck } from "react-icons/fa";
-import { CheckCircle2, Info, PackageOpen } from "lucide-react";
+import { CheckCircle2, Info, PackageOpen, Search } from "lucide-react";
 import { FaGear } from "react-icons/fa6";
 import "../../components/order-dash/OrderDash.css";
 import OrderTable from "../../components/order-dash/OrderTable";
@@ -116,7 +116,17 @@ const OrderDash = () => {
   const [pickupOrder, setPickupOrder] = useState<string | null>(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
   const printerRef = useRef<LabelPrinterRef>(null);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
 
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [search]);
   const tabs = [
     { key: "new", label: "New", icon: <FaBoxOpen /> },
     {
@@ -166,7 +176,7 @@ const OrderDash = () => {
   }, []);
   useEffect(() => {
     fetchOrders();
-  }, [tab, page]);
+  }, [tab, page, debouncedSearch]);
 
   const fetchChannelAccounts = async () => {
     try {
@@ -194,6 +204,7 @@ const OrderDash = () => {
           tab,
           page,
           limit,
+          search: debouncedSearch,
         },
       });
 
@@ -408,7 +419,7 @@ const OrderDash = () => {
         toast.success(res.data.message);
         setShowLinkModal(false);
         setLinkOrderData(null);
-        fetchOrders(); // Refresh table
+        fetchOrders();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Linking failed");
@@ -436,16 +447,36 @@ const OrderDash = () => {
           </Link>
         </div>
       </div>
-      <div className="custom-tabs mb-3">
-        {tabs.map((tabi) => (
-          <div
-            key={tabi.key}
-            className={`tab-btn ${tabi.key === tab ? "active" : ""}`}
-            onClick={() => setTab(tabi.key)}
-          >
-            {tabi.icon} {tabi.label}
-          </div>
-        ))}
+      <div className="mb-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          {tabs.map((tabi) => (
+            <div
+              key={tabi.key}
+              className={`tab-btn ${tabi.key === tab ? "active" : ""}`}
+              onClick={() => setTab(tabi.key)}
+              style={{ cursor: "pointer" }}
+            >
+              {tabi.icon} {tabi.label}
+            </div>
+          ))}
+        </div>
+
+        {/* Restyled Bootstrap Search Input */}
+        <div className="input-group" style={{ maxWidth: "300px" }}>
+          <span className="input-group-text bg-white border-end-0">
+            <Search size={18} className="text-muted" />
+          </span>
+          <input
+            type="search"
+            className="form-control border-start-0 shadow-none ps-0"
+            placeholder="Search orders..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1); // Reset to page 1 whenever the user types a new search
+            }}
+          />
+        </div>
       </div>
       <OrderTable
         orders={orders}
