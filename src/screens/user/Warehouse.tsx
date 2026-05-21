@@ -1,27 +1,13 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Modal, Button, Form, Badge } from "react-bootstrap";
-import DataTable from "react-data-table-component";
-import {
-  GoogleMap,
-  useJsApiLoader,
-  Marker,
-  Autocomplete,
-} from "@react-google-maps/api";
-import {
-  getAllWarehouses,
-  createWarehouse,
-  updateWarehouse,
-  updateStatus,
-} from "../../APIs/user/warehouse";
-import { getUser } from "../../APIs/user/user";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from "react";
+import { getAllWarehouses, updateStatus } from "../../APIs/user/warehouse";
 import CustomDataTable from "../../components/DataTable";
 import { Mail, MapPin, Phone, User } from "lucide-react";
+import WarehouseModal from "../../components/warehouses/WarehouseModal";
 
-// --- Google Maps Configuration ---
-const LIBRARIES: "places"[] = ["places"];
-const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
-const GOOGLE_MAPS_API_KEY = "AIzaSyANgy6kbp_ciumVNTAwakMFTXdCW3rVZfg";
+export interface UserType {
+  _id: string;
+  name: string;
+}
 
 export interface Warehouse {
   _id: string;
@@ -40,61 +26,25 @@ export interface Warehouse {
   contact_phone: string;
   contact_email: string;
   createdAt?: string;
-  admins?: User[];
+  admins?: UserType[];
 }
 
-export interface User {
-  _id: string;
-  name: string;
-}
-
-const Warehouses: React.FC = () => {
-  // --- Data State ---
+export const Warehouses: React.FC = () => {
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const limit = 10;
   const [totalRecords, setTotalRecords] = useState(0);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
     null
   );
-  const [adminList, setAdminList] = useState<User[]>([]);
-
-  // --- Google Maps State ---
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: LIBRARIES,
-  });
-
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markerPosition, setMarkerPosition] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
     fetchWarehouses();
   }, [page, limit]);
-
-  // Sync Map Marker when opening Edit Modal
-  useEffect(() => {
-    if (
-      showModal &&
-      editingWarehouse?.latitude &&
-      editingWarehouse?.longitude
-    ) {
-      setMarkerPosition({
-        lat: editingWarehouse.latitude,
-        lng: editingWarehouse.longitude,
-      });
-    } else if (showModal && !editingWarehouse) {
-      // Reset if creating new
-      setMarkerPosition(null);
-    }
-  }, [showModal, editingWarehouse]);
 
   const fetchWarehouses = async () => {
     try {
@@ -111,19 +61,19 @@ const Warehouses: React.FC = () => {
 
   const handleClose = () => {
     setShowModal(false);
-    setEditingWarehouse(null);
-    setAdminList([]);
-    setMarkerPosition(null); // Reset map
+    // Slight delay to allow modal exit animation to finish before clearing data
+    setTimeout(() => setEditingWarehouse(null), 200);
   };
 
-  const handleShow = () => setShowModal(true);
+  const handleShow = () => {
+    setEditingWarehouse(null);
+    setShowModal(true);
+  };
 
-  // Uncommented this to allow editing based on your code structure context
-  // const handleEdit = (warehouse: Warehouse) => {
-  //   setEditingWarehouse(warehouse);
-  //   setAdminList(warehouse.admins || []);
-  //   setShowModal(true);
-  // };
+  const handleEdit = (warehouse: Warehouse) => {
+    setEditingWarehouse(warehouse);
+    setShowModal(true);
+  };
 
   const handleToggleStatus = async (warehouse: Warehouse) => {
     const newStatus = warehouse.status === "active" ? "inactive" : "active";
@@ -141,127 +91,26 @@ const Warehouses: React.FC = () => {
     }
   };
 
-  // --- Map Handlers ---
-  const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      setMarkerPosition({
-        lat: e.latLng.lat(),
-        lng: e.latLng.lng(),
-      });
-    }
-  }, []);
-
-  const onPlaceChanged = () => {
-    if (autocompleteRef.current) {
-      const place = autocompleteRef.current.getPlace();
-      if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-
-        setMarkerPosition({ lat, lng });
-
-        map?.panTo({ lat, lng });
-        map?.setZoom(15);
-      } else {
-        toast.error("No details available for input: '" + place.name + "'");
-      }
-    }
-  };
-
-  // --- Submit Handler ---
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as typeof e.target & {
-      name: { value: string };
-      address1: { value: string };
-      address2: { value: string };
-      City: { value: string };
-      State: { value: string };
-      pincode: { value: string };
-      contact_person: { value: string };
-      contact_phone: { value: string };
-      contact_email: { value: string };
-      status: { value: string };
-    };
-
-    const formData = {
-      name: form.name.value.trim(),
-      address1: form.address1.value.trim(),
-      address2: form.address2.value.trim(),
-      City: form.City.value.trim(),
-      State: form.State.value,
-      Country: "IN",
-      pincode: form.pincode.value.trim(),
-      contact_person: form.contact_person.value.trim(),
-      contact_phone: form.contact_phone.value.trim(),
-      contact_email: form.contact_email.value.trim(),
-      // Use State for Coordinates
-      latitude: markerPosition?.lat,
-      longitude: markerPosition?.lng,
-      status: form.status.value as "active" | "inactive" | "suspended",
-      admins: adminList.map((admin) => admin._id),
-    };
-
-    try {
-      if (editingWarehouse) {
-        await updateWarehouse(editingWarehouse._id, formData);
-        toast.success("Warehouse updated successfully");
-      } else {
-        await createWarehouse(formData);
-        toast.success("Warehouse created successfully");
-      }
-      fetchWarehouses();
-      handleClose();
-    } catch (error) {
-      console.error("Error saving warehouse", error);
-      toast.error("Failed to save warehouse");
-    }
-  };
-
-  const handleUserSearch = async (email: string) => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) return;
-
-    try {
-      const user = await getUser(trimmedEmail);
-      if (!user || user.length === 0) {
-        toast.warn("User not found");
-        return;
-      }
-
-      const userObj = user[0];
-
-      if (adminList.some((admin) => admin._id === userObj._id)) {
-        toast.info("User already added as admin");
-        return;
-      }
-      toast.success("User added as admin");
-      setAdminList((prev) => [...prev, userObj]);
-    } catch (error) {
-      console.error("Error finding user:", error);
-      toast.error("Error fetching user");
-    }
-  };
-
-  const removeAdmin = (userId: string) => {
-    setAdminList((prev) => prev.filter((admin) => admin._id !== userId));
-  };
-
   const columns = [
     {
       name: "Warehouse Name",
       selector: (row: Warehouse) => row.name,
       sortable: true,
-      width: "280px", // Gives the name and status enough room
+      width: "280px",
       cell: (row: Warehouse) => (
-        <div className="flex items-center gap-3 py-2 text-xl font-semibold text-neutral-600">
-          {row.name}
+        <div className="flex items-center gap-3 py-2 text-lg font-semibold text-neutral-600">
+          <button
+            onClick={() => handleEdit(row)}
+            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors focus:outline-none text-left"
+          >
+            {row.name}
+          </button>
         </div>
       ),
     },
     {
       name: "Location",
-      selector: (row: Warehouse) => row.City, // Sorting primarily by City makes sense here
+      selector: (row: Warehouse) => row.City,
       wrap: true,
       minWidth: "300px",
       cell: (row: Warehouse) => (
@@ -328,10 +177,10 @@ const Warehouses: React.FC = () => {
           <div className="py-2 flex items-center">
             <button
               onClick={() => handleToggleStatus(row)}
-              className={`w-full font-semibold px-4  text-neutral-600 py-2 rounded-lg shadow-sm transition-all duration-200 border border-neutral-600 ${
+              className={`w-full font-semibold px-4 text-sm text-neutral-600 py-2 rounded-lg shadow-sm transition-all duration-200 border border-neutral-600 ${
                 isActive
-                  ? "hover:bg-red-50 hover:border-red-300"
-                  : "hover:bg-green-50 hover:border-green-300"
+                  ? "hover:bg-red-50 hover:border-red-300 hover:text-red-700"
+                  : "hover:bg-green-50 hover:border-green-300 hover:text-green-700"
               }`}
             >
               {isActive ? "Deactivate" : "Activate"}
@@ -344,13 +193,24 @@ const Warehouses: React.FC = () => {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Warehouses</h4>
-        <Button onClick={handleShow}>+ New Warehouse</Button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-1">
+            Warehouses
+          </h1>
+          <p className="text-sm text-gray-500">
+            Streamline your shipping and fulfillment
+          </p>
+        </div>
+        <button
+          onClick={handleShow}
+          className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+        >
+          + New Warehouse
+        </button>
       </div>
 
       <CustomDataTable
-        // title="Your Warehouse"
         columns={columns as any}
         data={warehouses}
         totalRecords={totalRecords}
@@ -360,254 +220,12 @@ const Warehouses: React.FC = () => {
         isLoading={loading}
       />
 
-      <Modal show={showModal} onHide={handleClose} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingWarehouse ? "Edit Warehouse" : "Create Warehouse"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            <div className="row">
-              <div className="col-md-6">
-                <Form.Group className="mb-2">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    name="name"
-                    defaultValue={editingWarehouse?.name}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Address 1</Form.Label>
-                  <Form.Control
-                    name="address1"
-                    defaultValue={editingWarehouse?.address1}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Address 2</Form.Label>
-                  <Form.Control
-                    name="address2"
-                    defaultValue={editingWarehouse?.address2 || ""}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>City</Form.Label>
-                  <Form.Control
-                    name="City"
-                    defaultValue={editingWarehouse?.City}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>State</Form.Label>
-                  <Form.Control
-                    as="select"
-                    name="State"
-                    defaultValue={editingWarehouse?.State}
-                    required
-                  >
-                    <option value="">Select</option>
-                    {[
-                      "Andaman and Nicobar Islands",
-                      "Andhra Pradesh",
-                      "Arunachal Pradesh",
-                      "Assam",
-                      "Bihar",
-                      "Chandigarh",
-                      "Chhattisgarh",
-                      "Dadra and Nagar Haveli and Daman and Diu",
-                      "Delhi",
-                      "Goa",
-                      "Gujarat",
-                      "Haryana",
-                      "Himachal Pradesh",
-                      "Jammu and Kashmir",
-                      "Jharkhand",
-                      "Karnataka",
-                      "Kerala",
-                      "Ladakh",
-                      "Lakshadweep",
-                      "Madhya Pradesh",
-                      "Maharashtra",
-                      "Manipur",
-                      "Meghalaya",
-                      "Mizoram",
-                      "Nagaland",
-                      "Odisha",
-                      "Puducherry",
-                      "Punjab",
-                      "Rajasthan",
-                      "Sikkim",
-                      "Tamil Nadu",
-                      "Telangana",
-                      "Tripura",
-                      "Uttar Pradesh",
-                      "Uttarakhand",
-                      "West Bengal",
-                    ].map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </Form.Control>
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Pincode</Form.Label>
-                  <Form.Control
-                    name="pincode"
-                    defaultValue={editingWarehouse?.pincode}
-                    required
-                    pattern="[1-9][0-9]{5}"
-                    title="Enter a valid 6-digit Indian pincode"
-                  />
-                </Form.Group>
-              </div>
-              <div className="col-md-6">
-                <Form.Group className="mb-2">
-                  <Form.Label>Contact Person</Form.Label>
-                  <Form.Control
-                    name="contact_person"
-                    defaultValue={editingWarehouse?.contact_person}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Contact Phone</Form.Label>
-                  <Form.Control
-                    name="contact_phone"
-                    defaultValue={editingWarehouse?.contact_phone}
-                    required
-                    pattern="[6-9]\d{9}"
-                    title="Enter a valid 10-digit Indian mobile number"
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Contact Email</Form.Label>
-                  <Form.Control
-                    name="contact_email"
-                    type="email"
-                    defaultValue={editingWarehouse?.contact_email}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Status</Form.Label>
-                  <Form.Control
-                    as="select"
-                    name="status"
-                    defaultValue={editingWarehouse?.status || "active"}
-                    required
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
-                  </Form.Control>
-                </Form.Group>
-
-                <hr />
-                <Form.Group className="mb-2">
-                  <Form.Label>Find Admin User by Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="email"
-                    placeholder="Enter user email"
-                    onBlur={(e) => handleUserSearch(e.target.value)}
-                  />
-                </Form.Group>
-                <div className="mb-2">
-                  {adminList.map((admin) => (
-                    <Badge bg="secondary" className="me-1" key={admin._id}>
-                      {admin.name}{" "}
-                      <span
-                        role="button"
-                        onClick={() => removeAdmin(admin._id)}
-                        style={{
-                          marginLeft: 6,
-                          cursor: "pointer",
-                          color: "white",
-                        }}
-                      >
-                        ×
-                      </span>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* --- Google Map Section --- */}
-            <div className="mt-3 border rounded p-3 bg-light">
-              <Form.Label className="fw-bold">Warehouse Location</Form.Label>
-              <div className="text-muted small mb-2">
-                Search or click on map to pin location.
-              </div>
-
-              {isLoaded ? (
-                <>
-                  <div className="mb-2">
-                    <Autocomplete
-                      onLoad={(autocomplete) =>
-                        (autocompleteRef.current = autocomplete)
-                      }
-                      onPlaceChanged={onPlaceChanged}
-                    >
-                      <Form.Control
-                        type="text"
-                        placeholder="Search Location"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") e.preventDefault();
-                        }}
-                      />
-                    </Autocomplete>
-                  </div>
-
-                  <div style={{ height: "300px", width: "100%" }}>
-                    <GoogleMap
-                      mapContainerStyle={{ height: "100%", width: "100%" }}
-                      center={markerPosition || DEFAULT_CENTER}
-                      zoom={markerPosition ? 15 : 5}
-                      onLoad={(mapInstance) => setMap(mapInstance)}
-                      onClick={onMapClick}
-                      options={{
-                        streetViewControl: false,
-                        mapTypeControl: false,
-                      }}
-                    >
-                      {markerPosition && <Marker position={markerPosition} />}
-                    </GoogleMap>
-                  </div>
-
-                  <div className="mt-2 d-flex gap-3">
-                    <small className="text-muted">
-                      <strong>Lat:</strong>{" "}
-                      {markerPosition?.lat.toFixed(6) || "Not set"}
-                    </small>
-                    <small className="text-muted">
-                      <strong>Lng:</strong>{" "}
-                      {markerPosition?.lng.toFixed(6) || "Not set"}
-                    </small>
-                  </div>
-                </>
-              ) : (
-                <div>Loading Map...</div>
-              )}
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              {editingWarehouse ? "Update" : "Create"}
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
+      <WarehouseModal
+        isOpen={showModal}
+        onClose={handleClose}
+        editingWarehouse={editingWarehouse}
+        onSuccess={fetchWarehouses}
+      />
     </>
   );
 };
-
-export { Warehouses };

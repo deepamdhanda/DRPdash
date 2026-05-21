@@ -1,11 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
-import DataTable from "react-data-table-component";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   getAllProductPacks,
   createProductPack,
   updateProductPack,
 } from "../../APIs/user/productPack";
+import CustomDataTable from "../../components/DataTable"; // Adjust path if needed
+import {
+  Edit2,
+  Package,
+  Ruler,
+  IndianRupee,
+  Activity,
+  Calendar,
+} from "lucide-react";
+import { ProductPackModal } from "../../components/productpacks/ProductPackModal";
 
 export interface User {
   _id: string;
@@ -28,44 +36,30 @@ export interface ProductPack {
   updatedAt?: string;
 }
 
-const ProductPacks: React.FC = () => {
-  const [product_packs, setProductPacks] = useState<ProductPack[]>([]);
+export const ProductPacks: React.FC = () => {
+  const [productPacks, setProductPacks] = useState<ProductPack[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProductPack, setEditingProductPack] =
     useState<ProductPack | null>(null);
-  const [dimensions, setDimensions] = useState({
-    length: 0,
-    breadth: 0,
-    height: 0,
-  });
-  const [volumetricWeight, setVolumetricWeight] = useState<number>(0);
 
   // Pagination states
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const limit = 10;
 
-  useEffect(() => {
-    // Recalculate volumetric weight whenever dimensions change
-    const { length, breadth, height } = dimensions;
-    const calculatedVolumetricWeight = (length * breadth * height) / 5000;
-    setVolumetricWeight(calculatedVolumetricWeight * 1000);
-  }, [dimensions]);
-
-  // Fetch product packs whenever page/limit changes
   useEffect(() => {
     fetchProductPacks(page, limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit]);
 
   const fetchProductPacks = async (pageParam = page, limitParam = limit) => {
     setLoading(true);
     try {
-      const productPackData = await getAllProductPacks(pageParam, limitParam);
-      // Expected: { totalRecords: number, data: ProductPack[] }
-      setTotalRecords(productPackData.total);
-      setProductPacks(productPackData.data);
+      const data = await getAllProductPacks(pageParam, limitParam);
+      setTotalRecords(data.total);
+      setProductPacks(data.data);
     } catch (error) {
       console.error("Error loading product_packs", error);
     } finally {
@@ -73,33 +67,14 @@ const ProductPacks: React.FC = () => {
     }
   };
 
-  const handleClose = () => {
-    setShowModal(false);
+  const handleCreateNew = () => {
     setEditingProductPack(null);
-    setDimensions({ length: 0, breadth: 0, height: 0 });
-    setVolumetricWeight(0);
-  };
-
-  const handleShow = () => setShowModal(true);
-
-  const handleDimensionChange = (
-    field: "length" | "breadth" | "height",
-    value: number
-  ) => {
-    setDimensions((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setIsModalOpen(true);
   };
 
   const handleEdit = (product_pack: ProductPack) => {
     setEditingProductPack(product_pack);
-    setDimensions({
-      length: product_pack.length,
-      breadth: product_pack.breadth,
-      height: product_pack.height,
-    });
-    setShowModal(true);
+    setIsModalOpen(true);
   };
 
   const handleToggleStatus = async (product_pack: ProductPack) => {
@@ -111,259 +86,183 @@ const ProductPacks: React.FC = () => {
     ) {
       try {
         await updateProductPack(product_pack._id, { status: newStatus });
-        await fetchProductPacks(); // Refresh current page
+        await fetchProductPacks();
       } catch (error) {
         console.error("Error updating status", error);
       }
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as typeof e.target & {
-      name: { value: string };
-      weight: { value: number };
-      length: { value: number };
-      breadth: { value: number };
-      height: { value: number };
-      stock: { value: number };
-      packing_cost: { value: number };
-      volumetric_weight: { value: number };
-    };
-
-    const formData = {
-      name: form.name.value.trim(),
-      weight: form.weight.value,
-      length: form.length.value,
-      breadth: form.breadth.value,
-      height: form.height.value,
-      stock: form.stock.value,
-      packing_cost: form.packing_cost.value,
-      volumetric_weight: form.volumetric_weight.value,
-    };
-
+  const handleSaveProductPack = async (
+    data: Omit<ProductPack, "_id" | "created_by" | "status">
+  ) => {
     try {
       if (editingProductPack) {
-        await updateProductPack(editingProductPack._id, formData);
+        await updateProductPack(editingProductPack._id, data);
       } else {
-        await createProductPack(formData);
-        // Optional: go back to first page after create
-        setPage(1);
+        await createProductPack(data);
+        setPage(1); // Go to first page on new entry
       }
-      await fetchProductPacks(); // Refresh list for current page
-      handleClose();
+      await fetchProductPacks();
     } catch (error) {
       console.error("Error saving product pack", error);
+      throw error;
     }
   };
 
-  const columns = [
-    {
-      name: "Name",
-      selector: (row: ProductPack) => (
-        <>
-          {row.status === "active"
-            ? "🟢"
-            : row.status === "inactive"
-            ? "🔴"
-            : "❌"}{" "}
-          <strong>{row.name}</strong>
-        </>
-      ),
-      sortable: true,
-    },
-    {
-      name: "Created By",
-      selector: (row: ProductPack) => row.created_by?.name || "—",
-    },
-    {
-      name: "Status",
-      selector: (row: ProductPack) => row.status,
-      sortable: true,
-    },
-    {
-      name: "Created On",
-      selector: (row: ProductPack) =>
-        row.createdAt
-          ? new Date(row.createdAt).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-          : "—",
-    },
-    {
-      name: "Actions",
-      cell: (row: ProductPack) => (
-        <>
-          <Button
-            variant="outline-primary"
-            size="sm"
-            className="me-2"
-            onClick={() => handleEdit(row)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant={
-              row.status === "active" ? "outline-danger" : "outline-success"
-            }
-            size="sm"
-            onClick={() => handleToggleStatus(row)}
-          >
-            {row.status === "active" ? "Deactivate" : "Activate"}
-          </Button>
-        </>
-      ),
-      width: "180px",
-    },
-  ];
+  const columns = useMemo(
+    () => [
+      {
+        name: "Pack Details",
+        selector: (row: ProductPack) => row.name,
+        sortable: true,
+        width: "250px",
+        cell: (row: ProductPack) => (
+          <div className="flex flex-col gap-1 py-3">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                  row.status === "active"
+                    ? "bg-green-500 shadow-sm shadow-green-500/40"
+                    : row.status === "inactive"
+                    ? "bg-red-500 shadow-sm shadow-red-500/40"
+                    : "bg-gray-400"
+                }`}
+              />
+              <span className="text-sm font-semibold text-gray-800 leading-tight">
+                {row.name}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 ms-4">
+              <span>By {row.created_by?.name || "Unknown"}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Specifications",
+        minWidth: "220px",
+        cell: (row: ProductPack) => (
+          <div className="flex flex-col gap-1.5 py-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <Ruler className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <span>
+                {row.length} × {row.breadth} × {row.height} cm
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">
+                Wt: {row.weight}g
+              </span>
+              <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100">
+                Vol: {row.volumetric_weight}g
+              </span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Inventory & Cost",
+        minWidth: "180px",
+        cell: (row: ProductPack) => (
+          <div className="flex flex-col gap-1.5 py-2 text-sm">
+            <div className="flex items-center gap-2 text-gray-700">
+              <Package className="w-4 h-4 text-gray-400" />
+              <span className="font-medium">{row.stock} in stock</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <IndianRupee className="w-3.5 h-3.5 text-gray-400" />
+              <span>{row.packing_cost} / piece</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Created On",
+        minWidth: "150px",
+        cell: (row: ProductPack) => (
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <span>
+              {row.createdAt
+                ? new Date(row.createdAt).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "—"}
+            </span>
+          </div>
+        ),
+      },
+      {
+        name: "Actions",
+        width: "200px",
+        cell: (row: ProductPack) => {
+          const isActive = row.status === "active";
+          return (
+            <div className="py-2 flex items-center gap-2 w-full">
+              <button
+                onClick={() => handleEdit(row)}
+                className="p-2 text-neutral-600 rounded-lg shadow-sm transition-all duration-200 border border-neutral-300 hover:bg-neutral-50 hover:border-neutral-400 flex items-center justify-center"
+                title="Edit Product Pack"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleToggleStatus(row)}
+                className={`flex-1 flex items-center justify-center gap-1.5 font-medium px-3 py-1.5 text-sm rounded-lg shadow-sm transition-all duration-200 border ${
+                  isActive
+                    ? "text-red-700 border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300"
+                    : "text-green-700 border-green-200 bg-green-50 hover:bg-green-100 hover:border-green-300"
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                {isActive ? "Deactivate" : "Activate"}
+              </button>
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   return (
-    <div className="container mt-4 ms-2 me-2">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Product Packs</h4>
-        <Button onClick={handleShow}>+ New Product Pack</Button>
+    <>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-1">
+            Product Packs
+          </h1>
+          <p className="text-sm text-gray-500">
+            Manage your packaging materials, dimensions, and inventory.
+          </p>
+        </div>
+        <button
+          onClick={handleCreateNew}
+          className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+        >
+          + New Product Pack
+        </button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : product_packs.length === 0 ? (
-        <p>No product packs found.</p>
-      ) : (
-        <DataTable
-          title="Your Product Packs"
-          data={product_packs}
-          columns={columns as any}
-          pagination
-          paginationServer
-          paginationTotalRows={totalRecords}
-          paginationDefaultPage={page}
-          paginationPerPage={limit}
-          onChangePage={(p) => {
-            setPage(p);
-          }}
-          onChangeRowsPerPage={(newLimit) => {
-            setLimit(newLimit);
-            setPage(1); // ALWAYS reset to page 1 when limit changes
-          }}
-          highlightOnHover
-          responsive
-          striped
-          persistTableHead
-        />
-      )}
+      <CustomDataTable
+        columns={columns}
+        data={productPacks}
+        totalRecords={totalRecords}
+        page={page}
+        limit={limit}
+        setPage={setPage}
+        isLoading={loading}
+      />
 
-      <Modal show={showModal} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingProductPack ? "Edit ProductPack" : "Create ProductPack"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            <Form.Group className="mb-2">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                name="name"
-                defaultValue={editingProductPack?.name || ""}
-                required
-              />
-            </Form.Group>
-            <div className="mb-2 row">
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Weight (gm)</Form.Label>
-                <Form.Control
-                  name="weight"
-                  type="number"
-                  defaultValue={editingProductPack?.weight || ""}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Volumetric Weight (gm)</Form.Label>
-                <Form.Control
-                  name="volumetric_weight"
-                  disabled
-                  type="number"
-                  step={1}
-                  value={volumetricWeight.toFixed(2)}
-                  required
-                />
-              </Form.Group>
-            </div>
-            <div className="mb-2 row">
-              <Form.Group className="mb-2 col-4">
-                <Form.Label>Length (cm)</Form.Label>
-                <Form.Control
-                  name="length"
-                  type="number"
-                  value={dimensions.length}
-                  onChange={(e) =>
-                    handleDimensionChange("length", Number(e.target.value))
-                  }
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-4">
-                <Form.Label>Breadth (cm)</Form.Label>
-                <Form.Control
-                  name="breadth"
-                  type="number"
-                  value={dimensions.breadth}
-                  onChange={(e) =>
-                    handleDimensionChange("breadth", Number(e.target.value))
-                  }
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-4">
-                <Form.Label>Height (cm)</Form.Label>
-                <Form.Control
-                  name="height"
-                  type="number"
-                  value={dimensions.height}
-                  onChange={(e) =>
-                    handleDimensionChange("height", Number(e.target.value))
-                  }
-                  required
-                />
-              </Form.Group>
-            </div>
-            <div className="mb-2 row">
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Stock</Form.Label>
-                <Form.Control
-                  name="stock"
-                  type="number"
-                  step={1}
-                  defaultValue={editingProductPack?.stock || ""}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-2 col-6">
-                <Form.Label>Cost per peice</Form.Label>
-                <Form.Control
-                  name="packing_cost"
-                  type="number"
-                  defaultValue={editingProductPack?.packing_cost || ""}
-                  required
-                />
-              </Form.Group>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              {editingProductPack ? "Update" : "Create"}
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-    </div>
+      <ProductPackModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        productPack={editingProductPack}
+        onSave={handleSaveProductPack}
+      />
+    </>
   );
 };
-
-export { ProductPacks };

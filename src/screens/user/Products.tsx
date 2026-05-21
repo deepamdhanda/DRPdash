@@ -1,21 +1,28 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-import DataTable, { TableColumn } from "react-data-table-component";
 import {
   createProduct,
   getAllProducts,
   updateProduct,
 } from "../../APIs/user/product";
 import { getAllWarehouses } from "../../APIs/user/warehouse";
-import { Warehouse } from "./Warehouse";
 import { createAmazonS3 } from "../../APIs/user/amazonS3";
+import CustomDataTable from "../../components/DataTable";
+import { Edit2, Package, Ruler, Tag, Weight } from "lucide-react";
+import { ProductModal } from "../../components/products/ProductModal"; // Adjust path if needed
 
-interface ProductAttribute {
+// Shared Interfaces
+export interface Warehouse {
+  _id: string;
+  name: string;
+  // ...other warehouse fields
+}
+
+export interface ProductAttribute {
   key: string;
   value: string;
 }
 
-interface WarehouseStock {
+export interface WarehouseStock {
   warehouse: Warehouse;
   stock: number;
 }
@@ -38,22 +45,27 @@ export interface Product {
   updatedAt?: string;
 }
 
-const Products: React.FC = () => {
+export const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productAttributes, setProductAttributes] = useState<
-    ProductAttribute[]
-  >([]);
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [warehouseStocks, setWarehouseStocks] = useState<WarehouseStock[]>([]);
-  const [imageName, setImageName] = useState<string>("");
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Pagination State
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const limit = 10;
+
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
+
+  useEffect(() => {
+    fetchProducts(page, limit);
+  }, [page, limit]);
 
   const fetchWarehouses = async () => {
     try {
@@ -63,19 +75,11 @@ const Products: React.FC = () => {
       console.error("Error loading warehouses", error);
     }
   };
-  useEffect(() => {
-    fetchWarehouses();
-  }, []);
-
-  useEffect(() => {
-    fetchProducts(page, limit);
-  }, [page, limit]);
 
   const fetchProducts = async (pageParam = page, limitParam = limit) => {
     setLoading(true);
     try {
       const productData = await getAllProducts(pageParam, limitParam);
-
       setTotalRecords(productData.total);
       setProducts(productData.data);
     } catch (error) {
@@ -85,41 +89,14 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleClose = () => {
-    setShowModal(false);
+  const handleCreateNew = () => {
     setEditingProduct(null);
-    setProductAttributes([]);
-    setImagePreview("");
-    setWarehouseStocks([]);
-    setImageName("");
-  };
-
-  const handleShow = () => {
-    const defaultStocks: WarehouseStock[] = warehouses.map((wh) => ({
-      warehouse: wh,
-      stock: 0,
-    }));
-    setWarehouseStocks(defaultStocks);
-    setShowModal(true);
+    setIsModalOpen(true);
   };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setProductAttributes(product.product_attributes || []);
-    setImagePreview(product.product_image || "");
-
-    const mappedStocks: WarehouseStock[] = warehouses.map((wh) => {
-      const existingStock = product.warehouse.find(
-        (w) => w.warehouse._id === wh._id
-      );
-      return {
-        warehouse: wh,
-        stock: existingStock ? existingStock.stock : 0,
-      };
-    });
-
-    setWarehouseStocks(mappedStocks);
-    setShowModal(true);
+    setIsModalOpen(true);
   };
 
   const handleToggleStatus = async (product: Product) => {
@@ -138,97 +115,36 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAttributeChange = (
-    index: number,
-    field: "key" | "value",
-    value: string
+  const handleSaveProduct = async (
+    productData: Partial<Product>,
+    imagePreview: string,
+    imageName: string
   ) => {
-    const updated = [...productAttributes];
-    updated[index][field] = value;
-    setProductAttributes(updated);
-  };
-
-  const addAttribute = () => {
-    setProductAttributes([...productAttributes, { key: "", value: "" }]);
-  };
-
-  const removeAttribute = (index: number) => {
-    const updated = [...productAttributes];
-    updated.splice(index, 1);
-    setProductAttributes(updated);
-  };
-
-  const handleWarehouseStockChange = (warehouseId: string, stock: number) => {
-    const updated = [...warehouseStocks];
-    const idx = updated.findIndex((w) => w.warehouse._id === warehouseId);
-    if (idx !== -1) {
-      updated[idx].stock = stock;
-    }
-    setWarehouseStocks(updated);
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-
-    const newProduct: Product = {
-      product_name: (
-        form.elements.namedItem("product_name") as HTMLInputElement
-      ).value,
-      product_description: (
-        form.elements.namedItem("product_description") as HTMLTextAreaElement
-      ).value,
-      product_weight: parseFloat(
-        (form.elements.namedItem("product_weight") as HTMLInputElement).value
-      ),
-      length: parseFloat(
-        (form.elements.namedItem("length") as HTMLInputElement).value
-      ),
-      breadth: parseFloat(
-        (form.elements.namedItem("breadth") as HTMLInputElement).value
-      ),
-      height: parseFloat(
-        (form.elements.namedItem("height") as HTMLInputElement).value
-      ),
-      product_attributes: productAttributes,
-      product_image: imagePreview || "",
-      warehouse: warehouseStocks.filter((ws) => ws.stock > 0),
-    };
-
     try {
-      let imageData: { url: string } | null = null;
-      if (imagePreview) {
-        imageData = await createAmazonS3(
+      let finalProductData = { ...productData };
+
+      // Handle Image Upload if a new image preview is provided
+      if (imagePreview && !imagePreview.startsWith("http")) {
+        const imageData = await createAmazonS3(
           `product/${Date.now()}-${imageName.replace(/ /g, "_")}`,
           imagePreview
         );
-        newProduct.product_image = (imageData as any).url;
+        finalProductData.product_image = (imageData as any).url;
+      } else {
+        finalProductData.product_image = imagePreview || "";
       }
 
       if (editingProduct && editingProduct._id) {
-        await updateProduct(editingProduct._id, newProduct);
+        await updateProduct(editingProduct._id, finalProductData as Product);
       } else {
-        await createProduct(newProduct);
-
-        setPage(1);
+        await createProduct(finalProductData as Product);
+        setPage(1); // Reset to first page on create
       }
 
       await fetchProducts();
-      handleClose();
-    } catch (err) {
-      console.error("Error saving product", err);
+    } catch (error) {
+      console.error("Error saving product", error);
+      throw error; // Re-throw so the modal form knows it failed
     }
   };
 
@@ -239,291 +155,163 @@ const Products: React.FC = () => {
     }, {});
   }, [warehouses]);
 
-  const columns: TableColumn<Product>[] = useMemo(
+  const columns = useMemo(
     () => [
       {
-        name: "Name",
+        name: "Product Name",
         selector: (row: Product) => row.product_name,
         sortable: true,
-      },
-      {
-        name: "Description",
-        selector: (row: Product) => row.product_description,
-      },
-      {
-        name: "Dimensions (L×B×H)",
-        selector: (row: Product) =>
-          `${row.length} × ${row.breadth} × ${row.height}`,
-      },
-      {
-        name: "Weight",
-        selector: (row: Product) => `${row.product_weight} kg`,
-      },
-      {
-        name: "Attributes",
+        width: "280px",
+        wrap: true,
         cell: (row: Product) => (
-          <div>
-            {row.product_attributes.map((attr, idx) => (
-              <div key={idx}>
-                <strong>{attr.key}:</strong> {attr.value}
-              </div>
-            ))}
+          <div className="flex flex-col gap-1 py-3">
+            <span className="text-lg font-semibold text-neutral-600 leading-tight">
+              {row.product_name}
+            </span>
+            <span className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+              {row.product_description}
+            </span>
           </div>
         ),
       },
       {
-        name: "Stock",
+        name: "Specifications",
+        minWidth: "220px",
         cell: (row: Product) => (
-          <div>
-            {row.warehouse.map((wh, i) => (
-              <div key={i}>
-                <strong>
-                  {warehouseMap[wh.warehouse?._id]?.name || "N/A"}:
-                </strong>{" "}
-                {wh.stock}
-              </div>
-            ))}
+          <div className="flex flex-col gap-2 py-2 text-sm">
+            <div className="flex items-center gap-2 text-gray-600">
+              <Ruler className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <span>
+                <span className="text-gray-900 font-medium">Dim:</span>{" "}
+                {row.length} × {row.breadth} × {row.height}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <Weight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <span>
+                <span className="text-gray-900 font-medium">Weight:</span>{" "}
+                {row.product_weight} kg
+              </span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Attributes",
+        minWidth: "200px",
+        cell: (row: Product) => (
+          <div className="flex flex-col gap-1.5 py-2 text-sm">
+            {row.product_attributes?.length > 0 ? (
+              row.product_attributes.map((attr, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-gray-600">
+                  <Tag className="w-3.5 h-3.5 mt-0.5 text-gray-400 shrink-0" />
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-gray-900 font-medium capitalize">
+                      {attr.key}
+                    </span>
+                    <span className="text-gray-500 text-xs">{attr.value}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-400 italic">No attributes</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        name: "Stock Status",
+        minWidth: "220px",
+        cell: (row: Product) => (
+          <div className="flex flex-col gap-2 py-2 text-sm w-full pe-4">
+            {row.warehouse?.length > 0 ? (
+              row.warehouse.map((wh, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2 text-gray-600 truncate">
+                    <Package className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">
+                      {warehouseMap[wh.warehouse?._id]?.name || "N/A"}
+                    </span>
+                  </div>
+                  <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md text-xs font-semibold shrink-0">
+                    {wh.stock}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-400 italic">No stock data</span>
+            )}
           </div>
         ),
       },
       {
         name: "Actions",
-        cell: (row: Product) => (
-          <>
-            <Button
-              variant="outline-primary"
-              size="sm"
-              className="me-2"
-              onClick={() => handleEdit(row)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant={
-                row.status === "active" ? "outline-danger" : "outline-success"
-              }
-              size="sm"
-              onClick={() => handleToggleStatus(row)}
-            >
-              {row.status === "active" ? "Deactivate" : "Activate"}
-            </Button>
-          </>
-        ),
+        width: "220px",
+        cell: (row: Product) => {
+          const isActive = row.status === "active";
+          return (
+            <div className="py-2 flex items-center gap-2 w-full">
+              <button
+                onClick={() => handleEdit(row)}
+                className="p-2.5 text-neutral-600 rounded-lg shadow-sm transition-all duration-200 border border-neutral-300 hover:bg-neutral-50 hover:border-neutral-400 flex items-center justify-center"
+                title="Edit Product"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleToggleStatus(row)}
+                className={`flex-1 font-semibold px-3 py-2 text-sm text-neutral-600 rounded-lg shadow-sm transition-all duration-200 border border-neutral-600 ${
+                  isActive
+                    ? "hover:bg-red-50 hover:border-red-300 hover:text-red-700"
+                    : "hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+                }`}
+              >
+                {isActive ? "Deactivate" : "Activate"}
+              </button>
+            </div>
+          );
+        },
       },
     ],
     [warehouseMap]
   );
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Products</h4>
-        <Button onClick={handleShow}>Create New</Button>
+    <>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-1">
+            Products
+          </h1>
+        </div>
+        <button
+          onClick={handleCreateNew}
+          className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+        >
+          Create New
+        </button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : products.length === 0 ? (
-        <p>No products found.</p>
-      ) : (
-        <DataTable
-          title="Your Products"
-          columns={columns}
-          data={products}
-          pagination
-          paginationServer
-          paginationTotalRows={totalRecords}
-          paginationDefaultPage={page}
-          paginationPerPage={limit}
-          onChangePage={(p) => {
-            setPage(p);
-          }}
-          onChangeRowsPerPage={(newLimit) => {
-            setLimit(newLimit);
-            setPage(1);
-          }}
-          highlightOnHover
-          responsive
-        />
-      )}
+      <CustomDataTable
+        columns={columns}
+        data={products}
+        totalRecords={totalRecords}
+        page={page}
+        limit={limit}
+        setPage={setPage}
+        isLoading={loading}
+      />
 
-      <Modal show={showModal} onHide={handleClose} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingProduct ? "Edit Product" : "Create Product"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Product Name</Form.Label>
-                  <Form.Control
-                    name="product_name"
-                    defaultValue={editingProduct?.product_name || ""}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Description</Form.Label>
-                  <Form.Control
-                    name="product_description"
-                    as="textarea"
-                    rows={3}
-                    defaultValue={editingProduct?.product_description || ""}
-                  />
-                </Form.Group>
-
-                {/* DIMENSIONS ROW */}
-                <Row>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Length (cm)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        step="0.01"
-                        name="length"
-                        defaultValue={editingProduct?.length || 0}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Breadth (cm)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        step="0.01"
-                        name="breadth"
-                        defaultValue={editingProduct?.breadth || 0}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Height (cm)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        step="0.01"
-                        name="height"
-                        defaultValue={editingProduct?.height || 0}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Weight (kg)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.001"
-                    name="product_weight"
-                    defaultValue={editingProduct?.product_weight || ""}
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Warehouse Stock</Form.Label>
-                  {warehouses.map((wh) => (
-                    <Row className="mb-2" key={wh._id}>
-                      <Col>{wh.name}</Col>
-                      <Col>
-                        <Form.Control
-                          type="number"
-                          placeholder="Stock"
-                          value={
-                            warehouseStocks
-                              .find((w) => w.warehouse._id === wh._id)
-                              ?.stock?.toString() || ""
-                          }
-                          onChange={(e) =>
-                            handleWarehouseStockChange(
-                              wh._id,
-                              parseInt(e.target.value, 10) || 0
-                            )
-                          }
-                        />
-                      </Col>
-                    </Row>
-                  ))}
-                </Form.Group>
-              </Col>
-
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Product Image</Form.Label>
-                  <Form.Control
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                  {imagePreview && (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="mt-2 w-100 rounded shadow-sm"
-                    />
-                  )}
-                </Form.Group>
-
-                <Form.Label>Attributes</Form.Label>
-                {productAttributes.map((attr, index) => (
-                  <Row key={index} className="mb-2">
-                    <Col>
-                      <Form.Control
-                        placeholder="Key"
-                        value={attr.key}
-                        onChange={(e) =>
-                          handleAttributeChange(index, "key", e.target.value)
-                        }
-                      />
-                    </Col>
-                    <Col>
-                      <Form.Control
-                        placeholder="Value"
-                        value={attr.value}
-                        onChange={(e) =>
-                          handleAttributeChange(index, "value", e.target.value)
-                        }
-                      />
-                    </Col>
-                    <Col xs="auto">
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removeAttribute(index)}
-                      >
-                        ✕
-                      </Button>
-                    </Col>
-                  </Row>
-                ))}
-                <Button
-                  size="sm"
-                  variant="outline-primary"
-                  onClick={addAttribute}
-                >
-                  + Add Attribute
-                </Button>
-              </Col>
-            </Row>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              {editingProduct ? "Update" : "Create"}
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-    </div>
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={editingProduct}
+        warehouses={warehouses}
+        onSave={handleSaveProduct}
+      />
+    </>
   );
 };
-
-export { Products };
