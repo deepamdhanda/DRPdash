@@ -51,6 +51,7 @@ const navGroups: NavLink[][] = [
       path: "/user/order-dash",
       children: [
         { name: "Order", link: "/user/order-dash" },
+        { name: "Old Orders", link: "/user/orders" },
         { name: "Flagged Order", link: "/user/flaggedOrders" },
       ],
     },
@@ -61,6 +62,10 @@ const navGroups: NavLink[][] = [
       name: "Business Account",
       icon: <Layers3 {...iconProps} />,
       path: "/user/pools",
+      children: [
+        { name: "Business Accounts", link: "/user/pools" },
+        { name: "Channel Accounts", link: "/user/channel_accounts" },
+      ],
     },
   ],
 
@@ -77,6 +82,11 @@ const navGroups: NavLink[][] = [
       name: "Products",
       icon: <Boxes {...iconProps} />,
       path: "/user/products",
+      children: [
+        { name: "Product", link: "/user/products" },
+        { name: "Product SKU", link: "/user/productSKU" },
+        { name: "Channel SKU", link: "/user/channelSKU" },
+      ],
     },
     {
       name: "Product Packs",
@@ -148,28 +158,30 @@ const UserPanel: React.FC = () => {
   });
   useEffect(() => {
     const currentPath = location.pathname;
-    let matchedName = "";
+    let matchedParent = null;
 
-    navGroups.forEach((group) => {
-      group.forEach((link) => {
-        if (link.path === currentPath) matchedName = link.name;
-      });
-    });
-    navGroups.forEach((group) => {
-      group.forEach((link) => {
-        if (link.name === matchedName) {
-          if (link.children) {
-            setNlink(link.children);
-            return;
-          }
-          setNlink(null);
+    // Search through groups to find a matching parent OR a matching child
+    for (const group of navGroups) {
+      for (const item of group) {
+        if (
+          item.path === currentPath ||
+          item.children?.some((child) => child.link === currentPath)
+        ) {
+          matchedParent = item;
+          break;
         }
-      });
-    });
-    if (matchedName) {
-      setActiveLink(matchedName);
-      document.title = `${matchedName} - OrderzUp`;
+      }
+      if (matchedParent) break;
+    }
+
+    // Apply the active states
+    if (matchedParent) {
+      setActiveLink(matchedParent.name);
+      setNlink(matchedParent.children || null);
+      document.title = `${matchedParent.name} - OrderzUp`;
     } else {
+      setActiveLink("");
+      setNlink(null);
       document.title = "Dashboard - OrderzUp";
     }
   }, [location.pathname]);
@@ -329,7 +341,7 @@ const UserPanel: React.FC = () => {
                     {isActive && (
                       <motion.div
                         layoutId="desktop-underline"
-                        className="absolute left-0 right-0 bottom-0 h-[3px] bg-[#F5891E] rounded-t-md mx-4"
+                        className="absolute left-0 right-0 bottom-0 h-0.75 bg-[#F5891E] rounded-t-md mx-4"
                         initial={false}
                         transition={{
                           type: "spring",

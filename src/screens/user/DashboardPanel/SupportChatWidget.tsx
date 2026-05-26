@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
-import { FaComments, FaChevronLeft } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import {
+  FaComments,
+  FaChevronLeft,
+  FaTimes,
+  FaRegLifeRing,
+  FaPaperclip,
+} from "react-icons/fa";
 import { fetchGyaan, fetchTopics } from "../../../APIs/user/supportChat";
 import { getAccountSummary } from "../../../APIs/user/dashboard";
-import { Form, Button, Tabs, Tab, Spinner, Modal } from "react-bootstrap";
 import { createAmazonS3 } from "../../../APIs/user/amazonS3";
 import { toast } from "react-toastify";
 import {
@@ -14,7 +19,7 @@ import {
 import { useUserStore } from "../../../store/useUserStore";
 import { useStatsStore } from "../../../store/useStatsStore";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Topic = {
   _id: string;
@@ -43,6 +48,83 @@ type Ticket = {
   createdAt: string;
 };
 
+// --- Design System Constants ---
+const theme = {
+  white: "#ffffff",
+  black: "#000000",
+  textMain: "#111827",
+  textMuted: "#6b7280",
+  highlight: "#F5891E",
+  border: "#e5e7eb",
+  bgSubtle: "#f9fafb",
+  shadowFloat:
+    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+  shadowSubtle:
+    "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+};
+
+// --- Custom Components & Styles ---
+
+const CustomSpinner = ({
+  size = 20,
+  color = theme.white,
+}: {
+  size?: number;
+  color?: string;
+}) => (
+  <motion.div
+    animate={{ rotate: 360 }}
+    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+    style={{
+      width: size,
+      height: size,
+      border: `2px solid ${color}`,
+      borderTopColor: "transparent",
+      borderRadius: "50%",
+      display: "inline-block",
+    }}
+  />
+);
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 12px",
+  border: `1px solid ${theme.border}`,
+  borderRadius: "8px",
+  fontSize: "14px",
+  marginBottom: "16px",
+  boxSizing: "border-box",
+  fontFamily: "inherit",
+  backgroundColor: theme.white,
+  color: theme.textMain,
+  outline: "none",
+  transition: "border-color 0.2s",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: "6px",
+  fontSize: "13px",
+  fontWeight: "500",
+  color: theme.textMain,
+};
+
+const btnStyle: React.CSSProperties = {
+  padding: "10px 16px",
+  borderRadius: "8px",
+  border: "none",
+  cursor: "pointer",
+  fontWeight: "500",
+  fontSize: "14px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  transition: "all 0.2s ease",
+};
+
+// --- Main Component ---
+
 const SupportChatWidget = () => {
   const navigate = useNavigate();
   const { setStatsStore } = useStatsStore();
@@ -61,7 +143,6 @@ const SupportChatWidget = () => {
   );
   const [stats, setStats] = useState<any>();
   const [gyaan, setGyaan] = useState<any>();
-  // const [isTicketOpen, setIsTicketOpen] = useState(false)
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isNew, setIsNew] = useState(false);
   const [loadingTickets, setLoadingTickets] = useState(false);
@@ -72,6 +153,7 @@ const SupportChatWidget = () => {
   const [replyLoading, setReplyLoading] = useState(false);
   const [displayImage, setDisplayImage] = useState<string | null>(null);
   const [orderly, setOrderly] = useState(true);
+  const [help, setHelp] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -101,7 +183,6 @@ const SupportChatWidget = () => {
       }
       (res as any).counts.forEach((stat: any) => {
         const token = stat.label.split(" ")[1]?.toLowerCase();
-
         if (
           (token === "pools" ||
             token === "warehouses" ||
@@ -115,7 +196,6 @@ const SupportChatWidget = () => {
   };
 
   const onTicketClose = () => {
-    // setIsTicketOpen(false)
     setSelectedCategory(null);
     setSelectedSubcategory(null);
   };
@@ -227,7 +307,7 @@ const SupportChatWidget = () => {
       toast.success("Reply sent!");
       setReplyMessage("");
       setReplyAttachment(null);
-      openReplyScreen(replyTicketId); // Refresh ticket data
+      openReplyScreen(replyTicketId);
       fetchAllTickets();
     } catch (err) {
       toast.error("Failed to send reply.");
@@ -261,798 +341,1550 @@ const SupportChatWidget = () => {
       setSelectedSubcategory(null);
     }
   };
-  const [help, setHelp] = useState(false);
-  const toggleOpen = () => {
-    setHelp(false);
-  };
+
   return (
     <>
-      {/* Floating Chat Button */}
-      {!help && (
-        <motion.button
-          onClick={() => {
-            setHelp(true);
-            setOpen(false);
-            setOrderly(false);
-          }}
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            backgroundColor: "#dbeafe",
-            color: "#fff",
-            padding: "16px",
-            borderRadius: "50%",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-            border: "none",
-            cursor: "pointer",
-            zIndex: 999,
-          }}
-          layout="position"
-        >
-          <HelpDeskIcon />
-        </motion.button>
-      )}
-
-      <button
-        onClick={() => {
-          setOpen(!open);
-          setOrderly(false);
-        }}
-        style={{
-          position: "fixed",
-          bottom: "84px",
-          right: "24px",
-          backgroundColor: "#F5891E",
-          color: "#fff",
-          padding: "16px",
-          borderRadius: "50%",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          border: "none",
-          cursor: "pointer",
-          zIndex: 999,
-        }}
-      >
-        <FaComments size={20} />
-      </button>
-
-      {/* Onboarding Widget */}
-      {orderly && (
-        <div
-          style={{
-            maxWidth: "320px",
-            backgroundColor: "white",
-            borderRadius: "16px",
-            padding: "16px",
-            marginBottom: "16px",
-            fontSize: "14px",
-            fontFamily: "sans-serif",
-            bottom: 40,
-            right: 24,
-            position: "fixed",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.22)",
-            transition: "transform 0.3s ease, opacity 0.3s ease",
-            transform: "translateY(0%)",
-            opacity: 1,
-            zIndex: 998,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: "8px",
+      <AnimatePresence>
+        {/* HELP DESK LOGIC */}
+        {!help ? (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            onClick={() => {
+              setHelp(true);
+              setOpen(false);
+              setOrderly(false);
             }}
-          >
-            <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>
-              <span style={{ fontSize: "24px" }}>👋</span> Hi {username}!
-            </p>
-            <button
-              style={{ border: "none", background: "#fff", cursor: "pointer" }}
-              onClick={() => {
-                setOrderly(false);
-              }}
-            >
-              X
-            </button>
-          </div>
-          <p style={{ margin: "0 0 4px 0" }}>
-            I’m <strong>Orderly</strong> 💁‍♀️ — your assistant for a smoother
-            shipping journey!
-          </p>
-          {stats && stats.counts.some((s: any) => s.count === 0) ? (
-            <>
-              <p style={{ margin: "0 0 8px 0" }}>
-                Here's your <strong>To-Do List</strong> — you're off to a great
-                start 🚀
-              </p>
-              <ul style={{ paddingLeft: "18px", margin: 0, listStyle: "none" }}>
-                {stats.counts.map((i: any) => (
-                  <li
-                    key={i.label}
-                    style={{
-                      textDecoration: i.count > 0 ? "line-through" : "none",
-                    }}
-                  >
-                    {i.count > 0 ? "✅" : "⬜️"} {i.label}: {i.count}
-                  </li>
-                ))}
-              </ul>
-              <p style={{ margin: "8px 0 0 0", color: "#F5891E" }}>
-                You're almost done! Let’s check off the remaining tasks together
-                💪
-              </p>
-            </>
-          ) : (
-            <>
-              <p style={{ margin: "8px 0 0 0" }}>
-                🎉 You're all set up! Systems are good to go.
-              </p>
-              {gyaan?.gyaan && (
-                <div
-                  style={{
-                    backgroundColor: "#fff3e0",
-                    border: "2px dashed #F5891E",
-                    borderRadius: "12px",
-                    color: "#000434",
-                    padding: "20px",
-                    marginTop: "20px",
-                    fontFamily: "Hiragino Maru Gothic ProN W4",
-                    boxShadow: "2px 4px 12px rgba(0,0,0,0.1)",
-                    position: "relative",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "-12px",
-                      right: "16px",
-                      fontSize: "1.5rem",
-                    }}
-                  >
-                    🤓🧠🔥
-                  </div>
-                  <h3
-                    style={{
-                      fontWeight: "bold",
-                      marginBottom: "10px",
-                      fontSize: "1.4rem",
-                    }}
-                  >
-                    🧠 Aaj Ka Dhamakedaar Gyaan!
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "1.05rem",
-                      fontStyle: "italic",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    “{gyaan?.gyaan}”
-                  </p>
-                  <p
-                    style={{
-                      marginTop: "12px",
-                      fontSize: "0.9rem",
-                      color: "#000",
-                    }}
-                  >
-                    💬 Gyaan accha laga? Toh like thoko, share karo aur doston
-                    ko bhi enlighten karo! 🚀
-                  </p>
-                </div>
-              )}
-              <p style={{ margin: "4px 0 0 0", color: "#000434" }}>
-                😄 Let me know if you need help anytime!
-              </p>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Main Chat Panel */}
-      {open && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            maxWidth: "380px",
-            maxHeight: "80vh",
-            backgroundColor: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
-            overflow: "hidden",
-            zIndex: 1000,
-          }}
-        >
-          {/* Header */}
-          <div
             style={{
-              backgroundColor: "#000434",
-              color: "white",
+              position: "fixed",
+              bottom: "16px",
+              right: "16px",
+              backgroundColor: theme.white,
+              color: theme.textMain,
               padding: "16px",
+              borderRadius: "50%",
+              boxShadow: theme.shadowFloat,
+              border: `1px solid ${theme.border}`,
+              cursor: "pointer",
+              zIndex: 999,
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = theme.highlight)
+            }
+            onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMain)}
+          >
+            <FaRegLifeRing size={20} />
+          </motion.button>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            style={{
+              position: "fixed",
+              bottom: "16px",
+              right: "16px",
+              width: "calc(100vw - 32px)",
+              maxWidth: "320px",
+              backgroundColor: theme.white,
+              borderRadius: "16px",
+              boxShadow: theme.shadowFloat,
+              border: `1px solid ${theme.border}`,
+              overflow: "hidden",
+              zIndex: 1000,
+              padding: "24px",
+              fontFamily: "sans-serif",
             }}
           >
-            <span style={{ fontWeight: "bold" }}>👋 Hey, I’m Orderly</span>
-            <button
-              onClick={() => {
-                setOpen(false);
-                setIsNew(false);
-                setReplyTicketId(null);
-                setReplyTicketData(null);
-              }}
+            <div
               style={{
-                background: "none",
-                color: "white",
-                fontSize: "18px",
-                border: "none",
-                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
               }}
             >
-              ×
-            </button>
-          </div>
+              <h4
+                style={{
+                  margin: 0,
+                  color: theme.textMain,
+                  fontSize: "16px",
+                  fontWeight: "600",
+                }}
+              >
+                Help Desk
+              </h4>
+              <button
+                onClick={() => setHelp(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: theme.textMuted,
+                  fontSize: "14px",
+                  padding: 0,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = theme.highlight)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = theme.textMuted)
+                }
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: theme.textMuted,
+                  display: "block",
+                  marginBottom: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Support Agent
+              </span>
+              <strong
+                style={{
+                  color: theme.textMain,
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+              >
+                Gurdeep
+              </strong>
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: theme.textMuted,
+                  display: "block",
+                  marginBottom: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Phone
+              </span>
+              <a
+                href="tel:+918640000446"
+                style={{
+                  textDecoration: "none",
+                  color: theme.textMain,
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = theme.highlight)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = theme.textMain)
+                }
+              >
+                +91 86400-00446
+              </a>
+            </div>
+            <div>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: theme.textMuted,
+                  display: "block",
+                  marginBottom: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Email
+              </span>
+              <a
+                href="mailto:gurdeep-a24@orderzup.com"
+                style={{
+                  textDecoration: "none",
+                  color: theme.textMain,
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = theme.highlight)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = theme.textMain)
+                }
+              >
+                gurdeep-a24@orderzup.com
+              </a>
+            </div>
+          </motion.div>
+        )}
 
-          {/* Tabs */}
-          <Tabs
-            activeKey={tab}
-            onSelect={(k) => setTab(k as any)}
-            className="mb-2"
-            fill
-            style={{ background: "#f8f9fa" }}
-          >
-            <Tab eventKey="tickets" title="Tickets" />
-            <Tab eventKey="help" title="Help Center" />
-          </Tabs>
-
-          {/* Tab Content */}
-          <div
+        {/* MAIN CHAT LOGIC */}
+        {!open ? (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            onClick={() => {
+              setOpen(true);
+              setOrderly(false);
+              setHelp(false);
+            }}
             style={{
-              padding: 12,
-              overflowY: "auto",
-              maxHeight: "calc(80vh - 100px)",
+              position: "fixed",
+              bottom: "72px",
+              right: "16px",
+              backgroundColor: theme.highlight,
+              color: theme.white,
+              padding: "16px",
+              borderRadius: "50%",
+              boxShadow: theme.shadowFloat,
+              border: "none",
+              cursor: "pointer",
+              zIndex: 999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {/* Tickets Tab */}
-            {tab === "tickets" && (
-              <>
-                {replyTicketId && replyTicketData ? (
-                  <div>
-                    <Button
-                      size="sm"
-                      variant="link"
-                      onClick={() => {
-                        setReplyTicketId(null);
-                        setReplyTicketData(null);
-                      }}
-                      style={{ paddingLeft: 0 }}
+            <FaComments size={20} />
+          </motion.button>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            style={{
+              position: "fixed",
+              bottom: "16px",
+              right: "16px",
+              width: "calc(100vw - 32px)",
+              maxWidth: "380px",
+              maxHeight: "85vh",
+              backgroundColor: theme.white,
+              borderRadius: "16px",
+              boxShadow: theme.shadowFloat,
+              border: `1px solid ${theme.border}`,
+              overflow: "hidden",
+              zIndex: 1000,
+              fontFamily: "sans-serif",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                backgroundColor: theme.white,
+                color: theme.textMain,
+                padding: "20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: `1px solid ${theme.border}`,
+              }}
+            >
+              <span style={{ fontWeight: "600", fontSize: "16px" }}>
+                Hey, I’m Orderly
+              </span>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  setIsNew(false);
+                  setReplyTicketId(null);
+                  setReplyTicketData(null);
+                }}
+                style={{
+                  background: "none",
+                  color: theme.textMuted,
+                  fontSize: "16px",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = theme.highlight)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = theme.textMuted)
+                }
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Custom Tabs */}
+            <div
+              style={{
+                display: "flex",
+                backgroundColor: theme.white,
+                borderBottom: `1px solid ${theme.border}`,
+              }}
+            >
+              <button
+                onClick={() => setTab("tickets")}
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  border: "none",
+                  background: "transparent",
+                  borderBottom:
+                    tab === "tickets"
+                      ? `2px solid ${theme.highlight}`
+                      : "2px solid transparent",
+                  color: tab === "tickets" ? theme.highlight : theme.textMuted,
+                  fontWeight: tab === "tickets" ? "600" : "500",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  transition: "color 0.2s, border-color 0.2s",
+                }}
+              >
+                Tickets
+              </button>
+              <button
+                onClick={() => setTab("help")}
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  border: "none",
+                  background: "transparent",
+                  borderBottom:
+                    tab === "help"
+                      ? `2px solid ${theme.highlight}`
+                      : "2px solid transparent",
+                  color: tab === "help" ? theme.highlight : theme.textMuted,
+                  fontWeight: tab === "help" ? "600" : "500",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  transition: "color 0.2s, border-color 0.2s",
+                }}
+              >
+                Help Center
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div
+              style={{
+                padding: "20px",
+                overflowY: "auto",
+                maxHeight: "calc(85vh - 125px)",
+                backgroundColor: theme.white,
+              }}
+            >
+              {/* Tickets Tab */}
+              {tab === "tickets" && (
+                <AnimatePresence mode="wait">
+                  {replyTicketId && replyTicketData ? (
+                    <motion.div
+                      key="reply-view"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
                     >
-                      <FaChevronLeft /> Back to Tickets
-                    </Button>
-                    <h5 className="mt-2">{replyTicketData.subject}</h5>
-                    <div className="mb-2 text-muted">
-                      <strong>Category:</strong>{" "}
-                      {replyTicketData.category?.name} -{" "}
-                      {replyTicketData.subcategory?.name}
-                    </div>
-                    <div className="mb-2">
-                      <strong>Status:</strong>{" "}
-                      <span
-                        className={
-                          replyTicketData.status === "open"
-                            ? "text-success"
-                            : "text-secondary"
+                      <button
+                        onClick={() => {
+                          setReplyTicketId(null);
+                          setReplyTicketData(null);
+                        }}
+                        style={{
+                          ...btnStyle,
+                          background: "transparent",
+                          color: theme.textMuted,
+                          padding: 0,
+                          marginBottom: "20px",
+                          fontSize: "13px",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.color = theme.highlight)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.color = theme.textMuted)
                         }
                       >
-                        {replyTicketData.status}
-                      </span>
-                    </div>
-                    <div className="mb-2">
-                      <strong>Description:</strong>{" "}
-                      {replyTicketData.description}
-                    </div>
-                    <div className="mb-2">
-                      <strong>Created:</strong>{" "}
-                      {new Date(replyTicketData.createdAt).toLocaleString()}
-                    </div>
-                    {replyTicketData.attachments &&
-                      replyTicketData.attachments.length > 0 && (
-                        <div className="mb-2">
-                          <strong>Attachments:</strong>
-                          <ul>
-                            {replyTicketData.attachments.map((url, idx) => (
-                              <li
-                                key={idx}
-                                onClick={() => {
-                                  setDisplayImage(url);
-                                }}
-                              >
-                                <img src={url} style={{ width: "50px" }} />
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    <hr />
-                    <div>
-                      <strong>Replies:</strong>
+                        <FaChevronLeft size={10} /> Back to Tickets
+                      </button>
+                      <h5
+                        style={{
+                          margin: "0 0 12px 0",
+                          color: theme.textMain,
+                          fontWeight: "600",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {replyTicketData.subject}
+                      </h5>
                       <div
                         style={{
-                          maxHeight: 120,
-                          overflowY: "auto",
-                          marginBottom: 8,
+                          display: "flex",
+                          gap: "12px",
+                          marginBottom: "16px",
+                          flexWrap: "wrap",
                         }}
                       >
-                        {replyTicketData.replies &&
-                        replyTicketData.replies.length > 0 ? (
-                          replyTicketData.replies.map((rep, idx) => (
-                            <div key={idx} style={{ marginBottom: 10 }}>
-                              <div>
-                                <span style={{ fontWeight: 500 }}>
-                                  {rep.user?.name || "Support"}
-                                </span>
-                                <span
-                                  className="text-muted"
-                                  style={{ marginLeft: 8, fontSize: 12 }}
-                                >
-                                  {new Date(rep.createdAt).toLocaleString()}
-                                </span>
-                              </div>
-                              <div>{rep.message}</div>
-                              {rep.attachments &&
-                                rep.attachments.length > 0 && (
-                                  <div>
-                                    {rep.attachments.map((url, i) => (
-                                      <a
-                                        key={i}
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
-                                        Attachment {i + 1}
-                                      </a>
-                                    ))}
-                                  </div>
-                                )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-muted">No replies yet.</div>
-                        )}
-                      </div>
-                      <Form onSubmit={handleReplySubmit}>
-                        <Form.Group className="mb-2">
-                          <Form.Label>Reply</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={2}
-                            value={replyMessage}
-                            onChange={(e) => setReplyMessage(e.target.value)}
-                            placeholder="Type your reply here..."
-                            disabled={replyLoading}
-                          />
-                        </Form.Group>
-                        <Form.Group className="mb-2">
-                          <Form.Label>Attachment (optional)</Form.Label>
-                          <Form.Control
-                            type="file"
-                            onChange={(e: any) =>
-                              setReplyAttachment(e.target.files?.[0] || null)
-                            }
-                            disabled={replyLoading}
-                          />
-                        </Form.Group>
-                        <Button
-                          type="submit"
-                          variant="primary"
-                          size="sm"
-                          disabled={replyLoading}
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: theme.textMuted,
+                            background: theme.bgSubtle,
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            border: `1px solid ${theme.border}`,
+                          }}
                         >
-                          {replyLoading ? (
-                            <Spinner size="sm" animation="border" />
-                          ) : (
-                            "Send Reply"
-                          )}
-                        </Button>
-                      </Form>
-                    </div>
-                  </div>
-                ) : isNew ? (
-                  <Form onSubmit={handleSubmitTicket}>
-                    <p>
-                      <strong>Category: </strong>
-                      <span className="text-primary fw-semibold">
-                        {selectedCategory?.name || "N/A"}
-                      </span>
-                      <span className="text-muted"> → </span>
-                      <span className="text-success fw-semibold">
-                        {selectedSubcategory?.name || "N/A"}
-                      </span>
-                    </p>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Subject</Form.Label>
-                      <Form.Control
-                        name="subject"
-                        type="text"
-                        placeholder="Briefly summarize your issue"
-                        required
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Priority</Form.Label>
-                      <Form.Select name="priority" required>
-                        <option value="">Select priority</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </Form.Select>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Describe your issue or feedback</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        name="description"
-                        rows={4}
-                        placeholder="Please describe the issue in detail."
-                        required
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Attachment (optional)</Form.Label>
-                      <Form.Control name="attachment" type="file" />
-                    </Form.Group>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setIsNew(false)}
-                      className="me-2"
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" variant="primary">
-                      Submit Ticket
-                    </Button>
-                  </Form>
-                ) : (
-                  <div>
-                    <div
-                      className="d-flex justify-content-between align-items-center mb-2"
-                      style={{ minWidth: "260px" }}
-                    >
-                      <h6 className="mb-0">Your Tickets</h6>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          selectedCategory ? setIsNew(true) : setTab("help");
+                          {replyTicketData.category?.name} /{" "}
+                          {replyTicketData.subcategory?.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color:
+                              replyTicketData.status === "open"
+                                ? theme.highlight
+                                : theme.textMuted,
+                            background: theme.bgSubtle,
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            border: `1px solid ${theme.border}`,
+                            fontWeight: "500",
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {replyTicketData.status}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          color: theme.textMain,
+                          marginBottom: "16px",
+                          lineHeight: "1.5",
                         }}
                       >
-                        + New Ticket
-                      </Button>
-                    </div>
-                    {loadingTickets ? (
-                      <div className="text-center py-4">
-                        <Spinner animation="border" />
+                        {replyTicketData.description}
                       </div>
-                    ) : tickets.length === 0 ? (
-                      <div className="text-center text-muted py-4">
-                        No tickets found.
-                      </div>
-                    ) : (
-                      <div style={{ maxHeight: 220, overflowY: "auto" }}>
-                        {tickets.map((ticket) => (
-                          <div
-                            key={ticket._id}
-                            className="border rounded p-2 mb-2 bg-light"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => openReplyScreen(ticket._id)}
-                          >
-                            <div className="fw-bold">{ticket.subject}</div>
-                            <div className="small text-muted">
-                              {ticket.category?.name} -{" "}
-                              {ticket.subcategory?.name}
-                            </div>
-                            <div className="small">
-                              <span>Status: </span>
-                              <span
-                                className={
-                                  ticket.status === "open"
-                                    ? "text-success"
-                                    : "text-secondary"
-                                }
-                              >
-                                {ticket.status}
-                              </span>
+
+                      {replyTicketData.attachments &&
+                        replyTicketData.attachments.length > 0 && (
+                          <div style={{ marginBottom: "20px" }}>
+                            <strong
+                              style={{
+                                fontSize: "12px",
+                                color: theme.textMuted,
+                                display: "block",
+                                marginBottom: "8px",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Attachments
+                            </strong>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {replyTicketData.attachments.map((url, idx) => (
+                                <div
+                                  key={idx}
+                                  onClick={() => setDisplayImage(url)}
+                                  style={{
+                                    border: `1px solid ${theme.border}`,
+                                    borderRadius: "6px",
+                                    padding: "2px",
+                                    cursor: "pointer",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <img
+                                    src={url}
+                                    alt="attachment"
+                                    style={{
+                                      width: "60px",
+                                      height: "60px",
+                                      objectFit: "cover",
+                                      borderRadius: "4px",
+                                    }}
+                                  />
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
+                        )}
 
-            {/* Help Center Tab */}
-            {tab === "help" && (
-              <div>
-                {step !== "categories" && (
-                  <button
-                    onClick={() =>
-                      resetToStep(
-                        step === "articles" ? "subcategories" : "categories"
-                      )
-                    }
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#666",
-                      fontSize: "13px",
-                      marginBottom: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <FaChevronLeft style={{ marginRight: "6px" }} /> Back
-                  </button>
-                )}
-                {step === "categories" && (
-                  <>
-                    <p style={{ marginBottom: "12px" }}>
-                      What can I help you with today?
-                    </p>
-                    {categories.map((cat) => (
-                      <button
-                        key={cat._id}
-                        onClick={() => handleCategoryClick(cat)}
+                      <hr
                         style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          backgroundColor: "#f9f9f9",
-                          color: "#333",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                          fontWeight: 500,
-                          fontSize: "10px",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease-in-out",
-                          alignItems: "center",
-                          margin: "6px 6px 6px 0",
-                          border: "1px solid #d0dfff",
-                          display: "inline-flex",
-                          gap: "6px",
-                          whiteSpace: "nowrap",
+                          border: "0",
+                          borderTop: `1px solid ${theme.border}`,
+                          margin: "24px 0",
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#ffe6cc";
-                          e.currentTarget.style.color = "#F5891E";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#f9f9f9";
-                          e.currentTarget.style.color = "#333";
-                        }}
-                      >
-                        <span style={{ fontSize: "14px" }}>{cat.icon}</span>
-                        {cat.name}
-                      </button>
-                    ))}
-                  </>
-                )}
-                {step === "subcategories" && (
-                  <>
-                    <p style={{ marginBottom: "12px" }}>
-                      Topics under <strong>{selectedCategory?.name}</strong>:
-                    </p>
-                    {subcategories.map((sub) => (
-                      <button
-                        key={sub._id}
-                        onClick={() => handleSubcategoryClick(sub)}
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          backgroundColor: "#f9f9f9",
-                          color: "#333",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                          fontWeight: 500,
-                          fontSize: "10px",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease-in-out",
-                          alignItems: "center",
-                          margin: "6px 6px 6px 0",
-                          border: "1px solid #d0dfff",
-                          display: "inline-flex",
-                          gap: "6px",
-                          whiteSpace: "nowrap",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#ffe6cc";
-                          e.currentTarget.style.color = "#F5891E";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#f9f9f9";
-                          e.currentTarget.style.color = "#333";
-                        }}
-                      >
-                        {sub.name}
-                      </button>
-                    ))}
-                  </>
-                )}
-                {step === "articles" && (
-                  <>
-                    <p style={{ marginBottom: "12px" }}>
-                      Articles under{" "}
-                      <strong>{selectedSubcategory?.name}</strong>:
-                    </p>
-                    {articles.length > 0 ? (
-                      articles.map((article) => (
-                        <a
-                          key={article._id}
-                          href={article.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      />
+
+                      <div>
+                        <strong
                           style={{
-                            display: "block",
-                            padding: "8px",
-                            color: "#0056b3",
-                            textDecoration: "none",
                             fontSize: "12px",
-                            borderBottom: "1px solid #eee",
+                            color: theme.textMuted,
+                            display: "block",
+                            marginBottom: "12px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
                           }}
                         >
-                          {article.name}
-                        </a>
-                      ))
-                    ) : (
-                      <div style={{ color: "#666", fontSize: "13px" }}>
-                        😕 No helpful articles found.
-                        <br />
-                        <button
-                          onClick={() => setStep("fallback")}
+                          Conversation
+                        </strong>
+                        <div
                           style={{
-                            marginTop: "12px",
-                            backgroundColor: "#F5891E",
-                            color: "white",
-                            border: "none",
-                            padding: "8px 12px",
-                            borderRadius: "6px",
-                            cursor: "pointer",
+                            maxHeight: 200,
+                            overflowY: "auto",
+                            marginBottom: "20px",
+                            paddingRight: "4px",
                           }}
                         >
-                          Talk to Support
+                          {replyTicketData.replies &&
+                          replyTicketData.replies.length > 0 ? (
+                            replyTicketData.replies.map((rep, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  marginBottom: "16px",
+                                  borderLeft: `2px solid ${theme.border}`,
+                                  paddingLeft: "12px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "6px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      fontSize: "13px",
+                                      color: theme.textMain,
+                                    }}
+                                  >
+                                    {rep.user?.name || "Support"}
+                                  </span>
+                                  <span
+                                    style={{
+                                      color: theme.textMuted,
+                                      fontSize: "11px",
+                                    }}
+                                  >
+                                    {new Date(rep.createdAt).toLocaleString(
+                                      undefined,
+                                      {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      }
+                                    )}
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "13px",
+                                    color: theme.textMain,
+                                    lineHeight: "1.5",
+                                  }}
+                                >
+                                  {rep.message}
+                                </div>
+                                {rep.attachments &&
+                                  rep.attachments.length > 0 && (
+                                    <div
+                                      style={{
+                                        marginTop: "8px",
+                                        display: "flex",
+                                        gap: "8px",
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      {rep.attachments.map((url, i) => (
+                                        <a
+                                          key={i}
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{
+                                            fontSize: "11px",
+                                            color: theme.textMain,
+                                            textDecoration: "none",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px",
+                                            background: theme.bgSubtle,
+                                            padding: "4px 8px",
+                                            borderRadius: "4px",
+                                            border: `1px solid ${theme.border}`,
+                                          }}
+                                          onMouseEnter={(e) =>
+                                            (e.currentTarget.style.borderColor =
+                                              theme.highlight)
+                                          }
+                                          onMouseLeave={(e) =>
+                                            (e.currentTarget.style.borderColor =
+                                              theme.border)
+                                          }
+                                        >
+                                          <FaPaperclip size={10} /> Attachment{" "}
+                                          {i + 1}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
+                              </div>
+                            ))
+                          ) : (
+                            <div
+                              style={{
+                                fontSize: "13px",
+                                color: theme.textMuted,
+                                fontStyle: "italic",
+                              }}
+                            >
+                              No replies yet.
+                            </div>
+                          )}
+                        </div>
+                        <form onSubmit={handleReplySubmit}>
+                          <label style={labelStyle}>Your Reply</label>
+                          <textarea
+                            style={{
+                              ...inputStyle,
+                              minHeight: "80px",
+                              resize: "vertical",
+                            }}
+                            value={replyMessage}
+                            onChange={(e) => setReplyMessage(e.target.value)}
+                            placeholder="Type here..."
+                            disabled={replyLoading}
+                          />
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                            }}
+                          >
+                            <label
+                              style={{
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "8px",
+                                border: `1px solid ${theme.border}`,
+                                background: theme.white,
+                                color: theme.textMuted,
+                              }}
+                            >
+                              <FaPaperclip />
+                              <input
+                                type="file"
+                                style={{ display: "none" }}
+                                onChange={(
+                                  e: React.ChangeEvent<HTMLInputElement>
+                                ) =>
+                                  setReplyAttachment(
+                                    e.target.files?.[0] || null
+                                  )
+                                }
+                                disabled={replyLoading}
+                              />
+                            </label>
+                            <button
+                              type="submit"
+                              style={{
+                                ...btnStyle,
+                                backgroundColor: theme.highlight,
+                                color: theme.white,
+                                flex: 1,
+                              }}
+                              disabled={replyLoading}
+                            >
+                              {replyLoading ? (
+                                <CustomSpinner size={16} />
+                              ) : (
+                                "Send"
+                              )}
+                            </button>
+                          </div>
+                          {replyAttachment && (
+                            <div
+                              style={{
+                                fontSize: "11px",
+                                color: theme.textMuted,
+                                marginTop: "8px",
+                              }}
+                            >
+                              Attached: {replyAttachment.name}
+                            </div>
+                          )}
+                        </form>
+                      </div>
+                    </motion.div>
+                  ) : isNew ? (
+                    <motion.form
+                      key="new-ticket"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      onSubmit={handleSubmitTicket}
+                    >
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          marginBottom: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span style={{ color: theme.textMuted }}>
+                          Category:
+                        </span>
+                        <span
+                          style={{
+                            background: theme.bgSubtle,
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            border: `1px solid ${theme.border}`,
+                            color: theme.textMain,
+                            fontWeight: "500",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {selectedCategory?.name || "N/A"}
+                        </span>
+                        <span style={{ color: theme.textMuted }}>/</span>
+                        <span
+                          style={{
+                            background: theme.bgSubtle,
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            border: `1px solid ${theme.border}`,
+                            color: theme.textMain,
+                            fontWeight: "500",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {selectedSubcategory?.name || "N/A"}
+                        </span>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Subject</label>
+                        <input
+                          name="subject"
+                          type="text"
+                          style={inputStyle}
+                          placeholder="Briefly summarize your issue"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Priority</label>
+                        <select
+                          name="priority"
+                          style={{
+                            ...inputStyle,
+                            backgroundColor: theme.white,
+                          }}
+                          required
+                        >
+                          <option value="">Select priority</option>
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Description</label>
+                        <textarea
+                          name="description"
+                          rows={4}
+                          style={{ ...inputStyle, resize: "vertical" }}
+                          placeholder="Please describe the issue in detail."
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Attachment (optional)</label>
+                        <input
+                          name="attachment"
+                          type="file"
+                          style={{
+                            ...inputStyle,
+                            padding: "8px",
+                            border: "none",
+                            background: "transparent",
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "12px",
+                          marginTop: "12px",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          style={{
+                            ...btnStyle,
+                            flex: 1,
+                            backgroundColor: theme.white,
+                            color: theme.textMain,
+                            border: `1px solid ${theme.border}`,
+                          }}
+                          onClick={() => setIsNew(false)}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              theme.bgSubtle)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              theme.white)
+                          }
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{
+                            ...btnStyle,
+                            flex: 1,
+                            backgroundColor: theme.highlight,
+                            color: theme.white,
+                          }}
+                        >
+                          Submit
+                        </button>
+                      </div>
+                    </motion.form>
+                  ) : (
+                    <motion.div
+                      key="list-tickets"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        <h6
+                          style={{
+                            margin: 0,
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: theme.textMain,
+                          }}
+                        >
+                          Your Tickets
+                        </h6>
+                        <button
+                          style={{
+                            ...btnStyle,
+                            backgroundColor: theme.highlight,
+                            color: theme.white,
+                            padding: "8px 16px",
+                            fontSize: "13px",
+                          }}
+                          onClick={() => {
+                            selectedCategory ? setIsNew(true) : setTab("help");
+                          }}
+                        >
+                          Create Ticket
+                        </button>
+                      </div>
+                      {loadingTickets ? (
+                        <div style={{ textAlign: "center", padding: "40px 0" }}>
+                          <CustomSpinner size={30} color={theme.highlight} />
+                        </div>
+                      ) : tickets.length === 0 ? (
+                        <div
+                          style={{
+                            textAlign: "center",
+                            padding: "40px 0",
+                            color: theme.textMuted,
+                            fontSize: "14px",
+                          }}
+                        >
+                          No tickets found.
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "12px",
+                          }}
+                        >
+                          {tickets.map((ticket) => (
+                            <div
+                              key={ticket._id}
+                              onClick={() => openReplyScreen(ticket._id)}
+                              style={{
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: "12px",
+                                padding: "16px",
+                                backgroundColor: theme.white,
+                                cursor: "pointer",
+                                transition: "all 0.2s",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor =
+                                  theme.highlight;
+                                e.currentTarget.style.boxShadow =
+                                  theme.shadowSubtle;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor =
+                                  theme.border;
+                                e.currentTarget.style.boxShadow = "none";
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "flex-start",
+                                  gap: "8px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                    color: theme.textMain,
+                                    lineHeight: "1.4",
+                                  }}
+                                >
+                                  {ticket.subject}
+                                </div>
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                    color:
+                                      ticket.status === "open"
+                                        ? theme.highlight
+                                        : theme.textMuted,
+                                  }}
+                                >
+                                  {ticket.status}
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: theme.textMuted,
+                                }}
+                              >
+                                {ticket.category?.name} •{" "}
+                                {ticket.subcategory?.name}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+
+              {/* Help Center Tab */}
+              {tab === "help" && (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`step-${step}`}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                  >
+                    {step !== "categories" && (
+                      <button
+                        onClick={() =>
+                          resetToStep(
+                            step === "articles" ? "subcategories" : "categories"
+                          )
+                        }
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: theme.textMuted,
+                          fontSize: "13px",
+                          marginBottom: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          cursor: "pointer",
+                          padding: 0,
+                          transition: "color 0.2s",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.color = theme.highlight)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.color = theme.textMuted)
+                        }
+                      >
+                        <FaChevronLeft
+                          style={{ marginRight: "6px" }}
+                          size={10}
+                        />{" "}
+                        Back
+                      </button>
+                    )}
+                    {step === "categories" && (
+                      <>
+                        <p
+                          style={{
+                            marginBottom: "16px",
+                            fontSize: "15px",
+                            fontWeight: "500",
+                            color: theme.textMain,
+                          }}
+                        >
+                          What can we help you with?
+                        </p>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "10px",
+                          }}
+                        >
+                          {categories.map((cat) => (
+                            <button
+                              key={cat._id}
+                              onClick={() => handleCategoryClick(cat)}
+                              style={{
+                                textAlign: "left",
+                                padding: "14px 16px",
+                                backgroundColor: theme.white,
+                                color: theme.textMain,
+                                borderRadius: "12px",
+                                border: `1px solid ${theme.border}`,
+                                fontWeight: 500,
+                                fontSize: "14px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor =
+                                  theme.highlight;
+                                e.currentTarget.style.color = theme.highlight;
+                                e.currentTarget.style.boxShadow =
+                                  theme.shadowSubtle;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor =
+                                  theme.border;
+                                e.currentTarget.style.color = theme.textMain;
+                                e.currentTarget.style.boxShadow = "none";
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "18px",
+                                  filter: "grayscale(100%)",
+                                  opacity: 0.8,
+                                }}
+                              >
+                                {cat.icon}
+                              </span>
+                              {cat.name}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {step === "subcategories" && (
+                      <>
+                        <p
+                          style={{
+                            marginBottom: "16px",
+                            fontSize: "15px",
+                            color: theme.textMain,
+                          }}
+                        >
+                          Topics under{" "}
+                          <strong style={{ fontWeight: "600" }}>
+                            {selectedCategory?.name}
+                          </strong>
+                        </p>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "10px",
+                          }}
+                        >
+                          {subcategories.map((sub) => (
+                            <button
+                              key={sub._id}
+                              onClick={() => handleSubcategoryClick(sub)}
+                              style={{
+                                textAlign: "left",
+                                padding: "14px 16px",
+                                backgroundColor: theme.white,
+                                color: theme.textMain,
+                                borderRadius: "12px",
+                                border: `1px solid ${theme.border}`,
+                                fontWeight: 500,
+                                fontSize: "14px",
+                                cursor: "pointer",
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor =
+                                  theme.highlight;
+                                e.currentTarget.style.color = theme.highlight;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor =
+                                  theme.border;
+                                e.currentTarget.style.color = theme.textMain;
+                              }}
+                            >
+                              {sub.name}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {step === "articles" && (
+                      <>
+                        <p
+                          style={{
+                            marginBottom: "16px",
+                            fontSize: "15px",
+                            color: theme.textMain,
+                          }}
+                        >
+                          Articles for{" "}
+                          <strong style={{ fontWeight: "600" }}>
+                            {selectedSubcategory?.name}
+                          </strong>
+                        </p>
+                        {articles.length > 0 ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            {articles.map((article) => (
+                              <a
+                                key={article._id}
+                                href={article.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: "block",
+                                  padding: "14px 16px",
+                                  color: theme.textMain,
+                                  textDecoration: "none",
+                                  fontSize: "14px",
+                                  border: `1px solid ${theme.border}`,
+                                  borderRadius: "12px",
+                                  transition: "all 0.2s",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor =
+                                    theme.highlight;
+                                  e.currentTarget.style.color = theme.highlight;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor =
+                                    theme.border;
+                                  e.currentTarget.style.color = theme.textMain;
+                                }}
+                              >
+                                {article.name}
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              color: theme.textMuted,
+                              fontSize: "14px",
+                              marginTop: "16px",
+                              textAlign: "center",
+                              padding: "20px",
+                            }}
+                          >
+                            No articles found for this topic.
+                            <br />
+                            <button
+                              onClick={() => setStep("fallback")}
+                              style={{
+                                ...btnStyle,
+                                marginTop: "20px",
+                                backgroundColor: theme.highlight,
+                                color: theme.white,
+                              }}
+                            >
+                              Contact Support
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {(step === "fallback" || step === "articles") && (
+                      <div
+                        style={{
+                          marginTop: "32px",
+                          borderTop: `1px solid ${theme.border}`,
+                          paddingTop: "24px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: "0 0 16px 0",
+                            fontSize: "14px",
+                            color: theme.textMuted,
+                            textAlign: "center",
+                          }}
+                        >
+                          {step === "articles"
+                            ? "Still need help? Our team is here."
+                            : "Let's get you connected to support."}
+                        </p>
+                        <button
+                          onClick={() => {
+                            setTab("tickets");
+                            setIsNew(true);
+                          }}
+                          style={{
+                            ...btnStyle,
+                            backgroundColor: theme.white,
+                            color: theme.textMain,
+                            border: `1px solid ${theme.border}`,
+                            width: "100%",
+                            padding: "12px",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = theme.highlight;
+                            e.currentTarget.style.color = theme.highlight;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = theme.border;
+                            e.currentTarget.style.color = theme.textMain;
+                          }}
+                        >
+                          Create a Ticket
                         </button>
                       </div>
                     )}
-                  </>
-                )}
-                {(step === "fallback" || step === "articles") && (
-                  <div>
-                    <p style={{ margin: "12px 0", fontSize: "12px" }}>
-                      {step === "articles"
-                        ? "Still confused? No worries, let’s get you the help you need."
-                        : "No worries, we're here to help!"}
-                    </p>
-                    <Button
-                      onClick={() => {
-                        setTab("tickets");
-                        setIsNew(true);
-                      }}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding Widget (Orderly) */}
+      <AnimatePresence>
+        {orderly && !open && !help && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            style={{
+              width: "calc(100vw - 32px)",
+              maxWidth: "340px",
+              backgroundColor: theme.white,
+              borderRadius: "16px",
+              padding: "24px",
+              marginBottom: "16px",
+              fontSize: "14px",
+              fontFamily: "sans-serif",
+              bottom: "124px",
+              right: "16px",
+              position: "fixed",
+              boxShadow: theme.shadowFloat,
+              border: `1px solid ${theme.border}`,
+              zIndex: 998,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                marginBottom: "12px",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0",
+                  fontWeight: "600",
+                  fontSize: "18px",
+                  color: theme.textMain,
+                }}
+              >
+                Hi {username}
+              </p>
+              <button
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  color: theme.textMuted,
+                  padding: 0,
+                }}
+                onClick={() => setOrderly(false)}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = theme.textMain)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = theme.textMuted)
+                }
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <p
+              style={{
+                margin: "0 0 16px 0",
+                color: theme.textMuted,
+                lineHeight: "1.5",
+              }}
+            >
+              I’m{" "}
+              <strong style={{ color: theme.textMain, fontWeight: "600" }}>
+                Orderly
+              </strong>{" "}
+              — your assistant for a smoother shipping journey.
+            </p>
+
+            {stats && stats.counts.some((s: any) => s.count === 0) ? (
+              <>
+                <p
+                  style={{
+                    margin: "0 0 12px 0",
+                    color: theme.textMain,
+                    fontWeight: "500",
+                  }}
+                >
+                  Your setup checklist:
+                </p>
+                <ul
+                  style={{
+                    paddingLeft: "0",
+                    margin: 0,
+                    listStyle: "none",
+                    color: theme.textMuted,
+                  }}
+                >
+                  {stats.counts.map((i: any) => (
+                    <li
+                      key={i.label}
                       style={{
-                        backgroundColor: "#000434",
-                        color: "white",
-                        padding: "6px 12px",
-                        width: "100%",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
+                        textDecoration: i.count > 0 ? "line-through" : "none",
+                        marginBottom: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        opacity: i.count > 0 ? 0.6 : 1,
                       }}
                     >
-                      ✍️ Create a Support Ticket
-                    </Button>
-                  </div>
-                )}
+                      <span
+                        style={{
+                          color:
+                            i.count > 0 ? theme.textMuted : theme.highlight,
+                          fontSize: "12px",
+                        }}
+                      >
+                        {i.count > 0 ? "●" : "○"}
+                      </span>
+                      <span>{i.label}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p
+                  style={{
+                    margin: "16px 0 0 0",
+                    color: theme.highlight,
+                    fontWeight: "500",
+                    fontSize: "13px",
+                  }}
+                >
+                  Let’s check off the remaining tasks.
+                </p>
+              </>
+            ) : (
+              <>
+                <p
+                  style={{
+                    margin: "8px 0 0 0",
+                    color: theme.textMain,
+                    fontWeight: "600",
+                  }}
+                >
+                  Setup complete. Systems are ready.
+                </p>
+                <p
+                  style={{
+                    margin: "12px 0 0 0",
+                    color: theme.textMuted,
+                    fontSize: "13px",
+                  }}
+                >
+                  Let me know if you need help anytime.
+                </p>
+              </>
+            )}
+
+            {/* Seamless, unboxed Gyaan at the bottom */}
+            {gyaan?.gyaan && (
+              <div
+                style={{
+                  marginTop: "24px",
+                  borderTop: `1px solid ${theme.border}`,
+                  paddingTop: "16px",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: theme.textMuted,
+                    fontStyle: "italic",
+                    margin: 0,
+                    lineHeight: "1.5",
+                  }}
+                >
+                  💡 "{gyaan?.gyaan}"
+                </p>
               </div>
             )}
-          </div>
-          <Modal show={!!displayImage} onHide={() => setDisplayImage(null)}>
-            <Modal.Body>
-              {displayImage && (
-                <img
-                  src={displayImage}
-                  style={{ width: "100%", maxWidth: "600px" }}
-                />
-              )}
-            </Modal.Body>
-          </Modal>
-        </div>
-      )}
-      {help && (
-        <motion.div
-          layout="position"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="p-4"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            maxWidth: "580px",
-            maxHeight: "80vh",
-            backgroundColor: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
-            overflow: "hidden",
-            zIndex: 1000,
-          }}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h4 className="m-0">Help Desk</h4>
-            <Button variant="close" onClick={toggleOpen} size="sm" />
-          </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <hr />
-
-          <div className="mb-2">
-            <small className="text-muted d-block">Support Agent</small>
-            <strong>Gurdeep</strong>
-          </div>
-
-          <div className="mb-2">
-            <small className="text-muted d-block">Phone</small>
-            <a href="tel:+918640000446" className="text-decoration-none">
-              +91 86400-00446
-            </a>
-          </div>
-
-          <div>
-            <small className="text-muted d-block">Email</small>
-            <a
-              href="mailto:support@example.com"
-              className="text-decoration-none"
+      {/* Image Modal (Custom) */}
+      <AnimatePresence>
+        {displayImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(4px)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+            }}
+            onClick={() => setDisplayImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{
+                position: "relative",
+                maxWidth: "95vw",
+                maxHeight: "90vh",
+              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              gurdeep-a24@orderzup.com
-            </a>
-          </div>
-        </motion.div>
-      )}
+              <button
+                onClick={() => setDisplayImage(null)}
+                style={{
+                  position: "absolute",
+                  top: "-40px",
+                  right: "0",
+                  background: theme.white,
+                  border: `1px solid ${theme.border}`,
+                  color: theme.textMain,
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  boxShadow: theme.shadowSubtle,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = theme.highlight)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = theme.textMain)
+                }
+              >
+                <FaTimes />
+              </button>
+              <img
+                src={displayImage}
+                alt="Enlarged Attachment"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "85vh",
+                  borderRadius: "12px",
+                  boxShadow: theme.shadowFloat,
+                  objectFit: "contain",
+                  backgroundColor: theme.white,
+                  border: `1px solid ${theme.border}`,
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
-
-const HelpDeskIcon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-  >
-    <rect width="20" height="20" fill="url(#pattern0_14_4)" />
-    <defs>
-      <pattern
-        id="pattern0_14_4"
-        patternContentUnits="objectBoundingBox"
-        width="1"
-        height="1"
-      >
-        <use xlinkHref="#image0_14_4" transform="scale(0.0208333)" />
-      </pattern>
-      <image
-        id="image0_14_4"
-        width="48"
-        height="48"
-        preserveAspectRatio="none"
-        xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAElUlEQVR4Ae3BX2hVdQDA8e/vd86uK1dsudyFJPZgeDe2MFDRaemJCT5MaBBkc4JSRg8RHhBEeqi0oEC4Vj4ILUxcs0haD3vIVG5/3Bzqw+bmukaBwRZX3Z+rXvfn3nPOr1tdYe6s3XN3bn8u9PlQ6AR/g/e/S5U6NiEFxaQJmJQa0VefKoqTZ4I8ORhJ1oN4TqHqgUpmd1UgToP6bJcROE0eCHw6GLG3gP2aghpyIKAHtHd3Gdqn+CCYp3AkGQSOAJvw5ytgh2kEYsyDxjyEI/YKUN8Cy/FvKdC8afvrZ04e3RcjRxo5Ckfs1WCfAR5ibpPAEHATKAZ0/loJqOZN2984dfLovl/JgSAH4UhyCXABCDK7X0BrAftL0wj0M004klwOWgPYLwOPMLsYsNI0AoN4pJOb40AQt0kQb4J+wDSExSxMI9AD9IQj6h2wdoPaD+jcKwgcB57EI4FH4UjqRVAf4hYDrdE0tG5yEI4468D6HAjiInaaRlELHkg8CEdUMaj9uCVA22waWjc5Mg15FrRGIIGL2h+OKB0PJJ4knwGCuO01De0i82QaWjewF7cgJJ/FA4knohm3XtMIHMK3osNALy6iGQ8kWYQjSgfW43aIPDANYQGHcFsfjiidLCRZpWqAElzECfJGnMCtBFI1ZCGYIdR8rlTYqkHp1GBRUVZW/OjixQufJmPRovuprnr4yu764hB5dOD0ZHTghxvLRkbGuev6tTunxuKTQ+hcExb9ShMd0dY1cabRmaZ22/mGlJU6oqAciz+MjU0wNjbBdInEVJw8O39hMH7p0jVm2MjvLFCk2Wq4dtv5HX3HVnWQIcmoburckLJS7UA5WQwO3qogzwYHb1WQXXnKSrVXN3VuIEOS4Sg+AHQ8mJqyb5NnU1P2bbzRHUWYDEladVNXCKjBozvjyVHy7M54chTvllc3dYVIk6Q5qCAFxkEFSZMUOEmBkxQ4SYGTFDhJgZMUOEmaRMQoMBIRI02SNtBWFwUuUzh6B9rqoqRJMqTgFcDiX/LgAwsq8MaSgl1kSDIG2tZ+U6QXNQLDZCXOkmeVlaU3yW64SC9qHGhb+w0ZOtP0HVvVEWo+95hwnAaliRocgszkqB4C4jB5tmrlksmShQsYGRnnrhsj42dHxyZ+RhITtupXUnb0HVsVZxqdGaKta+JAK/8wTZPU1lYww0emEfiYOUgKnOS/YxluCbLQyYOq57vKEWqPUjQAIeYWFYIOJeXb0dY1cdLCkdQWUEFctItkIfCpqqlzqVKcAirJzVUh2PjSztWVYLcDJdzrimkEQmSh45NSHAcqyV1lWdl9F8AuZVbiIB5IfKhq6qwHVjBPo6MTpUNDt3ATvaC34IHEB6VYh0+xWIIZYqC2mIaw8EDHDymKcRR+OI5imp+AzaYRiOKRjg9CqX6FP6WlxaRNAu8Bb5lGIEEOdHxQUnZgO8NAOfMTC1aU7AG+MI1AgnkQ+FSztbvBcux2QCc3li61xv5PVnfgg4ZP1/taflz8+AvfK3gCCOJNrxRsvdxW9zU+CfKouqkr5KCCzEEiYgNtdVH+96ffALdYj6H1963mAAAAAElFTkSuQmCC"
-      />
-    </defs>
-  </svg>
-);
 
 export default SupportChatWidget;

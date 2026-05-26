@@ -14,7 +14,6 @@ import { ProductModal } from "../../components/products/ProductModal"; // Adjust
 export interface Warehouse {
   _id: string;
   name: string;
-  // ...other warehouse fields
 }
 
 export interface ProductAttribute {
