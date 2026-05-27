@@ -109,10 +109,12 @@ const App = () => {
     }
   };
   useEffect(() => {
-    if (!username) {
+    const isCustomerRoute = location.pathname.startsWith("/customer");
+
+    if (!username && !isCustomerRoute) {
       setUserName();
     }
-  }, [location.pathname]);
+  }, [location.pathname, username]);
   return (
     <>
       <ToastContainer

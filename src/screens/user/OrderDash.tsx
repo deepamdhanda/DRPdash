@@ -34,7 +34,6 @@ import {
   LabelPrinter,
   LabelPrinterRef,
 } from "../../components/order-dash/LabelPreviewModal";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export interface Order {

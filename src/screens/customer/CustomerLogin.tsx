@@ -1,7 +1,7 @@
 import React, { useState, useRef, ChangeEvent, KeyboardEvent } from "react";
-import { Container, Row, Col, Form, Button, InputGroup } from "react-bootstrap";
 import { CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "../../assets/logo.png";
 import { customerAxios } from "../../axios/customerAxios";
 import { drpCrmBaseUrl } from "../../axios/urls";
@@ -18,7 +18,6 @@ const LoginScreen: React.FC = () => {
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setStep("otp");
     try {
       const { data } = await customerAxios.post(
         `${drpCrmBaseUrl}/customer/auth/send-otp`,
@@ -59,7 +58,6 @@ const LoginScreen: React.FC = () => {
         `${drpCrmBaseUrl}/customer/auth/confirm-otp`,
         { phone, otp: finalOtp }
       );
-      console.log(data);
       if (data.success) {
         navigate("/customer/order");
       }
@@ -69,132 +67,163 @@ const LoginScreen: React.FC = () => {
     }
   };
 
+  // Framer Motion variants
+  const formVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, x: -20, transition: { duration: 0.3 } },
+  };
+
   return (
-    <Container fluid className="vh-100 p-0 overflow-hidden">
-      <Row className="h-100 g-0">
-        {/* Left Side */}
-        <Col
-          lg={6}
-          className="bg-amber-light d-none d-lg-flex align-items-center p-5"
-        >
-          <div className="max-w-md mx-auto">
-            <h1 className="display-4 fw-bold mb-4" style={{ fontSize: "50px" }}>
-              Discover a world of{" "}
-              <span className="text-amber">possibilities</span> tailored just
-              for you.
-            </h1>
-            <ul className="list-unstyled mb-5">
-              {[
-                "Gain access to powerful tools and resources designed to enhance your experience.",
-                "Be the first to know about new features, updates, and special events.",
-                "Connect with other users and share insights, tips, and experiences.",
-                "We prioritize your security and privacy with industry-leading protections.",
-              ].map((text, idx) => (
-                <li key={idx} className="d-flex align-items-center mb-3">
-                  <CheckCircle
-                    className="text-amber mt-1 me-3 flex-shrink-0"
-                    size={20}
-                  />
-                  <p className="mb-0 text-black">{text}</p>
-                </li>
-              ))}
-            </ul>
-            <p className="text-muted">
-              Have questions? Visit our{" "}
-              <a href="#" className="text-amber fw-semibold">
-                Help Center
-              </a>
-            </p>
-          </div>
-        </Col>
+    <div className="flex h-screen w-full overflow-hidden bg-white">
+      {/* Left Side */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+        className="hidden lg:flex lg:w-1/2 bg-amber-50 items-center justify-center p-12"
+      >
+        <div className="max-w-md mx-auto">
+          <h1 className="text-5xl font-bold mb-8 leading-tight text-gray-900">
+            Discover a world of{" "}
+            <span className="text-amber-500">possibilities</span> tailored just
+            for you.
+          </h1>
+          <ul className="space-y-6 mb-10">
+            {[
+              "Gain access to powerful tools and resources designed to enhance your experience.",
+              "Be the first to know about new features, updates, and special events.",
+              "Connect with other users and share insights, tips, and experiences.",
+              "We prioritize your security and privacy with industry-leading protections.",
+            ].map((text, idx) => (
+              <li key={idx} className="flex items-start">
+                <CheckCircle
+                  className="text-amber-500 mt-1 mr-4 flex-shrink-0"
+                  size={20}
+                />
+                <p className="text-gray-700 m-0">{text}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="text-gray-500">
+            Have questions? Visit our{" "}
+            <a
+              href="#"
+              className="text-amber-500 font-semibold hover:underline"
+            >
+              Help Center
+            </a>
+          </p>
+        </div>
+      </motion.div>
 
-        {/* Right Side */}
-        <Col
-          lg={6}
-          className="bg-white d-flex align-items-center justify-content-center p-4"
-        >
-          <div className="login-card w-100" style={{ maxWidth: "400px" }}>
-            <div className="text-center mb-5">
-              <div className="d-flex align-items-center justify-content-center mb-3">
-                <img src={logoImg} alt="Logo" width={30} />
-                <span className="h3 fw-bold ms-2 mb-0 text-amber">
-                  Orderz<span className="text-amber">Up</span>
-                </span>
-              </div>
-              <h2 className="fw-bold h4">
-                {step === "phone" ? "Login with mobile number" : "Verify OTP"}
-              </h2>
-              <p className="text-muted small">
-                {step === "phone"
-                  ? "Please confirm your country code and enter your mobile number"
-                  : "Enter the 4-digit code sent to your device"}
-              </p>
+      {/* Right Side */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white">
+        <div className="w-full max-w-[400px]">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-10"
+          >
+            <div className="flex items-center justify-center mb-4 gap-2">
+              <img src={logoImg} alt="Logo" className="w-8 h-auto" />
+              <span className="text-2xl font-bold text-gray-900">
+                Orderz<span className="text-amber-500">Up</span>
+              </span>
             </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {step === "phone" ? "Login with mobile number" : "Verify OTP"}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {step === "phone"
+                ? "Please confirm your country code and enter your mobile number"
+                : "Enter the 4-digit code sent to your device"}
+            </p>
+          </motion.div>
 
-            {step === "phone" ? (
-              <Form onSubmit={handleSendOTP}>
-                <InputGroup className="mb-4">
-                  <Form.Select className="country-select border-end-0 shadow-none">
-                    <option>🇮🇳 +91</option>
-                  </Form.Select>
-                  <Form.Control
-                    className="phone-input border-start-0 shadow-none"
-                    type="tel"
-                    placeholder="98658 98569"
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                  />
-                </InputGroup>
-                <Button
-                  type="submit"
-                  className="btn-amber w-100 py-2 fw-bold mb-4 border-0"
+          {/* Form Area with AnimatePresence for smooth toggling */}
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              {step === "phone" ? (
+                <motion.form
+                  key="phone-form"
+                  variants={formVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  onSubmit={handleSendOTP}
                 >
-                  Send OTP
-                </Button>
-              </Form>
-            ) : (
-              <Form onSubmit={handleVerifyOTP}>
-                <div className="d-flex justify-content-center gap-3 mb-4">
-                  {otp.map((digit, idx) => (
+                  <div className="flex rounded-md border border-gray-300 focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 overflow-hidden mb-6 transition-all">
+                    <select className="bg-gray-50 px-3 py-3 border-r border-gray-300 text-gray-700 outline-none cursor-pointer">
+                      <option>🇮🇳 +91</option>
+                    </select>
                     <input
-                      key={idx}
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      className="otp-box"
-                      value={digit}
-                      ref={(el: any) => (inputRefs.current[idx] = el)}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        handleChange(e.target, idx)
-                      }
-                      onKeyDown={(e: KeyboardEvent<HTMLInputElement>) =>
-                        handleKeyDown(e, idx)
-                      }
+                      type="tel"
+                      className="flex-1 px-4 py-3 outline-none w-full text-gray-900 placeholder-gray-400"
+                      placeholder="98658 98569"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       required
                     />
-                  ))}
-                </div>
-                <Button
-                  type="submit"
-                  className="btn-amber w-100 py-2 fw-bold mb-4 border-0"
-                >
-                  Verify & Proceed
-                </Button>
-                <div className="text-center">
+                  </div>
                   <button
-                    type="button"
-                    onClick={() => setStep("phone")}
-                    className="btn btn-link text-amber text-decoration-none fw-semibold p-0"
+                    type="submit"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-md transition-colors"
                   >
-                    Change Phone Number
+                    Send OTP
                   </button>
-                </div>
-              </Form>
-            )}
+                </motion.form>
+              ) : (
+                <motion.form
+                  key="otp-form"
+                  variants={formVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  onSubmit={handleVerifyOTP}
+                >
+                  <div className="flex justify-center gap-4 mb-8">
+                    {otp.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        className="w-14 h-14 text-center text-2xl font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-gray-900"
+                        value={digit}
+                        ref={(el: any) => (inputRefs.current[idx] = el)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          handleChange(e.target, idx)
+                        }
+                        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) =>
+                          handleKeyDown(e, idx)
+                        }
+                        required
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-md transition-colors mb-4"
+                  >
+                    Verify & Proceed
+                  </button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setStep("phone")}
+                      className="text-amber-500 hover:text-amber-600 font-semibold text-sm hover:underline"
+                    >
+                      Change Phone Number
+                    </button>
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
           </div>
-        </Col>
-      </Row>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
 
