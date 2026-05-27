@@ -142,6 +142,7 @@ const OrderDash = () => {
     },
     { key: "rto", label: "RTO", icon: <Info size={14} /> },
     { key: "all", label: "All Orders", icon: <FaGear /> },
+    { key: "archive", label: "Archive Orders", icon: <FaGear /> },
   ];
 
   const [page, setPage] = useState(1);
