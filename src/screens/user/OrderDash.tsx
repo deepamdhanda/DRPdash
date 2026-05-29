@@ -13,7 +13,7 @@ import {
 import { getAllProductSKUs } from "../../APIs/user/productSKU";
 import { drpCrmBaseUrl } from "../../axios/urls";
 import { FaBoxOpen, FaTruck } from "react-icons/fa";
-import { CheckCircle2, Info, PackageOpen } from "lucide-react";
+import { CheckCircle2, Info, PackageOpen, Plus, Search } from "lucide-react";
 import { FaGear } from "react-icons/fa6";
 import "../../components/order-dash/OrderDash.css";
 import OrderTable from "../../components/order-dash/OrderTable";
@@ -34,7 +34,9 @@ import {
   LabelPrinter,
   LabelPrinterRef,
 } from "../../components/order-dash/LabelPreviewModal";
+
 import { motion } from "framer-motion";
+import { UpdateDimensionsModal } from "../../components/order-dash/UpdateDimensionsModal";
 
 export interface Order {
   _id: string;
@@ -107,13 +109,25 @@ const OrderDash = () => {
     packWeight: "",
     warehouse: [],
   });
-
+  const [missingDataProductId, setMissingDataProductId] = useState<
+    string | null
+  >(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [pickupOrder, setPickupOrder] = useState<string | null>(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
   const printerRef = useRef<LabelPrinterRef>(null);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
 
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [search]);
   const tabs = [
     { key: "new", label: "New", icon: <FaBoxOpen /> },
     {
@@ -129,6 +143,7 @@ const OrderDash = () => {
     },
     { key: "rto", label: "RTO", icon: <Info size={14} /> },
     { key: "all", label: "All Orders", icon: <FaGear /> },
+    { key: "archive", label: "Archive Orders", icon: <FaGear /> },
   ];
 
   const [page, setPage] = useState(1);
@@ -163,7 +178,7 @@ const OrderDash = () => {
   }, []);
   useEffect(() => {
     fetchOrders();
-  }, [tab, page]);
+  }, [tab, page, debouncedSearch]);
 
   const fetchChannelAccounts = async () => {
     try {
@@ -191,6 +206,7 @@ const OrderDash = () => {
           tab,
           page,
           limit,
+          search: debouncedSearch,
         },
       });
 
@@ -263,6 +279,12 @@ const OrderDash = () => {
       if ((err as any).message.toLowerCase() === "product sku not linked") {
         handleOpenLinkModal(order);
       }
+      console.log(err);
+      // if (
+      //   (err as any).message.toLowerCase() === "product has missing information"
+      // ) {
+      //   setMissingDataProductId(order.items);
+      // }
       toast.error((err as any).message);
     }
   };
@@ -398,7 +420,7 @@ const OrderDash = () => {
         toast.success(res.data.message);
         setShowLinkModal(false);
         setLinkOrderData(null);
-        fetchOrders(); // Refresh table
+        fetchOrders();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Linking failed");
@@ -407,64 +429,85 @@ const OrderDash = () => {
 
   return (
     <>
-      <div className="w-full">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="w-full p-4 space-y-6">
+        {/* Top Bar: Title & Primary Action */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-1">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               Orders Management
             </h1>
-
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500 mt-0.5">
               Streamline your shipping and fulfillment
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setShow(true)}
-              className="px-4 py-2.5 text-sm font-medium text-white bg-linear-to-r from-[#F5891E] to-[#FF6B35] rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-            >
-              + Add Order
-            </button>
-          </div>
+          <button
+            onClick={() => setShow(true)}
+            className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition-all duration-200 active:scale-[0.98]"
+          >
+            <Plus size={16} />
+            Add Order
+          </button>
         </div>
 
-        {/* Modern Segmented Tabs Section */}
-        <div className="flex items-center p-1 bg-gray-100/80 backdrop-blur-sm rounded-2xl w-max mb-6 border border-gray-200/50">
-          {tabs.map((tabs) => {
-            const isActive = tab === tabs.key;
+        {/* Filter Bar: Tabs & Search Input */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2 border-b border-slate-100 pb-4">
+          {/* Animated Tabs Container */}
+          <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full">
+            {tabs.map((tabi) => {
+              const isActive = tabi.key === tab;
+              return (
+                <button
+                  key={tabi.key}
+                  onClick={() => setTab(tabi.key)}
+                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 whitespace-nowrap focus:outline-none ${
+                    isActive
+                      ? "text-orange-500"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {/* Sliding Highlight Background */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabHighlight"
+                      className="absolute inset-0 bg-white rounded-lg shadow-sm z-0"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
 
-            return (
-              <button
-                key={tabs.key}
-                onClick={() => setTab(tabs.key)}
-                className={`relative flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-xl transition-colors duration-300 outline-none ${
-                  isActive
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                style={{ WebkitTapHighlightColor: "transparent" }}
-              >
-                {/* The Sliding Pill Background */}
-                {isActive && (
-                  <motion.div
-                    layoutId="active-tab-pill"
-                    className="absolute inset-0 bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-
-                {/* Tab Content (Z-index ensures it sits above the sliding pill) */}
-                <span className="relative z-10 flex items-center gap-2">
-                  <span className={isActive ? "text-[#F5891E]" : "opacity-70"}>
-                    {tabs.icon}
+                  {/* Content elements need relative z-index to sit on top of the moving background */}
+                  <span className="relative z-10 flex items-center gap-2">
+                    {tabi.icon}
+                    {tabi.label}
                   </span>
-                  {tabs.label}
-                </span>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search Input Box */}
+          <div className="relative w-full lg:max-w-xs group">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search
+                size={18}
+                className="text-slate-400 group-focus-within:text-orange-500 transition-colors"
+              />
+            </span>
+            <input
+              type="search"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all shadow-inner"
+              placeholder="Search orders..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
       </div>
       <OrderTable
@@ -531,6 +574,15 @@ const OrderDash = () => {
         }}
       />
       <LabelPrinter ref={printerRef} labelData={labelData} />
+      <UpdateDimensionsModal
+        show={!!missingDataProductId}
+        onHide={() => setMissingDataProductId(null)}
+        productId={missingDataProductId}
+        onSuccess={() => {
+          setMissingDataProductId(null);
+          fetchOrders(); // Refresh the table
+        }}
+      />
     </>
   );
 };

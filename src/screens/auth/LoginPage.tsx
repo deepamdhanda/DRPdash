@@ -60,7 +60,15 @@ export const AuthPage: React.FC = () => {
   };
 
   const onRegister = async (data: any) => {
-    await RegisterUser(data, (email) => navigate("/verify?email=" + email));
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryParams = Object.fromEntries(searchParams.entries());
+
+    // 2. Construct the new payload with the params object attached
+    const payload = {
+      ...data,
+      params: queryParams,
+    };
+    await RegisterUser(payload, (email) => navigate("/verify?email=" + email));
   };
 
   const toggleForm = () => {
