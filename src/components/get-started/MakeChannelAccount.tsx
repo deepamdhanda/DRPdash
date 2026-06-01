@@ -196,7 +196,7 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = () => {
             <Col md={7}>
               <Form.Group className="mb-3" controlId="accountName">
                 <Form.Label className="fw-medium">
-                  Channel Account Name
+                  Channel Account 
                 </Form.Label>
                 <Form.Control
                   placeholder="e.g. My Shopify Store"
