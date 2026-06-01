@@ -48,7 +48,8 @@ export const ProductPacks: React.FC = () => {
   // Pagination states
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const limit = 10;
+  // const limit = 10;
+  const [limit, setLimit] = useState(10);
 
   useEffect(() => {
     fetchProductPacks(page, limit);
@@ -248,6 +249,7 @@ export const ProductPacks: React.FC = () => {
       </div>
 
       <CustomDataTable
+        setLimit={setLimit}
         columns={columns}
         data={productPacks}
         totalRecords={totalRecords}

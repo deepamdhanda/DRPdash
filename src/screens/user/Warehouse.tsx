@@ -31,7 +31,8 @@ export interface Warehouse {
 
 export const Warehouses: React.FC = () => {
   const [page, setPage] = useState(1);
-  const limit = 10;
+  // const limit = 10;
+  const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,6 +212,7 @@ export const Warehouses: React.FC = () => {
       </div>
 
       <CustomDataTable
+        setLimit={setLimit}
         columns={columns as any}
         data={warehouses}
         totalRecords={totalRecords}
