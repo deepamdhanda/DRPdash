@@ -541,19 +541,15 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
               </div>
             )}
 
-            <hr style={s.divider} />
-
-            {/* Account details */}
-            <p style={s.sectionLabel}>📋 Account Details</p>
-            <div style={m("grid2")}>
-              <div
-                style={{
-                  ...s.field,
-                  gridColumn: isMobile ? undefined : "1 / -1",
-                }}
-              >
-                <label style={s.label}>Channel Account Name</label>
-                <FI
+        <Form onSubmit={handleSubmit}>
+          <Row>
+            <Col md={7}>
+              <Form.Group className="mb-3" controlId="accountName">
+                <Form.Label className="fw-medium">
+                  Channel Account 
+                </Form.Label>
+                <Form.Control
+                  placeholder="e.g. My Shopify Store"
                   value={channelAccountName}
                   onChange={(e) => setChannelAccountName(e.target.value)}
                   required
