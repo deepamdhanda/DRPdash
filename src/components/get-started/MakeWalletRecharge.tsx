@@ -1,12 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Form,
-  Card,
-  InputGroup,
-  Spinner,
-  Badge,
-} from "react-bootstrap";
 import { toast } from "react-toastify";
 import { getAllPools } from "../../APIs/user/pool";
 import { makePayment } from "../../APIs/user/wallet";
@@ -18,21 +10,14 @@ const GetStartedRecharge = () => {
   const [pools, setPools] = useState<any[]>([]);
   const [selectedPool, setSelectedPool] = useState<string>("");
   const [loadingPools, setLoadingPools] = useState(true);
-
-  // Changed: Amount is now dynamic, not fixed
   const [amount, setAmount] = useState<number | "">("");
-
   const [coupon, setCoupon] = useState<string>("");
-
-  // Changed: Logic switched from 'discount' to 'bonus' based on 2nd component
   const [bonus, setBonus] = useState<number>(0);
-
   const [isValidating, setIsValidating] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
 
   const navigate = useNavigate();
 
-  // 1. Fetch pools on mount
   useEffect(() => {
     const fetchPools = async () => {
       try {
@@ -51,7 +36,6 @@ const GetStartedRecharge = () => {
     fetchPools();
   }, []);
 
-  // 2. Validate Coupon (Logic Updated to Bonus)
   const handleApplyCoupon = async () => {
     if (!coupon || !amount) {
       toast.error("Please enter an amount and coupon code");
@@ -66,7 +50,6 @@ const GetStartedRecharge = () => {
         coupon: coupon,
       });
 
-      // Assuming API returns 'discount' key, but we treat it as bonus based on your Wallets component
       if (data.data.discount > 0) {
         setBonus(data.data.discount);
         toast.success(`Coupon applied! You get ₹${data.data.discount} extra.`);
@@ -81,7 +64,6 @@ const GetStartedRecharge = () => {
     }
   };
 
-  // 3. Process Payment
   const handlePayment = async () => {
     if (!selectedPool) {
       toast.error("Please select a wallet pool.");
@@ -94,7 +76,6 @@ const GetStartedRecharge = () => {
 
     setIsPaying(true);
     try {
-      // Logic: User pays the entered amount. The coupon is sent to backend to apply bonus credit.
       const res = await makePayment(Number(amount), selectedPool, coupon);
       if (res) {
         toast.success("Payment initiated successfully!");
@@ -108,12 +89,10 @@ const GetStartedRecharge = () => {
     }
   };
 
-  // Helper to handle amount change and reset coupon if amount changes
   const handleAmountChange = (val: string) => {
-    setAmount(Number(val));
+    setAmount(val === "" ? "" : Number(val));
     if (bonus > 0) {
-      setBonus(0); // Reset bonus if amount changes as % might differ
-      // Optional: toast.info("Amount changed, please re-apply coupon");
+      setBonus(0);
     }
   };
 
@@ -121,195 +100,215 @@ const GetStartedRecharge = () => {
   const totalCredit = numericAmount + bonus;
 
   return (
-    <div className="d-flex justify-content-center align-items-center py-5">
-      <Card
-        className="shadow-lg border-0 overflow-hidden"
-        style={{ maxWidth: "550px", width: "100%", borderRadius: "15px" }}
-      >
-        {/* Modern Header */}
-        <div
-          className="bg-primary p-4 text-white text-center"
-          style={{
-            background: "linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)",
-          }}
-        >
-          <h4 className="mb-0 fw-bold">Add Money to Wallet</h4>
-          <small className="opacity-75">Secure & Instant Recharge</small>
+    <div className="w-full  mx-auto bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+      <div className="p-6 space-y-6">
+        {/* Modern Dynamic Balance Card */}
+        <div className="bg-linear-to-br from-orange-300 to-orange-400 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+          <div className="text-xs text-neutral-100 font-medium tracking-wide uppercase">
+            Estimated Total Allocation
+          </div>
+          <div className="text-3xl font-bold mt-1 tracking-tight">
+            ₹{totalCredit.toLocaleString("en-IN")}
+          </div>
+          <div className="text-[11px] text-neutral-100 mt-2 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Ready for instant platform remittance
+          </div>
         </div>
 
-        <Card.Body className="p-4 bg-white">
-          {/* Row 1: Wallet Pool Selection */}
-          <Form.Group className="mb-4">
-            <Form.Label className="fw-bold small text-uppercase text-muted ls-1">
-              Select Wallet
-            </Form.Label>
-            <Form.Select
-              value={selectedPool}
-              onChange={(e) => setSelectedPool(e.target.value)}
-              disabled={loadingPools || isPaying}
-              className="py-2"
-              style={{ border: "2px solid #e9ecef" }}
-            >
-              {loadingPools ? (
-                <option>Loading pools...</option>
-              ) : (
-                pools.map((pool: any) => (
-                  <option key={pool._id} value={pool._id}>
-                    {pool.name} (Cur. Bal: ₹
-                    {pool?.wallet_balance?.toFixed(2) || 0})
-                  </option>
-                ))
-              )}
-            </Form.Select>
-          </Form.Group>
+        {/* Pool Selection Interface */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+            Select Wallet Pool Account
+          </label>
 
-          {/* Row 2: Recharge Amount (Dynamic) */}
-          <Form.Group className="mb-4">
-            <Form.Label className="fw-bold small text-uppercase text-muted ls-1">
-              Enter Amount
-            </Form.Label>
-            <InputGroup className="mb-2">
-              <InputGroup.Text className="bg-light border-end-0 fw-bold text-muted">
-                ₹
-              </InputGroup.Text>
-              <Form.Control
-                type="number"
-                placeholder="e.g. 5000"
-                value={amount}
-                onChange={(e) => handleAmountChange(e.target.value)}
-                className="py-2 border-start-0 fw-bold text-dark fs-5"
-                style={{ border: "2px solid #e9ecef" }}
-                disabled={isPaying}
-              />
-            </InputGroup>
-            {/* Quick Select Chips (Optional UI enhancement) */}
-            <div className="d-flex gap-2 mt-2">
-              {[1000, 2000, 5000].map((val) => (
-                <Badge
-                  key={val}
-                  bg="light"
-                  text="dark"
-                  className="border px-3 py-2 cursor-pointer user-select-none"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleAmountChange(val.toString())}
-                >
-                  ₹{val}
-                </Badge>
-              ))}
+          {loadingPools ? (
+            <div className="h-12 bg-gray-50 border border-gray-100 rounded-xl animate-pulse flex items-center px-4">
+              <div className="h-4 bg-gray-200 rounded w-1/3" />
             </div>
-          </Form.Group>
+          ) : pools.length === 0 ? (
+            <div className="p-3 text-xs text-center text-amber-600 bg-amber-50 border border-amber-100 rounded-xl font-medium">
+              No remittance pools configured. Please complete setup.
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+              {pools.map((pool) => {
+                const isSelected = selectedPool === pool._id;
+                return (
+                  <div
+                    key={pool._id}
+                    onClick={() => setSelectedPool(pool._id)}
+                    className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between transition-all duration-150 ${
+                      isSelected
+                        ? "border-[#F5891E] bg-[#FFF7ED] shadow-sm"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                          isSelected ? "border-[#F5891E]" : "border-gray-300"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="w-2 h-2 rounded-full bg-[#F5891E]" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-sm font-semibold transition-colors ${
+                          isSelected ? "text-[#F5891E]" : "text-gray-700"
+                        }`}
+                      >
+                        {pool.name ||
+                          pool.poolName ||
+                          "Default Billing Account"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] bg-gray-100 text-gray-500 font-mono px-2 py-0.5 rounded-md">
+                      ID: {pool._id?.slice(-6).toUpperCase() || "N/A"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-          {/* Row 3: Coupon Section */}
-          <Form.Group className="mb-4">
-            <Form.Label className="fw-bold small text-uppercase text-muted ls-1">
-              Promo Code
-            </Form.Label>
+        {/* Amount Input Wrapper */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+            Recharge Amount
+          </label>
+          <div className="relative rounded-lg shadow-sm">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <span className="text-gray-500 font-semibold text-base">₹</span>
+            </div>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              placeholder="Enter custom amount"
+              className="w-full pl-8 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-base font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F5891E]/20 focus:border-[#F5891E] focus:bg-white transition-all"
+            />
+          </div>
+        </div>
 
-            <InputGroup>
-              <Form.Control
-                placeholder="Enter Coupon Code"
+        {/* Quick Select Smart Pills */}
+        <div className="grid grid-cols-4 gap-2">
+          {[500, 1000, 2000, 5000].map((val) => {
+            const isSelected = Number(amount) === val;
+            return (
+              <button
+                key={val}
+                type="button"
+                onClick={() => handleAmountChange(val.toString())}
+                className={`py-2.5 px-1 rounded-xl text-xs font-bold transition-all border text-center ${
+                  isSelected
+                    ? "border-[#F5891E] bg-[#FFF7ED] text-[#F5891E] shadow-sm shadow-orange-500/10"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                }`}
+              >
+                +₹{val}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Promo Actions */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+            Offers & Promo Codes
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-                disabled={isValidating || isPaying || bonus > 0}
-                className="text-uppercase"
-                style={{ border: "2px solid #e9ecef" }}
+                placeholder="ENTER PROMO CODE"
+                disabled={bonus > 0}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold tracking-wider placeholder:tracking-normal uppercase outline-none focus:ring-2 focus:ring-[#F5891E]/20 focus:border-[#F5891E] disabled:bg-gray-50 disabled:text-gray-400 transition-all"
               />
-
-              <Button
-                variant={bonus > 0 ? "success" : "outline-primary"}
-                onClick={handleApplyCoupon}
-                disabled={
-                  !coupon || !amount || isValidating || isPaying || bonus > 0
-                }
-              >
-                {isValidating ? (
-                  <Spinner size="sm" animation="border" />
-                ) : bonus > 0 ? (
-                  <i className="bi bi-check-lg"></i>
-                ) : (
-                  "Apply"
-                )}
-              </Button>
-            </InputGroup>
-
-            {/* Promo Hint */}
-            {!bonus && (
-              <div className="mt-2 small text-muted">
-                <i className="bi bi-gift me-1 text-primary"></i>
-                Use code <strong>NEW500</strong> to get{" "}
-                <strong>50% extra bonus</strong> on your first recharge. Valid
-                only on recharges above <strong>₹500</strong>.
-              </div>
-            )}
-
-            {/* Success Message */}
-            {bonus > 0 && (
-              <div className="mt-2 small text-success fw-bold fade-in">
-                <i className="bi bi-stars me-1"></i>
-                Coupon applied! ₹{bonus} bonus added.
-              </div>
-            )}
-          </Form.Group>
-
-          <hr className="my-4 border-light" />
-
-          {/* Row 4: Summary Breakdown */}
-          <div className="bg-light p-3 rounded-3 mb-4">
-            <div className="d-flex justify-content-between mb-2">
-              <span className="text-muted">Recharge Amount</span>
-              <span className="fw-medium">₹{numericAmount.toFixed(2)}</span>
             </div>
+            <button
+              type="button"
+              onClick={handleApplyCoupon}
+              disabled={
+                !coupon || !amount || isValidating || isPaying || bonus > 0
+              }
+              className={`px-5 py-2.5 text-xs font-bold rounded-xl transition-all shadow-sm ${
+                bonus > 0
+                  ? "bg-emerald-600 text-white cursor-default"
+                  : "bg-[#000434] text-white hover:bg-opacity-90 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+              }`}
+            >
+              {bonus > 0 ? "Applied" : "Apply"}
+            </button>
+          </div>
 
-            {bonus > 0 && (
-              <div className="d-flex justify-content-between mb-2 text-success">
-                <span>
-                  <i className="bi bi-gift-fill me-1"></i> Bonus Credit
-                </span>
-                <span className="fw-bold">+ ₹{bonus.toFixed(2)}</span>
-              </div>
-            )}
-
-            <div className="border-top my-2"></div>
-
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="fw-bold text-dark">Total Wallet Credit</span>
-              <span className="fw-bold text-primary fs-4">
-                ₹{totalCredit.toFixed(2)}
+          {bonus > 0 && (
+            <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1.5 mt-1">
+              <span className="flex items-center justify-center w-4 h-4 bg-emerald-100 rounded-full text-[10px]">
+                ✓
               </span>
-            </div>
-          </div>
+              Promo applied successfully! Extra credit added.
+            </p>
+          )}
+        </div>
 
-          {/* Pay Button */}
-          <Button
-            variant="success"
-            size="lg"
-            className="w-100 text-white fw-bold py-3 shadow-sm"
-            onClick={handlePayment}
-            disabled={loadingPools || isPaying || !selectedPool || !amount}
-            style={{
-              background: isPaying ? "#6c757d" : "#198754",
-              border: "none",
-              transition: "all 0.2s",
-            }}
+        {/* Itemized Invoice Ledger */}
+        <div className="bg-gray-50/70 rounded-xl border border-gray-100 p-4 space-y-3">
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Base Recharge</span>
+            <span className="font-medium text-gray-900">
+              ₹{numericAmount.toLocaleString("en-IN")}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Promotional Bonus</span>
+            <span className="font-semibold text-emerald-600">
+              {bonus > 0 ? `+₹${bonus.toLocaleString("en-IN")}` : "₹0"}
+            </span>
+          </div>
+          <div className="border-t border-dashed border-gray-200 my-1" />
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-bold text-gray-800">Total Settlement</span>
+            <span className="font-extrabold text-lg text-[#F5891E]">
+              ₹{totalCredit.toLocaleString("en-IN")}
+            </span>
+          </div>
+        </div>
+
+        {/* Primary Checkout CTA */}
+        <button
+          onClick={handlePayment}
+          disabled={loadingPools || isPaying || !selectedPool || !amount}
+          className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide text-white transition-all shadow-md ${
+            loadingPools || isPaying || !selectedPool || !amount
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+              : "bg-[#F5891E] hover:bg-orange-600 active:transform active:scale-[0.99] shadow-orange-500/10"
+          }`}
+        >
+          {isPaying
+            ? "Securing Payment Session..."
+            : `Proceed to Pay ₹${numericAmount.toLocaleString("en-IN")}`}
+        </button>
+
+        {/* Trust Indicator Footnote */}
+        <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400 font-medium">
+          <svg
+            className="w-3.5 h-3.5 text-gray-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
           >
-            {isPaying ? (
-              <>
-                <Spinner size="sm" animation="border" className="me-2" />
-                Processing Payment...
-              </>
-            ) : (
-              `Pay ₹${numericAmount} Now`
-            )}
-          </Button>
-
-          <div className="text-center mt-3">
-            <small className="text-muted" style={{ fontSize: "0.75rem" }}>
-              <i className="bi bi-lock-fill me-1"></i>
-              Payments are secured by Razorpay
-            </small>
-          </div>
-        </Card.Body>
-      </Card>
+            <path
+              fillRule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Encrypted payments routed via Razorpay Gateway
+        </div>
+      </div>
     </div>
   );
 };

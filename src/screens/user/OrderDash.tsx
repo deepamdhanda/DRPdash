@@ -156,7 +156,8 @@ const OrderDash = () => {
       console.error("Error loading warehouses", error);
     }
   };
-  const limit = 10;
+  // const limit = 10;
+  const [limit, setLimit] = useState(10);
   useEffect(() => {
     setPage(1);
   }, [tab]);
@@ -178,7 +179,7 @@ const OrderDash = () => {
   }, []);
   useEffect(() => {
     fetchOrders();
-  }, [tab, page, debouncedSearch]);
+  }, [tab, page, debouncedSearch, limit]);
 
   const fetchChannelAccounts = async () => {
     try {
@@ -527,6 +528,8 @@ const OrderDash = () => {
         onCancelOrder={handleCancelOrder}
       />
       <Pagination
+        setLimit={setLimit}
+        limit={limit}
         currentPage={page}
         totalPages={totalPages}
         onPageChange={(newPage) => setPage(newPage)}

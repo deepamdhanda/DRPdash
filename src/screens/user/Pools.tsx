@@ -46,7 +46,8 @@ export type Pool = {
 
 export const Pools: React.FC = () => {
   const [page, setPage] = useState<number>(1);
-  const limit = 10;
+  // const limit = 10;
+  const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [pools, setPools] = useState<Pool[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,6 +232,7 @@ export const Pools: React.FC = () => {
       </div>
 
       <CustomDataTable
+        setLimit={setLimit}
         columns={columns}
         data={pools}
         totalRecords={totalRecords}

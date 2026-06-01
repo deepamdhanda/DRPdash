@@ -16,6 +16,7 @@ interface CustomDataTableProps<T> {
   page: number;
   limit: number;
   setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
   isLoading?: boolean;
   selectableRows?: boolean;
   selectedIds?: string[];
@@ -31,6 +32,7 @@ export default function CustomDataTable<T>({
   page,
   limit,
   setPage,
+  setLimit,
   isLoading = false,
   selectableRows = false,
   selectedIds = [],
@@ -96,7 +98,6 @@ export default function CustomDataTable<T>({
     <div className="flex flex-col w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left border-collapse whitespace-nowrap min-w-max">
-          {/* Added Table Header */}
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {selectableRows && (
@@ -197,29 +198,54 @@ export default function CustomDataTable<T>({
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="py-4 px-6 flex items-center justify-center gap-2 bg-white border-t border-gray-200">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="flex items-center px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+      {/* Pagination Footer Container */}
+      <div className="py-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border-t border-gray-200">
+        {/* Limit Selection Controls */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-medium text-gray-500">
+            Rows per page:
+          </span>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1); // Safely push layout indexes back to head frame
+            }}
+            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-[#F5891E]/20 focus:border-[#F5891E] cursor-pointer transition-all"
           >
-            <ChevronLeft size={16} className="mr-1.5" /> Prev
-          </button>
-
-          <div className="flex items-center gap-1 mx-4">
-            {renderPageNumbers()}
-          </div>
-
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage(page + 1)}
-            className="flex items-center px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
-          >
-            Next <ChevronRight size={16} className="ml-1.5" />
-          </button>
+            {[10, 50, 100].map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+
+        {/* Page Navigators */}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="flex items-center px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+            >
+              <ChevronLeft size={16} className="mr-1.5" /> Prev
+            </button>
+
+            <div className="flex items-center gap-1 mx-2">
+              {renderPageNumbers()}
+            </div>
+
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage(page + 1)}
+              className="flex items-center px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+            >
+              Next <ChevronRight size={16} className="ml-1.5" />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

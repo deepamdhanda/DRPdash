@@ -1,23 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  ProgressBar,
-  Badge,
-  Navbar,
-  Container,
-  Nav,
-  Dropdown,
-} from "react-bootstrap";
-import { FaCheck, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
+import { FaCheck } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Stat, useStatsStore } from "../../store/useStatsStore";
 import MakePool from "../../components/get-started/MakePool";
 import MakeWarehouse from "../../components/get-started/MakeWarehouse";
 import MakeChannelAccount from "../../components/get-started/MakeChannelAccount";
-import logoImg from "../../assets/logo.png";
-import logoImg1 from "../../assets/logo1.png";
+import logoImg from "/Orderzup.png";
 import { drpCrmBaseUrl } from "../../axios/urls";
 import { appAxios } from "../../axios/appAxios";
 import { getAccountSummary } from "../../APIs/user/dashboard";
@@ -25,13 +13,6 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import GetStartedRecharge from "../../components/get-started/MakeWalletRecharge";
-
-/**
- * Horizontal Onboarding Stepper
- * - Retains original visual style (colors, sizes, fonts)
- * - Uses Bootstrap Grid + Flex for horizontal layout
- * - Adds Framer Motion for smooth content switching
- */
 
 type Step = {
   key: string;
@@ -94,16 +75,16 @@ const GetStarted: React.FC = () => {
   // Step definitions
   const stepOrder: Step[] = [
     {
-      key: "pools",
-      label: "Pool Setup",
-      helper: "Minimal business details",
-      content: <MakePool handleNext={() => handleNext("pools")} />,
-    },
-    {
       key: "warehouses",
       label: "Warehouse",
       helper: "Create location",
       content: <MakeWarehouse handleNext={() => handleNext("warehouses")} />,
+    },
+    {
+      key: "pools",
+      label: "Business Account Setup",
+      helper: "Minimal business details",
+      content: <MakePool handleNext={() => handleNext("pools")} />,
     },
     {
       key: "channel",
@@ -117,39 +98,6 @@ const GetStarted: React.FC = () => {
       helper: "Let's add some balance.",
       content: <GetStartedRecharge />,
     },
-    // {
-    //   key: "final",
-    //   label: "Finish",
-    //   helper: "You're all set",
-    //   content: (
-    //     <div style={{ textAlign: "center", padding: 40 }}>
-    //       <motion.div
-    //         initial={{ scale: 0.9, opacity: 0 }}
-    //         animate={{ scale: 1, opacity: 1 }}
-    //       >
-    //         <h3 style={{ marginBottom: 12, color: "#000434" }}>Nice work 👏</h3>
-    //         <p
-    //           className="text-muted"
-    //           style={{ maxWidth: 500, margin: "0 auto" }}
-    //         >
-    //           You completed onboarding. Explore dashboards, add products, or
-    //           configure integrations.
-    //         </p>
-    //         <div style={{ marginTop: 24 }}>
-    //           <Button
-    //             variant="primary"
-    //             size="lg"
-    //             onClick={() => {
-    //               window.location.href = "/user";
-    //             }}
-    //           >
-    //             Go to Dashboard
-    //           </Button>
-    //         </div>
-    //       </motion.div>
-    //     </div>
-    //   ),
-    // },
   ];
 
   const totalSteps = stepOrder.length;
@@ -185,41 +133,30 @@ const GetStarted: React.FC = () => {
   return (
     <>
       <OnboardingHeader username={username} />
-      <div
-        style={{
-          padding: "2rem 1rem",
-          backgroundColor: "#f5f7fb", // Keep original bg color
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div className="py-8 px-4 bg-[#f5f7fb] min-h-screen">
+        <div className="max-w-[1200px] mx-auto">
           {/* Header Section */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
             <div>
-              <h2 style={{ color: "#000434", margin: 0, fontWeight: 700 }}>
+              <h2 className="text-[#000434] m-0 font-bold text-2xl md:text-3xl">
                 Welcome — Let's get you set up
               </h2>
-              <div style={{ color: "#6b7280", marginTop: 6, fontSize: 14 }}>
+              <div className="text-gray-500 mt-1.5 text-sm">
                 Onboarding in a few quick steps. We'll guide you.
               </div>
             </div>
 
-            <div style={{ width: 320 }} className="d-none d-md-block">
-              <div className="d-flex gap-2 align-items-center">
-                <div style={{ flex: 1 }}>
-                  <ProgressBar
-                    now={progress}
-                    variant="warning"
-                    style={{ height: 8, borderRadius: 8 }}
-                  />
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#6b7280",
-                      marginTop: 6,
-                      textAlign: "right",
-                    }}
-                  >
+            <div className="hidden md:block w-[320px]">
+              <div className="flex gap-2 items-center">
+                <div className="flex-1">
+                  {/* Custom Progress Bar replicating Bootstrap's variant="warning" */}
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#ffc107] rounded-full transition-all duration-300 ease-in-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1.5 text-right">
                     {completedCount}/{totalSteps - 1} completed
                   </div>
                 </div>
@@ -227,163 +164,116 @@ const GetStarted: React.FC = () => {
             </div>
           </div>
 
-          {/* Horizontal Stepper */}
-          <Row className="mb-4 g-3">
+          {/* Stepper Tabs */}
+          <div className="mb-6 flex gap-3 flex-nowrap overflow-x-auto pb-2 scrollbar-hide">
             {stepOrder.map((step, index) => {
               const isActive = activeStep === step.key;
               const isComplete = completedSteps.includes(step.key);
 
               return (
-                <Col key={step.key} xs={12} md={6} lg={3}>
+                <div key={step.key} className="flex-1 min-w-[250px]">
                   <div
                     role="button"
                     tabIndex={0}
                     onClick={() => handleClickStep(step.key)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 16px",
-                      borderRadius: 10,
-                      cursor: "pointer",
-                      backgroundColor: "#fff",
-                      // Animate background color gently
-                      background: isActive ? "rgba(245,137,30,0.06)" : "#fff",
-                      // Move border from Left to Bottom for horizontal feel
-                      borderBottom: isActive
-                        ? "4px solid #F5891E"
-                        : "4px solid transparent",
-                      border: isActive ? undefined : "1px solid transparent", // invisible border to prevent layout shift
-                      boxShadow: "0 2px 5px rgba(0,0,0,0.03)",
-                      height: "100%",
-                      transition: "all 0.2s ease",
-                    }}
+                    className={`flex items-center gap-3 p-3 px-4 rounded-xl cursor-pointer h-full transition-all duration-200 shadow-[0_2px_5px_rgba(0,0,0,0.03)] border-b-4 
+                      ${
+                        isActive
+                          ? "bg-[#F5891E]/10 border-b-[#F5891E]"
+                          : "bg-white border-b-transparent border border-transparent"
+                      }
+                    `}
                   >
-                    {/* Circle Icon - Same Size (36px) */}
-                    <div style={{ flexShrink: 0 }}>
+                    <div className="shrink-0">
                       {isComplete ? (
                         <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
-                            background: "#F5891E",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#fff",
-                          }}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all duration-200 
+                            ${
+                              isComplete
+                                ? "bg-[#F5891E] text-white"
+                                : isActive
+                                ? "bg-[#F5891E]/10 text-[#F5891E] border border-[#F5891E]"
+                                : "bg-white text-[#9aa0ad] border border-[#e6e9ee]"
+                            }
+                          `}
                         >
                           <FaCheck size={14} />
                         </div>
                       ) : (
                         <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
-                            border: "1px solid #e6e9ee",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: isActive ? "#F5891E" : "#9aa0ad",
-                            background: isActive
-                              ? "rgba(245,137,30,0.06)"
-                              : "transparent",
-                            fontWeight: 600,
-                          }}
+                          className={`w-9 h-9 rounded-full border inline-flex items-center justify-center font-semibold transition-all duration-200
+                            ${
+                              isActive
+                                ? "border-[#F5891E] text-[#F5891E] bg-[#F5891E]/10"
+                                : "border-[#e6e9ee] text-[#9aa0ad] bg-transparent"
+                            }
+                          `}
                         >
                           {index + 1}
                         </div>
                       )}
                     </div>
 
-                    {/* Text Content */}
-                    <div style={{ flex: 1, overflow: "hidden" }}>
+                    <div className="flex-1 overflow-hidden">
                       <div
-                        className="text-truncate"
-                        style={{
-                          fontWeight: isActive ? 700 : 600,
-                          color: isActive ? "#000434" : "#111827",
-                          fontSize: "1rem",
-                        }}
+                        className={`truncate text-base ${
+                          isActive
+                            ? "font-bold text-[#000434]"
+                            : "font-semibold text-gray-900"
+                        }`}
                       >
                         {step.label}
                       </div>
+
                       {step.helper && (
-                        <div
-                          className="text-truncate"
-                          style={{
-                            fontSize: 12,
-                            color: "#6b7280",
-                            marginTop: 2,
-                          }}
-                        >
+                        <div className="truncate text-xs text-gray-500 mt-0.5">
                           {step.helper}
                         </div>
                       )}
                     </div>
                   </div>
-                </Col>
+                </div>
               );
             })}
-          </Row>
+          </div>
 
           {/* Content Card */}
-          <Row>
-            <Col xs={12}>
-              <Card
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 8px 30px rgba(2,6,23,0.06)",
-                  minHeight: 450,
-                  padding: 24,
-                  border: "none",
-                }}
-              >
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <div>
-                    <h4
-                      style={{ margin: 0, color: "#000434", fontWeight: 700 }}
-                    >
-                      {stepOrder.find((s) => s.key === activeStep)?.label}
-                    </h4>
-                    <span style={{ fontSize: 13, color: "#9aa0ad" }}>
-                      Step{" "}
-                      {stepOrder.findIndex((s) => s.key === activeStep) + 1} of{" "}
-                      {stepOrder.length}
-                    </span>
-                  </div>
-
-                  {completedSteps.length > 0 && activeStep !== "final" && (
-                    <Badge bg="success" pill style={{ fontSize: 12 }}>
-                      {completedSteps.length} completed
-                    </Badge>
-                  )}
+          <div className="w-full">
+            <div className="rounded-2xl shadow-[0_8px_30px_rgba(2,6,23,0.06)] min-h-[450px] p-6 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="m-0 text-[#000434] font-bold text-xl">
+                    {stepOrder.find((s) => s.key === activeStep)?.label}
+                  </h4>
+                  <span className="text-[13px] text-[#9aa0ad]">
+                    Step {stepOrder.findIndex((s) => s.key === activeStep) + 1}{" "}
+                    of {stepOrder.length}
+                  </span>
                 </div>
 
-                <div
-                  style={{
-                    borderTop: "1px dashed #eef2f6",
-                    marginBottom: 20,
-                  }}
-                />
+                {completedSteps.length > 0 && activeStep !== "final" && (
+                  <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                    {completedSteps.length} completed
+                  </span>
+                )}
+              </div>
 
-                {/* Framer Motion Transition */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeStep}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    {renderedContent}
-                  </motion.div>
-                </AnimatePresence>
-              </Card>
-            </Col>
-          </Row>
+              <div className="border-t border-dashed border-[#eef2f6] mb-5" />
+
+              {/* Framer Motion Transition */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  {renderedContent}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </div>
     </>
@@ -394,6 +284,7 @@ export default GetStarted;
 
 const OnboardingHeader = ({ username = "" }) => {
   const navigate = useNavigate();
+
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -407,63 +298,36 @@ const OnboardingHeader = ({ username = "" }) => {
     }
   };
 
-  // Reusing exact logic/colors from your original code
   return (
-    <Navbar
-      expand="lg"
-      style={{
-        backgroundColor: "#000434", // Explicit blue color from brand
-        borderBottom: "1px solid #1a1e4b",
-        padding: "0.75rem 0",
-      }}
-      variant="dark" // Ensures text/hamburger is light
-    >
-      <Container fluid style={{ maxWidth: 1200 }}>
-        <div className="d-flex gap-2 align-items-center my-2">
-          <span className="nav-logo-icon">
-            <img src={logoImg} style={{ width: "30px " }} alt="logo" />
-          </span>
-          <span>
-            <img src={logoImg1} style={{ width: "100px " }} alt="logo text" />
-          </span>
+    <header className="bg-white border-b border-white/10">
+      <div className="max-w-[1200px] mx-auto py-4.5 px-6 flex justify-between items-center">
+        <div>
+          <div className="flex items-center gap-0 leading-none">
+            <img
+              src={logoImg}
+              alt="logo"
+              className="w-11 h-11 object-contain -mr-0.5"
+            />
+
+            <span className="font-bold text-[#000967] text-[34px] leading-11 tracking-tight">
+              Orderz
+              <span className="text-[#F5891E] -ml-px">Up</span>
+            </span>
+          </div>
+
+          <div className="mt-1 ml-15.5 text-[13px] tracking-wide text-slate-400 uppercase">
+            Hello,
+            <span className="text-[#F5891E] font-bold ml-1.5">{username}</span>
+          </div>
         </div>
 
-        <Nav className="ms-auto">
-          <Dropdown align="end">
-            <Dropdown.Toggle
-              variant="outline-light" // Changed to fit dark header
-              id="user-dropdown"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                borderRadius: 24,
-                padding: "6px 12px",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "rgba(255,255,255,0.1)",
-                color: "#fff",
-              }}
-            >
-              <FaUserCircle size={18} />
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{username}</span>
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu>
-              <Dropdown.Item
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-                onClick={handleLogout}
-              >
-                <FaSignOutAlt />
-                Logout
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </Nav>
-      </Container>
-    </Navbar>
+        <button
+          onClick={handleLogout}
+          className="border-none bg-[#F5891E] text-white px-5.5 py-2.5 rounded-lg font-semibold cursor-pointer shadow-[0_4px_12px_rgba(245,137,30,0.25)] hover:bg-[#e07a16] transition-colors"
+        >
+          Logout
+        </button>
+      </div>
+    </header>
   );
 };

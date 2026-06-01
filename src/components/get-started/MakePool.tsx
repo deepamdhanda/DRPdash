@@ -1,15 +1,4 @@
-// Pools.tsx
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Row,
-  Col,
-  Form,
-  Button,
-  InputGroup,
-  Spinner,
-  Badge,
-} from "react-bootstrap";
 import { toast } from "react-toastify";
 
 import { createPool } from "../../APIs/user/pool";
@@ -37,34 +26,27 @@ const validateGSTIN = (gstin: string) =>
 
 const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
 
-/* --- Component --- */
 const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
-  // --- Section 1 State ---
-  const [hasGst, setHasGst] = useState<boolean>(true); // Default to Yes
+  const [hasGst, setHasGst] = useState(true);
   const [gstin, setGstin] = useState("");
-  const [businessName, setBusinessName] = useState(""); // Firm Name
-  const [ownerName, setOwnerName] = useState(""); // Contact Person
-  const [panFile, setPanFile] = useState<File | string | null>(null);
+  const [businessName, setBusinessName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [address, setAddress] = useState("");
+  const [panFile, setPanFile] = useState<File | null>(null);
 
-  // --- Section 2 State ---
   const [bankAccount, setBankAccount] = useState("");
   const [bankIFSC, setBankIFSC] = useState("");
-  const [chequeFile, setChequeFile] = useState<File | null>(null); // Cancelled Cheque
+  const [chequeFile, setChequeFile] = useState<File | null>(null);
 
-  // --- Additional / Hidden Functionality State ---
-  const [ownerEmail, setOwnerEmail] = useState(""); // Kept for payload
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [admins, setAdmins] = useState<User[]>([]);
   const [companyType, setCompanyType] = useState("individual");
   const [submitting, setSubmitting] = useState(false);
   const [gstLoading, setGstLoading] = useState(false);
   const [gstVerified, setGstVerified] = useState(false);
-  // const [address, setAddress] = useState("");
-  const address = "";
   const [stateName, setStateName] = useState("");
 
-  // Logic
   useEffect(() => {
-    // If user selects "No GST", default to individual
     if (!hasGst) {
       setCompanyType("individual");
       setGstVerified(false);
@@ -72,7 +54,6 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
     }
   }, [hasGst]);
 
-  // --- Admin search by email ---
   const handleUserSearch = async (email: string) => {
     const e = email.trim();
     if (!e) return;
@@ -90,12 +71,10 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       setAdmins((p) => [...p, u]);
       toast.success("Admin added");
     } catch (err) {
-      console.error("User search error", err);
       toast.error("Failed to search user");
     }
   };
 
-  // --- GST verification ---
   const verifyGst = async () => {
     const g = gstin.trim().toUpperCase();
     if (!g) {
@@ -103,44 +82,37 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       return;
     }
     if (!validateGSTIN(g)) {
-      toast.error("GSTIN format looks invalid");
+      toast.error("Invalid GSTIN format");
       return;
     }
     setGstLoading(true);
     try {
       const data = await getGST(g);
-      setGstLoading(false);
       setGstVerified(true);
       setBusinessName((prev) => prev || data.business_name || "");
       setStateName(data.state || "");
       setCompanyType(data.company_type);
-      toast.success("GST verified; Details autofilled");
-    } catch (err) {
-      setGstLoading(false);
+      toast.success("GST verified — details autofilled");
+    } catch {
       setGstVerified(false);
-      console.error("GST verify error", err);
       toast.error("GST verification failed");
+    } finally {
+      setGstLoading(false);
     }
   };
 
-  // --- Submit handler ---
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-
-    // Validations
-    if (hasGst && !gstVerified) {
-      // Optional: You can force verification or just check if text exists
-      if (!gstin.trim()) {
-        toast.warn("Please enter GST Number");
-        return;
-      }
+    if (hasGst && !gstin.trim()) {
+      toast.warn("Please enter GST Number");
+      return;
     }
     if (!businessName.trim()) {
       toast.warn("Firm Name is required");
       return;
     }
     if (!ownerName.trim()) {
-      toast.warn("Contact Person name is required");
+      toast.warn("Contact Person is required");
       return;
     }
     if (!bankAccount.trim()) {
@@ -151,7 +123,6 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
       toast.warn("Valid IFSC is required");
       return;
     }
-
     setSubmitting(true);
     try {
       const payload: any = {
@@ -169,13 +140,11 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
         status: "active",
         kyc_documents: [],
       };
-
       if (hasGst && gstin) payload.gstin = gstin.trim().toUpperCase();
       if (address.trim()) payload.address = address.trim();
       if (stateName.trim()) payload.state = stateName.trim();
 
-      // 1. Upload PAN
-      if (panFile && panFile instanceof File) {
+      if (panFile) {
         try {
           const panData = await createAmazonS3(
             `kyc/pan/${Date.now()}-${panFile.name.replace(/ /g, "_")}`,
@@ -187,13 +156,11 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
             value: panData.url,
             is_optional: false,
           });
-        } catch (err) {
-          console.warn("PAN upload skipped", err);
+        } catch {
+          console.warn("PAN upload skipped");
         }
       }
-
-      // 2. Upload Cancelled Cheque
-      if (chequeFile && chequeFile instanceof File) {
+      if (chequeFile) {
         try {
           const chequeData = await createAmazonS3(
             `kyc/cheque/${Date.now()}-${chequeFile.name.replace(/ /g, "_")}`,
@@ -205,232 +172,304 @@ const MakePool: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
             value: chequeData.url,
             is_optional: false,
           });
-        } catch (err) {
-          console.warn("Cheque upload skipped", err);
+        } catch {
+          console.warn("Cheque upload skipped");
         }
       }
 
       await createPool(payload);
-      toast.success("Pool created successfully!");
+      toast.success("Business account created!");
       handleNext();
-    } catch (err) {
-      console.error("Create pool error", err);
-      toast.error("Failed to create pool. Try again.");
+    } catch {
+      toast.error("Failed to create account. Try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const inputClass =
+    "w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F5891E]/20 focus:border-[#F5891E] transition-all";
+
   return (
-    <div className="shadow-sm">
-      <Card.Body className="p-4">
-        <Form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-medium d-block">
-                Do you have a GST Number?
-              </Form.Label>
-              <Form.Check
-                inline
-                type="radio"
-                label="Yes"
-                name="gstRadio"
-                id="gstYes"
-                checked={hasGst === true}
-                onChange={() => setHasGst(true)}
-              />
-              <Form.Check
-                inline
-                type="radio"
-                label="No"
-                name="gstRadio"
-                id="gstNo"
-                checked={hasGst === false}
-                onChange={() => setHasGst(false)}
-              />
-            </Form.Group>
+    <div className="w-full mx-auto bg-white overflow-hidden font-sans">
+      <div className="p-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Section 1: Business Info */}
+          <div>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-gray-400 block mb-3">
+              🏢 Business Information
+            </span>
 
-            {hasGst && (
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">GST Number</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    placeholder="Enter GSTIN"
-                    value={gstin}
-                    onChange={(e) => setGstin(e.target.value.toUpperCase())}
-                  />
-                  <Button
-                    variant="outline-primary"
-                    onClick={verifyGst}
-                    disabled={gstLoading}
-                  >
-                    {gstLoading ? (
-                      <Spinner size="sm" animation="border" />
-                    ) : (
-                      "Verify"
-                    )}
-                  </Button>
-                </InputGroup>
-                {gstVerified && (
-                  <Form.Text className="text-success">
-                    Verified successfully
-                  </Form.Text>
-                )}
-              </Form.Group>
-            )}
-
-            <Row>
-              <Col md={6}>
-                {/* 3. Firm Name */}
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-medium">Firm Name</Form.Label>
-                  <Form.Control
-                    placeholder="e.g. Acme Retail"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                {/* 4. Contact Person */}
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-medium">Contact Person</Form.Label>
-                  <Form.Control
-                    placeholder="Full Name"
-                    value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {/* 5. PAN Card */}
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-medium">PAN Card Upload</Form.Label>
-              <Form.Control
-                type="file"
-                accept="image/*,.pdf"
-                onChange={(e: any) => {
-                  const f = e.target.files?.[0];
-                  if (f) setPanFile(f);
-                }}
-              />
-              <Form.Text className="text-muted">
-                Upload clear image or PDF of PAN
-              </Form.Text>
-            </Form.Group>
-          </div>
-          <hr className="my-5 border-secondary" style={{ opacity: 0.2 }} />
-          <div className="mb-4">
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-medium">
-                    Bank Account Number
-                  </Form.Label>
-                  <Form.Control
-                    placeholder="Enter Account Number"
-                    value={bankAccount}
-                    onChange={(e) => setBankAccount(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-medium">IFSC Code</Form.Label>
-                  <Form.Control
-                    placeholder="Enter IFSC"
-                    value={bankIFSC}
-                    onChange={(e) => setBankIFSC(e.target.value.toUpperCase())}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-medium">Cancelled Cheque</Form.Label>
-              <Form.Control
-                type="file"
-                accept="image/*,.pdf"
-                onChange={(e: any) => {
-                  const f = e.target.files?.[0];
-                  if (f) setChequeFile(f);
-                }}
-              />
-              <Form.Text className="text-muted">
-                Upload a cancelled cheque for bank verification
-              </Form.Text>
-            </Form.Group>
-          </div>
-
-          <details className="mb-4">
-            <summary className="text-muted small cursor-pointer">
-              Additional Settings (Admins, Email)
-            </summary>
-            <div className="p-3 border rounded mt-2 bg-light">
-              <Form.Group className="mb-2">
-                <Form.Label className="small">
-                  Admin Email (Add multiple)
-                </Form.Label>
-                <Form.Control
-                  size="sm"
-                  placeholder="Type email and press Enter"
-                  onKeyDown={async (e: any) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const email = e.target.value?.trim();
-                      if (email) {
-                        await handleUserSearch(email);
-                        e.target.value = "";
-                      }
-                    }
-                  }}
-                />
-                <div className="mt-2">
-                  {admins.map((a) => (
-                    <Badge key={a._id} bg="info" className="me-2 mb-2">
-                      {a.name}
-                    </Badge>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* GST Radio */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  Do you have a GST Number?
+                </label>
+                <div className="flex gap-5 items-center pt-0.5">
+                  {[
+                    { val: true, label: "Yes" },
+                    { val: false, label: "No" },
+                  ].map(({ val, label }) => (
+                    <label
+                      key={label}
+                      className="flex items-center gap-2 cursor-pointer select-none"
+                    >
+                      <input
+                        type="radio"
+                        name="gstRadio"
+                        checked={hasGst === val}
+                        onChange={() => setHasGst(val)}
+                        className="accent-[#F5891E] w-4 h-4"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {label}
+                      </span>
+                    </label>
                   ))}
                 </div>
-              </Form.Group>
-              <Form.Group className="mb-2">
-                <Form.Label className="small">
-                  Owner Email (Optional)
-                </Form.Label>
-                <Form.Control
-                  size="sm"
-                  value={ownerEmail}
-                  onChange={(e) => setOwnerEmail(e.target.value)}
-                  placeholder="For record keeping"
+              </div>
+
+              {/* GST Input */}
+              {hasGst && (
+                <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-700">
+                    GST Number
+                  </label>
+                  <div className="flex rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-[#F5891E]/20 focus-within:border-[#F5891E] transition-all">
+                    <input
+                      type="text"
+                      placeholder="Enter GSTIN (e.g. 27AAPFU0939F1ZV)"
+                      value={gstin}
+                      onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                      className="flex-1 px-3 py-2 text-sm text-gray-900 outline-none placeholder-gray-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={verifyGst}
+                      disabled={gstLoading}
+                      className="px-4 py-2 bg-gray-50 border-l border-gray-200 text-xs font-bold text-[#F5891E] hover:bg-orange-50 active:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {gstLoading ? "Verifying…" : "Verify"}
+                    </button>
+                  </div>
+                  {gstVerified && (
+                    <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md px-2 py-0.5 text-xs font-semibold mt-1 w-max">
+                      ✓ GST Verified
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Firm Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  Firm Name
+                </label>
+                <input
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  required
+                  placeholder="e.g. Acme Retail Pvt. Ltd."
+                  className={inputClass}
                 />
-              </Form.Group>
+              </div>
+
+              {/* Contact Person */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  Contact Person
+                </label>
+                <input
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  required
+                  placeholder="Full name"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Address */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  Business Address
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Street, area, city, state, pincode"
+                  rows={2}
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+
+              {/* PAN Upload */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  PAN Card
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e: any) => {
+                    const f = e.target.files?.[0];
+                    if (f) setPanFile(f);
+                  }}
+                  className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[#FFF7ED] file:text-[#F5891E] hover:file:bg-orange-100 file:cursor-pointer border border-dashed border-gray-200 rounded-lg p-1.5 bg-gray-50/50"
+                />
+                <span className="text-[11px] text-gray-400">
+                  Upload a clear image or PDF of your PAN card
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 my-4" />
+
+          {/* Section 2: Bank Details */}
+          <div>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-gray-400 block mb-3">
+              🏦 Bank Details
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  Account Number
+                </label>
+                <input
+                  value={bankAccount}
+                  onChange={(e) => setBankAccount(e.target.value)}
+                  required
+                  placeholder="Enter account number"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  IFSC Code
+                </label>
+                <input
+                  value={bankIFSC}
+                  onChange={(e) => setBankIFSC(e.target.value.toUpperCase())}
+                  required
+                  placeholder="e.g. HDFC0001234"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-700">
+                  Cancelled Cheque
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e: any) => {
+                    const f = e.target.files?.[0];
+                    if (f) setChequeFile(f);
+                  }}
+                  className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[#FFF7ED] file:text-[#F5891E] hover:file:bg-orange-100 file:cursor-pointer border border-dashed border-gray-200 rounded-lg p-1.5 bg-gray-50/50"
+                />
+                <span className="text-[11px] text-gray-400">
+                  Upload a cancelled cheque for bank verification
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 my-4" />
+
+          {/* Collapsible Additional Settings */}
+          <details className="border border-gray-200 rounded-lg overflow-hidden group">
+            <summary className="px-4 py-2.5 cursor-pointer text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 select-none outline-none flex items-center justify-between transition-colors">
+              <span>⚙ Additional Settings (Admins, Email)</span>
+              <svg
+                className="w-4 h-4 transform group-open:rotate-180 transition-transform text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l7 7-7 7"
+                />
+              </svg>
+            </summary>
+
+            <div className="p-4 bg-white border-t border-gray-100 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-700">
+                    Add Admin by Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Type email and press Enter"
+                    onKeyDown={async (e: any) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const email = e.target.value?.trim();
+                        if (email) {
+                          await handleUserSearch(email);
+                          e.target.value = "";
+                        }
+                      }
+                    }}
+                    className={inputClass}
+                  />
+                  {admins.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {admins.map((a) => (
+                        <span
+                          key={a._id}
+                          className="bg-gray-100 text-gray-700 text-xs px-2.5 py-1 rounded-md font-medium"
+                        >
+                          {a.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-700">
+                    Owner Email{" "}
+                    <span className="text-gray-400 font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="email"
+                    value={ownerEmail}
+                    onChange={(e) => setOwnerEmail(e.target.value)}
+                    placeholder="For record keeping"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
             </div>
           </details>
 
-          <div className="d-grid gap-2">
-            <Button
-              variant="primary"
-              size="lg"
+          {/* Action Footer */}
+          <div className="flex justify-end pt-3 border-t border-gray-100">
+            <button
               type="submit"
               disabled={submitting}
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold text-white shadow-sm transition-all ${
+                submitting
+                  ? "bg-orange-400 cursor-not-allowed shadow-none"
+                  : "bg-[#F5891E] hover:bg-orange-600 active:transform active:scale-[0.99]"
+              }`}
             >
-              {submitting ? (
-                <>
-                  <Spinner size="sm" animation="border" className="me-2" />
-                  Creating Pool...
-                </>
-              ) : (
-                "Submit & Create Pool"
-              )}
-            </Button>
+              {submitting ? "Creating…" : "Create Business Account"}
+            </button>
           </div>
-        </Form>
-      </Card.Body>
+        </form>
+      </div>
     </div>
   );
 };
