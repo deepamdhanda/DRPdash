@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,12 +21,9 @@ const registerSchema = z.object({
 
 export const AuthPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-
   const navigate = useNavigate();
-  // const location = useLocation();
 
   const [isLogin, setIsLogin] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const {
     register: loginRegister,
@@ -46,7 +43,7 @@ export const AuthPage: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const path = params.get("path");
 
-    await LoginUser(data, (verified, email) => {
+    await LoginUser(data, (verified: boolean, email: string) => {
       if (verified) {
         if (path) {
           navigate(path);
@@ -63,12 +60,13 @@ export const AuthPage: React.FC = () => {
     const searchParams = new URLSearchParams(window.location.search);
     const queryParams = Object.fromEntries(searchParams.entries());
 
-    // 2. Construct the new payload with the params object attached
     const payload = {
       ...data,
       params: queryParams,
     };
-    await RegisterUser(payload, (email) => navigate("/verify?email=" + email));
+    await RegisterUser(payload, (email: string) =>
+      navigate("/verify?email=" + email)
+    );
   };
 
   const toggleForm = () => {
@@ -77,132 +75,32 @@ export const AuthPage: React.FC = () => {
     resetRegister();
   };
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const styles = {
-    container: {
-      display: "flex",
-      flexDirection: isMobile ? ("column" as const) : ("row" as const),
-      justifyContent: "center",
-      alignItems: "center",
-      height: "100vh",
-      backgroundColor: "#f5f7fae6",
-      padding: isMobile ? "1rem" : "20rem",
-      gap: "1rem",
-    },
-    card: {
-      flex: "1 1 400px",
-      width: isMobile ? "100%" : "480px",
-      backgroundColor: "#fff",
-      borderRadius: "16px",
-      boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
-      padding: "2rem",
-      display: "flex",
-      flexDirection: "column" as const,
-      justifyContent: "center",
-      minHeight: isMobile ? "25%" : "480px",
-    },
-    infoCard: {
-      background: "linear-gradient(135deg, #000434, #191970)",
-      color: "#fff",
-      textAlign: "center" as const,
-    },
-    infoText: {
-      fontSize: "1.2rem",
-      marginBottom: "1.5rem",
-    },
-    switchBtn: {
-      backgroundColor: "#f5891e",
-      color: "#fff",
-      border: "none",
-      padding: "0.75rem 1.5rem",
-      fontSize: "1rem",
-      borderRadius: "8px",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-    },
-    formTitle: {
-      fontSize: "1.8rem",
-      fontWeight: "bold",
-      marginBottom: "0.5rem",
-      color: "#000434",
-    },
-    subtitle: {
-      fontSize: "1rem",
-      marginBottom: "1.5rem",
-      color: "#555",
-    },
-    form: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "1rem",
-    },
-    input: {
-      padding: "0.75rem 1rem",
-      border: "1px solid #ddd",
-      borderRadius: "8px",
-      fontSize: "1rem",
-      width: "100%",
-    },
-    submitBtn: {
-      padding: "0.75rem",
-      fontSize: "1rem",
-      fontWeight: "bold",
-      backgroundColor: "#f5891e",
-      border: "none",
-      borderRadius: "8px",
-      color: "white",
-      cursor: "pointer",
-    },
-    error: {
-      color: "red",
-      fontSize: "0.8rem",
-      marginTop: "-0.5rem",
-    },
-  };
-
   return (
     <div
-      style={{
-        backgroundImage: `url(${BG})`,
-        backgroundRepeat: "repeat",
-        backgroundSize: "contain",
-        backgroundPosition: "center",
-      }}
+      className="min-h-screen bg-repeat bg-contain bg-center text-black"
+      style={{ backgroundImage: `url(${BG})` }}
     >
-      <div style={styles.container}>
+      <div className="flex flex-col md:flex-row justify-center items-center min-h-screen bg-[#f5f7fae6] p-4 md:p-20 gap-4">
         {/* Left Info Card */}
-        <div
-          style={{
-            ...styles.card,
-            ...styles.infoCard,
-            top: isMobile ? "5%" : 0,
-            position: isMobile ? "relative" : "static",
-          }}
-        >
-          <h2>{isLogin ? "New Here?" : "Already have an account?"}</h2>
-          <p style={styles.infoText}>
+        <div className="w-full md:w-[480px] flex-1 md:flex-none bg-linear-to-br from-[#000434] to-[#191970] text-white text-center rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] p-8 flex flex-col justify-center min-h-[25%] md:min-h-[480px] relative top-[5%] md:top-0 z-10 md:z-auto">
+          <h2 className="text-2xl font-bold mb-4">
+            {isLogin ? "New Here?" : "Already have an account?"}
+          </h2>
+          <p className="text-lg mb-6 text-gray-200">
             {isLogin
               ? "Create your account and start reducing RTOs today."
               : "Login to your dashboard and manage your orders effortlessly."}
           </p>
-          <button onClick={toggleForm} style={styles.switchBtn}>
+          <button
+            onClick={toggleForm}
+            className="bg-[#f5891e] text-white border-none py-3 px-6 text-base rounded-lg cursor-pointer transition-all duration-300 hover:bg-[#d97715]"
+          >
             {isLogin ? "Create Account" : "Login"}
           </button>
         </div>
 
         {/* Right Form Card */}
-        <div
-          style={{
-            ...styles.card,
-            position: isMobile ? "relative" : "static",
-            top: isMobile ? "-5%" : 0,
-          }}
-        >
+        <div className="w-full md:w-[480px] flex-1 md:flex-none bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] p-8 flex flex-col justify-center min-h-[25%] md:min-h-[480px] relative -top-[5%] md:top-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={isLogin ? "login" : "register"}
@@ -211,10 +109,10 @@ export const AuthPage: React.FC = () => {
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.5 }}
             >
-              <h3 style={styles.formTitle}>
+              <h3 className="text-[1.8rem] font-bold mb-2 text-[#000434]">
                 {isLogin ? "Welcome Back 👋" : "Create Account 🚀"}
               </h3>
-              <p style={styles.subtitle}>
+              <p className="text-base mb-6 text-gray-500">
                 {isLogin
                   ? "Login to continue managing your orders"
                   : "Start your journey with OrderzUp"}
@@ -226,43 +124,47 @@ export const AuthPage: React.FC = () => {
                     ? handleLoginSubmit(onLogin)
                     : handleRegisterSubmit(onRegister)
                 }
-                style={styles.form}
+                className="flex flex-col gap-4"
               >
                 {!isLogin && (
-                  <>
+                  <div className="flex flex-col">
                     <input
-                      style={styles.input}
+                      className="p-3 border border-gray-300 rounded-lg text-base w-full focus:outline-none focus:border-[#f5891e] focus:ring-1 focus:ring-[#f5891e]"
                       type="text"
                       placeholder="Full Name"
                       {...registerRegister("name")}
                     />
                     {registerErrors.name && (
-                      <span style={styles.error}>
-                        {registerErrors.name.message}
+                      <span className="text-red-500 text-sm mt-1">
+                        {registerErrors.name.message as string}
                       </span>
                     )}
-                  </>
+                  </div>
                 )}
 
-                <input
-                  style={styles.input}
-                  type="email"
-                  placeholder="Email"
-                  {...(isLogin
-                    ? loginRegister("email")
-                    : registerRegister("email"))}
-                />
-                {(loginErrors.email || registerErrors.email) && (
-                  <span style={styles.error}>
-                    {loginErrors.email?.message ||
-                      registerErrors.email?.message}
-                  </span>
-                )}
+                <div className="flex flex-col">
+                  <input
+                    className="p-3 border border-gray-300 rounded-lg text-base w-full focus:outline-none focus:border-[#f5891e] focus:ring-1 focus:ring-[#f5891e]"
+                    type="email"
+                    placeholder="Email"
+                    {...(isLogin
+                      ? loginRegister("email")
+                      : registerRegister("email"))}
+                  />
+                  {(loginErrors.email || registerErrors.email) && (
+                    <span className="text-red-500 text-sm mt-1">
+                      {
+                        (loginErrors.email?.message ||
+                          registerErrors.email?.message) as string
+                      }
+                    </span>
+                  )}
+                </div>
 
                 {!isLogin && (
-                  <>
+                  <div className="flex flex-col">
                     <input
-                      style={styles.input}
+                      className="p-3 border border-gray-300 rounded-lg text-base w-full focus:outline-none focus:border-[#f5891e] focus:ring-1 focus:ring-[#f5891e]"
                       type="text"
                       placeholder="Phone Number"
                       inputMode="numeric"
@@ -275,61 +177,53 @@ export const AuthPage: React.FC = () => {
                         },
                       })}
                     />
-                  </>
+                  </div>
                 )}
-                {isLogin ? (
-                  <Link to="/forgotPassword">
-                    <div className="text-primary text-decoration-underline">
-                      Forgot Password ?
-                    </div>
-                  </Link>
-                ) : (
-                  ""
-                )}
-                <div style={{ position: "relative" }}>
-                  <input
-                    style={{
-                      ...styles.input,
-                      paddingRight: "42px",
-                    }}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    {...(isLogin
-                      ? loginRegister("password")
-                      : registerRegister("password"))}
-                  />
 
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((p) => !p)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#666",
-                    }}
+                {isLogin && (
+                  <Link
+                    to="/forgotPassword"
+                    className="text-[#000434] hover:text-[#f5891e] underline text-sm transition-colors w-max"
                   >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-                {(loginErrors.password || registerErrors.password) && (
-                  <span style={styles.error}>
-                    {loginErrors.password?.message ||
-                      registerErrors.password?.message}
-                  </span>
+                    Forgot Password ?
+                  </Link>
                 )}
 
-                <button style={styles.submitBtn} type="submit">
+                <div className="flex flex-col">
+                  <div className="relative">
+                    <input
+                      className="p-3 pr-11 border border-gray-300 rounded-lg text-base w-full focus:outline-none focus:border-[#f5891e] focus:ring-1 focus:ring-[#f5891e]"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      {...(isLogin
+                        ? loginRegister("password")
+                        : registerRegister("password"))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((p) => !p)}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-1.5 flex items-center text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                  {(loginErrors.password || registerErrors.password) && (
+                    <span className="text-red-500 text-sm mt-1">
+                      {
+                        (loginErrors.password?.message ||
+                          registerErrors.password?.message) as string
+                      }
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  className="p-3 text-base font-bold bg-[#f5891e] hover:bg-[#d97715] transition-colors border-none rounded-lg text-white cursor-pointer mt-2"
+                  type="submit"
+                >
                   {isLogin ? "Login" : "Sign Up"}
                 </button>
               </form>
@@ -349,6 +243,8 @@ const EyeIcon = () => (
       d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
       stroke="currentColor"
       strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
     <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
   </svg>
@@ -360,7 +256,15 @@ const EyeOffIcon = () => (
       d="M17.94 17.94C16.14 19.24 14.12 20 12 20 5 20 1 12 1 12a21.8 21.8 0 0 1 5.06-6.94"
       stroke="currentColor"
       strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
-    <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" />
+    <path
+      d="M1 1l22 22"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );

@@ -109,7 +109,11 @@ const navGroups: NavLink[][] = [
     {
       name: "Wallet",
       icon: <Wallet {...iconProps} />,
-      path: "/user/Wallet",
+      path: "/user/wallet-transactions",
+      children: [
+        { name: "Wallet Transactions", link: "/user/wallet-transactions" },
+        { name: "Wallet Recharge", link: "/user/wallet-recharge" },
+      ],
     },
   ],
 
