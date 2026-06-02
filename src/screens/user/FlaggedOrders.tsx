@@ -81,7 +81,9 @@ const FlaggedOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [rowsPerPage] = useState<number>(10);
+  // const [rowsPerPage] = useState<number>(10);
+  const [rowsPerPage, setLimit] = useState(10);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [filters, setFilters] = useState<FilterParams>({});
@@ -564,6 +566,7 @@ const FlaggedOrders: React.FC = () => {
       {/* Table Container */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <CustomDataTable
+          setLimit={setLimit}
           data={orders}
           columns={columns}
           totalRecords={totalOrders}

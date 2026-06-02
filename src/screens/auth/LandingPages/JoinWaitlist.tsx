@@ -1,1679 +1,397 @@
-import React, { useEffect, useRef, useState } from "react";
-import "./JoinWaitlist.css";
-import image1 from "../../../assets/1.jpg";
-import image2 from "../../../assets/2.jpg";
-import image3 from "../../../assets/3.jpg";
-import logoWide from "../../../assets/logo-wide.png";
-import { registerLead } from "../../../APIs/landingPageAPIs";
+import { useState } from "react";
+import { Twitter, Linkedin, Mail } from "lucide-react";
 
-const JoinWaitingList: React.FC = () => {
-  const [spots, setSpots] = useState<number>(() => {
-    const stored = localStorage.getItem("orderzup_spots");
-    return stored ? parseInt(stored, 10) : 37;
-  });
-  const TOTAL_SPOTS = 50;
+export default function App() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [success] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Countdown state
-  const [countdown, setCountdown] = useState({
-    days: "00",
-    hours: "00",
-    minutes: "00",
-    seconds: "00",
-  });
-
-  // Popup & form state
-  const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [formHidden, setFormHidden] = useState<boolean>(false);
-  const [showSuccess, setShowSuccess] = useState<boolean>(false);
-
-  // Refs
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const waitlistPopupRef = useRef<HTMLDivElement | null>(null);
-  const exitIntentRef = useRef<HTMLDivElement | null>(null);
-
-  // Launch date used in original file
-  const launchDate = new Date("2026-06-01T11:00:00Z").getTime();
-
-  // Helper pad
-  const pad = (n: number) => (n < 10 ? "0" + n : String(n));
-
-  // Countdown effect (flip countdown)
-  useEffect(() => {
-    const updateFlipCountdown = () => {
-      const now = Date.now();
-      let distance = launchDate - now;
-      if (distance < 0) distance = 0;
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-      );
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      setCountdown({
-        days: pad(days),
-        hours: pad(hours),
-        minutes: pad(minutes),
-        seconds: pad(seconds),
-      });
-    };
-    const id = setInterval(updateFlipCountdown, 1000);
-    updateFlipCountdown();
-    return () => clearInterval(id);
-  }, []);
-
-  // Spots logic (dynamic decreasing)
-  useEffect(() => {
-    // DOMContentLoaded logic equivalent: slightly reduce spots on initial load by random 0-2
-    const dec = Math.floor(Math.random() * 3);
-    setSpots((prev) => {
-      const newSpots = prev > 12 ? Math.max(12, prev - dec) : prev;
-      localStorage.setItem("orderzup_spots", String(newSpots));
-      return newSpots;
-    });
-
-    const interval = setInterval(() => {
-      setSpots((prev) => {
-        if (prev > 12 && Math.random() < 0.18) {
-          const newSpots = prev - 1;
-          localStorage.setItem("orderzup_spots", String(newSpots));
-          return newSpots;
-        }
-        return prev;
-      });
-    }, 3500);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Show popup after 10 seconds (like original)
-  useEffect(() => {
-    const t = setTimeout(() => setShowPopup(true), 10000);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Close popup on overlay click (same behaviour as original)
-  const onOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === waitlistPopupRef.current) {
-      setShowPopup(false);
-      // also reset states like original?
-    }
-  };
-
-  // Form submit handler (mimics original)
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    const data = {
-      sourceTypeId: 1001,
-      name: fd.get("name"),
-      email: fd.get("email"),
-      phone: fd.get("phone"),
-      orders: fd.get("orders"),
-      platform: fd.get("platform"),
-    };
-    const res = await registerLead(data);
-    if (!res) return;
-    setFormHidden(true);
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowPopup(false);
-      setFormHidden(false);
-      setShowSuccess(false);
-      form.reset();
-    }, 250000);
+    setLoading(true);
   };
-
-  // Canvas particles logic (converted from original)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let w = 0;
-    let h = 0;
-    let particles: any[] = [];
-    let rafId = 0;
-
-    function resizeCanvas() {
-      if (canvas) {
-        w = canvas.width = window.innerWidth;
-        // find hero-section height - approximate from canvas container
-        const heroEl = document.querySelector(
-          ".hero-section"
-        ) as HTMLElement | null;
-        h = heroEl ? heroEl.offsetHeight : window.innerHeight / 2;
-        canvas.height = h;
-      }
-    }
-
-    function Particle() {
-      return {
-        x: Math.random() * w,
-        y: Math.random() * h,
-        radius: Math.random() * 1.6 + 0.8,
-        speedX: (Math.random() - 0.5) * 0.3,
-        speedY: (Math.random() - 0.5) * 0.3,
-      };
-    }
-
-    function createParticles(num: number) {
-      particles = [];
-      for (let i = 0; i < num; i++) particles.push(Particle());
-    }
-
-    function drawParticles() {
-      if (ctx) {
-        ctx.clearRect(0, 0, w, h);
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
-          ctx.fillStyle = "#F5891E";
-          ctx.globalAlpha = 0.18;
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          for (let j = i + 1; j < particles.length; j++) {
-            const q = particles[j];
-            const dist = Math.hypot(p.x - q.x, p.y - q.y);
-            if (dist < 80) {
-              ctx.strokeStyle = "#fff";
-              ctx.globalAlpha = 0.09;
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(q.x, q.y);
-              ctx.stroke();
-              ctx.globalAlpha = 1;
-            }
-          }
-          p.x += p.speedX;
-          p.y += p.speedY;
-          if (p.x < 0 || p.x > w) p.speedX *= -1;
-          if (p.y < 0 || p.y > h) p.speedY *= -1;
-        }
-      }
-      rafId = requestAnimationFrame(drawParticles);
-    }
-
-    function onResize() {
-      resizeCanvas();
-      createParticles(Math.floor(w / 18));
-    }
-
-    window.addEventListener("resize", onResize);
-    onResize();
-    drawParticles();
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  // FAQ accordion toggling (delegated)
-  useEffect(() => {
-    const container = document.getElementById("faqAccordion");
-    if (!container) return;
-    const onClick = (ev: Event) => {
-      const t = ev.target as HTMLElement;
-      if (t && t.classList.contains("faq-question")) {
-        const item = t.parentElement;
-        if (!item) return;
-        if (item.classList.contains("open")) {
-          item.classList.remove("open");
-        } else {
-          item.classList.add("open");
-        }
-      }
-    };
-    container.addEventListener("click", onClick);
-    return () => container.removeEventListener("click", onClick);
-  }, []);
-
-  // Compute progress width used in the UI
-  const progressPercent = ((TOTAL_SPOTS - spots) / TOTAL_SPOTS) * 100;
-
   return (
-    <div
-      id="join_waiting_list"
-      className="page-wrapper"
-      style={{
-        fontFamily: "'Inter', Arial, sans-serif",
-        fontSize: "15px!important",
-        margin: 10,
-      }}
-    >
-      {/* Inject CSS */}
+    <div className="min-h-screen bg-white">
 
-      {/* HERO */}
-      <section className="hero-section">
-        <div className="hero-bg-anim">
-          <canvas id="hero-particles" ref={canvasRef}></canvas>
-        </div>
+      {/* NAV */}
+      <nav className="sticky top-0 bg-white border-b border-gray-100 h-24 z-50">
+        <div className="max-w-7xl mx-auto px-8 md:px-12 h-full flex items-center gap-10 justify-between">
+          {/* Logo */}
+          <div className="flex items-center ">
+            <img
+              src="./Orderzup.png"
+              alt="OrderzUp Logo"
+              className="w-12 h-12"
+            />
 
-        <div className="hero-content">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 32,
-              flexWrap: "wrap",
-            }}
-          >
-            {/* Left Column */}
-            <div style={{ flex: "1 1 520px", minWidth: 300 }}>
-              <h1
-                className="display-4 fw-bold mb-3"
-                data-abtest="headline"
-                style={{ margin: 0 }}
-              >
-                Slash RTOs by{" "}
-                <span style={{ color: "var(--orange)" }}>30%</span> with
-                AI-Driven Logistics
-              </h1>
-              <h2
-                style={{ marginTop: 12, fontSize: "1.35rem", fontWeight: 400 }}
-                data-abtest="subheadline"
-              >
-                Join the <strong>OrderzUp Waitlist</strong> for early access to
-                the only D2C platform that automates fulfillment, reduces
-                returns, and boosts your bottom line.
-              </h2>
-
-              <div
-                className="hero-urgency-mobile"
-                style={{
-                  background: "rgba(255,255,255,0.1)",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  marginTop: 18,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "1.05rem",
-                      fontWeight: 600,
-                      color: "var(--orange)",
-                    }}
-                  >
-                    🚀 <strong id="spots-num">{spots}</strong> /{" "}
-                    <strong>50</strong> Beta spots left
-                  </span>
-
-                  <div
-                    className="flip-countdown"
-                    id="flip-countdown"
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <div>
-                      <div className="flip-unit" id="days">
-                        {countdown.days}
-                      </div>
-                      <span className="flip-label">Days</span>
-                    </div>
-                    <div>
-                      <div className="flip-unit" id="hours">
-                        {countdown.hours}
-                      </div>
-                      <span className="flip-label">Hrs</span>
-                    </div>
-                    <div>
-                      <div className="flip-unit" id="minutes">
-                        {countdown.minutes}
-                      </div>
-                      <span className="flip-label">Min</span>
-                    </div>
-                    <div>
-                      <div className="flip-unit" id="seconds">
-                        {countdown.seconds}
-                      </div>
-                      <span className="flip-label">Sec</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    height: 8,
-                    background: "rgba(255,255,255,0.2)",
-                    borderRadius: 4,
-                    marginTop: 8,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    id="spots-progress"
-                    style={{
-                      height: "100%",
-                      width: `${progressPercent}%`,
-                      background: "var(--orange)",
-                      transition: "width 0.4s ease",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <button
-                className="btn btn-primary btn-lg w-100 fw-bold"
-                style={{
-                  fontSize: "1.2rem",
-                  background: "var(--orange)",
-                  border: "none",
-                  padding: 14,
-                  marginTop: 16,
-                  width: "100%",
-                }}
-                onClick={() => setShowPopup(true)}
-                data-abtest="cta-primary"
-              >
-                ✅ Join the Waitlist Now
-              </button>
-
-              <div
-                style={{
-                  fontSize: "0.98rem",
-                  color: "#fff",
-                  opacity: 0.85,
-                  marginTop: 7,
-                  textAlign: "center",
-                }}
-              >
-                Takes 30 seconds, no credit card required
-              </div>
-
-              <div
-                className="mt-4"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginTop: 12,
-                }}
-              >
-                <img
-                  src="https://cdn.shopify.com/b/shopify-brochure2-assets/08b278c519512d187520e1fe10b4f5b7.svg"
-                  alt="Shopify Integration"
-                  style={{
-                    background: "#fff",
-                    borderRadius: 8,
-                    padding: "4px 10px",
-                    height: 40,
-                  }}
-                  loading="lazy"
-                />
-                <span style={{ fontSize: "0.85rem", color: "#bbb" }}>
-                  Trusted by 300+ ecommerce brands in Beta
-                </span>
-              </div>
-
-              <div className="mini-testimonials">
-                <div className="mini-testimonial">
-                  <img
-                    src="https://randomuser.me/api/portraits/men/32.jpg"
-                    alt="Rahul M."
-                  />
-                  <span>
-                    “25% fewer returns in 1 month!”{" "}
-                    <b style={{ color: "var(--orange)" }}>Beauty Startup</b>
-                  </span>
-                </div>
-                <div className="mini-testimonial">
-                  <img
-                    src="https://randomuser.me/api/portraits/women/44.jpg"
-                    alt="Priya S."
-                  />
-                  <span>
-                    “Validation is a game changer.”{" "}
-                    <b style={{ color: "var(--orange)" }}>D2C Apparel</b>
-                  </span>
-                </div>
-                <div className="mini-testimonial">
-                  <img
-                    src="https://randomuser.me/api/portraits/women/65.jpg"
-                    alt="Meera T."
-                  />
-                  <span>
-                    “Saved us thousands in fraud!”{" "}
-                    <b style={{ color: "var(--orange)" }}>Home Decor</b>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div
-              style={{ flex: "1 1 420px", textAlign: "center", minWidth: 280 }}
-            >
-              <img
-                src={image1}
-                alt="OrderzUp Dashboard"
-                className="img-fluid rounded shadow"
-                style={{
-                  border: "4px solid rgba(255,255,255,0.15)",
-                  background: "#0a0a1a",
-                  maxWidth: "100%",
-                }}
-                loading="lazy"
-              />
-            </div>
+            <span className="text-4xl font-extrabold text-gray-900 tracking-tight">
+              Orderz<span className="text-orange-500">Up</span>
+            </span>
           </div>
-        </div>
-      </section>
 
-      {/* Trust & courier partners */}
-      <section
-        className="py-4"
-        style={{ background: "rgba(255,255,255,0.03)" }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <div className="text-center mb-2" style={{ fontWeight: 600 }}>
-            Our Trusted Courier Partners
-          </div>
-          <div
-            style={{
-              backgroundColor: "#000434",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-              padding: "20px 0",
-            }}
-          >
-            <div
-              style={{
-                display: "inline-block",
-                animation: "slide-left 10s linear infinite",
-              }}
-            >
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#F5891E",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Delhivery
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FFFFFF",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Blue Dart
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FCE4EC",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                DTDC
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FFF3E0",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Ecom Express
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#EDE7F6",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                XpressBees
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#E8F5E9",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Shadowfax
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#F3E5F5",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Ekart Logistics
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FFF8E1",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Gati
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#E1F5FE",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                India Post
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#F9FBE7",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Safexpress
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FBE9E7",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Wow Express
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#E3F2FD",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Pickrr
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FFFFFF",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Shiprocket
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#F1F8E9",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                iThink Logistics
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FFECB3",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Trackon Courier
-              </span>
-              {/* repeat */}
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#F5891E",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Delhivery
-              </span>
-              <span
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FFFFFF",
-                  color: "#000434",
-                  borderRadius: 8,
-                  marginRight: 12,
-                  display: "inline-block",
-                }}
-              >
-                Blue Dart
-              </span>
-            </div>
-          </div>
-          <style>{`@keyframes slide-left{0%{transform:translateX(0%)}100%{transform:translateX(-50%)}}`}</style>
-        </div>
-      </section>
-
-      {/* Problem → Solution section */}
-      <section
-        className="py-5 position-relative"
-        id="problem-solution"
-        style={{ padding: "48px 0" }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 24,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ flex: "0 0 320px", textAlign: "center" }}>
-              <img
-                src={image2}
-                alt="RTO Problem"
-                className="img-fluid rounded shadow"
-                loading="lazy"
-                style={{ maxWidth: "100%" }}
-              />
-              <div
-                style={{
-                  fontSize: "1.2rem",
-                  color: "var(--orange)",
-                  marginTop: 12,
-                }}
-              >
-                <b>22%+ of D2C revenue lost to RTOs</b>
-              </div>
-            </div>
-            <div style={{ flex: "1 1 560px" }}>
-              <h3
-                style={{
-                  marginTop: 0,
-                  color: "var(--orange)",
-                  fontWeight: 700,
-                }}
-              >
-                Are You Losing Revenue to Returns?
-              </h3>
-              <p style={{ fontSize: "1.12rem", color: "var(--white)" }}>
-                If you run a D2C brand, you know the pain:{" "}
-                <b>failed deliveries, fake orders, and rising shipping costs</b>{" "}
-                eat into your profits every single day.
-                <br />
-                <span style={{ color: "var(--orange)", fontWeight: 600 }}>
-                  Does this sound familiar?
-                </span>
-              </p>
-              <ul
-                style={{ listStyle: "none", padding: 0, fontSize: "1.08rem" }}
-              >
-                <li style={{ marginBottom: 10 }}>
-                  <span style={{ color: "var(--orange)", fontWeight: 700 }}>
-                    •
-                  </span>{" "}
-                  <b>Orders returned due to wrong addresses</b> – You pay for
-                  shipping, but never get paid.
-                </li>
-                <li style={{ marginBottom: 10 }}>
-                  <span style={{ color: "var(--orange)", fontWeight: 700 }}>
-                    •
-                  </span>{" "}
-                  <b>Manual courier selection</b> – Wasting time comparing rates
-                  and reliability.
-                </li>
-                <li style={{ marginBottom: 10 }}>
-                  <span style={{ color: "var(--orange)", fontWeight: 700 }}>
-                    •
-                  </span>{" "}
-                  <b>Fraud & duplicate orders</b> – Risky orders slip through,
-                  hurting your bottom line.
-                </li>
-                <li style={{ marginBottom: 10 }}>
-                  <span style={{ color: "var(--orange)", fontWeight: 700 }}>
-                    •
-                  </span>{" "}
-                  <b>No real-time insights</b> – You’re left guessing why
-                  returns are rising.
-                </li>
-              </ul>
-
-              <div style={{ margin: "18px 0 10px 0" }}>
-                <span
-                  style={{
-                    background: "var(--orange)",
-                    color: "var(--navy)",
-                    padding: "6px 18px",
-                    borderRadius: 8,
-                    fontWeight: 700,
-                  }}
-                >
-                  OrderzUp solves all of this — automatically.
-                </span>
-              </div>
-
-              <ul
-                style={{ listStyle: "none", padding: 0, fontSize: "1.08rem" }}
-              >
-                <li style={{ marginBottom: 8 }}>
-                  <b>AI-powered address validation</b>{" "}
-                  <span style={{ color: "var(--orange)" }}>–</span> Catch errors
-                  before they cost you.
-                </li>
-                <li style={{ marginBottom: 8 }}>
-                  <b>Automated carrier selection</b>{" "}
-                  <span style={{ color: "var(--orange)" }}>–</span> Always ship
-                  with the best rates and reliability.
-                </li>
-                <li style={{ marginBottom: 8 }}>
-                  <b>Predictive fraud detection</b>{" "}
-                  <span style={{ color: "var(--orange)" }}>–</span> Block risky
-                  and duplicate orders automatically.
-                </li>
-                <li style={{ marginBottom: 8 }}>
-                  <b>Real-time rate comparison</b>{" "}
-                  <span style={{ color: "var(--orange)" }}>–</span> Save on
-                  every shipment, every time.
-                </li>
-              </ul>
-
+          {/* Center Nav Links */}
+          <div className="hidden md:flex items-center gap-12 ">
+            {["Features", "Product", "Pricing", "Compare"].map((item) => (
               <a
+                key={item}
                 href="#"
-                className="btn btn-primary btn-lg"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowPopup(true);
-                }}
-                data-abtest="cta-problem-waitlist"
-                style={{ display: "inline-block", marginTop: 12 }}
-              >
-                Yes, I want to fix my RTO problem!
+                className="text-xl font-medium text-[#707684] hover:text-gray-900 transition-colors">
+                {item}
               </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features & Benefits (abridged but kept as in original) */}
-      <section
-        className="py-5"
-        id="features"
-        style={{
-          background: "linear-gradient(120deg, #F5891E 0%, #000434 100%)",
-          boxShadow: "0 8px 32px rgba(0,4,52,0.18)",
-          borderRadius: 32,
-          margin: "48px 0",
-        }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <h3
-            className="text-center mb-4"
-            style={{
-              fontSize: "2.2rem",
-              color: "var(--white)",
-              letterSpacing: 1,
-              textShadow: "0 2px 16px rgba(0,0,0,0.12)",
-            }}
-          >
-            <span
-              style={{
-                background: "rgba(0,4,52,0.12)",
-                padding: "8px 24px",
-                borderRadius: 16,
-                display: "inline-block",
-              }}
-            >
-              Why D2C Brands{" "}
-              <span style={{ color: "var(--orange)" }}>Love</span> OrderzUp
-            </span>
-          </h3>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 24,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ width: 300, background: "transparent", padding: 16 }}>
-              <div style={{ fontSize: "2.5rem" }}>⚡</div>
-              <div
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                  color: "var(--orange)",
-                }}
-              >
-                Slash Returns
-              </div>
-              <div style={{ color: "var(--white)", fontSize: "1.05rem" }}>
-                Reduce RTOs by up to <b>30%</b> with AI-driven validation and
-                fraud checks.
-              </div>
-            </div>
-
-            <div style={{ width: 300, background: "transparent", padding: 16 }}>
-              <div style={{ fontSize: "2.5rem" }}>🚀</div>
-              <div
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                  color: "var(--orange)",
-                }}
-              >
-                Scale Effortlessly
-              </div>
-              <div style={{ color: "var(--white)", fontSize: "1.05rem" }}>
-                Automate fulfillment and shipping as your business grows.
-              </div>
-            </div>
-
-            <div style={{ width: 300, background: "transparent", padding: 16 }}>
-              <div style={{ fontSize: "2.5rem" }}>🔒</div>
-              <div
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                  color: "var(--orange)",
-                }}
-              >
-                Protect Revenue
-              </div>
-              <div style={{ color: "var(--white)", fontSize: "1.05rem" }}>
-                Block fraud and duplicates before they impact your bottom line.
-              </div>
-            </div>
-
-            <div style={{ width: 300, background: "transparent", padding: 16 }}>
-              <div style={{ fontSize: "2.5rem" }}>📦</div>
-              <div
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                  color: "var(--orange)",
-                }}
-              >
-                Smart Shipping
-              </div>
-              <div style={{ color: "var(--white)", fontSize: "1.05rem" }}>
-                Compare rates and automate courier selection for every order.
-              </div>
-            </div>
-
-            <div style={{ width: 300, background: "transparent", padding: 16 }}>
-              <div style={{ fontSize: "2.5rem" }}>📊</div>
-              <div
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                  color: "var(--orange)",
-                }}
-              >
-                Actionable Analytics
-              </div>
-              <div style={{ color: "var(--white)", fontSize: "1.05rem" }}>
-                Track order volume, delivery performance, and RTO trends in real
-                time.
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 24,
-              alignItems: "center",
-              marginTop: 32,
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ flex: "1 1 320px", textAlign: "center" }}>
-              <img
-                src={image3}
-                alt="OrderzUp UI"
-                className="img-fluid rounded shadow-lg"
-                loading="lazy"
-                style={{
-                  maxWidth: "100%",
-                  border: "4px solid var(--orange)",
-                  boxShadow: "0 8px 32px rgba(245,137,30,0.18)",
-                }}
-              />
-            </div>
-            <div style={{ flex: "1 1 420px", textAlign: "left" }}>
-              <h4 style={{ color: "var(--orange)", fontSize: "1.4rem" }}>
-                Feature Highlights
-              </h4>
-              <ul
-                style={{ listStyle: "none", padding: 0, fontSize: "1.08rem" }}
-              >
-                <li style={{ marginBottom: 14 }}>
-                  <span
-                    style={{
-                      background: "var(--orange)",
-                      color: "var(--navy)",
-                      borderRadius: 6,
-                      padding: "2px 10px",
-                      marginRight: 8,
-                      fontWeight: 700,
-                    }}
-                  >
-                    1
-                  </span>
-                  <b>1-Click Shopify Integration</b> – Connect and sync orders
-                  instantly.
-                </li>
-                <li style={{ marginBottom: 14 }}>
-                  <span
-                    style={{
-                      background: "var(--orange)",
-                      color: "var(--navy)",
-                      borderRadius: 6,
-                      padding: "2px 10px",
-                      marginRight: 8,
-                      fontWeight: 700,
-                    }}
-                  >
-                    2
-                  </span>
-                  <b>Automated Dispatch</b> – Ship faster with zero manual
-                  effort.
-                </li>
-                <li style={{ marginBottom: 14 }}>
-                  <span
-                    style={{
-                      background: "var(--orange)",
-                      color: "var(--navy)",
-                      borderRadius: 6,
-                      padding: "2px 10px",
-                      marginRight: 8,
-                      fontWeight: 700,
-                    }}
-                  >
-                    3
-                  </span>
-                  <b>Multi-Courier Support</b> – 20+ partners, always the best
-                  rate.
-                </li>
-                <li style={{ marginBottom: 14 }}>
-                  <span
-                    style={{
-                      background: "var(--orange)",
-                      color: "var(--navy)",
-                      borderRadius: 6,
-                      padding: "2px 10px",
-                      marginRight: 8,
-                      fontWeight: 700,
-                    }}
-                  >
-                    4
-                  </span>
-                  <b>Real-Time Tracking</b> – Monitor every shipment from
-                  dashboard to doorstep.
-                </li>
-              </ul>
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={() => setShowPopup(true)}
-                style={{ marginTop: 12, fontSize: "1.15rem" }}
-                data-abtest="cta-demo"
-              >
-                Join Waiting List
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Video / Demo */}
-      <section className="py-5" id="video">
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <h3 className="text-center mb-4" style={{ fontSize: "2rem" }}>
-            <span
-              style={{
-                background: "rgba(245,137,30,0.12)",
-                padding: "8px 24px",
-                borderRadius: 16,
-                display: "inline-block",
-              }}
-            >
-              See OrderzUp in Action
-            </span>
-          </h3>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                maxWidth: 900,
-                position: "relative",
-                paddingBottom: "56.25%",
-                height: 0,
-                overflow: "hidden",
-                borderRadius: 16,
-                boxShadow: "0 2px 16px rgba(0,0,0,0.10)",
-              }}
-            >
-              <iframe
-                src="https://www.youtube.com/embed/TngWmsax8Rw"
-                title="OrderzUp Explainer Video"
-                allowFullScreen
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  border: 0,
-                }}
-                loading="lazy"
-              />
-            </div>
-            <div style={{ textAlign: "center", marginTop: 12 }}>
-              <p
-                style={{
-                  color: "var(--orange)",
-                  fontSize: "1.15rem",
-                  fontWeight: 600,
-                }}
-              >
-                Discover the secret sauce behind India's fastest-growing D2C
-                brands.
-                <br />
-                <span
-                  style={{
-                    color: "var(--white)",
-                    fontSize: "1rem",
-                    fontWeight: 400,
-                  }}
-                >
-                  (Real dashboard walkthrough, no fluff!)
-                </span>
-              </p>
-              <a
-                href="#"
-                className="btn btn-primary btn-lg"
-                data-abtest="cta-download-pdf"
-                style={{ fontSize: "1.08rem" }}
-              >
-                Download PDF Overview
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Roadmap / Timeline */}
-      <section
-        className="py-5"
-        style={{ background: "rgba(255,255,255,0.03)" }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <h3 className="text-center mb-4" style={{ fontSize: "2rem" }}>
-            <span
-              style={{
-                background: "rgba(245,137,30,0.12)",
-                padding: "8px 24px",
-                borderRadius: 16,
-                display: "inline-block",
-              }}
-            >
-              Your Journey to Smarter Logistics
-            </span>
-          </h3>
-          <div className="timeline-cards" style={{ paddingBottom: 8 }}>
-            <div className="timeline-card">
-              <div className="timeline-step">4 Weeks Out</div>
-              <div className="timeline-title">Feature Sneak Peek</div>
-              <div className="timeline-desc">
-                <span
-                  style={{
-                    display: "inline-block",
-                    background: "var(--orange)",
-                    color: "var(--navy)",
-                    padding: "2px 10px",
-                    borderRadius: 6,
-                    fontWeight: 600,
-                  }}
-                >
-                  ✨
-                </span>
-                Preview our dashboard, validation engine, and shipping
-                automations.
-              </div>
-            </div>
-            <div className="timeline-card">
-              <div className="timeline-step">3 Weeks Out</div>
-              <div className="timeline-title">Beta & Security Testing</div>
-              <div className="timeline-desc">
-                We’re stress-testing our platform and ensuring enterprise-grade
-                security for your data.
-              </div>
-            </div>
-            <div className="timeline-card">
-              <div className="timeline-step">2 Weeks Out</div>
-              <div className="timeline-title">Integrations & Onboarding</div>
-              <div className="timeline-desc">
-                See how easy it is to connect Shopify and set up your
-                fulfillment rules.
-                <div style={{ marginTop: 8 }}>
-                  <a
-                    href="#features"
-                    className="btn btn-primary btn-sm"
-                    style={{
-                      fontSize: "1rem",
-                      padding: "6px 18px",
-                      marginTop: 8,
-                    }}
-                    data-abtest="cta-timeline-integration"
-                  >
-                    Learn Integration
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div className="timeline-card">
-              <div className="timeline-step">1 Week Out</div>
-              <div className="timeline-title">Early Access Perks</div>
-              <div className="timeline-desc">
-                Waitlist members get exclusive early access, bonus features, and
-                priority support.
-                <div style={{ marginTop: 8 }}>
-                  <a
-                    href="#"
-                    className="btn btn-success btn-sm"
-                    style={{
-                      fontSize: "1rem",
-                      padding: "6px 18px",
-                      marginTop: 8,
-                    }}
-                    data-abtest="cta-timeline-earlyaccess"
-                  >
-                    Claim Your Spot
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            <span
-              style={{
-                color: "var(--orange)",
-                fontWeight: 600,
-                fontSize: "1.1rem",
-              }}
-            >
-              Ready to start?
-              <a
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowPopup(true);
-                }}
-                className="btn btn-primary btn-lg ml-2"
-                style={{ fontSize: "1.1rem", marginLeft: 12 }}
-                data-abtest="cta-timeline-bottom"
-              >
-                Join the Waiting List
-              </a>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="faq-section py-5">
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <h3 className="text-center mb-4">Frequently Asked Questions</h3>
-          <div className="faq-accordion" id="faqAccordion">
-            {[
-              {
-                q: "How does OrderzUp reduce RTOs?",
-                a: "OrderzUp uses AI to pre-validate addresses and phone numbers, flagging errors and risky orders before they ship.",
-              },
-              {
-                q: "Is Shopify integration really one-click?",
-                a: "Yes! You can connect your Shopify store in seconds and start syncing orders instantly.",
-              },
-              {
-                q: "How many courier partners are supported?",
-                a: "OrderzUp supports 20+ leading courier partners, always selecting the best rate for each order.",
-              },
-              {
-                q: "Is my data secure?",
-                a: "Absolutely. We use SSL encryption and are GDPR compliant. Your data is protected at every step.",
-              },
-              {
-                q: "What happens after I join the waitlist?",
-                a: "You'll get early access updates, onboarding support, and exclusive perks as we launch.",
-              },
-              {
-                q: "Can I cancel or leave the waitlist?",
-                a: "Yes, you can opt out at any time—no commitment required.",
-              },
-            ].map((item, idx) => (
-              <div className="faq-item" key={idx}>
-                <button className="faq-question">{item.q}</button>
-                <div className="faq-answer">{item.a}</div>
-              </div>
             ))}
           </div>
+
+          {/* Right Actions */}
+          <div className="hidden md:flex items-center gap-8">
+            <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-10 py-5 rounded-full text-xl shadow-lg transition-all">
+              Sign in
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <div className="w-5 h-0.5 bg-gray-800 mb-1"></div>
+            <div className="w-5 h-0.5 bg-gray-800 mb-1"></div>
+            <div className="w-5 h-0.5 bg-gray-800"></div>
+          </button>
+        </div>
+      </nav>
+
+      {/* MOBILE MENU */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-b border-gray-100 px-6 py-4 flex flex-col gap-4 text-sm font-medium text-gray-700">
+          {["Features", "Product", "Pricing", "Compare"].map((item) => (
+            <a key={item} href="#" className="hover:text-orange-500">
+              {item}
+            </a>
+          ))}
+          <a href="#" className="hover:text-orange-500">
+            Sign In
+          </a>
+        </div>
+      )}
+
+      {/* HERO */}
+      <section className="px-10 md:px-40 pt-14 pb-20 md:pt-20 md:pb-28">
+        <div className="max-w-8xl   grid md:grid-cols-2 gap-16 items-center">
+          {/* LEFT */}
+          <div className="relative mlx-auto">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-3 bg-orange-50 border border-orange-200 text-orange-600 text-sm font-semibold px-5 py-3 rounded-full mb-12 uppercase tracking-wide">
+              <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+              🚀 BETA WAS A MASSIVE SUCCESS — NOW LIVE FOR EVERYONE
+            </div>
+
+            {/* Headline */}
+            <h1 className="text-8xl lg:text-7xl font-black text-[#060741] leading-[1.02] tracking-tight mb-8">
+              Stop Losing Profit
+              <br />
+              <span className="bg-gradient-to-br from-orange-500 to-red-500 bg-clip-text text-transparent">
+                to Logistics Chaos.
+              </span>
+            </h1>
+
+            {/* Description */}
+            <p className="text-gray-500 text-2xl leading-relaxed max-w-xl mb-12">
+              The AI Operating System that slashes RTOs by 30%, detects COD
+              fraud before it ships, and automates your entire fulfillment
+              pipeline — so you scale faster, not harder.
+            </p>
+
+            {/* Checklist */}
+            <div className="space-y-4 mb-12">
+              {[
+                "No credit card required",
+                "Setup in under 5 minutes",
+                "Cancel anytime",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <svg
+                    className="w-6 h-6 text-orange-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+
+                  <span className="text-2xl text-gray-600">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-5">
+              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-10 py-5 rounded-full text-xl shadow-lg transition-all">
+                Start for Free →
+              </button>
+
+              <button className="border border-gray-300 text-[#04053e] font-bold px-10 py-5 rounded-full text-xl hover:bg-gray-50 transition-all">
+                ▶ See It in Action
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mt-20 pt-10 border-t border-gray-100">
+              {[
+                { val: "₹2Cr+", label: "Saved for Brands" },
+                { val: "50K+", label: "Orders Processed" },
+                { val: "30%", label: "Lower RTO" },
+                { val: "99.9%", label: "Sync Accuracy" },
+              ].map(({ val, label }) => (
+                <div key={label}>
+                  <h3 className="text-4xl font-extrabold text-[#03045E]">
+                    {val}
+                  </h3>
+
+                  <p className="text-base text-gray-400 mt-2">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT: LOGIN CARD */}
+          <div className="relative  ">
+            <div className="absolute -inset-4 bg-gradient-to-br from-orange-100 via-orange-50 to-white rounded-3xl blur-2xl opacity-70 pointer-events-none" />
+
+            <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+              {/* Card header */}
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
+                    Welcome back
+                  </p>
+                  <p className="text-white font-bold text-base">
+                    Sign in to OrderzUp
+                  </p>
+                </div>
+                <div className="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center text-white font-black">
+                  ⚡
+                </div>
+              </div>
+
+              <div className="px-7 py-8">
+                {success ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg
+                        className="w-8 h-8 text-green-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-900 font-bold text-lg mb-1">
+                      Logged in!
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Redirecting to your dashboard…
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleLogin} className="space-y-5">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-3 border border-gray-200 hover:border-gray-300 rounded-xl py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        />
+                      </svg>
+                      Continue with Google
+                    </button>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-gray-100" />
+                      <span className="text-xs text-gray-400 font-medium">
+                        or email
+                      </span>
+                      <div className="flex-1 h-px bg-gray-100" />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Email address
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@brand.com"
+                        required
+                        className="w-full border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-300 outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Password
+                        </label>
+                        <a
+                          href="#"
+                          className="text-xs text-orange-500 font-medium hover:underline">
+                          Forgot?
+                        </a>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showPass ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          className="w-full border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-xl px-4 py-3 pr-14 text-sm text-gray-800 placeholder-gray-300 outline-none transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPass(!showPass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 font-medium">
+                          {showPass ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-70 text-white font-bold py-3.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                      {loading ? "Signing in…" : "Sign In →"}
+                    </button>
+
+                    <p className="text-center text-xs text-gray-400">
+                      Don't have an account?{" "}
+                      <a
+                        href="#"
+                        className="text-orange-500 font-semibold hover:underline">
+                        Start for free
+                      </a>
+                    </p>
+                  </form>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
-        className="main-footer py-4 bg-dark text-white"
-        style={{ background: "var(--navy)" }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 320px" }}>
-              <img
-                src={logoWide}
-                width="200px"
-                className="p-2"
-                alt="OrderzUp logo"
-              />
-              <p>
-                Your smart solution for D2C logistics. Reduce RTOs, automate
-                shipping, and grow your brand.
-              </p>
-            </div>
-            <div style={{ flex: "1 1 200px" }}>
-              <h5>Contact</h5>
-              <p>
-                Email:{" "}
-                <a href="mailto:hello@orderzup.com" className="text-white">
-                  hello@orderzup.com
-                </a>
-              </p>
-            </div>
-            <div style={{ flex: "1 1 200px" }}>
-              <h5>Connect</h5>
-              <a
-                href="https://www.linkedin.com/company/ordezup/"
-                className="text-white mr-2"
-                style={{ marginRight: 8 }}
-              >
-                LinkedIn
-              </a>
-              <a
-                href="https://instagram.com/officialorderzup"
-                className="text-white mr-2"
-                style={{ marginRight: 8 }}
-              >
-                Instagram
-              </a>
-              <a
-                href="https://facebook.com/officialorderzup"
-                className="text-white"
-              >
-                Facebook
-              </a>
-              <div style={{ marginTop: 8 }}>
-                <a
-                  href="https://orderzup.com/terms-of-use"
-                  className="text-white mr-2"
-                  style={{ marginRight: 8 }}
-                >
-                  Terms of Service
-                </a>
-                <a
-                  href="https://orderzup.com/privacy-policy-2/"
-                  className="text-white"
-                >
-                  Privacy Policy
-                </a>
-              </div>
-            </div>
-          </div>
-          <div style={{ textAlign: "center", marginTop: 12 }}>
-            <small>Copyright © 2025 OrderzUp. All Rights Reserved.</small>
-          </div>
+{/* FOOTER */}
+<footer className="bg-[#010327] text-white py-20 px-10 md:px-20">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid md:grid-cols-4 gap-20">
+      {/* Left Section */}
+      <div>
+        <div className="flex items-center gap-3 mb-6">
+         <img src="../assets/logo.png" alt="OrderzUp Logo" />
+          <h2 className="text-3xl font-extrabold">
+            Orderz<span className="text-orange-500">Up</span>
+          </h2>
         </div>
-      </footer>
 
-      {/* Sticky CTA for mobile */}
-      <div
-        className="sticky-cta d-block d-md-none"
-        style={{ display: "block" }}
-      >
-        Slash RTOs by 30%:{" "}
-        <a
-          onClick={(e) => {
-            e.preventDefault();
-            setShowPopup(true);
-          }}
-          data-abtest="cta-mobile"
-        >
-          Join the Waitlist
-        </a>
-      </div>
+        <p className="text-gray-400 text-lg leading-relaxed max-w-sm mb-8">
+          The AI Logistics OS for modern D2C brands. Reduce RTO,
+          automate fulfillment, and scale profitably.
+        </p>
 
-      {/* Exit Intent Popup (hidden by default like original) */}
-      <div
-        id="exit-intent-popup"
-        ref={exitIntentRef}
-        style={{
-          display: "none",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          zIndex: 99999,
-          background: "rgba(0,4,52,0.85)",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            background: "var(--white)",
-            color: "var(--navy)",
-            padding: 32,
-            borderRadius: 18,
-            maxWidth: 340,
-            textAlign: "center",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-          }}
-        >
-          <h3 style={{ color: "var(--orange)", fontWeight: 700 }}>
-            Wait! Don’t Miss Out
-          </h3>
-          <p style={{ margin: "18px 0" }}>
-            Join the OrderzUp waitlist now and be first to access exclusive
-            early-bird perks.
-          </p>
-          <a
-            href="#"
-            className="btn btn-primary btn-lg"
-            data-abtest="popup-cta"
-            onClick={(e) => e.preventDefault()}
-          >
-            Join the Waitlist
-          </a>
+        <div className="flex gap-4">
+          <button className="w-12 h-12 border border-gray-500 rounded-xl flex items-center justify-center hover:border-white transition">
+            <Twitter size={20} />
+          </button>
+
+          <button className="w-12 h-12 border border-gray-500 rounded-xl flex items-center justify-center hover:border-white transition">
+            <Linkedin size={20} />
+          </button>
+
+          <button className="w-12 h-12 border border-gray-500 rounded-xl flex items-center justify-center hover:border-white transition">
+            <Mail size={20} />
+          </button>
         </div>
       </div>
 
-      {/* Waitlist Popup (center) */}
-      {showPopup && (
-        <div
-          id="waitlist-popup"
-          ref={waitlistPopupRef}
-          onClick={onOverlayClick}
-          style={{
-            display: "flex",
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            zIndex: 100000,
-            backdropFilter: "blur(3px)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              color: "#000434",
-              padding: "40px 32px 28px",
-              borderRadius: 24,
-              maxWidth: 600,
-              width: "90vw",
-              textAlign: "center",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
-              position: "relative",
-              fontFamily: "'Hiragino Maru Gothic ProN', sans-serif",
-            }}
-          >
-            <button
-              onClick={() => setShowPopup(false)}
-              style={{
-                position: "absolute",
-                top: 12,
-                right: 16,
-                background: "none",
-                border: "none",
-                fontSize: "1.8rem",
-                color: "#F5891E",
-                cursor: "pointer",
-              }}
-            >
-              &times;
-            </button>
+      {/* Product */}
+      <div>
+        <h3 className="font-bold text-xl mb-6">Product</h3>
 
-            <h3
-              style={{
-                color: "#F5891E",
-                fontWeight: 800,
-                marginBottom: 12,
-                fontSize: "1.5rem",
-              }}
-            >
-              🚀 Be the First to Experience OrderzUp
-            </h3>
-            <p style={{ fontSize: "1.05rem", marginBottom: 22, color: "#333" }}>
-              Join our waitlist and unlock early access + exclusive launch
-              benefits.
-            </p>
+        <ul className="space-y-4 text-gray-400 text-lg">
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Integrations</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+        </ul>
+      </div>
 
-            <form
-              id="waitlist-form"
-              onSubmit={handleFormSubmit}
-              style={{ display: formHidden ? "none" : "block" }}
-            >
-              <input
-                type="text"
-                name="name"
-                placeholder="Your Name"
-                required
-                style={{
-                  width: "100%",
-                  marginBottom: 12,
-                  padding: "12px 14px",
-                  borderRadius: 8,
-                  border: "1px solid #ccc",
-                  fontSize: "1rem",
-                }}
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                required
-                style={{
-                  width: "100%",
-                  marginBottom: 12,
-                  padding: "12px 14px",
-                  borderRadius: 8,
-                  border: "1px solid #ccc",
-                  fontSize: "1rem",
-                }}
-              />
-              <input
-                type="number"
-                name="phone"
-                placeholder="Phone Number +91 XXXXXXXX"
-                required
-                style={{
-                  width: "100%",
-                  marginBottom: 12,
-                  padding: "12px 14px",
-                  borderRadius: 8,
-                  border: "1px solid #ccc",
-                  fontSize: "1rem",
-                }}
-              />
-              <select
-                name="orders"
-                required
-                style={{
-                  width: "100%",
-                  marginBottom: 18,
-                  padding: "12px 14px",
-                  borderRadius: 8,
-                  border: "1px solid #ccc",
-                  fontSize: "1rem",
-                }}
-              >
-                <option value="">Number of Orders per Day</option>
-                <option>0-10</option>
-                <option>10-50</option>
-                <option>50-250</option>
-                <option>250-1000</option>
-                <option>1000-2500</option>
-                <option>2500-5000</option>
-                <option>5000+</option>
-              </select>
-              <select
-                name="platform"
-                required
-                style={{
-                  width: "100%",
-                  marginBottom: 18,
-                  padding: "12px 14px",
-                  borderRadius: 8,
-                  border: "1px solid #ccc",
-                  fontSize: "1rem",
-                }}
-              >
-                <option value="">Platform of Selling</option>
-                <option>Shopify</option>
-                <option>WooCommerce</option>
-                <option>Amazon</option>
-                <option>Flipkart</option>
-                <option>Magento</option>
-                <option>Other</option>
-              </select>
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  background: "linear-gradient(135deg,#F5891E,#ffb347)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-              >
-                Join Now
-              </button>
-            </form>
-            <div
-              id="waitlist-success"
-              style={{
-                display: showSuccess ? "block" : "none",
-                marginTop: 20,
-                color: "#000434",
-                fontWeight: 600,
-                textAlign: "center",
-              }}
-            >
-              🎉 Thank you! You're on the list — we'll reach out soon.
-              <div style={{ marginTop: 20 }}>
-                <a
-                  href="https://chat.whatsapp.com/KfXknYz3Zgg9MPu3l2WvTT"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-block",
-                    padding: "14px 22px",
-                    background: "linear-gradient(90deg, #0f1668ff, #010317ff)",
-                    color: "#fff!important",
-                    borderRadius: "50px",
-                    fontWeight: 700,
-                    textDecoration: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                    transition: "all 0.3s ease",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                    e.currentTarget.style.boxShadow =
-                      "0 6px 16px rgba(0,0,0,0.3)";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(0,0,0,0.2)";
-                  }}
-                >
-                  🚀 Join Our WhatsApp Community Now!
-                </a>
-                <p style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
-                  👉 Get insider RTO hacks, updates & early access!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Company */}
+      <div>
+        <h3 className="font-bold text-xl mb-6">Company</h3>
+
+        <ul className="space-y-4 text-gray-400 text-lg">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+
+      {/* Legal */}
+      <div>
+        <h3 className="font-bold text-xl mb-6">Legal</h3>
+
+        <ul className="space-y-4 text-gray-400 text-lg">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Security</a></li>
+          <li><a href="#">GDPR</a></li>
+        </ul>
+      </div>
     </div>
-  );
-};
 
-export default JoinWaitingList;
+    {/* Bottom Bar */}
+    <div className="border-t border-[#1E266D] mt-16 pt-10 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p className="text-gray-500 text-base">
+        © 2026 OrderzUp Technologies Pvt. Ltd. All rights reserved.
+      </p>
+
+      <div className="flex items-center gap-3 text-gray-400">
+        <span className="w-3 h-3 rounded-full bg-green-500"></span>
+        <span>All systems operational</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+
+    </div>
+
+
+    
+  );
+}

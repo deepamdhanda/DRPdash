@@ -1,8 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal, Form, Row, Col } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { FaExternalLinkAlt, FaShopify, FaWordpress } from "react-icons/fa";
+import {
+  FaExternalLinkAlt,
+  FaShopify,
+  FaTimes,
+  FaCheck,
+  FaInfoCircle,
+} from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
+// Update these imports to match your project's directory structure
 import { createChannelAccount } from "../../APIs/user/channelAccount";
 import { getAllChannels } from "../../APIs/user/channel";
 import { getAllPools } from "../../APIs/user/pool";
@@ -30,269 +37,19 @@ export interface ChannelAccount {
   createdAt?: string;
 }
 
-/* ── styles ── */
-const s: Record<string, React.CSSProperties> = {
-  wrap: { padding: "28px 32px", fontFamily: "'DM Sans', sans-serif" },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: 700,
-    letterSpacing: "1px",
-    textTransform: "uppercase" as const,
-    color: "#94a3b8",
-    marginBottom: 14,
-  },
-  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px 24px" },
-  full: { gridColumn: "1 / -1" },
-  field: { display: "flex", flexDirection: "column" as const, gap: 6 },
-  label: { fontSize: 13, fontWeight: 600, color: "#374151" },
-  input: {
-    padding: "10px 13px",
-    borderRadius: 8,
-    border: "1.5px solid #e2e8f0",
-    fontSize: 14,
-    color: "#1e293b",
-    background: "#fff",
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box" as const,
-    transition: "border-color 0.18s, box-shadow 0.18s",
-  },
-  inputFocus: {
-    borderColor: "#3b82f6",
-    boxShadow: "0 0 0 3px rgba(59,130,246,0.12)",
-  },
-  select: {
-    padding: "10px 13px",
-    borderRadius: 8,
-    border: "1.5px solid #e2e8f0",
-    fontSize: 14,
-    color: "#1e293b",
-    background: "#fff",
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box" as const,
-    cursor: "pointer",
-  },
-  helpText: { fontSize: 12, color: "#94a3b8", marginTop: 2 },
-  divider: { border: "none", borderTop: "1px solid #f0f1f5", margin: "24px 0" },
-  channelBtnRow: { display: "flex", gap: 12, flexWrap: "wrap" as const },
-
-  channelBtnIcon: { fontSize: 20 },
-  connectBtnShopify: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "10px 20px",
-    borderRadius: 8,
-    border: "none",
-    background: "#96bf48",
-    color: "#fff",
-    fontWeight: 700,
-    fontSize: 14,
-    cursor: "pointer",
-    textDecoration: "none",
-  },
-  connectBtnWoo: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "10px 20px",
-    borderRadius: 8,
-    border: "none",
-    background: "#7f54b3",
-    color: "#fff",
-    fontWeight: 700,
-    fontSize: 14,
-    cursor: "pointer",
-  },
-  wooFieldBox: {
-    background: "#faf7ff",
-    border: "1.5px solid #e9d5ff",
-    borderRadius: 10,
-    padding: "20px",
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "16px 20px",
-    marginTop: 8,
-  },
-  switchRow: { display: "flex", flexDirection: "column" as const, gap: 10 },
-  switchItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  switchLabel: { fontSize: 13, color: "#374151", fontWeight: 500 },
-  switchInput: {
-    accentColor: "#F5891E",
-    width: 36,
-    height: 20,
-    cursor: "pointer",
-  },
-  checkboxRow: { display: "flex", flexWrap: "wrap" as const, gap: 10 },
-  checkboxItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: 7,
-    cursor: "pointer",
-  },
-  adminTag: {
-    background: "#eff6ff",
-    color: "#2563eb",
-    border: "1px solid #bfdbfe",
-    borderRadius: 20,
-    padding: "3px 12px",
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  footer: {
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 28,
-    paddingTop: 20,
-    borderTop: "1px solid #f0f1f5",
-  },
-  btnSecondary: {
-    padding: "10px 20px",
-    borderRadius: 8,
-    border: "1.5px solid #e2e8f0",
-    background: "#fff",
-    color: "#475569",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  btnPrimary: {
-    padding: "10px 28px",
-    borderRadius: 8,
-    border: "none",
-    background: "#2563eb",
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  btnDisabled: { opacity: 0.5, cursor: "not-allowed" },
-  twoCol: {
-    display: "grid",
-    gridTemplateColumns: "1fr 320px",
-    gap: 28,
-    alignItems: "start",
-  },
-  automationCard: {
-    background: "#f8fafc",
-    border: "1.5px solid #e2e8f0",
-    borderRadius: 12,
-    padding: "20px",
-  },
-};
-
-/* ── mobile overrides ── */
-const mobileOverrides: Record<string, React.CSSProperties> = {
-  wrap: { padding: "16px" },
-  twoCol: { display: "grid", gridTemplateColumns: "1fr", gap: 20 },
-  grid2: { display: "grid", gridTemplateColumns: "1fr", gap: "14px" },
-  wooFieldBox: {
-    background: "#faf7ff",
-    border: "1.5px solid #e9d5ff",
-    borderRadius: 10,
-    padding: "14px",
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: "14px",
-    marginTop: 8,
-  },
-  footer: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: 10,
-    marginTop: 20,
-    paddingTop: 16,
-    borderTop: "1px solid #f0f1f5",
-  },
-  btnSecondary: {
-    padding: "11px 20px",
-    borderRadius: 8,
-    border: "1.5px solid #e2e8f0",
-    background: "#fff",
-    color: "#475569",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    width: "100%",
-    textAlign: "center" as const,
-  },
-  btnPrimary: {
-    padding: "11px 28px",
-    borderRadius: 8,
-    border: "none",
-    background: "#2563eb",
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    width: "100%",
-    textAlign: "center" as const,
-  },
-};
-
-/* ── hook ── */
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 640 : false
-  );
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-  return isMobile;
-};
-
-const FI: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => {
-  const [f, setF] = useState(false);
-  return (
-    <input
-      {...props}
-      style={{ ...s.input, ...(f ? s.inputFocus : {}), ...props.style }}
-      onFocus={(e) => {
-        setF(true);
-        props.onFocus?.(e);
-      }}
-      onBlur={(e) => {
-        setF(false);
-        props.onBlur?.(e);
-      }}
-    />
-  );
-};
-
-type ChannelType = "shopify" | "woocommerce" | "custom";
-
 const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
   handleNext,
 }) => {
-  const isMobile = useIsMobile();
-  const m = (key: string): React.CSSProperties =>
-    isMobile && mobileOverrides[key]
-      ? { ...s[key], ...mobileOverrides[key] }
-      : s[key];
-
   const [channels, setChannels] = useState<any[]>([]);
   const [pools, setPools] = useState<any[]>([]);
-  const [selectedPoolId, setSelectedPoolId] = useState("");
-  const [selectedChannelId, setSelectedChannelId] = useState("");
-  const [channelAccountName, setChannelAccountName] = useState("");
+  const [selectedPoolId, setSelectedPoolId] = useState<string>("");
+  const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+  const [channelAccountName, setChannelAccountName] = useState<string>("");
+  const [keys, setKeys] = useState<
+    { key: string; value: string; disabled?: boolean }[]
+  >([{ key: "", value: "" }]);
   const [selectedPoolAdmins, setSelectedPoolAdmins] = useState<any[]>([]);
   const [adminAccess, setAdminAccess] = useState<string[]>([]);
-  const [channelType, setChannelType] = useState<ChannelType>("shopify");
-
-  // WooCommerce fields
-  const [wooUrl, setWooUrl] = useState("");
-  const [wooConsumerKey, setWooConsumerKey] = useState("");
-  const [wooConsumerSecret, setWooConsumerSecret] = useState("");
-
   const [automation, setAutomation] = useState<Automation>({
     auto_ship: true,
     auto_ai_recommendation: true,
@@ -313,10 +70,11 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
           getAllPools(),
         ]);
         setChannels(channelsData || []);
-        const customChannel = channelsData.find(
-          (c: any) => c.channel_name === "Custom"
-        );
-        if (customChannel) setSelectedChannelId(customChannel._id);
+        channelsData.find((c: any) => {
+          if (c.channel_name === "Custom") {
+            setSelectedChannelId(c._id);
+          }
+        });
         setPools(poolsData?.data || []);
       } catch (err) {
         console.error("Failed to load channels/pools", err);
@@ -326,59 +84,55 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
 
   const handlePoolChange = (poolId: string) => {
     setSelectedPoolId(poolId);
-    const pool = pools.find((p) => p._id === poolId);
-    setSelectedPoolAdmins(pool?.admins || []);
+    const selectedPool = pools.find((p) => p._id === poolId);
+    setSelectedPoolAdmins(selectedPool?.admins || []);
     setAdminAccess([]);
   };
 
   const canSubmit = useMemo(() => {
     if (!channelAccountName.trim()) return false;
     if (!selectedPoolId) return false;
-    if (
-      channelType === "woocommerce" &&
-      (!wooUrl.trim() || !wooConsumerKey.trim() || !wooConsumerSecret.trim())
-    )
-      return false;
+    if (!selectedChannelId) return false;
     return true;
-  }, [
-    channelAccountName,
-    selectedPoolId,
-    channelType,
-    wooUrl,
-    wooConsumerKey,
-    wooConsumerSecret,
-  ]);
+  }, [channelAccountName, selectedPoolId, selectedChannelId]);
 
-  const startInitialFetch = async (channelAccountId?: string) => {
+  const startInitialChannelAccountFetch = async (channelAccountId?: string) => {
     if (!channelAccountId) return;
     setShowFetchingModal(true);
     setFetchingProducts(true);
     setFetchingOrders(true);
+
     try {
       await Promise.all([
-        initialChannelAccountFetch(channelAccountId, "products").finally(() =>
-          setFetchingProducts(false)
-        ),
-        initialChannelAccountFetch(channelAccountId, "orders").finally(() =>
-          setFetchingOrders(false)
-        ),
+        initialChannelAccountFetch(channelAccountId, "products")
+          .then(() => setFetchingProducts(false))
+          .catch(() => setFetchingProducts(false)),
+        initialChannelAccountFetch(channelAccountId, "orders")
+          .then(() => setFetchingOrders(false))
+          .catch(() => setFetchingOrders(false)),
       ]);
     } finally {
-      setTimeout(() => setShowFetchingModal(false), 700);
+      setTimeout(() => setShowFetchingModal(false), 800);
     }
+  };
+
+  const handleAdminToggle = (adminId: string) => {
+    setAdminAccess((prev) =>
+      prev.includes(adminId)
+        ? prev.filter((id) => id !== adminId)
+        : [...prev, adminId]
+    );
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!canSubmit) return;
-    setSubmitting(true);
 
+    setSubmitting(true);
     const keysObject: Record<string, any> = {};
-    if (channelType === "woocommerce") {
-      keysObject["store_url"] = wooUrl.trim();
-      keysObject["consumer_key"] = wooConsumerKey.trim();
-      keysObject["consumer_secret"] = wooConsumerSecret.trim();
-    }
+    keys.forEach(({ key, value }) => {
+      if (key.trim()) keysObject[key.trim()] = value;
+    });
 
     const formData: ChannelAccount = {
       channel_account_name: channelAccountName.trim(),
@@ -395,370 +149,380 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
 
     try {
       const result: any = await createChannelAccount(formData);
-      const chName = channels.find(
-        (c) => c._id === selectedChannelId
-      )?.channel_name;
-      if (chName !== "Custom") await startInitialFetch(result?._id || result);
+      channels.find((c) => c._id === selectedChannelId)?.channel_name !==
+        "Custom" &&
+        (await startInitialChannelAccountFetch(result?._id || result));
       handleNext();
     } catch (err) {
-      console.error(err);
+      console.error("Error creating channel account", err);
       toast.error("Failed to create channel account. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Reusable Modern Toggle
+  const ModernToggle = ({ id, label, checked, onChange, description }: any) => (
+    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+      <div className="flex flex-col">
+        <span className="text-sm font-semibold text-gray-800">{label}</span>
+        {description && (
+          <span className="text-xs text-gray-500 mt-0.5">{description}</span>
+        )}
+      </div>
+      <label
+        htmlFor={id}
+        className="relative inline-flex items-center cursor-pointer shrink-0"
+      >
+        <input
+          type="checkbox"
+          id={id}
+          className="sr-only peer"
+          checked={checked}
+          onChange={onChange}
+        />
+        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-orange-100 peer-checked:bg-orange-600 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+      </label>
+    </div>
+  );
+
   return (
-    <>
-      <div style={m("wrap")}>
-        <div style={m("twoCol")}>
-          <div>
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 20,
-                flexWrap: "wrap",
-              }}
-            >
-              <a
-                href="https://apps.shopify.com/app7"
-                target="_blank"
-                rel="noreferrer"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#F5891E";
-                  e.currentTarget.style.color = "#6b7280";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#f5f0ee";
-                  e.currentTarget.style.color = "#6b7280";
-                }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  borderRadius: 10,
-                  border: "1px solid #F5891E",
-                  background: "#f5f0ee",
-                  color: "#6b7280",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  textDecoration: "none",
-                  transition: "all 0.2s ease",
-                  flex: isMobile ? "1 1 auto" : undefined,
-                  justifyContent: isMobile ? "center" : undefined,
-                }}
-              >
-                <FaShopify size={14} />
-                Shopify
-                <FaExternalLinkAlt size={10} />
-              </a>
-
-              <a
-                href="https://yourstore.com"
-                target="_blank"
-                rel="noreferrer"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#F5891E";
-                  e.currentTarget.style.color = "#6b7280";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#f5f0ee";
-                  e.currentTarget.style.color = "#6b7280";
-                }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  borderRadius: 10,
-                  border: "1px solid #F5891E",
-                  background: "#f5f0ee",
-                  color: "#6b7280",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  textDecoration: "none",
-                  transition: "all 0.2s ease",
-                  flex: isMobile ? "1 1 auto" : undefined,
-                  justifyContent: isMobile ? "center" : undefined,
-                }}
-              >
-                <FaWordpress size={14} />
-                WooCommerce
-                <FaExternalLinkAlt size={10} />
-              </a>
-            </div>
-
-            {/* WooCommerce: API key fields */}
-            {channelType === "woocommerce" && (
-              <div style={m("wooFieldBox")}>
-                <div
-                  style={{
-                    ...s.field,
-                    gridColumn: isMobile ? undefined : "1 / -1",
-                  }}
-                >
-                  <label style={s.label}>Store URL</label>
-                  <FI
-                    value={wooUrl}
-                    onChange={(e) => setWooUrl(e.target.value)}
-                    placeholder="https://yourstore.com"
-                    required
-                  />
-                  <span style={s.helpText}>
-                    Full URL of your WooCommerce store
-                  </span>
-                </div>
-                <div style={s.field}>
-                  <label style={s.label}>Consumer Key</label>
-                  <FI
-                    value={wooConsumerKey}
-                    onChange={(e) => setWooConsumerKey(e.target.value)}
-                    placeholder="ck_xxxxxxxxxxxx"
-                    required
-                  />
-                </div>
-                <div style={s.field}>
-                  <label style={s.label}>Consumer Secret</label>
-                  <FI
-                    type="password"
-                    value={wooConsumerSecret}
-                    onChange={(e) => setWooConsumerSecret(e.target.value)}
-                    placeholder="cs_xxxxxxxxxxxx"
-                    required
-                  />
-                </div>
-                <div style={{ gridColumn: isMobile ? undefined : "1 / -1" }}>
-                  <span style={{ fontSize: 12, color: "#7f54b3" }}>
-                    💡 Find these under{" "}
-                    <strong>
-                      WooCommerce → Settings → Advanced → REST API
-                    </strong>{" "}
-                    in your WordPress admin.
-                  </span>
-                </div>
-              </div>
-            )}
-
-        <Form onSubmit={handleSubmit}>
-          <Row>
-            <Col md={7}>
-              <Form.Group className="mb-3" controlId="accountName">
-                <Form.Label className="fw-medium">
-                  Channel Account 
-                </Form.Label>
-                <Form.Control
-                 
-                  value={channelAccountName}
-                  onChange={(e) => setChannelAccountName(e.target.value)}
-                  required
-                  placeholder="e.g. My Shopify Store"
-                />
-                <span style={s.helpText}>
-                  Helps you identify this connected store
-                </span>
-              </div>
-
-              <div
-                style={{
-                  ...s.field,
-                  gridColumn: isMobile ? undefined : "1 / -1",
-                }}
-              >
-                <label style={s.label}>Business Account (Pool)</label>
-                <select
-                  value={selectedPoolId}
-                  onChange={(e) => handlePoolChange(e.target.value)}
-                  required
-                  style={s.select}
-                >
-                  <option value="">Select business account</option>
-                  {pools.map((pool) => (
-                    <option key={pool._id} value={pool._id}>
-                      {pool.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedPoolAdmins.length > 0 && (
-                <div
-                  style={{
-                    ...s.field,
-                    gridColumn: isMobile ? undefined : "1 / -1",
-                  }}
-                >
-                  <label style={s.label}>Give Admins Access</label>
-                  <div style={s.checkboxRow}>
-                    {selectedPoolAdmins.map((admin) => (
-                      <label key={admin._id} style={s.checkboxItem}>
-                        <input
-                          type="checkbox"
-                          checked={adminAccess.includes(admin._id)}
-                          onChange={(e) =>
-                            setAdminAccess((prev) =>
-                              e.target.checked
-                                ? [...prev, admin._id]
-                                : prev.filter((id) => id !== admin._id)
-                            )
-                          }
-                          style={{
-                            accentColor: "#2563eb",
-                            width: 15,
-                            height: 15,
-                          }}
-                        />
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: "#374151",
-                          }}
-                        >
-                          {admin.name}
-                        </span>
-                        <span style={s.adminTag}>Admin</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={m("footer")}>
-              <button
-                type="button"
-                style={m("btnSecondary")}
-                onClick={() => {
-                  setChannelAccountName("");
-                  setWooUrl("");
-                  setWooConsumerKey("");
-                  setWooConsumerSecret("");
-                }}
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                style={{
-                  ...m("btnPrimary"),
-                  background: "#F5891E",
-                  color: "#fff",
-                  opacity: 1,
-                  cursor: "pointer",
-                }}
-              >
-                {submitting ? "Creating…" : "Create Channel Account"}
-              </button>
-            </div>
-          </div>
-
-          {/* Right: Automation */}
-          <div style={s.automationCard}>
-            <p style={{ ...s.sectionLabel, marginBottom: 16 }}>⚡ Automation</p>
-            <div style={s.switchRow}>
-              {[
-                { key: "auto_ai_rating", label: "OUAI Customer Rating" },
-                {
-                  key: "auto_address_confirm",
-                  label: "Auto Order Confirmation",
-                },
-                {
-                  key: "auto_ai_recommendation",
-                  label: "OUAI Courier Recommendation",
-                },
-                { key: "auto_ship", label: "Auto Shipment Book" },
-              ].map(({ key, label }) => (
-                <div key={key} style={s.switchItem}>
-                  <span style={s.switchLabel}>{label}</span>
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    checked={(automation as any)[key]}
-                    onChange={(e) =>
-                      setAutomation((a) => ({ ...a, [key]: e.target.checked }))
-                    }
-                    style={s.switchInput}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <hr style={{ ...s.divider, margin: "20px 0" }} />
-
-            <p style={{ ...s.sectionLabel, marginBottom: 10 }}>💡 Quick Tips</p>
-            <ul
-              style={{
-                paddingLeft: 18,
-                margin: 0,
-                fontSize: 12,
-                color: "#64748b",
-                lineHeight: 1.7,
-              }}
-            >
-              <li>Use Shopify for OAuth-based one-click connect.</li>
-              <li>
-                WooCommerce needs Consumer Key + Secret from your WordPress
-                admin.
-              </li>
-              <li>Custom is for API-based or manual integrations.</li>
-              <li>You can update keys anytime from Channel Accounts.</li>
-            </ul>
-          </div>
-        </div>
+    <div className=" mx-auto">
+      {/* Header Section */}
+      <div className="mb-8 text-center sm:text-left">
+        <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+          Add Channel Account
+        </h2>
+        <p className="mt-2 text-gray-500 text-sm">
+          Connect your sales channels to streamline your fulfillment and sync
+          orders instantly.
+        </p>
       </div>
 
-      {/* Sync Modal */}
-      <Modal
-        show={showFetchingModal}
-        onHide={() => setShowFetchingModal(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Shopify Integration Banner */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm">
+          <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+            <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-emerald-600">
+              <FaShopify size={28} />
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900">
+                Connect via Shopify
+              </h4>
+              <p className="text-sm text-gray-600">
+                Secure, OAuth-based connection for immediate sync.
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://apps.shopify.com/app7"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto inline-flex  items-center justify-center px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white! text-sm font-medium rounded-xl transition-all shadow-sm hover:shadow active:scale-95 focus:ring-4 focus:ring-emerald-200"
           >
-            Initial sync in progress
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15 }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 14,
+            Install App <FaExternalLinkAlt className="ml-2 w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Details (Left Col) */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                General Information
+              </h3>
+
+              <div className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="accountName"
+                    className="block text-sm font-semibold text-gray-700 mb-1.5"
+                  >
+                    Account Name
+                  </label>
+                  <input
+                    id="accountName"
+                    type="text"
+                    placeholder="e.g. My Awesome Store"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all placeholder:text-gray-400 text-gray-900"
+                    value={channelAccountName}
+                    onChange={(e) => setChannelAccountName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="poolSelect"
+                    className="block text-sm font-semibold text-gray-700 mb-1.5"
+                  >
+                    Select Pool
+                  </label>
+                  <select
+                    id="poolSelect"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-gray-900 appearance-none"
+                    value={selectedPoolId}
+                    onChange={(e) => handlePoolChange(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>
+                      Choose a routing pool...
+                    </option>
+                    {pools.map((pool) => (
+                      <option key={pool._id} value={pool._id}>
+                        {pool.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <AnimatePresence>
+                  {selectedPoolAdmins.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginTop: 20 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Admin Access
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPoolAdmins.map((admin) => {
+                          const isSelected = adminAccess.includes(admin._id);
+                          return (
+                            <button
+                              type="button"
+                              key={admin._id}
+                              onClick={() => handleAdminToggle(admin._id)}
+                              className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
+                                isSelected
+                                  ? "bg-orange-50 border-orange-200 text-orange-700 shadow-sm"
+                                  : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                              }`}
+                            >
+                              <div
+                                className={`mr-2 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+                                  isSelected
+                                    ? "bg-orange-600 text-white"
+                                    : "border-2 border-gray-300"
+                                }`}
+                              >
+                                {isSelected && <FaCheck size={10} />}
+                              </div>
+                              {admin.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Automation & Settings (Right Col) */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Automation Rules
+              </h3>
+
+              <div className="flex flex-col">
+                <ModernToggle
+                  id="auto_ai_rating"
+                  label="AI Customer Rating"
+                  description="Evaluate risk based on history"
+                  checked={automation.auto_ai_rating}
+                  onChange={(e: any) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_ai_rating: e.target.checked,
+                    }))
+                  }
+                />
+                <ModernToggle
+                  id="auto_address_confirm"
+                  label="Auto Order Confirmation"
+                  description="Verify addresses automatically"
+                  checked={automation.auto_address_confirm}
+                  onChange={(e: any) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_address_confirm: e.target.checked,
+                    }))
+                  }
+                />
+                <ModernToggle
+                  id="auto_ai_recommendation"
+                  label="Smart Courier Select"
+                  description="AI chooses best delivery partner"
+                  checked={automation.auto_ai_recommendation}
+                  onChange={(e: any) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_ai_recommendation: e.target.checked,
+                    }))
+                  }
+                />
+                <ModernToggle
+                  id="auto_ship"
+                  label="Auto Shipment Book"
+                  description="Book instantly on order import"
+                  checked={automation.auto_ship}
+                  onChange={(e: any) =>
+                    setAutomation((a) => ({
+                      ...a,
+                      auto_ship: e.target.checked,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-start">
+                  <FaInfoCircle className="text-slate-400 mt-0.5 mr-3 flex-shrink-0" />
+                  <div className="text-xs text-slate-600 space-y-2">
+                    <p>
+                      <strong>Heads up:</strong> Manual keys for custom channels
+                      can be updated later from the integrations tab.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="flex items-center justify-end gap-4 pt-4">
+          <button
+            type="button"
+            className="px-6 py-3 text-sm font-semibold text-gray-600 bg-transparent hover:bg-gray-100 rounded-xl transition-colors"
+            onClick={() => {
+              setChannelAccountName("");
+              setKeys([{ key: "", value: "" }]);
+              setSelectedPoolId("");
             }}
           >
-            <strong>📦 Products:</strong>
-            <span
-              style={{
-                color: fetchingProducts ? "#f59e0b" : "#16a34a",
-                fontWeight: 600,
-              }}
+            Reset Form
+          </button>
+
+          <button
+            type="submit"
+            disabled={!canSubmit || submitting}
+            className="inline-flex items-center justify-center px-8 py-3 text-sm font-semibold text-white bg-orange-600 rounded-xl hover:bg-orange-700 shadow-md hover:shadow-lg focus:ring-4 focus:ring-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+          >
+            {submitting ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+        </div>
+      </form>
+
+      {/* Fetching Progress Modal */}
+      <AnimatePresence>
+        {showFetchingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", bounce: 0.4, duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
             >
-              {fetchingProducts ? "Fetching…" : "✓ Complete"}
-            </span>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                    Syncing Store
+                  </h3>
+                  <button
+                    onClick={() => setShowFetchingModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100"
+                  >
+                    <FaTimes size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div
+                    className={`flex items-center justify-between p-4 rounded-xl border ${
+                      fetchingProducts
+                        ? "bg-amber-50 border-amber-100"
+                        : "bg-emerald-50 border-emerald-100"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <span className="text-xl mr-3">📦</span>
+                      <strong className="text-sm text-gray-800">
+                        Products Sync
+                      </strong>
+                    </div>
+                    {fetchingProducts ? (
+                      <span className="flex h-3 w-3 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                      </span>
+                    ) : (
+                      <FaCheck className="text-emerald-500" />
+                    )}
+                  </div>
+
+                  <div
+                    className={`flex items-center justify-between p-4 rounded-xl border ${
+                      fetchingOrders
+                        ? "bg-amber-50 border-amber-100"
+                        : "bg-emerald-50 border-emerald-100"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <span className="text-xl mr-3">🚚</span>
+                      <strong className="text-sm text-gray-800">
+                        Orders Sync
+                      </strong>
+                    </div>
+                    {fetchingOrders ? (
+                      <span className="flex h-3 w-3 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                      </span>
+                    ) : (
+                      <FaCheck className="text-emerald-500" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <strong>🚚 Orders:</strong>
-            <span
-              style={{
-                color: fetchingOrders ? "#f59e0b" : "#16a34a",
-                fontWeight: 600,
-              }}
-            >
-              {fetchingOrders ? "Fetching…" : "✓ Complete"}
-            </span>
-          </div>
-        </Modal.Body>
-      </Modal>
-    </>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
