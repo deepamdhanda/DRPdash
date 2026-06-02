@@ -8,7 +8,7 @@ import { Orders } from "./Orders.tsx";
 import { Warehouses } from "./Warehouse.tsx";
 import { ChannelSKU } from "./ChannelSKU.tsx";
 import { ProductPacks } from "./ProductPacks.tsx";
-import { Wallets } from "./Wallets.tsx";
+
 import { ScanOrders } from "./ScanOrders.tsx";
 import { ProfitCalculator } from "./ProfitCalculator.tsx";
 import { NDRReports } from "./NDRReport.tsx";
@@ -21,6 +21,8 @@ import ShippingCalculator from "./ShippingChargeCalculator.tsx";
 import WeightDiscrepancy from "./WeightDiscrepancy.tsx";
 import DiscoverDashboard from "./Discovery.tsx";
 import OrderDash from "./OrderDash.tsx";
+import { WalletTransactionsComponent } from "./WalletTransactions.tsx";
+import { WalletRechargeComponent } from "./WalletRecharge.tsx";
 
 export const userRoutes = [
   {
@@ -36,8 +38,12 @@ export const userRoutes = [
     element: <Finances />,
   },
   {
-    path: "wallet", // /Dashboard/pools
-    element: <Wallets />,
+    path: "wallet-transactions", // /Dashboard/pools
+    element: <WalletTransactionsComponent />,
+  },
+  {
+    path: "wallet-recharge", // /Dashboard/pools
+    element: <WalletRechargeComponent />,
   },
   {
     path: "channel_accounts", // /Dashboard/pools
