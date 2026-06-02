@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal } from "react-bootstrap";
+import { Modal, Form, Row, Col } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { FaExternalLinkAlt, FaShopify, FaWordpress } from "react-icons/fa";
 
@@ -549,7 +549,7 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
                   Channel Account 
                 </Form.Label>
                 <Form.Control
-                  placeholder="e.g. My Shopify Store"
+                 
                   value={channelAccountName}
                   onChange={(e) => setChannelAccountName(e.target.value)}
                   required
