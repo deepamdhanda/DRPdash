@@ -44,7 +44,7 @@ Axios.interceptors.response.use(
       const { pathname, search } = window.location;
       const fullPath = pathname + search;
 
-      window.location.href = `/login?path=${encodeURIComponent(fullPath)}`;
+      window.location.href = `/?path=${encodeURIComponent(fullPath)}`;
       return Promise.reject(error);
     }
 

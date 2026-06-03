@@ -203,7 +203,7 @@ const UserPanel: React.FC = () => {
       {},
       { withCredentials: true }
     );
-    navigate("/login");
+    navigate("/");
   };
 
   const NavItem = ({ link }: { link: NavLink }) => {
