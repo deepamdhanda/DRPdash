@@ -117,7 +117,8 @@ export default function App() {
           {/* Mobile Menu Toggle */}
           <button
             className="md:hidden p-2 flex flex-col justify-center gap-1.5"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
             <div className="w-6 h-0.5 bg-gray-800"></div>
             <div className="w-6 h-0.5 bg-gray-800"></div>
             <div className="w-6 h-0.5 bg-gray-800"></div>
@@ -179,7 +180,8 @@ export default function App() {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2.5}>
+                    strokeWidth={2.5}
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -250,7 +252,8 @@ export default function App() {
           {problems.map((item, i) => (
             <div
               key={i}
-              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md  hover:border-red-200 hover:shadow-red-200  transition-shadow duration-200 flex flex-col mb-4 mt-4">
+              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md  hover:border-red-200 hover:shadow-red-200  transition-shadow duration-200 flex flex-col mb-4 mt-4"
+            >
               {/* Icon */}
               <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-5">
                 {item.icon}
@@ -326,7 +329,8 @@ export default function App() {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={2.5}>
+                strokeWidth={2.5}
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -341,7 +345,8 @@ export default function App() {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={1.5}>
+                strokeWidth={1.5}
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -356,7 +361,8 @@ export default function App() {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={1.5}>
+                strokeWidth={1.5}
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -371,7 +377,8 @@ export default function App() {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={1.5}>
+                strokeWidth={1.5}
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -488,7 +495,8 @@ export default function App() {
                   ].map((row) => (
                     <tr
                       key={row.id}
-                      className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors">
+                      className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors"
+                    >
                       <td className="py-4 font-bold text-orange-500">
                         {row.id}
                       </td>
@@ -497,14 +505,16 @@ export default function App() {
                       </td>
                       <td className="py-4">
                         <span
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-full ${row.statusColor}`}>
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-full ${row.statusColor}`}
+                        >
                           {row.status}
                         </span>
                       </td>
                       <td className="py-4 text-gray-500">{row.courier}</td>
                       <td className="py-4">
                         <span
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg ${row.riskColor}`}>
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg ${row.riskColor}`}
+                        >
                           {row.risk}
                         </span>
                       </td>
@@ -706,7 +716,8 @@ export default function App() {
           ].map((row, i) => (
             <div
               key={i}
-              className="grid grid-cols-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors">
+              className="grid grid-cols-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors"
+            >
               {/* Feature name */}
               <div className="px-14 py-8 flex items-center">
                 <p className="text-[#0f1035] font-medium text-lg">

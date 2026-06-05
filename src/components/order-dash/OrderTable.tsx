@@ -18,7 +18,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-// --- Types / Interfaces ---
 export interface OrderTableProps {
   orders: any[];
   isLoading: boolean;
@@ -36,7 +35,6 @@ export interface OrderTableProps {
   onCancelOrder: (orderId: string) => void;
 }
 
-// --- Modern Skeleton Loader (Deepened Neutrals) ---
 const SkeletonRow = () => (
   <tr className="border-b border-slate-100 animate-pulse bg-white">
     <td className="p-4">
@@ -240,7 +238,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                         <div className="flex items-center gap-2 mt-1.5 px-2.5 py-2 rounded-lg w-max border border-slate-200 bg-slate-50">
                           <Store
                             size={13}
-                            className="text-[#F5891E] flex-shrink-0"
+                            className="text-[#F5891E] shrink-0"
                           />
                           <div className="flex flex-col leading-snug">
                             <span className="text-[12px] font-semibold text-slate-800">
@@ -252,7 +250,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                                 Pool:
                               </span>
                               <span className="text-[10px] font-semibold text-[#F5891E]">
-                                {order.channel_account?.pool_id || "N/A"}
+                                {order.pool.name || "N/A"}
                               </span>
                             </div>
                           </div>
@@ -406,7 +404,8 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                             className="mt-0.5 text-slate-400 shrink-0"
                           />
                           <span className="leading-snug text-slate-500">
-                            {order.shipping_city}, {order.shipping_state} <br />
+                            {order.shipping_address},{order.shipping_city},{" "}
+                            {order.shipping_state} <br />
                             <span className="font-bold text-slate-700">
                               {order.shipping_pincode}
                             </span>
