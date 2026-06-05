@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Twitter, Linkedin, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+
 import {
   AlertTriangle,
   TrendingDown,
@@ -10,11 +11,13 @@ import {
   ShoppingBag,
   Cpu,
   TrendingUp,
- 
   XCircle,
   CheckCircle2,
   Check,
   ArrowRight,
+  Instagram,
+  Linkedin,
+  Facebook,
 } from "lucide-react";
 import AuthPage from "./AuthForm";
 
@@ -66,41 +69,50 @@ export default function App() {
     },
   ];
 
+  const navLinks = [
+    { label: "Home", href: "https://orderzup.com/" },
+    { label: "Contact Us", href: "https://orderzup.com/contact/" },
+    {
+      label: "Courier Partners",
+      href: "https://orderzup.com/courier-partners/",
+    },
+    { label: "Pricing", href: "https://orderzup.com/pricing/" },
+    {
+      label: "Resources",
+      href: "https://analytics.google.com/analytics/web/provision/#/provision",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
       {/* NAV */}
       <nav className="sticky top-0 bg-white border-b border-gray-100 h-24 z-50">
         <div className=" mx-auto px-6 md:px-12 h-full flex items-center gap-10 justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center ">
             <img
               src="./Orderzup.png"
               alt="OrderzUp Logo"
-              className="w-12 h-12 object-contain"
+              className="w-10 h-10 object-contain"
             />
-            <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
+            <span className="text-4xl md:text-4xl font-medium tracking-tight">
               Orderz<span className="text-orange-500">Up</span>
             </span>
           </div>
 
           {/* Center Nav Links */}
           <div className="hidden md:flex items-center gap-10">
-            {["Features", "Product", "Pricing", "Compare"].map((item) => (
-              <a
-                key={item}
-                href="#"
+            {navLinks.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
                 className="text-lg font-medium text-gray-500 hover:text-gray-900 transition-colors">
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </div>
 
           {/* Right Actions */}
-          <div className="hidden md:flex items-center gap-8">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3.5 rounded-full text-lg shadow-lg shadow-orange-500/30 transition-all">
-              Sign in
-            </button>
-          </div>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -182,14 +194,6 @@ export default function App() {
             </div>
 
             {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-16">
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-full text-lg shadow-lg shadow-orange-500/30 transition-all text-center">
-                Start for Free →
-              </button>
-              <button className="border border-gray-300 text-[#04053e] font-bold px-8 py-4 rounded-full text-lg hover:bg-gray-50 transition-all text-center">
-                ▶ See It in Action
-              </button>
-            </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-10 border-t border-gray-100">
@@ -773,17 +777,29 @@ export default function App() {
               </p>
 
               <div className="flex gap-4">
-                <button className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
-                  <Twitter size={18} />
-                </button>
+                <a
+                  href="https://www.facebook.com/officialorderzup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                  <Facebook size={18} />
+                </a>
 
-                <button className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                <a
+                  href="https://www.linkedin.com/in/officialorderzup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
                   <Linkedin size={18} />
-                </button>
+                </a>
 
-                <button className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
-                  <Mail size={18} />
-                </button>
+                <a
+                  href="https://www.instagram.com/officialorderzup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                  <Instagram size={18} />
+                </a>
               </div>
             </div>
 
@@ -793,30 +809,30 @@ export default function App() {
               <ul className="space-y-4 text-gray-400 text-base">
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/"
                     className="hover:text-orange-400 transition-colors">
-                    Features
+                    Home
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/contact/"
                     className="hover:text-orange-400 transition-colors">
-                    Integrations
+                    Contact Us
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/pricing/"
                     className="hover:text-orange-400 transition-colors">
                     Pricing
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/courier-partners/"
                     className="hover:text-orange-400 transition-colors">
-                    Changelog
+                    Courier Partners
                   </a>
                 </li>
               </ul>
@@ -828,30 +844,30 @@ export default function App() {
               <ul className="space-y-4 text-gray-400 text-base">
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/about-us/"
                     className="hover:text-orange-400 transition-colors">
                     About
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/blog/"
                     className="hover:text-orange-400 transition-colors">
                     Blog
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/api-integration/"
                     className="hover:text-orange-400 transition-colors">
-                    Careers
+                    API Integration
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/amazon-self-ship/"
                     className="hover:text-orange-400 transition-colors">
-                    Press
+                    Amazon Selfship
                   </a>
                 </li>
               </ul>
@@ -863,30 +879,16 @@ export default function App() {
               <ul className="space-y-4 text-gray-400 text-base">
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/privacy-policy/"
                     className="hover:text-orange-400 transition-colors">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="https://orderzup.com/terms-conditions/"
                     className="hover:text-orange-400 transition-colors">
                     Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors">
-                    Security
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors">
-                    GDPR
                   </a>
                 </li>
               </ul>
