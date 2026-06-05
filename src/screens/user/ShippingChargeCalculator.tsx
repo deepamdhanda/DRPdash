@@ -125,7 +125,7 @@ const ShippingCalculator: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto pb-10">
+    <div className="w-full max-w-5xl mx-auto pb-10 text-black">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="bg-[#000434] text-white py-4 px-6 relative flex items-center justify-center">

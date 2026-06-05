@@ -271,7 +271,7 @@ const MakeChannelAccount: React.FC<{ handleNext: () => void }> = ({
                     </option>
                     {pools.map((pool) => (
                       <option key={pool._id} value={pool._id}>
-                        {pool.name}
+                        {pool.pool.name}
                       </option>
                     ))}
                   </select>
