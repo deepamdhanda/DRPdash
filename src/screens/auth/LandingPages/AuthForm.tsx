@@ -77,7 +77,7 @@ export const AuthPage: React.FC = () => {
 
   return (
     <>
-      <div className="w-full flex flex-col justify-center bg-white relative py-16 border rounded-2xl border-neutral-200">
+      <div className="w-full flex flex-col justify-center bg-white relative py-20 px-10 sm:px-8 border rounded-2xl border-neutral-200">
         <AnimatePresence mode="wait">
           <motion.div
             key={isLogin ? "login" : "register"}
@@ -88,7 +88,7 @@ export const AuthPage: React.FC = () => {
             className="w-full max-w-3xl mx-auto"
           >
             <div className="mb-10 text-center md:text-left">
-              <h3 className="text-5xl font-extrabold text-orange-400 mb-3 tracking-tight ">
+              <h3 className="text-5xl font-extrabold text-orange-400 mb-3 tracking-tight">
                 {isLogin ? "Welcome back" : "Create an account"}
               </h3>
               <p className="text-gray-500 font-medium">
@@ -114,7 +114,7 @@ export const AuthPage: React.FC = () => {
                     Full Name
                   </label>
                   <input
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#f5891e] focus:ring-2 focus:ring-[#f5891e]/20 outline-none transition-all"
+                    className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#f5891e] focus:ring-2 focus:ring-[#f5891e]/20 outline-none transition-all"
                     type="text"
                     placeholder="e.g. Jane Doe"
                     {...registerRegister("name")}

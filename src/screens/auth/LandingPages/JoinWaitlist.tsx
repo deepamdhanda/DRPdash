@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Twitter, Linkedin, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+import logo from "../../../assets/logo.png";
+
 import {
   AlertTriangle,
   TrendingDown,
@@ -13,7 +15,9 @@ import {
   XCircle,
   CheckCircle2,
   Check,
-  ArrowRight,
+  Instagram,
+  Linkedin,
+  Facebook,
 } from "lucide-react";
 import AuthPage from "./AuthForm";
 
@@ -65,48 +69,53 @@ export default function App() {
     },
   ];
 
+  const navLinks = [
+    { label: "Home", href: "https://orderzup.com/" },
+    { label: "Contact Us", href: "https://orderzup.com/contact/" },
+    {
+      label: "Courier Partners",
+      href: "https://orderzup.com/courier-partners/",
+    },
+    { label: "Pricing", href: "https://orderzup.com/pricing/" },
+    {
+      label: "Resources",
+      href: "https://analytics.google.com/analytics/web/provision/#/provision",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
       {/* NAV */}
-      <nav className="sticky top-0 bg-white border-b border-gray-100 h-24 z-50">
-        <div className=" mx-auto px-6 md:px-12 h-full flex items-center gap-10 justify-between">
+      <nav className="sticky top-0 bg-white border-b border-gray-100 h-16 md:h-24 z-50">
+        <div className="mx-auto px-4 md:px-12 h-full flex items-center gap-10 justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <img
               src="./Orderzup.png"
               alt="OrderzUp Logo"
-              className="w-12 h-12 object-contain"
+              className="w-8 h-8 md:w-10 md:h-10 object-contain"
             />
-            <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
+            <span className="text-2xl md:text-4xl font-medium tracking-tight">
               Orderz<span className="text-orange-500">Up</span>
             </span>
           </div>
 
           {/* Center Nav Links */}
           <div className="hidden md:flex items-center gap-10">
-            {["Features", "Product", "Pricing", "Compare"].map((item) => (
-              <a
-                key={item}
-                href="#"
-                className="text-lg font-medium text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                {item}
-              </a>
+            {navLinks.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className="text-lg font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                {item.label}
+              </Link>
             ))}
-          </div>
-
-          {/* Right Actions */}
-          <div className="hidden md:flex items-center gap-8">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3.5 rounded-full text-lg shadow-lg shadow-orange-500/30 transition-all">
-              Sign in
-            </button>
           </div>
 
           {/* Mobile Menu Toggle */}
           <button
             className="md:hidden p-2 flex flex-col justify-center gap-1.5"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             <div className="w-6 h-0.5 bg-gray-800"></div>
             <div className="w-6 h-0.5 bg-gray-800"></div>
             <div className="w-6 h-0.5 bg-gray-800"></div>
@@ -129,18 +138,18 @@ export default function App() {
       )}
 
       {/* HERO */}
-      <section className="pt-14 pb-8 md:pt-24 md:pb-12 px-6 md:px-12 overflow-hidden max-w-[1400px] mx-auto">
-        <div className=" mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <section className="pt-8 pb-8 md:pt-24 md:pb-12 px-4 md:px-12 overflow-hidden max-w-[1400px] mx-auto">
+        <div className="mx-auto grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* LEFT: CONTENT */}
           <div className="relative">
             {/* Badge */}
-            <div className="inline-flex items-center gap-3 bg-orange-50 border border-orange-200 text-orange-600 text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full mb-10 uppercase tracking-wide">
+            <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-600 text-xs font-semibold px-3 py-2 rounded-full mb-6 md:mb-10 uppercase tracking-wide">
               <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
               🚀 BETA WAS A MASSIVE SUCCESS — NOW LIVE
             </div>
 
             {/* Headline */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#060741] leading-[1.1] tracking-tight mb-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-[#060741] leading-[1.1] tracking-tight mb-5 md:mb-8">
               Stop Losing Profit
               <br />
               <span className="bg-gradient-to-br from-orange-500 to-red-500 bg-clip-text text-transparent">
@@ -149,14 +158,14 @@ export default function App() {
             </h1>
 
             {/* Description */}
-            <p className="text-gray-500 text-lg sm:text-xl leading-relaxed max-w-lg mb-10">
+            <p className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-lg mb-6 md:mb-10">
               The AI Operating System that slashes RTOs by 30%, detects COD
               fraud before it ships, and automates your entire fulfillment
               pipeline — so you scale faster, not harder.
             </p>
 
             {/* Checklist */}
-            <div className="space-y-4 mb-10">
+            <div className="space-y-3 mb-6 md:mb-10">
               {[
                 "No credit card required",
                 "Setup in under 5 minutes",
@@ -164,37 +173,26 @@ export default function App() {
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
                   <svg
-                    className="w-6 h-6 text-orange-500 flex-shrink-0"
+                    className="w-5 h-5 md:w-6 md:h-6 text-orange-500 flex-shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
+                    strokeWidth={2.5}>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="text-lg text-gray-600 font-medium">
+                  <span className="text-base md:text-lg text-gray-600 font-medium">
                     {item}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-16">
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-full text-lg shadow-lg shadow-orange-500/30 transition-all text-center">
-                Start for Free →
-              </button>
-              <button className="border border-gray-300 text-[#04053e] font-bold px-8 py-4 rounded-full text-lg hover:bg-gray-50 transition-all text-center">
-                ▶ See It in Action
-              </button>
-            </div>
-
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-10 border-t border-gray-100">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 pt-6 md:pt-10 border-t border-gray-100">
               {[
                 { val: "₹2Cr+", label: "Saved Brands" },
                 { val: "50K+", label: "Orders Done" },
@@ -202,72 +200,68 @@ export default function App() {
                 { val: "99.9%", label: "Accuracy" },
               ].map(({ val, label }) => (
                 <div key={label}>
-                  <h3 className="text-3xl font-extrabold text-[#060741]">
+                  <h3 className="text-2xl md:text-3xl font-extrabold text-[#060741]">
                     {val}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-1 font-medium">
+                  <p className="text-xs md:text-sm text-gray-500 mt-1 font-medium">
                     {label}
                   </p>
                 </div>
               ))}
             </div>
           </div>
-          <AuthPage />
+
+          {/* RIGHT: Auth Form */}
+          <div className="w-full">
+            <AuthPage />
+          </div>
         </div>
       </section>
 
-      {/* {problem section } */}
-      <section className="bg-white py-20 px-4 ">
+      {/* PROBLEM SECTION */}
+      <section className="bg-white py-12 md:py-20 px-4 md:px-6">
         {/* Tag */}
         <div className="flex justify-center mb-6">
-          <span className="inline-flex items-center gap-2 border border-red-300 text-red-500 text-lg font-medium px-4 py-1.5 rounded-full bg-red-50">
+          <span className="inline-flex items-center gap-2 border border-red-300 text-red-500 text-sm md:text-lg font-medium px-4 py-1.5 rounded-full bg-red-50">
             <AlertTriangle className="w-3.5 h-3.5" />
             THE PROBLEM
           </span>
         </div>
 
         {/* Headline */}
-        <div className="text-center mb-4">
-          <h2 className="text-7xl font-extrabold text-[#0f1035] leading-tight">
+        <div className="text-center mb-4 px-2">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-[#0f1035] leading-tight">
             Your Logistics Stack Is
           </h2>
-          <h2 className="text-7xl font-extrabold text-[#ef4444] leading-tight">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-[#ef4444] leading-tight">
             Quietly Killing Profits.
           </h2>
         </div>
 
         {/* Subheading */}
-        <p className="text-center text-gray-500 text-3xl max-w-xl mx-auto mb-14 leading-tight">
+        <p className="text-center text-gray-500 text-base sm:text-xl md:text-3xl max-w-xl mx-auto mb-10 md:mb-14 leading-snug px-2">
           Every manual process, every missed fraud signal, every wrong courier
-          pick —<br />
+          pick —<br className="hidden sm:block" />
           it all compounds into silent profit erosion.
         </p>
 
         {/* Cards Grid */}
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {problems.map((item, i) => (
             <div
               key={i}
-              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md  hover:border-red-200 hover:shadow-red-200  transition-shadow duration-200 flex flex-col mb-4 mt-4"
-            >
-              {/* Icon */}
-              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-5">
+              className="bg-white border border-gray-100 rounded-2xl p-5 md:p-6 shadow-sm hover:shadow-md hover:border-red-200 hover:shadow-red-200 transition-shadow duration-200 flex flex-col">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4 md:mb-5">
                 {item.icon}
               </div>
-
-              {/* Title */}
-              <h3 className="text-[20px] font-bold text-[#0f1035] mb-5">
+              <h3 className="text-lg md:text-[20px] font-bold text-[#0f1035] mb-3 md:mb-5">
                 {item.title}
               </h3>
-
-              {/* Description */}
-              <p className="text-gray-500 text-xl leading-relaxed mb-5 flex-1">
+              <p className="text-gray-500 text-base md:text-xl leading-relaxed mb-4 md:mb-5 flex-1">
                 {item.description}
               </p>
-              <div className="mt-auto pt-5">
-                {" "}
-                {/* Badge */}
-                <span className="inline-block bg-red-50 text-red-500 text-lg font-semibold px-3 py-1.5 rounded-full border border-red-100">
+              <div className="mt-auto pt-4 md:pt-5">
+                <span className="inline-block bg-red-50 text-red-500 text-sm md:text-lg font-semibold px-3 py-1.5 rounded-full border border-red-100">
                   {item.badge}
                 </span>
               </div>
@@ -277,7 +271,7 @@ export default function App() {
       </section>
 
       {/* ONE PLATFORM SECTION */}
-      <section className="bg-[#f5f5f7] py-24 px-6">
+      <section className="bg-[#f5f5f7] py-12 md:py-24 px-4 md:px-6">
         {/* Tag */}
         <div className="flex justify-center mb-8">
           <span className="inline-flex items-center gap-2 border border-orange-300 text-orange-500 text-sm font-semibold px-5 py-2 rounded-full bg-[#fff7ed] shadow-sm">
@@ -286,63 +280,61 @@ export default function App() {
         </div>
 
         {/* Headline */}
-        <div className="text-center mb-4">
-          <h2 className="text-6xl md:text-7xl font-extrabold leading-tight">
+        <div className="text-center mb-4 px-2">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-extrabold leading-tight">
             <span className="text-[#0f1035]">One Platform. </span>
             <span className="text-orange-500">Total Control.</span>
           </h2>
         </div>
 
         {/* Subheading */}
-        <p className="text-center text-gray-500 text-xl max-w-lg mx-auto mb-16">
+        <p className="text-center text-gray-500 text-base md:text-xl max-w-lg mx-auto mb-10 md:mb-16">
           Every module your operations team needs, unified in one clean
           dashboard.
         </p>
 
         {/* Dashboard Mockup */}
-        <div className="max-w-7xl max-h-8xl mx-auto bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden">
+        <div className="max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200 overflow-hidden">
           {/* Browser chrome bar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-            <div className="flex gap-2">
-              <div className="w-3.5 h-3.5 rounded-full bg-[#ff5f57]" />
-              <div className="w-3.5 h-3.5 rounded-full bg-[#febc2e]" />
-              <div className="w-3.5 h-3.5 rounded-full bg-[#28c840]" />
+          <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 bg-white">
+            <div className="flex gap-1.5 md:gap-2">
+              <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-[#ff5f57]" />
+              <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-[#febc2e]" />
+              <div className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full bg-[#28c840]" />
             </div>
-            <span className="text-sm text-gray-400 font-medium">
+            <span className="text-xs md:text-sm text-gray-400 font-medium">
               orderzup.io/dashboard
             </span>
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
+            <span className="flex items-center gap-1.5 text-xs md:text-sm font-semibold text-green-500">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               Live
             </span>
           </div>
 
-          {/* Tabs */}
-          <div className="flex items-center gap-1 px-6 py-3 border-b border-gray-100 bg-white">
-            <button className="flex items-center gap-2 bg-orange-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl whitespace-nowrap shadow-md shadow-orange-200">
+          {/* Tabs — horizontal scroll on mobile */}
+          <div className="flex items-center gap-1 px-3 md:px-6 py-3 border-b border-gray-100 bg-white overflow-x-auto">
+            <button className="flex items-center gap-2 bg-orange-500 text-white text-xs md:text-sm font-bold px-3 md:px-5 py-2 md:py-2.5 rounded-xl whitespace-nowrap shadow-md shadow-orange-200 flex-shrink-0">
               <svg
                 className="w-4 h-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={2.5}
-              >
+                strokeWidth={2.5}>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
-              Orders Dashboard
+              Orders
             </button>
-            <button className="flex items-center gap-2 text-gray-500 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-gray-50 whitespace-nowrap">
+            <button className="flex items-center gap-2 text-gray-500 text-xs md:text-sm font-medium px-3 md:px-5 py-2 md:py-2.5 rounded-xl hover:bg-gray-50 whitespace-nowrap flex-shrink-0">
               <svg
                 className="w-4 h-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={1.5}
-              >
+                strokeWidth={1.5}>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -351,30 +343,28 @@ export default function App() {
               </svg>
               Courier AI
             </button>
-            <button className="flex items-center gap-2 text-gray-500 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-gray-50 whitespace-nowrap">
+            <button className="flex items-center gap-2 text-gray-500 text-xs md:text-sm font-medium px-3 md:px-5 py-2 md:py-2.5 rounded-xl hover:bg-gray-50 whitespace-nowrap flex-shrink-0">
               <svg
                 className="w-4 h-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={1.5}
-              >
+                strokeWidth={1.5}>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                 />
               </svg>
-              Fraud Detection
+              Fraud
             </button>
-            <button className="flex items-center gap-2 text-gray-500 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-gray-50 whitespace-nowrap">
+            <button className="flex items-center gap-2 text-gray-500 text-xs md:text-sm font-medium px-3 md:px-5 py-2 md:py-2.5 rounded-xl hover:bg-gray-50 whitespace-nowrap flex-shrink-0">
               <svg
                 className="w-4 h-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={1.5}
-              >
+                strokeWidth={1.5}>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -386,47 +376,47 @@ export default function App() {
           </div>
 
           {/* Table Header */}
-          <div className="px-8 pt-6 pb-4 flex items-center justify-between ml-3.5 mr-3.5">
+          <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-extrabold text-[#0f1035]">
+              <h3 className="text-base md:text-xl font-extrabold text-[#0f1035]">
                 All Orders
               </h3>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <p className="text-xs md:text-sm text-gray-400 mt-0.5">
                 2,847 orders today · 99.9% sync
               </p>
             </div>
             <div className="flex gap-2">
-              <span className="border border-green-300 text-green-600 text-xs font-bold px-4 py-2 rounded-full bg-green-50">
+              <span className="border border-green-300 text-green-600 text-xs font-bold px-3 py-1.5 rounded-full bg-green-50">
                 Auto-sync ON
               </span>
-              <span className="border border-gray-200 text-gray-500 text-xs font-semibold px-4 py-2 rounded-full bg-white">
+              <span className="border border-gray-200 text-gray-500 text-xs font-semibold px-3 py-1.5 rounded-full bg-white">
                 Filter
               </span>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="px-8 pb-8 overflow-x-auto w-full">
-            <div className="border border-gray-200 rounded-2xl overflow-hidden px-10 pb-10">
-              <table className="w-full text-lg">
+          {/* Table — scrollable on mobile */}
+          <div className="px-3 md:px-8 pb-6 md:pb-8 overflow-x-auto w-full">
+            <div className="border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden min-w-[520px]">
+              <table className="w-full text-sm md:text-lg">
                 <thead>
-                  <tr className="text-gray-400 border-b border-gray-200  ">
-                    <th className="text-left py-3 font-medium text-lg uppercase tracking-wide">
+                  <tr className="text-gray-400 border-b border-gray-200">
+                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Order ID
                     </th>
-                    <th className="text-left py-3 font-medium text-lg uppercase tracking-wide">
+                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Customer
                     </th>
-                    <th className="text-left py-3 font-medium text-lg uppercase tracking-wide">
+                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Status
                     </th>
-                    <th className="text-left py-3 font-medium text-lg uppercase tracking-wide">
+                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Courier
                     </th>
-                    <th className="text-left py-3 font-medium text-lg uppercase tracking-wide">
+                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Risk
                     </th>
-                    <th className="text-right py-3 font-medium text-lg uppercase tracking-wide">
+                    <th className="text-right py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Value
                     </th>
                   </tr>
@@ -491,30 +481,29 @@ export default function App() {
                   ].map((row) => (
                     <tr
                       key={row.id}
-                      className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors"
-                    >
-                      <td className="py-4 font-bold text-orange-500">
+                      className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors">
+                      <td className="py-3 md:py-4 px-3 md:px-0 font-bold text-orange-500 text-xs md:text-base whitespace-nowrap">
                         {row.id}
                       </td>
-                      <td className="py-4 text-gray-800 font-medium">
+                      <td className="py-3 md:py-4 px-3 md:px-0 text-gray-800 font-medium text-xs md:text-base whitespace-nowrap">
                         {row.customer}
                       </td>
-                      <td className="py-4">
+                      <td className="py-3 md:py-4 px-3 md:px-0">
                         <span
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-full ${row.statusColor}`}
-                        >
+                          className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${row.statusColor}`}>
                           {row.status}
                         </span>
                       </td>
-                      <td className="py-4 text-gray-500">{row.courier}</td>
-                      <td className="py-4">
+                      <td className="py-3 md:py-4 px-3 md:px-0 text-gray-500 text-xs md:text-base whitespace-nowrap">
+                        {row.courier}
+                      </td>
+                      <td className="py-3 md:py-4 px-3 md:px-0">
                         <span
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg ${row.riskColor}`}
-                        >
+                          className={`text-xs font-bold px-2 py-1 rounded-lg ${row.riskColor}`}>
                           {row.risk}
                         </span>
                       </td>
-                      <td className="py-4 text-right font-bold text-gray-800">
+                      <td className="py-3 md:py-4 px-3 md:px-0 text-right font-bold text-gray-800 text-xs md:text-base whitespace-nowrap">
                         {row.value}
                       </td>
                     </tr>
@@ -527,17 +516,17 @@ export default function App() {
       </section>
 
       {/* HOW IT WORKS SECTION */}
-      <section className="bg-[#f5f5f7] py-24 px-6">
+      <section className="bg-[#f5f5f7] py-12 md:py-24 px-4 md:px-6">
         {/* Tag */}
-        <div className="flex justify-center mb-6 ">
+        <div className="flex justify-center mb-6">
           <span className="inline-flex items-center gap-2 border border-orange-300 text-orange-500 text-sm font-semibold px-5 py-2 rounded-full bg-[#fff7ed] shadow-sm">
             Up and running in minutes
           </span>
         </div>
 
         {/* Headline */}
-        <div className="text-center mb-4">
-          <h2 className="text-6xl md:text-7xl font-extrabold leading-tight">
+        <div className="text-center mb-4 px-2">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-extrabold leading-tight">
             <span className="text-[#0f1035]">How </span>
             <span className="text-orange-500">OrderzUp</span>
             <span className="text-[#0f1035]"> Works</span>
@@ -545,12 +534,12 @@ export default function App() {
         </div>
 
         {/* Subheading */}
-        <p className="text-center text-gray-500 text-xl max-w-lg mx-auto mb-16">
+        <p className="text-center text-gray-500 text-base md:text-xl max-w-lg mx-auto mb-10 md:mb-16">
           From integration to intelligent automation in three clean steps.
         </p>
 
         {/* Cards */}
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-stretch">
           {[
             {
               num: "01",
@@ -578,31 +567,24 @@ export default function App() {
             },
           ].map((step, i) => (
             <div key={i} className="relative">
-              <div className="bg-white rounded-2xl p-7 h-full border border-gray-200 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100 transition-all duration-200 flex flex-col gap-5">
-                {/* Top row: icon + big number */}
+              <div className="bg-white rounded-2xl p-5 md:p-7 h-full border border-gray-200 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100 transition-all duration-200 flex flex-col gap-4 md:gap-5">
                 <div className="flex items-start justify-between">
-                  <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-orange-50 flex items-center justify-center flex-shrink-0">
                     {step.icon}
                   </div>
-                  <span className="text-6xl font-black text-orange-100 leading-none select-none">
+                  <span className="text-5xl md:text-6xl font-black text-orange-100 leading-none select-none">
                     {step.num}
                   </span>
                 </div>
-
-                {/* Badge */}
                 <div>
-                  <span className="inline-block bg-gray-100 text-gray-700 text-lg font-extrabold px-3 py-1.5 rounded-full">
+                  <span className="inline-block bg-gray-100 text-gray-700 text-sm md:text-lg font-extrabold px-3 py-1.5 rounded-full">
                     {step.badge}
                   </span>
                 </div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-[#0f1035]">
+                <h3 className="text-xl md:text-2xl font-bold text-[#0f1035]">
                   {step.title}
                 </h3>
-
-                {/* Description */}
-                <p className="text-gray-500 text-base leading-relaxed">
+                <p className="text-gray-500 text-sm md:text-base leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -612,46 +594,48 @@ export default function App() {
       </section>
 
       {/* WHY SWITCH SECTION */}
-      <section className="bg-white py-24 px-6">
+      <section className="bg-white py-12 md:py-24 px-4 md:px-6">
         {/* Headline */}
-        <div className="text-center mb-4">
-          <h2 className="text-5xl md:text-7xl font-extrabold leading-tight">
+        <div className="text-center mb-4 px-2">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-extrabold leading-tight">
             <span className="text-[#0f1035]">Why Brands Switch to </span>
             <span className="text-orange-500">OrderzUp</span>
           </h2>
         </div>
 
         {/* Subheading */}
-        <p className="text-center text-gray-500 text-xl max-w-lg mx-auto mb-16">
+        <p className="text-center text-gray-500 text-base md:text-xl max-w-lg mx-auto mb-10 md:mb-16">
           Traditional tools were built for tracking. OrderzUp was built for
           intelligence.
         </p>
 
-        {/* Comparison Table */}
+        {/* Comparison Table — scrollable on mobile */}
         <div className="max-w-6xl mx-auto rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           {/* Table Header */}
           <div className="grid grid-cols-3 border-b border-gray-200">
-            <div className="px-14 py-8 bg-white">
-              <p className="text-gray-400 text-2xl font-semibold">Feature</p>
-            </div>
-            <div className="px-14 py-8 bg-white border-l border-gray-200 text-center">
-              <p className="font-semibold text-gray-700 text-2xl">
-                Traditional Tools
+            <div className="px-4 md:px-14 py-4 md:py-8 bg-white">
+              <p className="text-gray-400 text-sm md:text-2xl font-semibold">
+                Feature
               </p>
-              <p className="text-gray-400 text-md mt-1">
+            </div>
+            <div className="px-3 md:px-14 py-4 md:py-8 bg-white border-l border-gray-200 text-center">
+              <p className="font-semibold text-gray-700 text-sm md:text-2xl">
+                Traditional
+              </p>
+              <p className="text-gray-400 text-xs md:text-md mt-1 hidden sm:block">
                 Shiprocket, manual dashboards
               </p>
             </div>
-            <div className="px-14 py-8 bg-orange-50 border-l border-orange-200 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <p className="font-semibold text-[#0f1035] text-2xl">
+            <div className="px-3 md:px-14 py-4 md:py-8 bg-orange-50 border-l border-orange-200 text-center">
+              <div className="flex items-center justify-center gap-1 md:gap-2 flex-wrap">
+                <p className="font-semibold text-[#0f1035] text-sm md:text-2xl">
                   OrderzUp
                 </p>
-                <span className="bg-orange-500 text-white text-md font-bold px-2.5 py-1 rounded-md">
-                  AI-Powered
-                </span>
+                {/* Removed AI-generated badge as requested */}
               </div>
-              <p className="text-gray-400 text-sm mt-1">The AI Logistics OS</p>
+              <p className="text-gray-400 text-xs md:text-sm mt-1 hidden sm:block">
+                The AI Logistics OS
+              </p>
             </div>
           </div>
 
@@ -712,126 +696,129 @@ export default function App() {
           ].map((row, i) => (
             <div
               key={i}
-              className="grid grid-cols-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors"
-            >
+              className="grid grid-cols-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors">
               {/* Feature name */}
-              <div className="px-14 py-8 flex items-center">
-                <p className="text-[#0f1035] font-medium text-lg">
+              <div className="px-4 md:px-14 py-4 md:py-8 flex items-center">
+                <p className="text-[#0f1035] font-medium text-xs md:text-lg leading-snug">
                   {row.feature}
                 </p>
               </div>
 
               {/* Traditional */}
-              <div className="px-14 py-8 border-l border-gray-100 flex items-center justify-center">
+              <div className="px-3 md:px-14 py-4 md:py-8 border-l border-gray-100 flex items-center justify-center">
                 {row.traditional === "cross" && (
-                  <XCircle className="w-7 h-7 text-red-400" />
+                  <XCircle className="w-5 h-5 md:w-7 md:h-7 text-red-400" />
                 )}
                 {row.traditional === "text" && (
-                  <span className="text-gray-400 text-base italic">
+                  <span className="text-gray-400 text-xs md:text-base italic">
                     {row.traditionalText}
                   </span>
                 )}
                 {row.traditional === "check-gray" && (
-                  <Check className="w-6 h-6 text-gray-400" />
+                  <Check className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
                 )}
               </div>
 
               {/* OrderzUp */}
-              <div className="px-14 py-8 bg-orange-50/60 border-l border-orange-100 flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7 text-green-500" />
+              <div className="px-3 md:px-14 py-4 md:py-8 bg-orange-50/60 border-l border-orange-100 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7 text-green-500" />
               </div>
             </div>
           ))}
 
           {/* CTA Banner */}
-          <div className="bg-[#060741] px-14 py-8 flex flex-col sm:flex-row items-center justify-between gap-6 rounded-b-2xl">
-            <div>
-              <p className="text-white font-extrabold text-2xl">
+          <div className="bg-[#060741] px-5 md:px-14 py-6 md:py-8 flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-6 rounded-b-2xl">
+            <div className="text-center sm:text-left">
+              <p className="text-white font-extrabold text-lg md:text-2xl">
                 Ready to see the difference?
               </p>
-              <p className="text-gray-400 text-base mt-1">
+              <p className="text-gray-400 text-sm md:text-base mt-1">
                 Join brands already scaling smarter with OrderzUp
               </p>
             </div>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-full text-base shadow-lg shadow-orange-500/30 transition-all whitespace-nowrap flex items-center gap-2">
-              Get Started Free
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#010327] text-white py-16 md:py-20 px-6 md:px-12">
+      <footer className="bg-[#010327] text-white py-12 md:py-20 px-4 md:px-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-20">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 lg:gap-20">
             {/* Left Section */}
             <div className="sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-5 md:mb-6">
                 <img
-                  src="./Orderzup.png"
+                  src={logo}
                   alt="OrderzUp Logo"
-                  className="w-10 h-10 object-contain brightness-0 invert"
+                  className="w-8 h-8 md:w-10 md:h-10 object-contain"
                 />
-                <h2 className="text-3xl font-extrabold tracking-tight">
+                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
                   Orderz<span className="text-orange-500">Up</span>
                 </h2>
               </div>
 
-              <p className="text-gray-400 text-base leading-relaxed max-w-sm mb-8">
+              <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-sm mb-6 md:mb-8">
                 The AI Logistics OS for modern D2C brands. Reduce RTO, automate
                 fulfillment, and scale profitably.
               </p>
 
               <div className="flex gap-4">
-                <button className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
-                  <Twitter size={18} />
-                </button>
-
-                <button className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                <a
+                  href="https://www.facebook.com/officialorderzup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                  <Facebook size={18} />
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/officialorderzup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
                   <Linkedin size={18} />
-                </button>
-
-                <button className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
-                  <Mail size={18} />
-                </button>
+                </a>
+                <a
+                  href="https://www.instagram.com/officialorderzup"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                  <Instagram size={18} />
+                </a>
               </div>
             </div>
 
             {/* Product */}
             <div>
-              <h3 className="font-bold text-lg mb-6 text-gray-100">Product</h3>
-              <ul className="space-y-4 text-gray-400 text-base">
+              <h3 className="font-bold text-base md:text-lg mb-5 md:mb-6 text-gray-100">
+                Product
+              </h3>
+              <ul className="space-y-3 md:space-y-4 text-gray-400 text-sm md:text-base">
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    Features
+                    href="https://orderzup.com/"
+                    className="hover:text-orange-400 transition-colors">
+                    Home
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    Integrations
+                    href="https://orderzup.com/contact/"
+                    className="hover:text-orange-400 transition-colors">
+                    Contact Us
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                    href="https://orderzup.com/pricing/"
+                    className="hover:text-orange-400 transition-colors">
                     Pricing
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    Changelog
+                    href="https://orderzup.com/courier-partners/"
+                    className="hover:text-orange-400 transition-colors">
+                    Courier Partners
                   </a>
                 </li>
               </ul>
@@ -839,38 +826,36 @@ export default function App() {
 
             {/* Company */}
             <div>
-              <h3 className="font-bold text-lg mb-6 text-gray-100">Company</h3>
-              <ul className="space-y-4 text-gray-400 text-base">
+              <h3 className="font-bold text-base md:text-lg mb-5 md:mb-6 text-gray-100">
+                Company
+              </h3>
+              <ul className="space-y-3 md:space-y-4 text-gray-400 text-sm md:text-base">
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                    href="https://orderzup.com/about-us/"
+                    className="hover:text-orange-400 transition-colors">
                     About
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                    href="https://orderzup.com/blog/"
+                    className="hover:text-orange-400 transition-colors">
                     Blog
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    Careers
+                    href="https://orderzup.com/api-integration/"
+                    className="hover:text-orange-400 transition-colors">
+                    API Integration
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    Press
+                    href="https://orderzup.com/amazon-self-ship/"
+                    className="hover:text-orange-400 transition-colors">
+                    Amazon Selfship
                   </a>
                 </li>
               </ul>
@@ -878,38 +863,22 @@ export default function App() {
 
             {/* Legal */}
             <div>
-              <h3 className="font-bold text-lg mb-6 text-gray-100">Legal</h3>
-              <ul className="space-y-4 text-gray-400 text-base">
+              <h3 className="font-bold text-base md:text-lg mb-5 md:mb-6 text-gray-100">
+                Legal
+              </h3>
+              <ul className="space-y-3 md:space-y-4 text-gray-400 text-sm md:text-base">
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                    href="https://orderzup.com/privacy-policy/"
+                    className="hover:text-orange-400 transition-colors">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                    href="https://orderzup.com/terms-conditions/"
+                    className="hover:text-orange-400 transition-colors">
                     Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    Security
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-orange-400 transition-colors"
-                  >
-                    GDPR
                   </a>
                 </li>
               </ul>
@@ -917,11 +886,10 @@ export default function App() {
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-[#1E266D] mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-            <p className="text-gray-500">
+          <div className="border-t border-[#1E266D] mt-10 md:mt-16 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+            <p className="text-gray-500 text-center md:text-left">
               © 2026 OrderzUp Technologies Pvt. Ltd. All rights reserved.
             </p>
-
             <div className="flex items-center gap-3 text-gray-400 font-medium">
               <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
               <span>All systems operational</span>

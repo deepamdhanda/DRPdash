@@ -1,11 +1,8 @@
 import { toast } from "react-toastify";
 import { appAxios } from "../../axios/appAxios";
 import { productSKUChannelLinks_url } from "../../URLs/user";
-import { ProductChannelLink } from "../../screens/user/ChannelSKU";
 
-export const linkProductSkuToChannelAccount = async (
-  data: ProductChannelLink
-) => {
+export const linkProductSkuToChannelAccount = async (data: any) => {
   try {
     const response = await appAxios.post(
       `${productSKUChannelLinks_url}/`,
