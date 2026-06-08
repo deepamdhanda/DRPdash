@@ -86,8 +86,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
       {/* NAV */}
-      <nav className="sticky top-0 bg-white border-b border-gray-100 h-16 md:h-24 z-50">
-        <div className="mx-auto px-4 md:px-12 h-full flex items-center gap-10 justify-between">
+      <nav className="sticky top-0 bg-white border-b border-gray-100 z-50">
+        <div className="mx-auto px-4 md:px-12 h-16 md:h-24 flex items-center gap-10 justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img
@@ -116,26 +116,33 @@ export default function App() {
           <button
             className="md:hidden p-2 flex flex-col justify-center gap-1.5"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <div className="w-6 h-0.5 bg-gray-800"></div>
-            <div className="w-6 h-0.5 bg-gray-800"></div>
-            <div className="w-6 h-0.5 bg-gray-800"></div>
+            <div
+              className={`w-6 h-0.5 bg-gray-800 transition-transform duration-300 ${mobileMenuOpen ? "rotate-45 translate-y-2" : ""}`}
+            />
+            <div
+              className={`w-6 h-0.5 bg-gray-800 transition-opacity duration-300 ${mobileMenuOpen ? "opacity-0" : ""}`}
+            />
+            <div
+              className={`w-6 h-0.5 bg-gray-800 transition-transform duration-300 ${mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""}`}
+            />
           </button>
         </div>
-      </nav>
 
-      {/* MOBILE MENU */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-100 px-6 py-4 flex flex-col gap-4 text-base font-medium text-gray-700 shadow-sm">
-          {["Features", "Product", "Pricing", "Compare"].map((item) => (
-            <a key={item} href="#" className="hover:text-orange-500 py-2">
-              {item}
-            </a>
-          ))}
-          <a href="#" className="hover:text-orange-500 py-2 font-bold">
-            Sign In
-          </a>
-        </div>
-      )}
+        {/* Mobile Dropdown — sits inside <nav> so it's below the bar */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-4 shadow-md">
+            {navLinks.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-lg font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </nav>
 
       {/* HERO */}
       <section className="pt-8 pb-8 md:pt-24 md:pb-12 px-4 md:px-12 overflow-hidden max-w-[1400px] mx-auto">
@@ -312,7 +319,7 @@ export default function App() {
           </div>
 
           {/* Tabs — horizontal scroll on mobile */}
-          <div className="flex items-center gap-1 px-3 md:px-6 py-3 border-b border-gray-100 bg-white overflow-x-auto">
+          <div className="flex items-center gap-1 px-3 md:px-6 py-4 border-b border-gray-100 bg-white overflow-x-auto">
             <button className="flex items-center gap-2 bg-orange-500 text-white text-xs md:text-sm font-bold px-3 md:px-5 py-2 md:py-2.5 rounded-xl whitespace-nowrap shadow-md shadow-orange-200 flex-shrink-0">
               <svg
                 className="w-4 h-4"
@@ -401,22 +408,22 @@ export default function App() {
               <table className="w-full text-sm md:text-lg">
                 <thead>
                   <tr className="text-gray-400 border-b border-gray-200">
-                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
+                    <th className="text-left py-5 pl-6 pr-4 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Order ID
                     </th>
-                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
+                    <th className="text-left py-5 px-4 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Customer
                     </th>
-                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
+                    <th className="text-left py-5 px-4 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Status
                     </th>
-                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
+                    <th className="text-left py-5 px-4 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Courier
                     </th>
-                    <th className="text-left py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
+                    <th className="text-left py-5 px-4 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Risk
                     </th>
-                    <th className="text-right py-3 px-3 md:px-0 font-medium text-xs md:text-lg uppercase tracking-wide">
+                    <th className="text-right py-5 pl-4 pr-6 font-medium text-xs md:text-lg uppercase tracking-wide">
                       Value
                     </th>
                   </tr>
@@ -482,28 +489,28 @@ export default function App() {
                     <tr
                       key={row.id}
                       className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors">
-                      <td className="py-3 md:py-4 px-3 md:px-0 font-bold text-orange-500 text-xs md:text-base whitespace-nowrap">
+                      <td className="py-4 pl-6 pr-4 font-bold text-orange-500 text-xs md:text-base whitespace-nowrap">
                         {row.id}
                       </td>
-                      <td className="py-3 md:py-4 px-3 md:px-0 text-gray-800 font-medium text-xs md:text-base whitespace-nowrap">
+                      <td className="py-4 px-4 text-gray-800 font-medium text-xs md:text-base whitespace-nowrap">
                         {row.customer}
                       </td>
-                      <td className="py-3 md:py-4 px-3 md:px-0">
+                      <td className="py-4 px-4">
                         <span
                           className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${row.statusColor}`}>
                           {row.status}
                         </span>
                       </td>
-                      <td className="py-3 md:py-4 px-3 md:px-0 text-gray-500 text-xs md:text-base whitespace-nowrap">
+                      <td className="py-4 px-4 text-gray-500 text-xs md:text-base whitespace-nowrap">
                         {row.courier}
                       </td>
-                      <td className="py-3 md:py-4 px-3 md:px-0">
+                      <td className="py-4 px-4">
                         <span
                           className={`text-xs font-bold px-2 py-1 rounded-lg ${row.riskColor}`}>
                           {row.risk}
                         </span>
                       </td>
-                      <td className="py-3 md:py-4 px-3 md:px-0 text-right font-bold text-gray-800 text-xs md:text-base whitespace-nowrap">
+                      <td className="py-4 pl-4 pr-6 text-right font-bold text-gray-800 text-xs md:text-base whitespace-nowrap">
                         {row.value}
                       </td>
                     </tr>

@@ -333,66 +333,64 @@ const SelfShipCalculator: React.FC = () => {
               </div>
 
               {/* Data Table */}
-              <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
-                <table className="w-full text-sm text-left whitespace-nowrap">
+              {/* Wrap with overflow container */}
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="w-full text-sm text-left">
                   <thead className="bg-[#F5891E] text-white">
                     <tr>
-                      <th className="px-4 py-3 font-semibold text-left">
+                      <th className="px-3 py-2.5 font-semibold text-left">
                         Details
                       </th>
-                      <th className="px-4 py-3 font-semibold text-center">
+                      <th className="px-3 py-2.5 font-semibold text-center">
                         Delivered
                       </th>
-                      <th className="px-4 py-3 font-semibold text-center">
+                      <th className="px-3 py-2.5 font-semibold text-center">
                         RTO
                       </th>
-                      <th className="px-4 py-3 font-semibold text-center">
+                      <th className="px-3 py-2.5 font-semibold text-center">
                         Net
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     <tr className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="px-3 py-2.5 font-medium text-gray-900">
                         Orders
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-2.5 text-center">
                         {deliveredOrders}
                       </td>
-                      <td className="px-4 py-3 text-center">{rtoOrders}</td>
-                      <td className="px-4 py-3 text-center font-bold">
+                      <td className="px-3 py-2.5 text-center">{rtoOrders}</td>
+                      <td className="px-3 py-2.5 text-center font-bold">
                         {totalOrders}
                       </td>
                     </tr>
                     <tr className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="px-3 py-2.5 font-medium text-gray-900">
                         Net Profit (₹)
                       </td>
-                      <td className="px-4 py-3 text-center text-green-600 font-medium">
+                      <td className="px-3 py-2.5 text-center text-green-600 font-medium">
                         {deliveredProfit.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-center text-red-600 font-medium">
+                      <td className="px-3 py-2.5 text-center text-red-600 font-medium">
                         {rtoProfit.toFixed(2)}
                       </td>
                       <td
-                        className={`px-4 py-3 text-center font-bold ${
-                          netProfit >= 0 ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
+                        className={`px-3 py-2.5 text-center font-bold ${netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
                         {netProfit.toFixed(2)}
                       </td>
                     </tr>
                     <tr className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="px-3 py-2.5 font-medium text-gray-900">
                         Profit (%)
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-2.5 text-center">
                         {deliveredProfitPercentage.toFixed(2)}%
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-2.5 text-center">
                         {rtoProfitPercentage.toFixed(2)}%
                       </td>
-                      <td className="px-4 py-3 text-center font-bold">
+                      <td className="px-3 py-2.5 text-center font-bold">
                         {netProfitPercentage.toFixed(2)}%
                       </td>
                     </tr>
