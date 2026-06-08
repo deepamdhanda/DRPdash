@@ -24,6 +24,7 @@ import {
   Calculator,
   Layers3,
   ClipboardX,
+  Paintbrush, // ← NEW: icon for Checkout Customizer
 } from "lucide-react";
 
 type NavLink = {
@@ -143,6 +144,16 @@ const navGroups: NavLink[][] = [
       path: "/user/shipping-charge-calculator",
     },
   ],
+
+  // ── NEW GROUP ─────────────────────────────────────────────────────────────
+  [
+    {
+      name: "Customize Checkout",
+      icon: <Paintbrush {...iconProps} />,
+      path: "/user/checkout-customizer",
+    },
+  ],
+  // ─────────────────────────────────────────────────────────────────────────
 ];
 
 const UserPanel: React.FC = () => {
@@ -164,7 +175,6 @@ const UserPanel: React.FC = () => {
     const currentPath = location.pathname;
     let matchedParent = null;
 
-    // Search through groups to find a matching parent OR a matching child
     for (const group of navGroups) {
       for (const item of group) {
         if (
@@ -178,7 +188,6 @@ const UserPanel: React.FC = () => {
       if (matchedParent) break;
     }
 
-    // Apply the active states
     if (matchedParent) {
       setActiveLink(matchedParent.name);
       setNlink(matchedParent.children || null);
@@ -364,14 +373,12 @@ const UserPanel: React.FC = () => {
                 {today}
               </div>
 
-              {/* 3. User Section */}
-              <button className="flex items-center space-x-3  p-2 rounded-lg transition-colors">
+              <button className="flex items-center space-x-3 p-2 rounded-lg transition-colors">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-bold text-orange-900 leading-tight">
                     {username}
                   </p>
                 </div>
-                {/* User Avatar Placeholder */}
                 <div className="h-10 w-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
                   {username?.slice(0, 1)}
                 </div>

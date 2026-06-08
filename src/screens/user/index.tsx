@@ -23,6 +23,7 @@ import DiscoverDashboard from "./Discovery.tsx";
 import OrderDash from "./OrderDash.tsx";
 import { WalletTransactionsComponent } from "./WalletTransactions.tsx";
 import { WalletRechargeComponent } from "./WalletRecharge.tsx";
+import CheckoutCustomizerPage from "./CheckoutCustomizerPage.tsx";
 
 export const userRoutes = [
   {
@@ -118,4 +119,5 @@ export const userRoutes = [
     element: <DiscoverDashboard />,
   },
   { path: "order-dash", element: <OrderDash /> },
+  { path: "checkout-customizer", element: <CheckoutCustomizerPage /> }
 ];
