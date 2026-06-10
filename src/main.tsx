@@ -17,6 +17,7 @@ import EcomCreditScoreLandingPage from "./screens/auth/LandingPages/EcomCreditSc
 import GetStarted from "./screens/user/GetStarted.tsx";
 import customerRoutes from "./screens/customer/index.tsx";
 
+
 const router = createBrowserRouter([
   {
     path: "/",
