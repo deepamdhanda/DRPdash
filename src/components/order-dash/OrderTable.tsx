@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreVertical,
-  Flag,
   Pencil,
   MapPin,
   Phone,
@@ -16,6 +15,7 @@ import {
   Box,
   XCircle,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 
 export interface OrderTableProps {
@@ -53,10 +53,12 @@ const SkeletonRow = () => (
     </td>
     <td className="p-4">
       <div className="h-6 w-20 bg-slate-100 rounded-full mb-2"></div>
-      <div className="h-4 w-24 bg-slate-100 rounded"></div>
     </td>
     <td className="p-4">
-      <div className="h-6 w-24 bg-slate-100 rounded-md"></div>
+      <div className="h-10 w-full bg-slate-100 rounded-md"></div>
+    </td>
+    <td className="p-4">
+      <div className="h-10 w-full bg-slate-100 rounded-md"></div>
     </td>
     <td className="p-4">
       <div className="h-8 w-20 bg-slate-200 rounded-lg float-right"></div>
@@ -109,7 +111,6 @@ const OrdersTable: React.FC<OrderTableProps> = ({
     setShipLoading(null);
   };
 
-  // Deepened badge colors for better contrast against white rows
   const getStatusStyle = (status: string) => {
     const s = status?.toLowerCase() || "";
     if (s.includes("new") || s.includes("open"))
@@ -129,12 +130,11 @@ const OrdersTable: React.FC<OrderTableProps> = ({
   return (
     <div
       ref={tableRef}
-      className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible min-h-125 "
+      className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible min-h-125"
     >
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            {/* Darker, structured neutral header to anchor the table */}
             <tr className="bg-slate-100/80 text-slate-600 text-[11px] uppercase tracking-wider font-bold border-b-2 border-slate-200">
               <th className="p-4 text-center w-12">
                 <input
@@ -145,12 +145,13 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                   disabled={isLoading || orders.length === 0}
                 />
               </th>
-              <th className="p-4 w-[12%]">Order Info</th>
-              <th className="p-4 w-[25%]">Items & Value</th>
-              <th className="p-4 w-[20%]">Customer Details</th>
-              <th className="p-4 w-[15%]">Status & Shipping</th>
-              <th className="p-4 w-[15%]">Risk Flags</th>
-              <th className="p-4 text-right pr-6 w-[13%]">Actions</th>
+              <th className="p-4 w-[10%]">Order Info</th>
+              <th className="p-4 w-[20%]">Items & Value</th>
+              <th className="p-4 w-[16%]">Customer Details</th>
+              <th className="p-4 w-[12%]">Status</th>
+              <th className="p-4 w-[14%]">Risk Issues</th>
+              <th className="p-4 w-[14%]">Verifications</th>
+              <th className="p-4 text-right pr-6 w-[14%]">Actions</th>
             </tr>
           </thead>
 
@@ -164,7 +165,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
               </>
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-24">
+                <td colSpan={8} className="text-center py-24">
                   <div className="flex flex-col items-center justify-center text-slate-400">
                     <div className="bg-slate-50 p-4 rounded-full mb-4 border border-slate-100">
                       <Package size={40} className="opacity-50 stroke-1" />
@@ -185,19 +186,21 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                   order.latest_status?.toUpperCase() ||
                   order.order_status?.toUpperCase() ||
                   "NEW";
-                const issues = order.issues || [];
-                const hasRedFlags =
-                  issues.length > 0 ||
-                  !order.customer_phone ||
-                  !order.shipping_pincode;
                 const itemsList = order.items || [];
                 const hasMultipleItems = itemsList.length > 1;
                 const isItemsExpanded = expandedItems.has(order._id);
 
+                // Separate flags into Red/Amber and Green
+                const redFlags =
+                  order.flags?.filter(
+                    (f: any) => f.type === "RED" || f.type === "AMBER"
+                  ) || [];
+                const greenFlags =
+                  order.flags?.filter((f: any) => f.type === "GREEN") || [];
+
                 return (
                   <tr
                     key={order._id}
-                    // Added a structural left border highlight when selected
                     className={`border-b border-slate-100 transition-all duration-200 group relative ${
                       isChecked
                         ? "bg-orange-50/50"
@@ -250,7 +253,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                                 Pool:
                               </span>
                               <span className="text-[10px] font-semibold text-[#F5891E]">
-                                {order.pool.name || "N/A"}
+                                {order.pool?.name || "N/A"}
                               </span>
                             </div>
                           </div>
@@ -258,10 +261,9 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                       </div>
                     </td>
 
-                    {/* 3. Items & Value (Nested Card Design) */}
+                    {/* 3. Items & Value */}
                     <td className="p-4 align-top">
                       <div className="flex flex-col bg-slate-50 rounded-xl p-3.5 border border-slate-200 shadow-sm inner-glow">
-                        {/* Single Item View */}
                         {!hasMultipleItems && itemsList.length > 0 && (
                           <div className="flex flex-col gap-1.5 mb-3 pb-3 border-b border-slate-200/80">
                             <span
@@ -271,12 +273,10 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                               {itemsList[0].product?.product_sku_name ||
                                 "Unknown Product"}
                             </span>
-
                             <div className="flex justify-between items-center text-slate-500 text-[11px]">
                               <span className="italic text-slate-500">
                                 {itemsList[0].product?.product_sku_id || "N/A"}
                               </span>
-
                               <span className="font-bold bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm text-slate-700">
                                 Qty: {itemsList[0].quantity}
                               </span>
@@ -284,7 +284,6 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                           </div>
                         )}
 
-                        {/* Multiple Items Accordion View */}
                         {hasMultipleItems && (
                           <div className="flex flex-col mb-3 pb-3 border-b border-slate-200/80">
                             <div
@@ -293,12 +292,10 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                             >
                               <div className="flex items-center gap-2">
                                 <Package size={14} className="text-[#F5891E]" />
-
                                 <span className="font-bold text-[#F5891E] text-xs">
                                   {itemsList.length} Items in Order
                                 </span>
                               </div>
-
                               <motion.div
                                 animate={{ rotate: isItemsExpanded ? 180 : 0 }}
                                 transition={{
@@ -311,7 +308,6 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                                 <ChevronDown size={14} />
                               </motion.div>
                             </div>
-
                             <AnimatePresence initial={false}>
                               {isItemsExpanded && (
                                 <motion.div
@@ -335,13 +331,11 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                                           {item.product?.product_sku_name ||
                                             "Unknown Product"}
                                         </span>
-
                                         <div className="flex justify-between items-center text-slate-500 text-[10px]">
                                           <span className="font-medium">
                                             {item.product?.product_sku_id ||
                                               "No SKU"}
                                           </span>
-
                                           <span className="font-bold text-slate-900 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
                                             x{item.quantity}
                                           </span>
@@ -355,14 +349,12 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                           </div>
                         )}
 
-                        {/* Empty State */}
                         {itemsList.length === 0 && (
                           <span className="text-slate-400 italic text-xs font-medium mb-3">
                             No items found
                           </span>
                         )}
 
-                        {/* Amount & Payment Section */}
                         <div className="flex justify-between items-center pt-2.5 border-t border-slate-200/80">
                           <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
                             Amount:
@@ -370,7 +362,6 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                               ₹{order.total_amount}
                             </span>
                           </span>
-
                           <span className="px-2 py-0.5 bg-white border border-slate-300 rounded text-[10px] uppercase font-bold text-slate-600 tracking-wider shadow-sm">
                             {order.payment_method?.length > 15
                               ? `${order.payment_method.slice(0, 15)}...`
@@ -379,6 +370,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                         </div>
                       </div>
                     </td>
+
                     {/* 4. Customer Info */}
                     <td className="p-4 align-top">
                       <div className="flex items-center gap-2 mb-2">
@@ -425,15 +417,14 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                         >
                           {statusName}
                         </button>
-
                         {order.awb_number ? (
-                          <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 mt-1 text-xs shadow-sm">
+                          <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 mt-1 text-xs shadow-sm w-full">
                             <span className="text-slate-500 font-medium">
                               AWB:{" "}
                             </span>
                             <Link
                               to={`/track/${order.awb_number}`}
-                              className="font-bold text-[#F5891E] hover:underline"
+                              className="font-bold text-[#F5891E] hover:underline block truncate"
                             >
                               {order.awb_number}
                             </Link>
@@ -451,40 +442,97 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                       </div>
                     </td>
 
-                    {/* 6. Risk Flags */}
+                    {/* 6. Risk Issues (Red/Amber) */}
                     <td className="p-4 align-top">
-                      <div className="flex flex-wrap gap-2 max-w-40">
-                        {hasRedFlags ? (
-                          <>
-                            {issues.map((issue: any, idx: number) => (
-                              <span
-                                key={idx}
-                                className="flex items-center gap-1 bg-red-100/80 text-red-700 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold tracking-wide shadow-sm"
-                              >
-                                <Flag size={10} />{" "}
-                                {issue.message || "Action Required"}
-                              </span>
-                            ))}
-                            {!order.customer_phone && (
-                              <span className="bg-red-100/80 text-red-700 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold tracking-wide shadow-sm">
-                                Missing Phone
-                              </span>
-                            )}
-                            {!order.shipping_pincode && (
-                              <span className="bg-red-100/80 text-red-700 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold tracking-wide shadow-sm">
-                                Missing ZIP
-                              </span>
-                            )}
-                          </>
+                      {/* Added max-height and scrollbar so lots of flags don't break row height */}
+                      <div className="flex flex-col gap-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                        {redFlags.length > 0 ? (
+                          redFlags.map((flag: any) => (
+                            <div
+                              key={flag._id}
+                              // Reduced padding, changed layout to inline
+                              className={`flex items-start gap-1.5 px-1.5 py-1 rounded border ${
+                                flag.type === "RED"
+                                  ? "bg-red-50/50 border-red-100"
+                                  : "bg-amber-50/50 border-amber-100"
+                              }`}
+                            >
+                              {flag.type === "RED" ? (
+                                <XCircle
+                                  size={12}
+                                  className="text-red-500 shrink-0 mt-0.5"
+                                />
+                              ) : (
+                                <AlertTriangle
+                                  size={12}
+                                  className="text-amber-500 shrink-0 mt-0.5"
+                                />
+                              )}
+                              <div className="text-[10px] leading-tight text-slate-700">
+                                <span
+                                  className={`font-bold mr-1 ${
+                                    flag.type === "RED"
+                                      ? "text-red-700"
+                                      : "text-amber-700"
+                                  }`}
+                                >
+                                  {flag.code || "WARNING"}:
+                                </span>
+                                {/* Added line-clamp to save space, hover shows full message */}
+                                <span
+                                  className="line-clamp-2"
+                                  title={flag.message}
+                                >
+                                  {flag.message}
+                                </span>
+                              </div>
+                            </div>
+                          ))
                         ) : (
-                          <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-200 text-[11px] font-bold shadow-sm">
-                            <CheckCircle2 size={14} /> Clear to Ship
-                          </div>
+                          <span className="text-slate-400 italic text-[11px] px-1">
+                            No issues detected
+                          </span>
                         )}
                       </div>
                     </td>
 
-                    {/* 7. Actions */}
+                    {/* 7. Verifications (Green) */}
+                    <td className="p-4 align-top">
+                      <div className="flex flex-col gap-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                        {greenFlags.length > 0 ? (
+                          greenFlags.map((flag: any) => (
+                            <div
+                              key={flag._id}
+                              className="flex items-start gap-1.5 px-1.5 py-1 rounded bg-emerald-50/50 border border-emerald-100"
+                            >
+                              <CheckCircle2
+                                size={12}
+                                className="text-emerald-500 shrink-0 mt-0.5"
+                              />
+                              <div className="text-[10px] leading-tight text-slate-700">
+                                {flag.code && (
+                                  <span className="font-bold text-emerald-700 mr-1">
+                                    {flag.code}:
+                                  </span>
+                                )}
+                                <span
+                                  className="line-clamp-2"
+                                  title={flag.message}
+                                >
+                                  {flag.message}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-slate-400 italic text-[11px] px-1">
+                            No verifications
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* 8. Actions */}
                     <td className="p-4 align-top text-right pr-6">
                       <div className="flex items-center justify-end gap-2.5 relative">
                         {order.awb_number ? (
