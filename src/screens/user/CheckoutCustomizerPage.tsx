@@ -1,5 +1,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
+// ─── Replace with your actual API base URL ───────────────────────────────────
+const API_BASE = "http://localhost:5000/checkout-customizer";// adjust to your Express route
+
 const GOOGLE_FONTS_URL =
   "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap";
 
@@ -26,7 +29,6 @@ function useGlobalFontInherit() {
       .hide-scrollbar::-webkit-scrollbar { display: none; }
       .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
-      /* Mobile: stack layout vertically */
       @media (max-width: 768px) {
         .customizer-layout {
           grid-template-columns: 1fr !important;
@@ -75,6 +77,8 @@ import {
   Eye,
   EyeOff,
   Check,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 
 type LucideIcon = React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
@@ -115,6 +119,75 @@ interface StyleType {
   socialProofText: string;
 }
 
+// ─── Map backend doc → StyleType ────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function backendToStyle(doc: any): StyleType {
+  return {
+    gradientEnabled: doc.theme?.gradient?.on ?? true,
+    gradientColor1: doc.theme?.gradient?.from ?? "#0f172a",
+    gradientColor2: doc.theme?.gradient?.to ?? "#ec4899",
+    gradientDirection: (doc.theme?.gradient?.dir ?? "to right") as GradientDirection,
+    pageBg: doc.theme?.page ?? "#f8fafc",
+    surfaceBg: doc.theme?.surface ?? "#ffffff",
+    borderColor: doc.theme?.border ?? "#e2e8f0",
+    textPrimary: doc.theme?.textPrimary ?? "#0f172a",
+    textSecondary: doc.theme?.textSecondary ?? "#64748b",
+    accentColor: doc.theme?.accent ?? "#0f172a",
+    headerBg: doc.theme?.header ?? "#ffffff",
+    fontFamily: doc.type?.font ?? "'Inter', sans-serif",
+    headingSize: doc.type?.h ?? "1.375rem",
+    bodySize: doc.type?.body ?? "0.9rem",
+    fontWeight: doc.type?.weight ?? 600,
+    textTransform: (doc.type?.transform ?? "none") as StyleType["textTransform"],
+    letterSpacing: doc.type?.spacing ?? "0px",
+    lineHeight: doc.type?.lineHeight ?? 1.5,
+    buttonVariant: (doc.btn?.variant ?? "solid") as ButtonVariant,
+    buttonRadius: (doc.btn?.radius ?? "md") as ButtonRadius,
+    buttonSize: (doc.btn?.size ?? "md") as ButtonSize,
+    buttonShadow: doc.btn?.shadow ?? true,
+    buttonBg: "#0f172a",   // not stored in backend schema — keep local
+    buttonText: "#ffffff", // not stored in backend schema — keep local
+    logoText: doc.content?.top ?? "OrderzUp",
+    trustBadgeText: doc.content?.badge ?? "Trusted by 10k+",
+    socialProofText: doc.content?.proof ?? "127 people purchased in the last 24 hours · 4.8★ from 2,450+ customers",
+    showTrustBadges: doc.toggles?.trust ?? true,
+    showSocialProof: doc.toggles?.proof ?? true,
+  };
+}
+
+// ─── Map StyleType → backend PATCH body ─────────────────────────────────────
+function styleToPatch(s: StyleType) {
+  return {
+    "theme.page": s.pageBg,
+    "theme.surface": s.surfaceBg,
+    "theme.border": s.borderColor,
+    "theme.textPrimary": s.textPrimary,
+    "theme.textSecondary": s.textSecondary,
+    "theme.accent": s.accentColor,
+    "theme.header": s.headerBg,
+    "theme.gradient.on": s.gradientEnabled,
+    "theme.gradient.from": s.gradientColor1,
+    "theme.gradient.to": s.gradientColor2,
+    "theme.gradient.dir": s.gradientDirection,
+    "type.font": s.fontFamily,
+    "type.h": s.headingSize,
+    "type.body": s.bodySize,
+    "type.weight": s.fontWeight,
+    "type.transform": s.textTransform,
+    "type.spacing": s.letterSpacing,
+    "type.lineHeight": s.lineHeight,
+    "btn.variant": s.buttonVariant,
+    "btn.radius": s.buttonRadius,
+    "btn.size": s.buttonSize,
+    "btn.shadow": s.buttonShadow,
+    "content.top": s.logoText,
+    "content.badge": s.trustBadgeText,
+    "content.proof": s.socialProofText,
+    "toggles.trust": s.showTrustBadges,
+    "toggles.proof": s.showSocialProof,
+  };
+}
+
 const GRADIENT_PRESETS = [
   { name: "OrderzUp", color1: "#0f172a", color2: "#074333" },
   { name: "Royal Blue", color1: "#141e30", color2: "#243b55" },
@@ -129,7 +202,7 @@ const GRADIENT_PRESETS = [
 const DEFAULT: StyleType = {
   gradientEnabled: true,
   gradientColor1: "#0f172a",
-  gradientColor2: "#ec4899",
+  gradientColor2: "#074333",
   gradientDirection: "to right",
   fontFamily: "'Inter', sans-serif",
   headingSize: "1.375rem",
@@ -237,6 +310,8 @@ const MOCK_ITEMS = [
   { title: "Premium Wireless Headphones", price: 299900, quantity: 1 },
   { title: "USB-C Charging Cable (2m)", price: 99900, quantity: 2 },
 ];
+
+// ─── Preview Components (unchanged from original) ───────────────────────────
 
 function PreviewHeader({ s }: { s: StyleType }) {
   return (
@@ -429,17 +504,7 @@ function PreviewStepBar({ step, s }: { step: number; s: StyleType }) {
         marginBottom: 24,
         padding: "0 8px",
       }}>
-      <div
-        style={{
-          position: "absolute",
-          top: 17,
-          left: 32,
-          right: 32,
-          height: 2,
-          background: s.borderColor,
-          zIndex: 1,
-        }}
-      />
+      <div style={{ position: "absolute", top: 17, left: 32, right: 32, height: 2, background: s.borderColor, zIndex: 1 }} />
       {steps.map(({ num, Icon, label }) => {
         const isActive = step >= num;
         const isCurrent = step === num;
@@ -697,10 +762,8 @@ function PreviewPaymentStep({ s }: { s: StyleType }) {
 
 function CheckoutPreview({ s }: { s: StyleType }) {
   const [step, setStep] = useState(1);
-
   return (
     <div
-      className="phone-scale-wrapper"
       style={{
         width: 400,
         margin: "0 auto",
@@ -712,7 +775,6 @@ function CheckoutPreview({ s }: { s: StyleType }) {
         ...typo(s),
         flexShrink: 0,
       }}>
-      {/* Dynamic Island */}
       <div
         style={{
           position: "absolute",
@@ -726,8 +788,6 @@ function CheckoutPreview({ s }: { s: StyleType }) {
           zIndex: 100,
         }}
       />
-
-      {/* Phone Screen — FIXED HEIGHT, flex column */}
       <div
         style={{
           borderRadius: 38,
@@ -738,7 +798,6 @@ function CheckoutPreview({ s }: { s: StyleType }) {
           flexDirection: "column",
           position: "relative",
         }}>
-        {/* Status Bar — fixed, never scrolls */}
         <div
           style={{
             height: 52,
@@ -757,8 +816,6 @@ function CheckoutPreview({ s }: { s: StyleType }) {
             <div style={{ width: 18, height: 10, background: "#111", borderRadius: 2 }} />
           </div>
         </div>
-
-        {/* Browser Step Bar — fixed */}
         <div
           style={{
             background: "#f8fafc",
@@ -790,14 +847,8 @@ function CheckoutPreview({ s }: { s: StyleType }) {
             ))}
           </div>
         </div>
-
-        {/* App Header — fixed */}
         <PreviewHeader s={s} />
-
-        {/* Social Proof Banner — fixed */}
         <PreviewBanner s={s} />
-
-        {/* Scrollable content wrapper — takes all remaining space */}
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
           <div
             className="hide-scrollbar"
@@ -829,8 +880,6 @@ function CheckoutPreview({ s }: { s: StyleType }) {
           </div>
         </div>
       </div>
-
-      {/* Home Indicator */}
       <div style={{ width: 150, height: 5, borderRadius: 999, background: "#4b5563", margin: "8px auto 0" }} />
     </div>
   );
@@ -840,14 +889,7 @@ function CheckoutPreview({ s }: { s: StyleType }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: 14,
-        border: "1px solid #e5e7eb",
-        padding: "16px 18px",
-        marginBottom: 12,
-      }}>
+    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "16px 18px", marginBottom: 12 }}>
       <p style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 14px" }}>
         {title}
       </p>
@@ -983,13 +1025,44 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
-function countUnsavedChanges(current: StyleType, defaults: StyleType): number {
+function countUnsavedChanges(current: StyleType, saved: StyleType): number {
   let count = 0;
-  const keys = Object.keys(defaults) as (keyof StyleType)[];
+  const keys = Object.keys(saved) as (keyof StyleType)[];
   for (const key of keys) {
-    if (current[key] !== defaults[key]) count++;
+    if (current[key] !== saved[key]) count++;
   }
   return count;
+}
+
+// ─── Status Banner ────────────────────────────────────────────────────────────
+type BannerState = "idle" | "loading" | "saving" | "saved" | "error";
+
+function StatusBanner({ state, error }: { state: BannerState; error?: string }) {
+  if (state === "idle") return null;
+  const configs: Record<Exclude<BannerState, "idle">, { bg: string; icon: React.ReactNode; text: string }> = {
+    loading: { bg: "#f0f9ff", icon: <Loader2 size={13} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }} />, text: "Loading saved settings…" },
+    saving: { bg: "#fff7ed", icon: <Loader2 size={13} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }} />, text: "Saving to server…" },
+    saved: { bg: "#f0fdf4", icon: <Check size={13} strokeWidth={2.5} color="#16a34a" />, text: "Settings saved successfully!" },
+    error: { bg: "#fef2f2", icon: <AlertCircle size={13} color="#dc2626" strokeWidth={2} />, text: error ?? "Something went wrong." },
+  };
+  const cfg = configs[state];
+  return (
+    <div style={{
+      background: cfg.bg,
+      border: `1px solid ${state === "error" ? "#fecaca" : state === "saved" ? "#bbf7d0" : "#e0f2fe"}`,
+      borderRadius: 8,
+      padding: "8px 12px",
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      fontSize: 12,
+      color: "#374151",
+      margin: "0 0 12px",
+    }}>
+      {cfg.icon}
+      {cfg.text}
+    </div>
+  );
 }
 
 // ─── Main Export ─────────────────────────────────────────────────────────────
@@ -997,39 +1070,85 @@ function countUnsavedChanges(current: StyleType, defaults: StyleType): number {
 export default function CheckoutCustomizerPage() {
   useFonts();
   useGlobalFontInherit();
-  const [style, setStyle] = useState<StyleType>(DEFAULT);
-  const [showPreview, setShowPreview] = useState(true);
-  const [saved, setSaved] = useState(false);
 
-  const unsavedCount = useMemo(() => countUnsavedChanges(style, DEFAULT), [style]);
+  const [style, setStyle] = useState<StyleType>(DEFAULT);
+  const [savedStyle, setSavedStyle] = useState<StyleType>(DEFAULT); // tracks what's persisted
+  const [showPreview, setShowPreview] = useState(true);
+  const [bannerState, setBannerState] = useState<BannerState>("loading");
+  const [bannerError, setBannerError] = useState<string>();
+
+  const unsavedCount = useMemo(() => countUnsavedChanges(style, savedStyle), [style, savedStyle]);
+
+  // ── LOAD config on mount ──────────────────────────────────────────────────
+  useEffect(() => {
+    setBannerState("loading");
+    fetch(API_BASE)
+      .then((r) => {
+        if (!r.ok) throw new Error(`Server returned ${r.status}`);
+        return r.json();
+      })
+      .then((json) => {
+        if (json.success && json.data) {
+          const loaded = backendToStyle(json.data);
+          setStyle(loaded);
+          setSavedStyle(loaded);
+        }
+        setBannerState("idle");
+      })
+      .catch((err) => {
+        console.error("Failed to load config:", err);
+        setBannerError("Could not load settings from server — showing defaults.");
+        setBannerState("error");
+        setTimeout(() => setBannerState("idle"), 4000);
+      });
+  }, []);
 
   const set = useCallback(<K extends keyof StyleType>(key: K, val: StyleType[K]) => {
     setStyle((prev) => ({ ...prev, [key]: val }));
-    setSaved(false);
   }, []);
 
-  const handleSave = () => {
-    try { localStorage.setItem("checkout-style", JSON.stringify(style)); } catch {}
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  // ── SAVE config ──────────────────────────────────────────────────────────
+  const handleSave = async () => {
+    setBannerState("saving");
+    try {
+      const body = styleToPatch(style);
+      const res = await fetch(API_BASE, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Server error ${res.status}`);
+      }
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message ?? "Save failed");
+      // Update savedStyle to reflect what's now on the server
+      setSavedStyle(style);
+      setBannerState("saved");
+      setTimeout(() => setBannerState("idle"), 2500);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setBannerError(msg);
+      setBannerState("error");
+      setTimeout(() => setBannerState("idle"), 4000);
+    }
   };
 
   const handleReset = () => {
     setStyle(DEFAULT);
-    setSaved(false);
+    // Note: reset is local-only — only saved on next "Save & Sync"
   };
 
   const applyGradientPreset = (color1: string, color2: string) => {
     setStyle((prev) => ({ ...prev, gradientColor1: color1, gradientColor2: color2 }));
   };
 
+  const isSaving = bannerState === "saving";
+  const isSaved = bannerState === "saved";
+
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: style.fontFamily }}>
-
-   
-    
-
-      {/* ── Two-column layout ── */}
       <div
         className="customizer-layout"
         style={{
@@ -1045,22 +1164,16 @@ export default function CheckoutCustomizerPage() {
         {/* ── LEFT: Settings Sidebar ── */}
         <div
           className="settings-sidebar"
-          style={{
-            position: "relative",
-            height: "calc(100vh - 120px)",
-            display: "flex",
-            flexDirection: "column",
-          }}>
+          style={{ position: "relative", height: "calc(100vh - 120px)", display: "flex", flexDirection: "column" }}>
 
-          {/* Scrollable settings */}
           <div
             className="hide-scrollbar settings-scroll"
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              paddingRight: 2,
-              paddingBottom: 8,
-            }}>
+            style={{ flex: 1, overflowY: "auto", paddingRight: 2, paddingBottom: 8 }}>
+
+            {/* Status banner sits at top of scroll area */}
+            <div style={{ paddingTop: 4 }}>
+              <StatusBanner state={bannerState} error={bannerError} />
+            </div>
 
             <Section title="Branding & Content">
               <Row label="Store / Logo Text">
@@ -1225,7 +1338,6 @@ export default function CheckoutCustomizerPage() {
               </Row>
             </Section>
 
-            {/* Bottom spacer so content isn't hidden behind action bar */}
             <div style={{ height: 88 }} />
           </div>
 
@@ -1245,7 +1357,6 @@ export default function CheckoutCustomizerPage() {
               gap: 8,
               zIndex: 10,
             }}>
-            {/* Hide / Show Preview */}
             <button
               onClick={() => setShowPreview((v) => !v)}
               style={{
@@ -1267,9 +1378,9 @@ export default function CheckoutCustomizerPage() {
               {showPreview ? "Hide" : "Show"}
             </button>
 
-            {/* Reset */}
             <button
               onClick={handleReset}
+              disabled={isSaving}
               style={{
                 padding: "8px 12px",
                 borderRadius: 8,
@@ -1278,41 +1389,42 @@ export default function CheckoutCustomizerPage() {
                 color: "#6b7280",
                 fontSize: 12,
                 fontWeight: 500,
-                cursor: "pointer",
+                cursor: isSaving ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 5,
                 flexShrink: 0,
+                opacity: isSaving ? 0.5 : 1,
               }}>
               <RotateCcw size={13} strokeWidth={2} />
               Reset
             </button>
 
-            {/* Save & Sync — primary, with unsaved badge */}
             <button
               onClick={handleSave}
+              disabled={isSaving || isSaved}
               style={{
                 flex: 1,
                 padding: "9px 14px",
                 borderRadius: 8,
                 border: "none",
-                background: saved ? "#10b981" : "#F5891E",
+                background: isSaved ? "#10b981" : isSaving ? "#fb923c" : "#F5891E",
                 color: "#fff",
                 fontSize: 12,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: isSaving || isSaved ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 6,
                 transition: "background 0.2s",
                 position: "relative",
+                opacity: isSaving ? 0.85 : 1,
               }}>
-              {saved ? (
-                <>
-                  <Check size={13} strokeWidth={2.5} />
-                  Saved!
-                </>
+              {isSaved ? (
+                <><Check size={13} strokeWidth={2.5} />Saved!</>
+              ) : isSaving ? (
+                <><Loader2 size={13} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }} />Saving…</>
               ) : (
                 <>
                   <Save size={13} strokeWidth={2} />
@@ -1347,17 +1459,14 @@ export default function CheckoutCustomizerPage() {
         {showPreview && (
           <div
             className="preview-panel"
-            style={{
-              position: "sticky",
-              top: 20,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "flex-start",
-            }}>
+            style={{ position: "sticky", top: 20, display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
             <CheckoutPreview s={style} />
           </div>
         )}
       </div>
+
+      {/* Spinner keyframe */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

@@ -1,19 +1,19 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Sora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
 .scrollbar-hide {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
 }
+
 @keyframes fadeSlideIn {
   0% {
     opacity: 0;
     transform: translateY(5px);
   }
-
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -24,11 +24,9 @@
   0% {
     box-shadow: 0 0 8px #f5891e;
   }
-
   50% {
     box-shadow: 0 0 16px #f5891e;
   }
-
   100% {
     box-shadow: 0 0 8px #f5891e;
   }
@@ -63,12 +61,10 @@
     background-color: #f5891e;
     box-shadow: 0 0 0 0 rgba(245, 137, 30, 0.7);
   }
-
   70% {
     background-color: #ff9f3d;
     box-shadow: 0 0 0 8px rgba(245, 137, 30, 0);
   }
-
   100% {
     background-color: #f5891e;
     box-shadow: 0 0 0 0 rgba(245, 137, 30, 0);
@@ -88,13 +84,13 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* Timeline specific for tracking */
 .timeline-step {
   border-left: 2px solid #e9ecef;
   padding-left: 24px;
   position: relative;
   padding-bottom: 24px;
 }
+
 .timeline-step::before {
   content: "";
   width: 14px;
@@ -105,26 +101,21 @@
   left: -8px;
   top: 0;
 }
+
 .timeline-step.active {
   border-left-color: #28a745;
 }
+
 .timeline-step.active::before {
   background: #28a745;
   box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.2);
 }
 
-/* Utility */
 .cursor-pointer {
   cursor: pointer;
 }
 
 .pac-container {
-  z-index: 10500 !important; /* Bootstrap modal is around 1055 */
+  z-index: 10500 !important;
   background-color: white;
 }
-
-
-
-
-
-
