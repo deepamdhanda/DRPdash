@@ -124,7 +124,15 @@ const AddOrderPage: React.FC = () => {
     Array<{ _id: string; channel_account_name: string }>
   >([]);
   const [productSKUs, setProductSKUs] = useState<
-    Array<{ _id: string; product_sku_name: string }>
+    Array<{
+      _id: string;
+      product_sku_name: string;
+      // Price may come from the backend under different field names depending
+      // on what the API returns — we check all of them when reading the price.
+      price?: number;
+      unit_price?: number;
+      selling_price?: number;
+    }>
   >([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError, setOptionsError] = useState(false);
@@ -247,6 +255,23 @@ const AddOrderPage: React.FC = () => {
   const handleItemChange = (index: number, field: keyof OrderItem, value: string | number) => {
     const updatedItems = [...formData.items];
     updatedItems[index] = { ...updatedItems[index], [field]: value };
+    handleInputChange("items", updatedItems);
+  };
+
+  // When a product is selected, pull its price from the backend SKU data
+  // instead of letting the user type it in. Unit price is no longer
+  // user-editable — it's whatever the catalog says.
+  const handleProductSelect = (index: number, productId: string) => {
+    const selectedSku = productSKUs.find((sku) => sku._id === productId);
+    const skuPrice =
+      selectedSku?.price ?? selectedSku?.unit_price ?? selectedSku?.selling_price ?? 0;
+
+    const updatedItems = [...formData.items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      product: productId,
+      unit_price: skuPrice,
+    };
     handleInputChange("items", updatedItems);
   };
 
@@ -670,6 +695,7 @@ const AddOrderPage: React.FC = () => {
                 {formData.items.map((item, index) => {
                   const lineHasError =
                     (touched.items || attemptedSubmit) && !item.product;
+                  const lineTotal = (item.unit_price || 0) * (item.quantity || 0);
                   return (
                     <motion.div
                       key={index}
@@ -685,7 +711,7 @@ const AddOrderPage: React.FC = () => {
                         <select
                           required
                           value={item.product}
-                          onChange={(e) => handleItemChange(index, "product", e.target.value)}
+                          onChange={(e) => handleProductSelect(index, e.target.value)}
                           onBlur={() => markTouched("items")}
                           aria-invalid={lineHasError}
                           aria-label={`Product for item ${index + 1}`}
@@ -700,6 +726,14 @@ const AddOrderPage: React.FC = () => {
                             </option>
                           ))}
                         </select>
+                        {/* Per-item price chip — shows the line's price next to the
+                            selected product so the cost is visible right where the
+                            product is chosen, not just in the summary card below. */}
+                        {item.product && (
+                          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-[#F97C2A] bg-orange-50 border border-orange-200 rounded-md px-2 py-0.5 tabular-nums">
+                            {currency(lineTotal)}
+                          </span>
+                        )}
                       </div>
                       <div className="col-span-4 md:col-span-2">
                         <input
@@ -726,23 +760,18 @@ const AddOrderPage: React.FC = () => {
                           <input
                             type="number"
                             min="0"
-                            placeholder="0.00"
+                            disabled
+                            readOnly
+                            placeholder="Auto-filled on selection"
                             aria-label={`Unit price for item ${index + 1}`}
                             value={item.unit_price || ""}
-                            onChange={(e) =>
-                              handleItemChange(
-                                index,
-                                "unit_price",
-                                Math.max(0, Number(e.target.value) || 0)
-                              )
-                            }
                             className={`${inputClass()} pl-6`}
                           />
                         </div>
                       </div>
                       <div className="col-span-3 md:col-span-2 flex items-center justify-end gap-2 h-[42px]">
                         <span className="text-sm font-bold text-slate-700 tabular-nums">
-                          {currency((item.unit_price || 0) * (item.quantity || 0))}
+                          {currency(lineTotal)}
                         </span>
                         {formData.items.length > 1 && (
                           <button
@@ -897,14 +926,19 @@ const AddOrderPage: React.FC = () => {
                     </span>
                   </div>
                 )}
-                <div className="border-t border-white/10 pt-3 mt-3 flex justify-between items-center">
-                  <span className="font-bold text-base text-white">Grand Total</span>
+                {/* Grand Total — stays on-theme (orange card, white text) but with
+                    a larger, bolder number so it's the clear visual anchor of
+                    the summary without introducing a clashing new color. */}
+                <div className="border-t border-white/20 pt-3 mt-3 flex justify-between items-center">
+                  <span className="font-bold text-base text-white uppercase tracking-wide">
+                    Grand Total
+                  </span>
                   <motion.span
                     key={grandTotal}
                     initial={{ scale: 1.08 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.35 }}
-                    className="font-bold text-xl tabular-nums text-[#FB923C]"
+                    className="font-extrabold text-2xl sm:text-3xl tabular-nums text-white"
                   >
                     {currency(Math.max(0, grandTotal))}
                   </motion.span>
