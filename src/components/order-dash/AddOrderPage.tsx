@@ -127,11 +127,6 @@ const AddOrderPage: React.FC = () => {
     Array<{
       _id: string;
       product_sku_name: string;
-      // Price may come from the backend under different field names depending
-      // on what the API returns — we check all of them when reading the price.
-      price?: number;
-      unit_price?: number;
-      selling_price?: number;
     }>
   >([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
@@ -258,19 +253,15 @@ const AddOrderPage: React.FC = () => {
     handleInputChange("items", updatedItems);
   };
 
-  // When a product is selected, pull its price from the backend SKU data
-  // instead of letting the user type it in. Unit price is no longer
-  // user-editable — it's whatever the catalog says.
+  // Product pack pricing is not used here (confirmed with Akshit) — price
+  // is entered manually by the user for every line item. Selecting a
+  // product only sets the product id; unit_price is left untouched so the
+  // user's typed value (or the default 0) is preserved.
   const handleProductSelect = (index: number, productId: string) => {
-    const selectedSku = productSKUs.find((sku) => sku._id === productId);
-    const skuPrice =
-      selectedSku?.price ?? selectedSku?.unit_price ?? selectedSku?.selling_price ?? 0;
-
     const updatedItems = [...formData.items];
     updatedItems[index] = {
       ...updatedItems[index],
       product: productId,
-      unit_price: skuPrice,
     };
     handleInputChange("items", updatedItems);
   };
@@ -309,8 +300,14 @@ const AddOrderPage: React.FC = () => {
     try {
       await createOrder({
         ...formData,
+        items: formData.items.map(({ product, quantity, unit_price }) => ({
+          product,
+          quantity,
+          price: unit_price,
+        })),
         subtotal,
-        tax_amount: taxAmount,
+        tax_amount: formData.tax_percent,
+        discount_amount: formData.discount,
         total_amount: grandTotal,
       });
       toast.success("Order created successfully");
@@ -726,14 +723,6 @@ const AddOrderPage: React.FC = () => {
                             </option>
                           ))}
                         </select>
-                        {/* Per-item price chip — shows the line's price next to the
-                            selected product so the cost is visible right where the
-                            product is chosen, not just in the summary card below. */}
-                        {item.product && (
-                          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-[#F97C2A] bg-orange-50 border border-orange-200 rounded-md px-2 py-0.5 tabular-nums">
-                            {currency(lineTotal)}
-                          </span>
-                        )}
                       </div>
                       <div className="col-span-4 md:col-span-2">
                         <input
@@ -760,11 +749,16 @@ const AddOrderPage: React.FC = () => {
                           <input
                             type="number"
                             min="0"
-                            disabled
-                            readOnly
-                            placeholder="Auto-filled on selection"
+                            placeholder="Enter unit price"
                             aria-label={`Unit price for item ${index + 1}`}
                             value={item.unit_price || ""}
+                            onChange={(e) =>
+                              handleItemChange(
+                                index,
+                                "unit_price",
+                                Math.max(0, Number(e.target.value) || 0)
+                              )
+                            }
                             className={`${inputClass()} pl-6`}
                           />
                         </div>
@@ -926,9 +920,7 @@ const AddOrderPage: React.FC = () => {
                     </span>
                   </div>
                 )}
-                {/* Grand Total — stays on-theme (orange card, white text) but with
-                    a larger, bolder number so it's the clear visual anchor of
-                    the summary without introducing a clashing new color. */}
+               
                 <div className="border-t border-white/20 pt-3 mt-3 flex justify-between items-center">
                   <span className="font-bold text-base text-white uppercase tracking-wide">
                     Grand Total
