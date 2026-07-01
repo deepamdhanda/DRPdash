@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
 // ─── Replace with your actual API base URL ───────────────────────────────────
-const API_BASE = "http://localhost:5000/checkout-customizer";// adjust to your Express route
+const API_BASE = "http://localhost:5001/checkout-customizer";// adjust to your Express route
 
 const GOOGLE_FONTS_URL =
   "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap";
@@ -156,35 +156,48 @@ function backendToStyle(doc: any): StyleType {
 }
 
 // ─── Map StyleType → backend PATCH body ─────────────────────────────────────
+// ─── Map StyleType → backend PATCH body ─────────────────────────────────────
 function styleToPatch(s: StyleType) {
   return {
-    "theme.page": s.pageBg,
-    "theme.surface": s.surfaceBg,
-    "theme.border": s.borderColor,
-    "theme.textPrimary": s.textPrimary,
-    "theme.textSecondary": s.textSecondary,
-    "theme.accent": s.accentColor,
-    "theme.header": s.headerBg,
-    "theme.gradient.on": s.gradientEnabled,
-    "theme.gradient.from": s.gradientColor1,
-    "theme.gradient.to": s.gradientColor2,
-    "theme.gradient.dir": s.gradientDirection,
-    "type.font": s.fontFamily,
-    "type.h": s.headingSize,
-    "type.body": s.bodySize,
-    "type.weight": s.fontWeight,
-    "type.transform": s.textTransform,
-    "type.spacing": s.letterSpacing,
-    "type.lineHeight": s.lineHeight,
-    "btn.variant": s.buttonVariant,
-    "btn.radius": s.buttonRadius,
-    "btn.size": s.buttonSize,
-    "btn.shadow": s.buttonShadow,
-    "content.top": s.logoText,
-    "content.badge": s.trustBadgeText,
-    "content.proof": s.socialProofText,
-    "toggles.trust": s.showTrustBadges,
-    "toggles.proof": s.showSocialProof,
+    theme: {
+      page: s.pageBg,
+      surface: s.surfaceBg,
+      border: s.borderColor,
+      textPrimary: s.textPrimary,
+      textSecondary: s.textSecondary,
+      accent: s.accentColor,
+      header: s.headerBg,
+      gradient: {
+        on: s.gradientEnabled,
+        from: s.gradientColor1,
+        to: s.gradientColor2,
+        dir: s.gradientDirection,
+      },
+    },
+    type: {
+      font: s.fontFamily,
+      h: s.headingSize,
+      body: s.bodySize,
+      weight: s.fontWeight,
+      transform: s.textTransform,
+      spacing: s.letterSpacing,
+      lineHeight: s.lineHeight,
+    },
+    btn: {
+      variant: s.buttonVariant,
+      radius: s.buttonRadius,
+      size: s.buttonSize,
+      shadow: s.buttonShadow,
+    },
+    content: {
+      top: s.logoText,
+      badge: s.trustBadgeText,
+      proof: s.socialProofText,
+    },
+    toggles: {
+      trust: s.showTrustBadges,
+      proof: s.showSocialProof,
+    },
   };
 }
 
