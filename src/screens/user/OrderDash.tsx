@@ -1,9 +1,6 @@
-import AddOrderModal, {
-  OrderFormData,
-} from "../../components/order-dash/AddOrderDialog";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { createOrder } from "../../APIs/user/order";
 import { appAxios } from "../../axios/appAxios";
 import {
   channelAccounts_url,
@@ -85,11 +82,15 @@ export interface Order {
 }
 
 const OrderDash = () => {
-  const [show, setShow] = useState(false);
+  const navigate = useNavigate();
   const [channelAccounts, setChannelAccounts] = useState<Array<any>>([]);
   const [productSKUs, setProductSKUs] = useState<
     Array<{ _id: string; product_sku_name: string }>
   >([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void channelAccounts;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void productSKUs;
   const [tab, setTab] = useState<String>("new");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -161,17 +162,7 @@ const OrderDash = () => {
   useEffect(() => {
     setPage(1);
   }, [tab]);
-  const addOrder = async (payload: OrderFormData) => {
-    try {
-      await createOrder(payload);
-      setShow(false);
-      setPage(1);
-      fetchOrders();
-      toast.success("Order created successfully");
-    } catch (error: any) {
-      toast.error("Error creating order: " + error.message);
-    }
-  };
+
   useEffect(() => {
     fetchChannelAccounts();
     fetchProductSkus();
@@ -442,8 +433,9 @@ const OrderDash = () => {
             </p>
           </div>
 
+          {/* CHANGED: navigates to a dedicated route instead of opening a modal */}
           <button
-            onClick={() => setShow(true)}
+            onClick={() => navigate("/user/order-dash/add")}
             className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition-all duration-200 active:scale-[0.98]"
           >
             <Plus size={16} />
@@ -541,15 +533,7 @@ const OrderDash = () => {
         shipmentDetails={shipmentDetails}
         handleBookShipment={handleBookShipment}
       />
-      <AddOrderModal
-        show={show}
-        onClose={() => setShow(false)}
-        onSubmit={addOrder}
-        dropdownOptions={{
-          channels: channelAccounts,
-          products: productSKUs,
-        }}
-      />
+      {/* REMOVED: <AddOrderModal ... /> — Add Order is now a dedicated page at /user/order-dash/add */}
       <EditOrderModal
         show={showEditModal}
         onHide={handleCloseEditModal}
