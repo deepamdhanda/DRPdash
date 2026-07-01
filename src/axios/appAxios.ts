@@ -58,8 +58,8 @@ Axios.interceptors.response.use(
       "Something went wrong, please try again later.";
 
     _.set(error, "response.data", {
+      ...error.response?.data,
       result: null,
-      error: error.response?.data?.error || null,
       success: false,
       errorMessage,
     });

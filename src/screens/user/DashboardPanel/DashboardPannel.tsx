@@ -24,7 +24,6 @@ import {
   Calculator,
   Layers3,
   ClipboardX,
-  Paintbrush, // ← NEW: icon for Checkout Customizer
 } from "lucide-react";
 
 type NavLink = {
@@ -146,13 +145,13 @@ const navGroups: NavLink[][] = [
   ],
 
   // ── NEW GROUP ─────────────────────────────────────────────────────────────
-  [
-    {
-      name: "Customize Checkout",
-      icon: <Paintbrush {...iconProps} />,
-      path: "/user/checkout-customizer",
-    },
-  ],
+  // [
+  //   {
+  //     name: "Customize Checkout",
+  //     icon: <Paintbrush {...iconProps} />,
+  //     path: "/user/checkout-customizer",
+  //   },
+  // ],
   // ─────────────────────────────────────────────────────────────────────────
 ];
 

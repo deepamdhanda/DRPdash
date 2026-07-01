@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Save, RotateCcw, Eye, EyeOff, Check } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -57,7 +57,13 @@ const DEFAULT: CheckoutStyle = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const RADIUS_MAP = { none: "0px", sm: "4px", md: "8px", lg: "16px", full: "9999px" };
+const RADIUS_MAP = {
+  none: "0px",
+  sm: "4px",
+  md: "8px",
+  lg: "16px",
+  full: "9999px",
+};
 const SIZE_MAP = { sm: "0.5rem 1rem", md: "0.75rem 1.5rem", lg: "1rem 2rem" };
 
 function getButtonStyle(s: CheckoutStyle): React.CSSProperties {
@@ -66,7 +72,10 @@ function getButtonStyle(s: CheckoutStyle): React.CSSProperties {
     bg = `linear-gradient(${s.gradientDirection}, ${s.gradientColor1}, ${s.gradientColor2})`;
   }
   return {
-    background: s.buttonVariant === "outline" || s.buttonVariant === "ghost" ? "transparent" : bg,
+    background:
+      s.buttonVariant === "outline" || s.buttonVariant === "ghost"
+        ? "transparent"
+        : bg,
     color: s.buttonText,
     border: s.buttonVariant === "outline" ? `2px solid ${s.buttonBg}` : "none",
     borderRadius: RADIUS_MAP[s.buttonRadius],
@@ -105,38 +114,93 @@ function getHeadingStyle(s: CheckoutStyle): React.CSSProperties {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const Row = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
   <div className="mb-4">
-    <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">{label}</p>
+    <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+      {label}
+    </p>
     {children}
   </div>
 );
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Section = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
   <div className="bg-white rounded-2xl border border-neutral-200 p-5 mb-4">
-    <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-4">{title}</p>
+    <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-4">
+      {title}
+    </p>
     {children}
   </div>
 );
 
-const Toggle = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
-  <div onClick={onChange} className={`relative w-10 h-5 rounded-full cursor-pointer transition-colors ${value ? "bg-[#F5891E]" : "bg-neutral-200"}`}>
-    <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${value ? "translate-x-5" : ""}`} />
+const Toggle = ({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: () => void;
+}) => (
+  <div
+    onClick={onChange}
+    className={`relative w-10 h-5 rounded-full cursor-pointer transition-colors ${
+      value ? "bg-[#F5891E]" : "bg-neutral-200"
+    }`}
+  >
+    <span
+      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+        value ? "translate-x-5" : ""
+      }`}
+    />
   </div>
 );
 
-const Swatch = ({ value, label, onChange }: { value: string; label: string; onChange: (v: string) => void }) => (
+const Swatch = ({
+  value,
+  label,
+  onChange,
+}: {
+  value: string;
+  label: string;
+  onChange: (v: string) => void;
+}) => (
   <div className="flex items-center gap-3 py-1.5">
     <div className="relative">
-      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" />
-      <span className="block w-7 h-7 rounded-md border border-neutral-200 shadow-sm" style={{ background: value }} />
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+      />
+      <span
+        className="block w-7 h-7 rounded-md border border-neutral-200 shadow-sm"
+        style={{ background: value }}
+      />
     </div>
     <span className="text-[13px] text-neutral-600 flex-1">{label}</span>
     <code className="text-[11px] text-neutral-400">{value}</code>
   </div>
 );
 
-const Chips = ({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) => (
+const Chips = ({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) => (
   <div className="flex gap-2 flex-wrap">
     {options.map((o) => (
       <button
@@ -154,13 +218,25 @@ const Chips = ({ options, value, onChange }: { options: string[]; value: string;
   </div>
 );
 
-const Sel = ({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) => (
+const Sel = ({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) => (
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
     className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#F5891E]/40 focus:border-[#F5891E] transition-all"
   >
-    {options.map((o) => <option key={o} value={o}>{o}</option>)}
+    {options.map((o) => (
+      <option key={o} value={o}>
+        {o}
+      </option>
+    ))}
   </select>
 );
 
@@ -180,10 +256,13 @@ const CheckoutCustomizerPage: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [hovering, setHovering] = useState(false);
 
-  const set = useCallback(<K extends keyof CheckoutStyle>(key: K, val: CheckoutStyle[K]) => {
-    setStyle((prev) => ({ ...prev, [key]: val }));
-    setSaved(false);
-  }, []);
+  const set = useCallback(
+    <K extends keyof CheckoutStyle>(key: K, val: CheckoutStyle[K]) => {
+      setStyle((prev) => ({ ...prev, [key]: val }));
+      setSaved(false);
+    },
+    []
+  );
 
   const handleSave = () => {
     localStorage.setItem("checkout-style", JSON.stringify(style));
@@ -204,15 +283,23 @@ const CheckoutCustomizerPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Checkout Style</h1>
-          <p className="text-sm text-neutral-400 mt-0.5">Customise how your checkout page looks to customers</p>
+          <h1 className="text-2xl font-bold text-neutral-800">
+            Checkout Style
+          </h1>
+          <p className="text-sm text-neutral-400 mt-0.5">
+            Customise how your checkout page looks to customers
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowPreview((v) => !v)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-neutral-500 bg-white border border-neutral-200 hover:border-[#F5891E] hover:text-[#F5891E] transition-all"
           >
-            {showPreview ? <EyeOff size={16} strokeWidth={2.5} /> : <Eye size={16} strokeWidth={2.5} />}
+            {showPreview ? (
+              <EyeOff size={16} strokeWidth={2.5} />
+            ) : (
+              <Eye size={16} strokeWidth={2.5} />
+            )}
             {showPreview ? "Hide preview" : "Show preview"}
           </button>
           <button
@@ -225,38 +312,75 @@ const CheckoutCustomizerPage: React.FC = () => {
           <button
             onClick={handleSave}
             className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
-              saved ? "bg-green-500 text-white" : "bg-[#F5891E] text-white hover:bg-orange-500"
+              saved
+                ? "bg-green-500 text-white"
+                : "bg-[#F5891E] text-white hover:bg-orange-500"
             }`}
           >
-            {saved ? <Check size={16} strokeWidth={2.5} /> : <Save size={16} strokeWidth={2.5} />}
+            {saved ? (
+              <Check size={16} strokeWidth={2.5} />
+            ) : (
+              <Save size={16} strokeWidth={2.5} />
+            )}
             {saved ? "Saved!" : "Save & Sync"}
           </button>
         </div>
       </div>
 
-      <div className={`grid gap-6 ${showPreview ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1 max-w-xl"}`}>
-
+      <div
+        className={`grid gap-6 ${
+          showPreview ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1 max-w-xl"
+        }`}
+      >
         {/* ── Controls ── */}
         <div>
-
           {/* Gradient */}
           <Section title="Text Gradient">
             <Row label="Enabled">
               <div className="flex items-center gap-3">
-                <Toggle value={style.gradientEnabled} onChange={() => set("gradientEnabled", !style.gradientEnabled)} />
-                <span className="text-sm text-neutral-500">{style.gradientEnabled ? "On" : "Off"}</span>
+                <Toggle
+                  value={style.gradientEnabled}
+                  onChange={() =>
+                    set("gradientEnabled", !style.gradientEnabled)
+                  }
+                />
+                <span className="text-sm text-neutral-500">
+                  {style.gradientEnabled ? "On" : "Off"}
+                </span>
               </div>
             </Row>
             <Row label="Direction">
-              <Sel value={style.gradientDirection} options={["to right", "to left", "to bottom", "to top", "to bottom right", "135deg", "45deg"]} onChange={(v) => set("gradientDirection", v)} />
+              <Sel
+                value={style.gradientDirection}
+                options={[
+                  "to right",
+                  "to left",
+                  "to bottom",
+                  "to top",
+                  "to bottom right",
+                  "135deg",
+                  "45deg",
+                ]}
+                onChange={(v) => set("gradientDirection", v)}
+              />
             </Row>
             <Row label="Colors">
-              <Swatch value={style.gradientColor1} label="Color 1" onChange={(v) => set("gradientColor1", v)} />
-              <Swatch value={style.gradientColor2} label="Color 2" onChange={(v) => set("gradientColor2", v)} />
+              <Swatch
+                value={style.gradientColor1}
+                label="Color 1"
+                onChange={(v) => set("gradientColor1", v)}
+              />
+              <Swatch
+                value={style.gradientColor2}
+                label="Color 2"
+                onChange={(v) => set("gradientColor2", v)}
+              />
               {/* Preview strip */}
               <div
                 className="mt-3 h-5 rounded-full"
-                style={{ background: `linear-gradient(${style.gradientDirection}, ${style.gradientColor1}, ${style.gradientColor2})` }}
+                style={{
+                  background: `linear-gradient(${style.gradientDirection}, ${style.gradientColor1}, ${style.gradientColor2})`,
+                }}
               />
             </Row>
           </Section>
@@ -266,45 +390,92 @@ const CheckoutCustomizerPage: React.FC = () => {
             <Row label="Font Family">
               <Sel
                 value={style.fontFamily}
-                options={["'Inter', sans-serif", "'Poppins', sans-serif", "'DM Sans', sans-serif", "'Sora', sans-serif", "'Manrope', sans-serif", "'Plus Jakarta Sans', sans-serif"]}
+                options={[
+                  "'Inter', sans-serif",
+                  "'Poppins', sans-serif",
+                  "'DM Sans', sans-serif",
+                  "'Sora', sans-serif",
+                  "'Manrope', sans-serif",
+                  "'Plus Jakarta Sans', sans-serif",
+                ]}
                 onChange={(v) => set("fontFamily", v)}
               />
             </Row>
             <div className="grid grid-cols-2 gap-3">
               <Row label="Heading Size">
-                <Sel value={style.headingSize} options={["1.25rem", "1.5rem", "1.875rem", "2.25rem", "3rem"]} onChange={(v) => set("headingSize", v)} />
+                <Sel
+                  value={style.headingSize}
+                  options={["1.25rem", "1.5rem", "1.875rem", "2.25rem", "3rem"]}
+                  onChange={(v) => set("headingSize", v)}
+                />
               </Row>
               <Row label="Body Size">
-                <Sel value={style.bodySize} options={["0.875rem", "1rem", "1.125rem"]} onChange={(v) => set("bodySize", v)} />
+                <Sel
+                  value={style.bodySize}
+                  options={["0.875rem", "1rem", "1.125rem"]}
+                  onChange={(v) => set("bodySize", v)}
+                />
               </Row>
             </div>
             <Row label="Font Weight">
-              <Chips options={["400", "500", "600", "700", "800"]} value={String(style.fontWeight)} onChange={(v) => set("fontWeight", Number(v))} />
+              <Chips
+                options={["400", "500", "600", "700", "800"]}
+                value={String(style.fontWeight)}
+                onChange={(v) => set("fontWeight", Number(v))}
+              />
             </Row>
           </Section>
 
           {/* Button */}
           <Section title="Button Style">
             <Row label="Variant">
-              <Chips options={["solid", "outline", "ghost", "gradient"]} value={style.buttonVariant} onChange={(v) => set("buttonVariant", v as any)} />
+              <Chips
+                options={["solid", "outline", "ghost", "gradient"]}
+                value={style.buttonVariant}
+                onChange={(v) => set("buttonVariant", v as any)}
+              />
             </Row>
             <div className="grid grid-cols-2 gap-3">
               <Row label="Size">
-                <Chips options={["sm", "md", "lg"]} value={style.buttonSize} onChange={(v) => set("buttonSize", v as any)} />
+                <Chips
+                  options={["sm", "md", "lg"]}
+                  value={style.buttonSize}
+                  onChange={(v) => set("buttonSize", v as any)}
+                />
               </Row>
               <Row label="Radius">
-                <Chips options={["none", "sm", "md", "lg", "full"]} value={style.buttonRadius} onChange={(v) => set("buttonRadius", v as any)} />
+                <Chips
+                  options={["none", "sm", "md", "lg", "full"]}
+                  value={style.buttonRadius}
+                  onChange={(v) => set("buttonRadius", v as any)}
+                />
               </Row>
             </div>
             <Row label="Colors">
-              <Swatch value={style.buttonBg} label="Background" onChange={(v) => set("buttonBg", v)} />
-              <Swatch value={style.buttonText} label="Text" onChange={(v) => set("buttonText", v)} />
+              <Swatch
+                value={style.buttonBg}
+                label="Background"
+                onChange={(v) => set("buttonBg", v)}
+              />
+              <Swatch
+                value={style.buttonText}
+                label="Text"
+                onChange={(v) => set("buttonText", v)}
+              />
             </Row>
             <Row label="Options">
               <div className="flex flex-col gap-2">
-                {([ ["buttonShadow", "Drop shadow"], ["buttonHoverScale", "Scale on hover"] ] as const).map(([key, label]) => (
+                {(
+                  [
+                    ["buttonShadow", "Drop shadow"],
+                    ["buttonHoverScale", "Scale on hover"],
+                  ] as const
+                ).map(([key, label]) => (
                   <div key={key} className="flex items-center gap-3">
-                    <Toggle value={style[key] as boolean} onChange={() => set(key, !style[key] as any)} />
+                    <Toggle
+                      value={style[key] as boolean}
+                      onChange={() => set(key, !style[key] as any)}
+                    />
                     <span className="text-sm text-neutral-500">{label}</span>
                   </div>
                 ))}
@@ -314,14 +485,37 @@ const CheckoutCustomizerPage: React.FC = () => {
 
           {/* Theme */}
           <Section title="Color Theme">
-            <Swatch value={style.pageBg} label="Page background" onChange={(v) => set("pageBg", v)} />
-            <Swatch value={style.surfaceBg} label="Surface / input background" onChange={(v) => set("surfaceBg", v)} />
-            <Swatch value={style.borderColor} label="Border color" onChange={(v) => set("borderColor", v)} />
-            <Swatch value={style.textPrimary} label="Text primary" onChange={(v) => set("textPrimary", v)} />
-            <Swatch value={style.textSecondary} label="Text secondary" onChange={(v) => set("textSecondary", v)} />
-            <Swatch value={style.accentColor} label="Accent color" onChange={(v) => set("accentColor", v)} />
+            <Swatch
+              value={style.pageBg}
+              label="Page background"
+              onChange={(v) => set("pageBg", v)}
+            />
+            <Swatch
+              value={style.surfaceBg}
+              label="Surface / input background"
+              onChange={(v) => set("surfaceBg", v)}
+            />
+            <Swatch
+              value={style.borderColor}
+              label="Border color"
+              onChange={(v) => set("borderColor", v)}
+            />
+            <Swatch
+              value={style.textPrimary}
+              label="Text primary"
+              onChange={(v) => set("textPrimary", v)}
+            />
+            <Swatch
+              value={style.textSecondary}
+              label="Text secondary"
+              onChange={(v) => set("textSecondary", v)}
+            />
+            <Swatch
+              value={style.accentColor}
+              label="Accent color"
+              onChange={(v) => set("accentColor", v)}
+            />
           </Section>
-
         </div>
 
         {/* ── Preview ── */}
@@ -333,17 +527,38 @@ const CheckoutCustomizerPage: React.FC = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                <span className="ml-2 text-xs text-neutral-400 font-medium">checkout preview</span>
+                <span className="ml-2 text-xs text-neutral-400 font-medium">
+                  checkout preview
+                </span>
               </div>
 
               {/* Mock checkout */}
-              <div className="p-8" style={{ background: style.pageBg, fontFamily: style.fontFamily }}>
+              <div
+                className="p-8"
+                style={{
+                  background: style.pageBg,
+                  fontFamily: style.fontFamily,
+                }}
+              >
                 <h2 style={h1Style}>Complete your order</h2>
-                <p style={{ color: style.textSecondary, fontSize: style.bodySize, marginBottom: "1.5rem" }}>
+                <p
+                  style={{
+                    color: style.textSecondary,
+                    fontSize: style.bodySize,
+                    marginBottom: "1.5rem",
+                  }}
+                >
                   Secure checkout · All fields required
                 </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: "1.5rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    marginBottom: "1.5rem",
+                  }}
+                >
                   {["Email address", "Card number", "Expiry / CVC"].map((p) => (
                     <input
                       key={p}
@@ -368,7 +583,10 @@ const CheckoutCustomizerPage: React.FC = () => {
                 <button
                   style={{
                     ...btnStyle,
-                    transform: hovering && style.buttonHoverScale ? "scale(1.03)" : "scale(1)",
+                    transform:
+                      hovering && style.buttonHoverScale
+                        ? "scale(1.03)"
+                        : "scale(1)",
                   }}
                   onMouseEnter={() => setHovering(true)}
                   onMouseLeave={() => setHovering(false)}
@@ -376,12 +594,21 @@ const CheckoutCustomizerPage: React.FC = () => {
                   Pay Now
                 </button>
 
-                <p style={{ textAlign: "center", fontSize: "0.75rem", color: style.textSecondary, marginTop: "1rem" }}>
+                <p
+                  style={{
+                    textAlign: "center",
+                    fontSize: "0.75rem",
+                    color: style.textSecondary,
+                    marginTop: "1rem",
+                  }}
+                >
                   🔒 Payments are encrypted and secure
                 </p>
               </div>
             </div>
-            <p className="text-xs text-neutral-400 text-center mt-3">Live preview · changes sync on save</p>
+            <p className="text-xs text-neutral-400 text-center mt-3">
+              Live preview · changes sync on save
+            </p>
           </div>
         )}
       </div>

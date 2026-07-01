@@ -280,12 +280,12 @@ const OrderDash = () => {
       if ((err as any).message.toLowerCase() === "product sku not linked") {
         handleOpenLinkModal(order);
       }
-      console.log(err);
-      // if (
-      //   (err as any).message.toLowerCase() === "product has missing information"
-      // ) {
-      //   setMissingDataProductId(order.items);
-      // }
+      const index = (err as any).response.data.index;
+      if (
+        (err as any).message.toLowerCase() === "product has missing information"
+      ) {
+        setMissingDataProductId(order.items[index].product._id);
+      }
       toast.error((err as any).message);
     }
   };
@@ -583,7 +583,7 @@ const OrderDash = () => {
         productId={missingDataProductId}
         onSuccess={() => {
           setMissingDataProductId(null);
-          fetchOrders(); // Refresh the table
+          fetchOrders();
         }}
       />
     </>
