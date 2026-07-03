@@ -29,7 +29,7 @@ export const LoginUser = async (
 
 export const RegisterUser = async (
   userdata: RegisterFormData,
-  next: (email: string) => void
+  next: (email: string) => void,
 ) => {
   try {
     const apiRes = await appAxios.post(registerURL, userdata, {
@@ -49,7 +49,7 @@ export const VerifyUser = async (userdata: any, next: () => void) => {
       withCredentials: true,
     });
     // if (apiRes.data) {
-    //   // console.log(apiRes.data.token)
+    //   console.log(apiRes.data.token)
     //   Cookies.set("username", apiRes.data.name, { expires: 1000 });
     //   Cookies.set("authToken", apiRes.data.token.split(" ")[1], {
     //     expires: 1000,
