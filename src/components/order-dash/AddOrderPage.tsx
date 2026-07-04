@@ -144,7 +144,6 @@ const AddOrderPage: React.FC = () => {
       ]);
       setChannelAccounts(channelRes.data?.data || []);
       setProductSKUs(productRes.data || []);
-      console.log(productRes.data);
     } catch (err) {
       console.error("Error fetching dropdown options:", err);
       setOptionsError(true);
@@ -301,6 +300,7 @@ const AddOrderPage: React.FC = () => {
     try {
       await createOrder({
         ...formData,
+        product_sku_id: formData.items[0].product,
         items: formData.items.map(({ product, quantity, unit_price }) => ({
           product,
           quantity,
