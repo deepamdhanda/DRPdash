@@ -245,7 +245,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                           />
                           <div className="flex flex-col leading-snug">
                             <span className="text-[12px] font-semibold text-slate-800">
-                              {order.channel_account?.channel_account_name ||
+                              {order.channel_id?.channel_account_name ||
                                 "Manual Store"}
                             </span>
                             <div className="flex items-center gap-1">
@@ -253,7 +253,7 @@ const OrdersTable: React.FC<OrderTableProps> = ({
                                 Pool:
                               </span>
                               <span className="text-[10px] font-semibold text-[#F5891E]">
-                                {order.pool?.name || "N/A"}
+                                {order.channel_id?.pool_id?.name || "N/A"}
                               </span>
                             </div>
                           </div>
